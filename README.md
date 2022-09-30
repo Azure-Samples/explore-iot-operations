@@ -4,7 +4,7 @@ This example is a template server for E4K broker custom authentication. Custom a
 
 ## Deploying the template
 
-The template server needs to be built and deployed as a container image. You will need to provide the repository for hosting the image.
+The template server needs to be built and deployed as a Kubernetes service. You will need to provide the repository for hosting its container image.
 
 1. Run the [build_image.sh](deploy/build_image.sh) script and pass the image tag to use. This script builds and pushes the template image.
 
