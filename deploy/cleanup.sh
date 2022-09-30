@@ -8,3 +8,5 @@ SERVER_CERT_NAME="${SERVER_CERT_NAME:-custom-auth-server-cert}"
 
 kubectl delete cm --ignore-not-found=true "$CA_CERT_NAME"
 kubectl delete secret --ignore-not-found=true "$SERVER_CERT_NAME" "$CLIENT_CERT_NAME"
+kubectl delete service --ignore-not-found=true "$POD_NAME"
+kubectl delete pod --ignore-not-found=true "$POD_NAME"
