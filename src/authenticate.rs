@@ -46,7 +46,7 @@ enum ClientAuthRequest {
         password: Option<String>,
 
         /// Client certificate chain, if provided.
-        #[serde(deserialize_with = "deserialize_cert_chain")]
+        #[serde(default, deserialize_with = "deserialize_cert_chain")]
         certs: Option<Vec<X509>>,
     },
 }
@@ -124,11 +124,15 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             let mut example_attributes = BTreeMap::new();
             example_attributes.insert("example_key".to_string(), "example_value".to_string());
 
-            // Example responses to client authentication.
-            let allow = ClientAuthResponse::Allow(example_attributes);
-            let _deny = ClientAuthResponse::Deny { reason: 135 };
+            // Example responses to client authentication. This template denies authentication to clients
+            // who present usernames that begin with 'deny', but allows all others.
+            if let Some(username) = username {
+                if username.starts_with("deny") {
+                    return ClientAuthResponse::Deny { reason: 135 };
+                }
+            }
 
-            allow
+            ClientAuthResponse::Allow(example_attributes)
         }
     }
 }
