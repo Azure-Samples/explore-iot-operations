@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auth-server-template
+  labels:
+    app.kubernetes.io/name: AuthServerTemplate
+spec:
+  containers:
+  - name: auth-server-template
+    image: # Set image here
+    imagePullPolicy: Always
+    ports:
+      - name: https
+        containerPort: 443
+    volumeMounts:
+      - name: custom-auth-server-cert
+        mountPath: /tls
+    env:
+    - name: SERVER_CERT_CHAIN
+      value: /tls/tls.crt
+    - name: SERVER_CERT_KEY
+      value: /tls/tls.key
+  volumes:
+  - name: custom-auth-server-cert
+    secret:
+      secretName: custom-auth-server-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-server-template
+spec:
+  selector:
+    app.kubernetes.io/name: AuthServerTemplate
+  ports:
+    - protocol: TCP
+      port: 443
