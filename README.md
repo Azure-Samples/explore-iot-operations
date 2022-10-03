@@ -4,23 +4,27 @@ This example is a template server for E4K broker custom authentication. Custom a
 
 ## Deploying the template
 
+A private preview image of the template is available with the tag `e4kpreview.azurecr.io/auth-server-template:latest`. You only need to deploy the template yourself once you make modifications.
+
 The template server needs to be built and deployed as a Kubernetes service. You will need to provide the repository for hosting its container image.
 
-1. Run the [build_image.sh](deploy/build_image.sh) script and pass the image tag to use. This script builds and pushes the template image.
+To deploy, run the [build_image.sh](deploy/build_image.sh) script and pass the image tag to use. This script builds and pushes the template image.
 
 ```sh
 IMAGE_TAG=example.example.io/auth-server-template:latest ./deploy/build_image.sh
 ```
 
-2. Run the [make_credentials.sh](deploy/make_credentials.sh) script to generate server credentials for the template. This script generates test certificates and saves them as Kubernetes secrets.
+## Running the template
+
+1. Run the [make_credentials.sh](deploy/make_credentials.sh) script to generate server credentials for the template. This script generates test certificates and saves them as Kubernetes secrets.
 
 ```sh
 ./deploy/make_credentials.sh
 ```
 
-3. Edit [auth-server-template.yaml](deploy/auth-server-template.yaml#L10) and set the image that you created in step 1.
+2. If you are using your own container register, edit [auth-server-template.yaml](deploy/auth-server-template.yaml#L10) and set the image that you created in the previous section.
 
-4. Deploy the pod and service for the template.
+3. Deploy the pod and service for the template.
 
 ```sh
 kubectl apply -f ./deploy/auth-server-template.yaml
