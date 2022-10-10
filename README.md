@@ -1,6 +1,8 @@
 # auth-server-template
 
-This example is a template server for E4K broker custom authentication. Custom authentication allows a third-party server to decide whether to authenticate connecting MQTT clients. The server template provided here can be used as a starting point for implementing the authentication logic.
+This is a sample server for E4K broker custom authentication. 
+
+The custom authentication feature of the E4K MQTT brokers provides an extension point that allows customers to plug in an authentication server to authenticate clients that connect to the MQTT broker. The server here is intended as a sample for how such a custom authentication can be implemented.
 
 ## Deploying the template
 
