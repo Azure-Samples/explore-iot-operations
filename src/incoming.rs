@@ -95,7 +95,7 @@ impl hyper::server::accept::Accept for Incoming {
                         }
                     };
                     self.connections.push(Box::pin(async move {
-                        let () = Pin::new(&mut stream).accept().await?;
+                        Pin::new(&mut stream).accept().await?;
                         Ok(stream)
                     }));
                 }

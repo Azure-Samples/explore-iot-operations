@@ -64,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     hyper::Server::builder(incoming)
         .serve(hyper::service::make_service_fn(move |_| {
-            let service = hyper::service::service_fn(move |req| process_req(req));
+            let service = hyper::service::service_fn(process_req);
 
             async move { Ok::<_, std::convert::Infallible>(service) }
         }))

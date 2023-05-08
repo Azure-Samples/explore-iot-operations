@@ -53,10 +53,10 @@ impl ParsedRequest {
 impl std::fmt::Debug for ParsedRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "\n----\n")?;
-        write!(f, "> {} {} {}\n", self.method, self.uri, self.version)?;
+        writeln!(f, "> {} {} {}", self.method, self.uri, self.version)?;
 
         for (key, value) in &self.headers {
-            write!(f, "> {}: {}\n", key, value)?;
+            writeln!(f, "> {}: {}", key, value)?;
         }
 
         if let Some(body) = &self.body {
