@@ -140,7 +140,7 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
                 if username.starts_with("expire") {
                     let example_expiry = chrono::Utc::now() + chrono::Duration::seconds(10);
 
-                    Some(example_expiry.to_rfc3339())
+                    Some(example_expiry.to_rfc3339_opts(chrono::SecondsFormat::Secs, true))
                 } else {
                     None
                 }
