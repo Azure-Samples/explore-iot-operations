@@ -72,21 +72,30 @@ where
 }
 
 enum ClientAuthResponse {
-    /// Allow the connection. Translates to a CONNACK packet with reason = success and
-    /// grants the client the provided authorization attributes. The response must contain
-    /// a body, so pass an empty map if there are no authorization attributes.
-    Allow(BTreeMap<String, String>),
+    /// Allow the connection. Translates to a CONNACK packet with reason = success.
+    Allow(AuthPassResponse),
 
     /// Deny the connection. Translates to a CONNACK packet with the given reason code.
     Deny { reason: u8 },
 }
 
+/// Response to an authenticated client.
+#[derive(Debug, serde::Serialize)]
+struct AuthPassResponse {
+    /// RFC 3339 timestamp that states the expiry time for the client's
+    /// provided credentials. Clients will be disconnected when the expiry time passes.
+    /// Omit `expiry` to allow clients to remain connected indefinitely.
+    expiry: Option<String>,
+
+    /// The client's authorization attributes. The response must contain
+    /// a body, so pass an empty map if there are no authorization attributes.
+    attributes: BTreeMap<String, String>,
+}
+
 impl From<ClientAuthResponse> for Response {
     fn from(response: ClientAuthResponse) -> Response {
         match response {
-            ClientAuthResponse::Allow(attributes) => {
-                Response::json(hyper::StatusCode::OK, attributes)
-            }
+            ClientAuthResponse::Allow(response) => Response::json(hyper::StatusCode::OK, response),
 
             ClientAuthResponse::Deny { reason } => {
                 let body = serde_json::json!({
@@ -107,7 +116,7 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             certs,
         } => {
             // TODO: Authenticate the client with provided credentials. For now, this template just logs the
-            // credentials.
+            // credentials. Note the password is base64-encoded.
             println!(
                 "Got MQTT CONNECT; username: {:?}, password: {:?}",
                 username, password
@@ -124,6 +133,19 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             let mut example_attributes = BTreeMap::new();
             example_attributes.insert("example_key".to_string(), "example_value".to_string());
 
+            // TODO: Determine when the client's credentials should expire. For now, this template sets
+            // an expiry of 10 seconds if the username starts with 'expire'; otherwise, it does not set
+            // expiry and allows clients to remain connected indefinitely.
+            let example_expiry = username.as_ref().and_then(|username| {
+                if username.starts_with("expire") {
+                    let example_expiry = chrono::Utc::now() + chrono::Duration::seconds(10);
+
+                    Some(example_expiry.to_rfc3339())
+                } else {
+                    None
+                }
+            });
+
             // Example responses to client authentication. This template denies authentication to clients
             // who present usernames that begin with 'deny', but allows all others.
             if let Some(username) = username {
@@ -132,7 +154,10 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
                 }
             }
 
-            ClientAuthResponse::Allow(example_attributes)
+            ClientAuthResponse::Allow(AuthPassResponse {
+                expiry: example_expiry,
+                attributes: example_attributes,
+            })
         }
     }
 }
