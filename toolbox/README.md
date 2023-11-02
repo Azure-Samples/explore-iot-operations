@@ -39,3 +39,7 @@ __Mage Commands__ are located within the magefile.go. Mage commands should be wr
 ## Linting & Formatting Requirements
 
 Linting and formatting rules are applied to all tools and libraries based on a linting configuration set up and applied via mage commands.
+
+## Example Tool
+
+Please view the example tool in `tools/example` for an example of how to contribute a new tool to the AIO toolbox.
