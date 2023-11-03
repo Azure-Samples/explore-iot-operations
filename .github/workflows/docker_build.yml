@@ -1,0 +1,4 @@
+name: docker_build
+
+on:
+  workflow_dispatch:
