@@ -9,6 +9,12 @@ The AIO toolbox is a collection of several tools for customers of AIO. To keep t
 │   ├── library1
 │   ├── ...
 │   ├── libraryN
+├── samples
+│   ├── tool1
+│   │   ├── config.yml
+│   │   ├── config.json
+│   ├── ...
+│   ├── toolN
 ├── tools
 │   ├── tool1
 │   │   ├── cmd
@@ -29,6 +35,8 @@ The AIO toolbox is a collection of several tools for customers of AIO. To keep t
 ```
 
 __Libraries__ which are shared between multiple tools should be stored in the lib directory. This library can be incorporated into projects beyond AIO tools and such documentation will be available on the _go.dev_ documentation site.
+
+__Samples__ are configuration files which have been created for specific sample usages of a tool. Multiple configuration files can live in each sample folder for different samples which utilize the same tool.
 
 __Tools__ are AIO specific tools which may have their own internal packages stored within the pkg folder. Other top-level folders in each tool are allowed, though it is recommended to minimize the number of top-level folders. Each tool must also have its own cmd directory where the entrypoint is located.
 

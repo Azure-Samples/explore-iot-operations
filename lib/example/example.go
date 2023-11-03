@@ -7,5 +7,5 @@ type Example struct {}
 
 // Print shows that the exported symbol comments applies to functions as well.
 func (*Example) Print() {
-	fmt.Println("Example package")
+	fmt.Println("Example library")
 }
