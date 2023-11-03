@@ -20,7 +20,7 @@ This project provides the following tools:
 
 1. Use this GitHub codespace to explore Azure IoT Operations in your browser without installing anything on your local machine.
 
-   [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/aio-dev-toolbox?quickstart=1)
+   [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/explore-iot-operations?quickstart=1)
 
 1. (Optional) Enter your Azure details to store them as environment variables inside the codespace. 
 
