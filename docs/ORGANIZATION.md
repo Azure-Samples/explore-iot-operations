@@ -51,3 +51,5 @@ Linting and formatting rules are applied to all tools and libraries based on a l
 ## Example Tool
 
 Please view the example tool in `tools/example` for an example of how to contribute a new tool to the AIO toolbox.
+
+_Note_: tools can be written in any language including minimal tools such as bash scripts. The tools are written in golang in this document for example purposes.
