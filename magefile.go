@@ -35,6 +35,22 @@ var (
 )
 
 const (
+	KRILL     project = "krill"
+)
+
+var projects = []project{
+	KRILL,
+}
+
+var buildProjectPathMap map[project]string = map[project]string{
+	KRILL:     "./cmd/krill",
+}
+
+var releasePathMap map[project]string = map[project]string{
+	KRILL:  "./releases/krill/.goreleaser.yaml",
+}
+
+const (
 	// UnitTestTimeoutMs specifies the maximum amount of time a unit test will be given before it is considered failed.
 	UnitTestTimeoutMs = 3000
 
@@ -44,6 +60,69 @@ const (
 	// ExpectedOverallCoverage describes the minimum expected test coverage of the overall codebase.
 	ExpectedOverallCoverage = 85.00
 )
+
+func ensureFormatter() error {
+	return golines.Ensure()
+}
+
+func ensureLinter() error {
+	return linter.Ensure()
+}
+
+func ensureDocumenter() error {
+	return documenter.Ensure()
+}
+
+func ensureReleaser() error {
+	return releaser.Ensure()
+}
+
+func EnsureAllTools() error {
+	if err := ensureFormatter(); err != nil {
+		return err
+	}
+
+	if err := ensureLinter(); err != nil {
+		return err
+	}
+
+	if err := ensureDocumenter(); err != nil {
+		return err
+	}
+
+	if err := ensureReleaser(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Format() error {
+	if err := ensureFormatter(); err != nil {
+		return err
+	}
+
+	return golines.Command("-m 80 --no-reformat-tags --base-formatter gofmt -w .").
+		Run()
+}
+
+func Lint() error {
+	if err := ensureLinter(); err != nil {
+		return err
+	}
+
+	return linter.Command("run").Run()
+}
+
+func Doc() error {
+	if err := ensureDocumenter(); err != nil {
+		return err
+	}
+
+	return shellcmd.RunAll(
+		documenter.Command("./lib/..."),
+	)
+}
 
 // Clean clears the testing cache such that all tests are fully run again.
 // Cleaning the test cache is recommended to avoid letting flaky tests into the toolbox.
@@ -205,4 +284,59 @@ func EvaluateCoverage() error {
 	)
 
 	return nil
+}
+
+func Build(proj string) error {
+
+	path, ok := buildProjectPathMap[project(proj)]
+	if !ok {
+		return fmt.Errorf("invalid project name, must be one of the following: %v", projects)
+	}
+
+	err := EnsureAllTools()
+	if err != nil {
+		return err
+	}
+
+	err = Cover()
+	if err != nil {
+		return err
+	}
+
+	return sh.RunV("go", "build", "-o", proj, path)
+}
+
+func Release(proj string, version string, message string) error {
+
+	path, ok := releasePathMap[project(proj)]
+	if !ok {
+		return fmt.Errorf("invalid project name, must be one of the following: %v", projects)
+	}
+
+	err := EnsureAllTools()
+	if err != nil {
+		return err
+	}
+
+	err = Cover()
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("goreleaser", "check", path)
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("git", "tag", "-a", version, "-m", message)
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("git", "push", "origin", version)
+	if err != nil {
+		return err
+	}
+
+	return sh.RunV("goreleaser", "release", "--clean", "-f", path)
 }
