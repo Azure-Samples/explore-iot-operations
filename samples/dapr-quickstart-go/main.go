@@ -74,10 +74,10 @@ func main() {
 		log.Fatalf("error adding topic subscription: %v", err)
 	}
 
-	// add a service to service invocation handler
-	// if err := s.AddServiceInvocationHandler("/get-order", orderGetter(c)); err != nil {
-	// 	log.Fatalf("error adding invocation handler: %v", err)
-	// }
+	add a service to service invocation handler
+	if err := s.AddServiceInvocationHandler("/get-order", orderGetter(c)); err != nil {
+		log.Fatalf("error adding invocation handler: %v", err)
+	}
 
 	if err := s.Start(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error listening: %v", err)
@@ -99,7 +99,6 @@ func eventHandler(c dapr.Client) common.TopicEventHandler {
 		log.Printf("Order number is %d with name %s", order.Number, order.Name)
 
 		// If the order Id is an odd number, republish on a new topic
-
 		if order.Number%2 != 0 {
 
 			// PubsubName seems to be in e.Topic when published by a pure MQTT client
@@ -125,11 +124,11 @@ func oddOrdersHandler(c dapr.Client) common.TopicEventHandler {
 		}
 		log.Printf("Odd order number is %d with name %s", order.Number, order.Name)
 
-		// STATE_STORE_NAME := "aio-mq-statestore"
-		// if err := c.SaveState(ctx, STATE_STORE_NAME, strconv.FormatUint(uint64(order.Number), 10), []byte(order.Name), nil); err != nil {
-		// 	log.Printf("Error saving state: %v", err)
-		// 	return true, err
-		// }
+		STATE_STORE_NAME := "aio-mq-statestore"
+		if err := c.SaveState(ctx, STATE_STORE_NAME, strconv.FormatUint(uint64(order.Number), 10), []byte(order.Name), nil); err != nil {
+			log.Printf("Error saving state: %v", err)
+			return true, err
+		}
 
 		log.Printf("Saved order #%d", order.Number)
 
@@ -137,28 +136,28 @@ func oddOrdersHandler(c dapr.Client) common.TopicEventHandler {
 	}
 }
 
-// func orderGetter(c dapr.Client) common.ServiceInvocationHandler {
-// 	return func(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {
-// 		if in == nil {
-// 			err = errors.New("invocation parameter required")
-// 			return
-// 		}
-// 		log.Printf(
-// 			"echo - ContentType:%s, Verb:%s, QueryString:%s, %s",
-// 			in.ContentType, in.Verb, in.QueryString, in.Data,
-// 		)
+func orderGetter(c dapr.Client) common.ServiceInvocationHandler {
+	return func(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {
+		if in == nil {
+			err = errors.New("invocation parameter required")
+			return
+		}
+		log.Printf(
+			"echo - ContentType:%s, Verb:%s, QueryString:%s, %s",
+			in.ContentType, in.Verb, in.QueryString, in.Data,
+		)
 
-// 		STATE_STORE_NAME := "aio-mq-statestore"
-// 		result, _ := c.GetState(ctx, STATE_STORE_NAME, string(in.Data), nil)
+		STATE_STORE_NAME := "aio-mq-statestore"
+		result, _ := c.GetState(ctx, STATE_STORE_NAME, string(in.Data), nil)
 
-// 		out = &common.Content{
-// 			Data:        result.Value,
-// 			ContentType: in.ContentType,
-// 			DataTypeURL: in.DataTypeURL,
-// 		}
-// 		return
-// 	}
-// }
+		out = &common.Content{
+			Data:        result.Value,
+			ContentType: in.ContentType,
+			DataTypeURL: in.DataTypeURL,
+		}
+		return
+	}
+}
 
 func runHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
 	log.Printf("binding - Data:%s, Meta:%v", in.Data, in.Metadata)
