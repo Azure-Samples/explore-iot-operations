@@ -1,10 +1,14 @@
 # Azure IoT Operations Dev Toolbox
 
-The AIO dev toolbox is the source of tools, samples, and other resources for customers of AIO. It features MQTT simulation tools, 
+The AIO dev toolbox is the source of tools, samples, and other resources for customers of AIO.
+
+## Contributing
+
+Please view the developer guides in the docs directory to get started with contributions. Get started with the [Organization docs](./docs/ORGANIZATION.md).
 
 ## Features
 
-This project framework provides the following features:
+This project provides the following tools:
 
 * Krill MQTT Data Simulator
 * HTTP Callout Server
