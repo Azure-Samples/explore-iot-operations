@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -74,7 +75,7 @@ func main() {
 		log.Fatalf("error adding topic subscription: %v", err)
 	}
 
-	add a service to service invocation handler
+	// add a service to service invocation handler
 	if err := s.AddServiceInvocationHandler("/get-order", orderGetter(c)); err != nil {
 		log.Fatalf("error adding invocation handler: %v", err)
 	}
