@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "github.com/iot-for-all/device-simulation/lib/proto";
+
+message Message {
+    oneof options {
+        string string = 1;
+        int32 integer = 2;
+        double float = 3;
+        bool boolean = 4;
+    }
+    map<string, Message> map = 5;
+    repeated Message array = 6;
+}
