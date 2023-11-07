@@ -18,21 +18,23 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠙⠛⠛⠛⠛⠋⠉⠉⠁
 ```
 
-Krill is a command line utility for simulating MQTT assets.
+Krill is a highly configurable MQTT asset simulator.
 
 ## Usage
 
-`./krill [--config config_file_path] [--yaml yaml_format_bool]`
+### Krill as K8s Pod
 
-Config will be supplied with the default value of "config.yml", and the yaml boolean will be set to true. If the yaml boolean is set to false, krill will attempt to decode using JSON instead of YAML.
+`kubectl run krill --image=azbluefin.azurecr.io/krill:latest --stdin < config.yml`
+
+Krill runs as a pod within the desired cluster using the kubectl run command. The configuration of choice is provided via stdin of the krill process within the pod, provided in the command above using `--stdin < config.yml`. Alternative names for a configuration file may be used -- the command simply uses stdin piping to provide krill with an appropriate configuration.
 
 See the example YAML configuration below, with comments describing the various configurable fields.
 
-```
-ports:
-  metrics: 2113 # Port to host prometheus formatted metrics.
-  refData: 2114 # Application server port for ref data.
-logLevel: 5 # Log level (debug: 0, info: 1, warn: 2, error: 3, critical: 4, fatal: 5, panic: 6)
+```yaml
+metrics:
+  type: prometheus # Type of metrics (prometheus is the only current option).
+  port: 2114 # Port to host prometheus formatted metrics.
+logLevel: 5 # Log level (trace: 0, debug: 1, info: 2, warn: 3, error: 4, critical: 5, fatal: 6, panic: 7)
 simulation:
   target: # Target broker information.
     endpoint: localhost
@@ -85,6 +87,7 @@ simulation:
       payloadFormat: JSON # Format of message (JSON, JSONTagPerMessage, BigEndian, LittleEndian)
       topicFormat: "{{.SiteName}}/{{.AssetName}}/{{.TagName}}" # Format of topic(s).
       qosLevel: 1 # QoS level of published messages.
+      mqttVersion: v5 # MQTT protocol version to use for clients in this site (v3 or v5 permitted).
 
 ```
 
