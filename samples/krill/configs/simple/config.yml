@@ -8,7 +8,7 @@ simulation:
     port: 1883
   sites:
     - name: site0
-      mqttVersion: v3
+      mqttVersion: v5
       assetCount: 3
       tags:
         - id: float_1
