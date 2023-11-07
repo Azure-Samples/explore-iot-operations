@@ -11,5 +11,5 @@ For instructions on how to deploy and interact with this, refer to [Use Dapr to 
 To build the quickstart image, use the following command: 
 
 ```
-docker build . -t quickstart-sample:0.3 -t quickstart-sample:latest
+docker build . -t quickstart-sample:1.0 -t quickstart-sample:latest
 ```
