@@ -1,0 +1,42 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: callout
+  namespace: default
+  labels:
+    app: callout
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: callout
+  template:
+    metadata:
+      labels:
+        app: callout
+    spec:
+      containers:
+        - name: callout
+          image: azbluefin.azurecr.io/reddy-callout:stable
+          imagePullPolicy: Always
+          ports:
+            - name: http-8080
+              containerPort: 8080
+              protocol: TCP
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: callout
+  namespace: default
+  labels:
+    app: callout
+spec:
+  ports:
+    - name: http-8080
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  selector:
+    app: callout
+  type: ClusterIP
