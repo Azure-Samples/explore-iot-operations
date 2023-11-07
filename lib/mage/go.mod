@@ -1,4 +1,4 @@
-module github.com/Azure-Samples/aio-dev-toolbox/toolbox
+module github.com/Azure-Samples/aio-dev-toolbox/lib/mage
 
 go 1.21.3
 
