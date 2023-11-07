@@ -40,9 +40,7 @@ Tag and push the container to your container registry:
 
 [!TIP] The Pod definition below uses a pre-built image. Substitute with the image from your own Container registry if desired.
 
-Create a file named `pod.yaml` with the following contents:
-
-1. Update the supplied [./deploy/pod.yaml](./deploy/pod.yaml) file to use the Azure Container Registry image for the `spec.containers.image` value, and to include the image pull secret in an `spec.imagePullSecrets` section. For example:
+1. Create a file named `pod.yaml` with the following contents:
 
     ```yaml
     apiVersion: v1
@@ -57,10 +55,13 @@ Create a file named `pod.yaml` with the following contents:
         - name: mqtt-client-token
           projected:
             sources:
-            - serviceAccountToken:
-                path: mqtt-client-token
-                audience: aio-mq-dmqtt
-                expirationSeconds: 86400
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq-dmqtt
+                  expirationSeconds: 86400
+        - name: aio-mq-ca-cert-chain
+          configMap:
+            name: aio-mq-ca-cert-chain
       containers:
         - name: mqtt-client-dotnet
           image: ghcr.io/azure-samples/explore-iot-operations/mqtt-client-dotnet:latest
@@ -68,6 +69,15 @@ Create a file named `pod.yaml` with the following contents:
           volumeMounts:
             - name: mqtt-client-token
               mountPath: /var/run/secrets/tokens
+            - name: aio-mq-ca-cert-chain
+              mountPath: /certs/aio-mq-ca-cert/      
+          env:
+            - name: IOT_MQ_HOST_NAME
+              value: "aio-mq-dmqtt-frontend"
+            - name: IOT_MQ_PORT
+              value: "8883"
+            - name: IOT_MQ_TLS_ENABLED
+              value: "true"
     ```
 
 1. Deploy the pod:
