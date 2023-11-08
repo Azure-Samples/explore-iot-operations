@@ -12,6 +12,10 @@ curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec
 echo '[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh' >> ~/.bashrc && \
 echo 'eval "$(atuin init bash)"' >> ~/.bashrc
 
+# Install az iot ops extension
+# TODO: change to use official extension management method once released
+az extension add --source $(curl -w "%{url_effective}\n" -I -L -s -S https://aka.ms/aziotopscli-latest -o /dev/null) -y
+
 # This env var is important to allow k3s to support shared mounts, required for CSI driver
 # Temporary fix until made default https://github.com/k3d-io/k3d/pull/1268#issuecomment-1745466499
 export K3D_FIX_MOUNTS=1
