@@ -51,11 +51,13 @@ spec:
             VIB=$(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
 
             DATA=$(jq -n \
+                      --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")" \
                       --arg id "Sensor-$(hostname)-$$" \
                       --argjson temp "$TEMP" \
                       --argjson pres "$PRES" \
                       --argjson vib "$VIB" \
                       '{
+                        timestamp: $ts,
                         sensor_id: $id,
                         temperature: $temp,
                         pressure: $pres,
