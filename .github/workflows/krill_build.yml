@@ -1,10 +1,9 @@
 name: krill_build
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - samples/krill/**
+    tags: 
+      - 'v*.*.*'
 
 jobs:
   call-docker-build:
