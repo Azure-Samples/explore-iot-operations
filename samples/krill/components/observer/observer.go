@@ -1,7 +1,7 @@
 package observer
 
 import (
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 // Observer is an implementation of the CancellableObservable interface and serves as the observer component in the simulation framework.

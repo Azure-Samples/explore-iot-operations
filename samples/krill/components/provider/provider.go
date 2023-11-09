@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

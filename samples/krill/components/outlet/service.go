@@ -3,10 +3,10 @@ package outlet
 import (
 	"go/parser"
 
-	"github.com/iot-for-all/device-simulation/components/formatter"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/expression"
+	"github.com/explore-iot-ops/samples/krill/components/formatter"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/expression"
 )
 
 type Store component.Store[Outlet, component.ID]

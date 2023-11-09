@@ -3,9 +3,8 @@ package renderer
 import (
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/components/formatter"
-	"github.com/iot-for-all/device-simulation/lib/composition"
-	"github.com/iot-for-all/device-simulation/lib/environment"
+	"github.com/explore-iot-ops/samples/krill/components/formatter"
+	"github.com/explore-iot-ops/samples/krill/lib/composition"
 	"github.com/stretchr/testify/require"
 )
 

@@ -4,7 +4,7 @@ package broker
 import (
 	"fmt"
 
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 type Source interface {

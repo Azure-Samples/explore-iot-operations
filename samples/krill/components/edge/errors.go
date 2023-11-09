@@ -3,10 +3,9 @@ package edge
 import (
 	"fmt"
 
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/errors"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/errors"
 )
-
 
 type InvalidPositionError struct {
 	errors.BadRequest

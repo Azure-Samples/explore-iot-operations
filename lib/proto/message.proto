@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/iot-for-all/device-simulation/lib/proto";
+option go_package = "github.com/explore-iot-ops/lib/proto";
 
 message Message {
     oneof options {

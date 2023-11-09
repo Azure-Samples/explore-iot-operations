@@ -3,8 +3,8 @@ package composition
 import (
 	"sort"
 
-	"github.com/iot-for-all/device-simulation/lib/expression"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/lib/expression"
 )
 
 const (
