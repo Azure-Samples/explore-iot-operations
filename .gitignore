@@ -396,7 +396,3 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-
-bin
-cover.tmp.out
-coverage.out
