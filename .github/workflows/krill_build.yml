@@ -1,6 +1,7 @@
 name: krill_build
 
 on:
+  workflow_dispatch:
   push:
     tags: 
       - 'v*.*.*-krill'
