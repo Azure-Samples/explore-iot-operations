@@ -7,10 +7,10 @@ import (
 	"net"
 	"os"
 
+	"github.com/explore-iot-ops/lib/env"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/lib/proto"
 	"github.com/gofiber/fiber/v2"
-	"github.com/iot-for-all/device-simulation/lib/env"
-	"github.com/iot-for-all/device-simulation/lib/logger"
-	"github.com/iot-for-all/device-simulation/lib/proto"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"

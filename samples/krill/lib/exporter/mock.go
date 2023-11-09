@@ -3,7 +3,7 @@ package exporter
 import (
 	"io"
 
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 type MockExporter struct {

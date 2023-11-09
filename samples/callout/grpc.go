@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/iot-for-all/device-simulation/lib/logger"
-	"github.com/iot-for-all/device-simulation/lib/proto"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/lib/proto"
 )
 
 type GRPCMessageServer struct {

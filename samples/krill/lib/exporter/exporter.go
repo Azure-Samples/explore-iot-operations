@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 type Exporter interface {

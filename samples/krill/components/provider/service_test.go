@@ -3,12 +3,12 @@ package provider
 import (
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/counter"
-	"github.com/iot-for-all/device-simulation/lib/exporter"
-	"github.com/iot-for-all/device-simulation/lib/gauge"
-	"github.com/iot-for-all/device-simulation/lib/histogram"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/counter"
+	"github.com/explore-iot-ops/samples/krill/lib/exporter"
+	"github.com/explore-iot-ops/samples/krill/lib/gauge"
+	"github.com/explore-iot-ops/samples/krill/lib/histogram"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )

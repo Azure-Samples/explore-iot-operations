@@ -3,8 +3,8 @@ package gauge
 import (
 	"fmt"
 
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/lib/errors"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/lib/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

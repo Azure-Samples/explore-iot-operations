@@ -5,11 +5,11 @@ import (
 	"net"
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/components/broker"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/components/site"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/dialer"
+	"github.com/explore-iot-ops/samples/krill/components/broker"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/site"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/dialer"
 	"github.com/stretchr/testify/require"
 
 	mqttv5 "github.com/eclipse/paho.golang/paho"

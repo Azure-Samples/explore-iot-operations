@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/explore-iot-ops/lib/logger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/iot-for-all/device-simulation/lib/logger"
 )
 
 type InvalidMethodError struct {

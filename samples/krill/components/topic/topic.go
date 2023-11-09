@@ -2,7 +2,7 @@
 package topic
 
 import (
-	"github.com/iot-for-all/device-simulation/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 // Renderer is an interface whose implementation should be able to render a topic name when called and should also implement the registry observable interface.

@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/lib/binary"
-	"github.com/iot-for-all/device-simulation/lib/flatten"
-	"github.com/iot-for-all/device-simulation/lib/proto"
+	"github.com/explore-iot-ops/lib/proto"
+	"github.com/explore-iot-ops/samples/krill/lib/binary"
+	"github.com/explore-iot-ops/samples/krill/lib/flatten"
 	"github.com/stretchr/testify/require"
 )
 

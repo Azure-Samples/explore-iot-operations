@@ -8,9 +8,9 @@ import (
 	"errors"
 	"io"
 
-	binaryEncoder "github.com/iot-for-all/device-simulation/lib/binary"
-	"github.com/iot-for-all/device-simulation/lib/flatten"
-	protoEncoder "github.com/iot-for-all/device-simulation/lib/proto"
+	protoEncoder "github.com/explore-iot-ops/lib/proto"
+	binaryEncoder "github.com/explore-iot-ops/samples/krill/lib/binary"
+	"github.com/explore-iot-ops/samples/krill/lib/flatten"
 	"google.golang.org/protobuf/proto"
 )
 

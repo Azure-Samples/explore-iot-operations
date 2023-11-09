@@ -3,10 +3,10 @@ package node
 import (
 	"go/parser"
 
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/composition"
-	"github.com/iot-for-all/device-simulation/lib/expression"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/composition"
+	"github.com/explore-iot-ops/samples/krill/lib/expression"
 )
 
 type Store component.Store[composition.Renderer, component.ID]

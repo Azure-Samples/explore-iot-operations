@@ -7,8 +7,8 @@ import (
 
 	mqttv5 "github.com/eclipse/paho.golang/paho"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/iot-for-all/device-simulation/components/site"
-	"github.com/iot-for-all/device-simulation/lib/errors"
+	"github.com/explore-iot-ops/samples/krill/components/site"
+	"github.com/explore-iot-ops/samples/krill/lib/errors"
 	"github.com/stretchr/testify/require"
 )
 
