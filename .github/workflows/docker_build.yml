@@ -40,17 +40,14 @@ jobs:
         with:
           creds: ${{ secrets.azureCredentials }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: "Docker Login"
+      - name: Azure Docker Login
         uses: azure/docker-login@v1
         with:
           login-server: ${{ secrets.registryLoginServer }}
           username: ${{ secrets.registryUsername }}
           password: ${{ secrets.registryPassword }}
 
-      - name: Build and push
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           tags: |

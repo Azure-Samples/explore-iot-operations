@@ -6,9 +6,6 @@ on:
     paths:
       - samples/krill/**
 
-env:
-  REGISTRY: azbluefin.azurecr.io/krill
-
 jobs:
   call-docker-build:
     uses: ./.github/workflows/docker_build.yml
