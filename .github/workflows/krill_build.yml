@@ -3,13 +3,13 @@ name: krill_build
 on:
   push:
     tags: 
-      - 'v*.*.*'
+      - 'v*.*.*-krill'
 
 jobs:
   call-docker-build:
     uses: ./.github/workflows/docker_build.yml
     with:
-      registry: azbluefin.azurecr.io/krill
+      registry: makocr.azurecr.io/krill
       file: Dockerfile
       context: ./samples/krill/
     secrets:
