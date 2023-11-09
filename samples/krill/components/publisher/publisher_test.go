@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/explore-iot-ops/lib/env"
 	"github.com/explore-iot-ops/lib/logger"
 	"github.com/explore-iot-ops/samples/krill/components/client"
 	"github.com/explore-iot-ops/samples/krill/components/formatter"
@@ -14,6 +13,7 @@ import (
 	"github.com/explore-iot-ops/samples/krill/components/topic"
 	"github.com/explore-iot-ops/samples/krill/components/tracer"
 	"github.com/explore-iot-ops/samples/krill/lib/composition"
+	"github.com/explore-iot-ops/samples/krill/lib/environment"
 	"github.com/explore-iot-ops/samples/krill/lib/errors"
 
 	"github.com/stretchr/testify/require"
