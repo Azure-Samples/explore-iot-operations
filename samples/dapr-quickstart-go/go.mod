@@ -1,6 +1,6 @@
 module dapr-quickstart-go
 
-go 1.20
+go 1.21
 
 require github.com/dapr/go-sdk v1.9.1
 
