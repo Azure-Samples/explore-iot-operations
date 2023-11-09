@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/iot-for-all/device-simulation/lib/proto";
+option go_package = "github.com/explore-iot-ops/lib/proto";
 
 message Message {
     oneof options {
@@ -10,4 +10,11 @@ message Message {
     }
     map<string, Message> map = 5;
     repeated Message array = 6;
+}
+
+message Empty {
+}
+
+service Sender {
+    rpc Send(Message) returns (Empty) {}
 }

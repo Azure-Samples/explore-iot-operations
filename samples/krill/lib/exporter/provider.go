@@ -1,8 +1,8 @@
 package exporter
 
 import (
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
 )
 
 type CustomHistogramProvider struct {

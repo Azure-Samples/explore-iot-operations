@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/components/site"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/site"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

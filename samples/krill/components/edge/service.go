@@ -1,9 +1,9 @@
 package edge
 
 import (
-	"github.com/iot-for-all/device-simulation/components/node"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/composition"
+	"github.com/explore-iot-ops/samples/krill/components/node"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/composition"
 )
 
 type Store component.Store[composition.Edge, component.ID]

@@ -3,10 +3,10 @@ package formatter
 import (
 	"encoding/binary"
 
-	encoder "github.com/iot-for-all/device-simulation/lib/binary"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/flatten"
-	"github.com/iot-for-all/device-simulation/lib/proto"
+	"github.com/explore-iot-ops/lib/proto"
+	encoder "github.com/explore-iot-ops/samples/krill/lib/binary"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/flatten"
 )
 
 type Store component.Store[Formatter, component.ID]

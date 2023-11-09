@@ -3,11 +3,11 @@ package krill
 import (
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/components/edge"
-	"github.com/iot-for-all/device-simulation/components/formatter"
-	"github.com/iot-for-all/device-simulation/components/node"
-	"github.com/iot-for-all/device-simulation/components/renderer"
-	"github.com/iot-for-all/device-simulation/lib/component"
+	"github.com/explore-iot-ops/samples/krill/components/edge"
+	"github.com/explore-iot-ops/samples/krill/components/formatter"
+	"github.com/explore-iot-ops/samples/krill/components/node"
+	"github.com/explore-iot-ops/samples/krill/components/renderer"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 	"github.com/stretchr/testify/require"
 )
 

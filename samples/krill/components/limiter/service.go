@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/iot-for-all/device-simulation/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 )
 
 type Store component.Store[Limiter[struct{}], component.ID]

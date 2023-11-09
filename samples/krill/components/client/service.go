@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 
-	"github.com/iot-for-all/device-simulation/components/broker"
-	"github.com/iot-for-all/device-simulation/components/observer"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/components/site"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/dialer"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/components/broker"
+	"github.com/explore-iot-ops/samples/krill/components/observer"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/site"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/dialer"
 
 	mqttv5 "github.com/eclipse/paho.golang/paho"
 	mqttv3 "github.com/eclipse/paho.mqtt.golang"

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iot-for-all/device-simulation/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 	"github.com/stretchr/testify/require"
 )
 

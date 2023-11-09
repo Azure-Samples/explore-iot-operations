@@ -1,9 +1,9 @@
 package renderer
 
 import (
-	"github.com/iot-for-all/device-simulation/components/formatter"
-	"github.com/iot-for-all/device-simulation/components/node"
-	"github.com/iot-for-all/device-simulation/lib/component"
+	"github.com/explore-iot-ops/samples/krill/components/formatter"
+	"github.com/explore-iot-ops/samples/krill/components/node"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 )
 
 type Store component.Store[Renderer, component.ID]
