@@ -1,0 +1,22 @@
+metrics:
+  type: prometheus
+  port: 2114
+logLevel: 1
+simulation:
+  target:
+    host: localhost
+    port: 1883
+  sites:
+    - name: site0
+      mqttVersion: v5
+      assetCount: 3
+      tags:
+        - id: float_1
+          configuration: x
+          count: 1
+      rate:
+        messagesPerPeriod: 2
+        periodSeconds: 1
+        tagsPerMessage: 2
+      payloadFormat: OPCUA
+      topicFormat: /{{.SiteName}}/{{.AssetName}}

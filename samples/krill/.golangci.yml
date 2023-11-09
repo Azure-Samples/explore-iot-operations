@@ -1,0 +1,36 @@
+linters:
+  enable:
+    - gofmt
+    - gocritic
+    - gosec
+    - govet
+    - prealloc
+    - unconvert
+
+linters-settings:
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+
+    disabled-checks:
+      - redundantSprint
+      - hugeParam
+      - rangeValCopy
+      - typeDefFirst
+      - paramTypeCombine
+      - externalErrorReassign
+
+issues:
+  exclude:
+    # errcheck: Configure linter to disregard unchecked returned errors for these functions.
+    - Error return value of
+      .((os\.)?std(out|err)\..*|.*Close|.*LockRelease|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv|.*Err).
+      is not checked
+    - unnamedResult
+
+  exclude-use-default: false
+
+run:
+  go: "1.21"

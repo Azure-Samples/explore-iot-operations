@@ -1,47 +1,43 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/kubernetes-helm-minikube
 {
-    "name": "Kubernetes - k3d",
-    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    // "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
-    "build": {
-      "dockerfile": "Dockerfile"
-    },
-    "hostRequirements": {
-      "cpus": 4,
-      "memory": "8gb",
-      "storage": "32gb"
-    },
-    "features": {
-      "ghcr.io/devcontainers/features/azure-cli:1": {
-        "extensions": "connectedk8s,k8s-extension"
-      },
-      "ghcr.io/rio/features/k3d:1": {},
-      "ghcr.io/rio/features/k9s:1": {}
-    },
-    "secrets": {
-      "SUBSCRIPTION_ID": {
-        "description": "Your Azure subscription ID"
-      },
-      "RESOURCE_GROUP": {
-        "description": "Your Azure resource group"
-      },
-      "REGION": {
-        "description": "Region to use, must be one of eastus, eastus2, westus, westus2, westus3, westeurope, or northeurope.",
-        "documentationUrl": "https://review.learn.microsoft.com/en-us/azure/iot-operations/deploy/howto-prepare-cluster"
-      }
-    },
-    "containerEnv": {
-      "CLUSTER_NAME": "${localEnv:CODESPACE_NAME}"
+  "name": "Kubernetes - k3d",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  // "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "build": {
+    "dockerfile": "Dockerfile"
   },
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    // "forwardPorts": [],
-    // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "bash ./.devcontainer/postCreateCommand.sh"
-    // Use 'postStartCommand' to run commands after the container is created like starting minikube.
-    // "postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1",
-    // Configure tool-specific properties.
-    // "customizations": {},
-    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-    // "remoteUser": "root"
-  }
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "extensions": "connectedk8s,k8s-extension"
+    },
+    "ghcr.io/rio/features/k3d:1": {}
+  },
+  "secrets": {
+    "SUBSCRIPTION_ID": {
+      "description": "Your Azure subscription ID"
+    },
+    "RESOURCE_GROUP": {
+      "description": "Your Azure resource group"
+    },
+    "REGION": {
+      "description": "Region to use, must be one of eastus, eastus2, westus, westus2, westus3, westeurope, or northeurope.",
+      "documentationUrl": "https://review.learn.microsoft.com/en-us/azure/iot-operations/deploy/howto-prepare-cluster"
+    }
+  },
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "bash ./.devcontainer/postCreateCommand.sh"
+  // Use 'postStartCommand' to run commands after the container is created like starting minikube.
+  // "postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1",
+  // Configure tool-specific properties.
+  // "customizations": {},
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
