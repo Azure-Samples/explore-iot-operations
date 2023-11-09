@@ -3,7 +3,7 @@ package provider
 import (
 	"fmt"
 
-	"github.com/iot-for-all/device-simulation/lib/errors"
+	"github.com/explore-iot-ops/samples/krill/lib/errors"
 )
 
 type InvalidTypeError struct {

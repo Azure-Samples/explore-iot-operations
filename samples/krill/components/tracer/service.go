@@ -1,10 +1,10 @@
 package tracer
 
 import (
-	"github.com/iot-for-all/device-simulation/components/observer"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/components/observer"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 )
 
 type Store component.Store[Tracer, component.ID]

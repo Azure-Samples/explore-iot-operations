@@ -1,7 +1,7 @@
 // Package site provides the implementation of the site component of the simulation framework.
 package site
 
-import "github.com/iot-for-all/device-simulation/components/registry"
+import "github.com/explore-iot-ops/samples/krill/components/registry"
 
 type Site interface {
 	Render() string

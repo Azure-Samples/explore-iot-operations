@@ -3,9 +3,9 @@ package outlet
 import (
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/components/formatter"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/lib/component"
+	"github.com/explore-iot-ops/samples/krill/components/formatter"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 	"github.com/stretchr/testify/require"
 )
 

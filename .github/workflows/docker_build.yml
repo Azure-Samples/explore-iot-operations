@@ -1,17 +1,60 @@
 name: docker_build
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - release/*
+  workflow_call:
+    inputs:
+      registry:
+        required: true
+        type: string
+      file:
+        required: true
+        type: string
+      context:
+        required: true
+        type: string
+    secrets:
+      azureCredentials:
+        required: true
+      registryLoginServer:
+        required: true
+      registryUsername:
+        required: true
+      registryPassword:
+        required: true
 
 jobs:
   docker_build:
-    name: 'Build docker containers'
+    name: "Build docker containers and push to registry"
     runs-on: ubuntu-latest
 
     defaults:
       run:
         shell: bash
-    
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login with Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azureCredentials }}
+
+      - name: Azure Docker Login
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.registryLoginServer }}
+          username: ${{ secrets.registryUsername }}
+          password: ${{ secrets.registryPassword }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          tags: |
+            ${{ inputs.registry }}:latest
+            ${{ inputs.registry }}:${{ github.sha }}
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

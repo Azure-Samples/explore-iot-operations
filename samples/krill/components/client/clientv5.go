@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
 )
 
 // Clientv5 is a full PublisherSubscriber implementation which follows the MQTTv5 client protocol.

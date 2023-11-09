@@ -3,13 +3,13 @@ package subscriber
 import (
 	"testing"
 
-	"github.com/iot-for-all/device-simulation/components/client"
-	"github.com/iot-for-all/device-simulation/components/outlet"
-	"github.com/iot-for-all/device-simulation/components/registry"
-	"github.com/iot-for-all/device-simulation/components/topic"
-	"github.com/iot-for-all/device-simulation/components/tracer"
-	"github.com/iot-for-all/device-simulation/lib/component"
-	"github.com/iot-for-all/device-simulation/lib/logger"
+	"github.com/explore-iot-ops/lib/logger"
+	"github.com/explore-iot-ops/samples/krill/components/client"
+	"github.com/explore-iot-ops/samples/krill/components/outlet"
+	"github.com/explore-iot-ops/samples/krill/components/registry"
+	"github.com/explore-iot-ops/samples/krill/components/topic"
+	"github.com/explore-iot-ops/samples/krill/components/tracer"
+	"github.com/explore-iot-ops/samples/krill/lib/component"
 	"github.com/stretchr/testify/require"
 )
 
