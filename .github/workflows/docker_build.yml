@@ -53,6 +53,7 @@ jobs:
           tags: |
             ${{ inputs.registry }}:latest
             ${{ inputs.registry }}:${{ github.sha }}
+            ${{ inputs.registry }}:${{ github.ref_name }}
           context: ${{ inputs.context }}
           file: ${{ inputs.file }}
           push: true

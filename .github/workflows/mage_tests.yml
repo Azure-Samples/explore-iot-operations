@@ -1,0 +1,17 @@
+name: mage_tests
+
+on:
+  workflow_call:
+
+jobs:
+  mage_test:
+    name: "Runs golang tests using mage command provided in libraries"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
