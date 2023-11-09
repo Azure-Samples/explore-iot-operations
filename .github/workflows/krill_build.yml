@@ -1,0 +1,23 @@
+name: krill_build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - samples/krill/**
+
+env:
+  REGISTRY: azbluefin.azurecr.io/krill
+
+jobs:
+  call-docker-build:
+    uses: ./.github/workflows/docker_build.yml
+    with:
+      registry: azbluefin.azurecr.io/krill
+      file: Dockerfile
+      context: ./samples/krill/
+    secrets:
+      azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
+      registryLoginServer: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+      registryUsername: ${{ secrets.REGISTRY_USERNAME }}
+      registryPassword: ${{ secrets.REGISTRY_PASSWORD }}

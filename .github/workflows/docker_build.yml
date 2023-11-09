@@ -1,49 +1,63 @@
 name: docker_build
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - release/*
-
-env:
-  REGISTRY: azbluefin.azurecr.io 
+  workflow_call:
+    inputs:
+      registry:
+        required: true
+        type: string
+      file:
+        required: true
+        type: string
+      context:
+        required: true
+        type: string
+    secrets:
+      azureCredentials:
+        required: true
+      registryLoginServer:
+        required: true
+      registryUsername:
+        required: true
+      registryPassword:
+        required: true
 
 jobs:
   docker_build:
-    name: 'Build docker containers'
+    name: "Build docker containers and push to registry"
     runs-on: ubuntu-latest
 
     defaults:
       run:
         shell: bash
-    
+
     steps:
-      - name: 'Checkout'
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 'Login with Azure CLI'
+      - name: Login with Azure CLI
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+          creds: ${{ secrets.azureCredentials }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 'Docker Login'
+      - name: "Docker Login"
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          login-server: ${{ secrets.registryLoginServer }}
+          username: ${{ secrets.registryUsername }}
+          password: ${{ secrets.registryPassword }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           tags: |
-            azbluefin.azurecr.io:latest
-            azbluefin.azurecr.io:${{ github.sha }}
-          context: .
+            ${{ inputs.registry }}:latest
+            ${{ inputs.registry }}:${{ github.sha }}
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
