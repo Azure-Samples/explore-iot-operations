@@ -12,6 +12,7 @@ import (
 	"github.com/explore-iot-ops/samples/krill/components/renderer"
 	"github.com/explore-iot-ops/samples/krill/components/topic"
 	"github.com/explore-iot-ops/samples/krill/components/tracer"
+	"github.com/explore-iot-ops/samples/krill/lib/environment"
 )
 
 // Publisher is a component which routinely publishes messages on a provided topic name.

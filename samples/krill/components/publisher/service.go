@@ -12,6 +12,7 @@ import (
 	"github.com/explore-iot-ops/samples/krill/components/topic"
 	"github.com/explore-iot-ops/samples/krill/components/tracer"
 	"github.com/explore-iot-ops/samples/krill/lib/component"
+	"github.com/explore-iot-ops/samples/krill/lib/environment"
 )
 
 type Store component.Store[*Publisher, component.ID]

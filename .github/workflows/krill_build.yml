@@ -12,7 +12,7 @@ jobs:
     with:
       registry: makocr.azurecr.io/krill
       file: samples/krill/Dockerfile
-      context: samples/krill/
+      context: .
     secrets:
       azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
       registryLoginServer: ${{ secrets.REGISTRY_LOGIN_SERVER }}
