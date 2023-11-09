@@ -11,3 +11,10 @@ message Message {
     map<string, Message> map = 5;
     repeated Message array = 6;
 }
+
+message Empty {
+}
+
+service Sender {
+    rpc Send(Message) returns (Empty) {}
+}
