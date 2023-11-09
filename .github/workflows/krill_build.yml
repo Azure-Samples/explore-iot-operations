@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/docker_build.yml
     with:
       registry: makocr.azurecr.io/krill
-      file: Dockerfile
+      file: samples/krill/Dockerfile
       context: samples/krill/
     secrets:
       azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
