@@ -1,0 +1,6 @@
+
+
+CREATE TABLE (...)
+
+ENTRY ...
+INSERT INTO table ROWS ...

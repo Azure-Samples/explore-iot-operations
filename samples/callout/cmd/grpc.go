@@ -23,6 +23,7 @@ func NewGRPCMessageServer(
 	server := &GRPCMessageServer{
 		outputs: outputs,
 		encoder: encoder,
+		Logger:  &logger.NoopLogger{},
 	}
 
 	for _, option := range options {
