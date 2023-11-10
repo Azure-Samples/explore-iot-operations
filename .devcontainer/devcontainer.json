@@ -30,6 +30,9 @@
       "documentationUrl": "https://learn.microsoft.com/azure/iot-operations/deploy/howto-prepare-cluster"
     }
   },
+  "containerEnv": {
+    "K3D_FIX_MOUNTS": "1"
+  },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
   // Use 'postCreateCommand' to run commands after the container is created.
