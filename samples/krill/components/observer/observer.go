@@ -15,11 +15,11 @@ type Observer struct {
 // It will register the observer with the registry when called.
 func NewObserver(
 	observable registry.CancellableObservable,
-	registry registry.Registry,
+	reg registry.Registry,
 ) *Observer {
 	observer := &Observer{
 		observable: observable,
-		registry:   registry,
+		registry:   reg,
 	}
 
 	observer.ID = observer.registry.Register(observer)

@@ -51,41 +51,53 @@ func TestService(t *testing.T) {
 }
 
 func TestServiceFormatterError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[formatter.Formatter, component.ID]{
-		OnGet: func(identifier component.ID) (formatter.Formatter, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[formatter.Formatter, component.ID]{
+			OnGet: func(identifier component.ID) (formatter.Formatter, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)
 }
 
 func TestServiceRegistryError(t *testing.T) {
-	service := NewService(nil, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)
 }
 
 func TestServiceParserError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[formatter.Formatter, component.ID]{
-		OnGet: func(identifier component.ID) (formatter.Formatter, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		&component.MockStore[formatter.Formatter, component.ID]{
+			OnGet: func(identifier component.ID) (formatter.Formatter, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Error(t, err)

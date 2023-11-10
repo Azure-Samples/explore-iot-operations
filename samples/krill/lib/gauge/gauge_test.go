@@ -25,7 +25,8 @@ func TestSimpleGaugeProvider(t *testing.T) {
 
 	require.NoError(t, err)
 
-	gaugeProvider.Cancel()
+	err = gaugeProvider.Cancel()
+	require.NoError(t, err)
 }
 
 func TestGaugeProviderWithInvalidName(t *testing.T) {

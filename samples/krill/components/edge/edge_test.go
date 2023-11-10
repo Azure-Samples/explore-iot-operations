@@ -71,7 +71,11 @@ func TestEdgeServicePosition(t *testing.T) {
 					OnWith: func(e composition.Edge) composition.Node {
 						res, ok := e.(*composition.Position)
 						require.True(t, ok)
-						require.Equal(t, MockPositionEdgeConfiguration, res.Edge())
+						require.Equal(
+							t,
+							MockPositionEdgeConfiguration,
+							res.Edge(),
+						)
 						return nil
 					},
 				}, nil
@@ -92,11 +96,14 @@ func TestEdgeServicePosition(t *testing.T) {
 }
 
 func TestEdgeServiceInvalidEdgeType(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return &composition.MockNode{}, nil
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return &composition.MockNode{}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId: MockParentNodeID,
@@ -123,11 +130,14 @@ func TestEdgeServiceIdentifierConflict(t *testing.T) {
 }
 
 func TestEdgeServiceParentNodeStoreGetError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId: MockParentNodeID,
@@ -136,14 +146,17 @@ func TestEdgeServiceParentNodeStoreGetError(t *testing.T) {
 }
 
 func TestEdgeServiceChildNodeStoreGetError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			if identifier == MockParentNodeID {
-				return &composition.MockNode{}, nil
-			}
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				if identifier == MockParentNodeID {
+					return &composition.MockNode{}, nil
+				}
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId: MockParentNodeID,
@@ -152,11 +165,14 @@ func TestEdgeServiceChildNodeStoreGetError(t *testing.T) {
 }
 
 func TestEdgeServiceInvalidParentNodeType(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return &composition.MockRenderer{}, nil
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return &composition.MockRenderer{}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId: MockParentNodeID,
@@ -168,11 +184,14 @@ func TestEdgeServiceInvalidParentNodeType(t *testing.T) {
 }
 
 func TestEdgeServiceInvalidLabelConfiguration(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return &composition.MockNode{}, nil
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return &composition.MockNode{}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId:  MockParentNodeID,
@@ -185,11 +204,14 @@ func TestEdgeServiceInvalidLabelConfiguration(t *testing.T) {
 }
 
 func TestEdgeServiceInvalidPositionConfiguration(t *testing.T) {
-	service := NewService(nil, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return &composition.MockNode{}, nil
+	service := NewService(
+		nil,
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return &composition.MockNode{}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		ParentNodeId:  MockParentNodeID,

@@ -23,7 +23,11 @@ func NewStore() Store {
 	return component.New[Tracer, component.ID]()
 }
 
-func NewService(store Store, registryStore registry.Store, options ...func(*Service)) *Service {
+func NewService(
+	store Store,
+	registryStore registry.Store,
+	options ...func(*Service),
+) *Service {
 	service := &Service{
 		Store:         store,
 		registryStore: registryStore,

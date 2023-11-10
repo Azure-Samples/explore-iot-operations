@@ -25,7 +25,9 @@ func TestSimpleCounterProvider(t *testing.T) {
 
 	require.NoError(t, err)
 
-	counterProvider.Cancel()
+	err = counterProvider.Cancel()
+
+	require.NoError(t, err)
 }
 
 func TestCounterProviderWithInvalidName(t *testing.T) {

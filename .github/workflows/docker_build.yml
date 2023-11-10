@@ -56,5 +56,13 @@ jobs:
           context: ${{ inputs.context }}
           file: ${{ inputs.file }}
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      - name: Build and Push if Pushed with Tag
+        uses: docker/build-push-action@v5
+        with:
+          tags: |
+            ${{ inputs.registry }}:${{ github.ref_name }}
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
+          push: true
+        if: ${{ github.event_name == 'push' }}

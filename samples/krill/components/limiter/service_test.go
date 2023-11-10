@@ -26,15 +26,18 @@ func TestLimiterService(t *testing.T) {
 
 	expectedDuration := time.Duration(MockPeriodSeconds) * time.Second
 
-	service := NewService(context.Background(), &component.MockStore[Limiter[struct{}], component.ID]{
-		OnCreate: func(entity Limiter[struct{}], identifier component.ID) error {
-			res, ok := entity.(*TimedLimiter[struct{}])
-			require.True(t, ok)
-			require.Equal(t, MockLimit, res.Limit)
-			require.Equal(t, expectedDuration, res.Period)
-			return nil
+	service := NewService(
+		context.Background(),
+		&component.MockStore[Limiter[struct{}], component.ID]{
+			OnCreate: func(entity Limiter[struct{}], identifier component.ID) error {
+				res, ok := entity.(*TimedLimiter[struct{}])
+				require.True(t, ok)
+				require.Equal(t, MockLimit, res.Limit)
+				require.Equal(t, expectedDuration, res.Period)
+				return nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		PeriodSeconds: MockPeriodSeconds,

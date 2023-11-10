@@ -5,13 +5,15 @@ import (
 	"os"
 )
 
-
 type InvalidVolumePath struct {
 	path string
 }
 
 func (err *InvalidVolumePath) Error() string {
-	return fmt.Sprintf("no storage directory exists at path %s, please check for misconfigurations", err.path)
+	return fmt.Sprintf(
+		"no storage directory exists at path %s, please check for misconfigurations",
+		err.path,
+	)
 }
 
 func Stat(path string) error {

@@ -43,7 +43,10 @@ func TestBasicTypeArray(t *testing.T) {
 func TestBasicTypeMap(t *testing.T) {
 	flattener := New()
 
-	fields, err := flattener.Flatten("key", map[string]any{"field_0": "1", "field_1": 2.0})
+	fields, err := flattener.Flatten(
+		"key",
+		map[string]any{"field_0": "1", "field_1": 2.0},
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(fields))
@@ -59,11 +62,22 @@ func TestBasicTypeMap(t *testing.T) {
 func TestComplexTypeMap(t *testing.T) {
 	flattener := New()
 
-	fields, err := flattener.Flatten("key", map[string]any{"field_0": "1", "field_1": []any{2, "3"}})
+	fields, err := flattener.Flatten(
+		"key",
+		map[string]any{"field_0": "1", "field_1": []any{2, "3"}},
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, 3, len(fields))
-	require.ElementsMatch(t, []Field{{Key: "key__field_0", Value: "1"}, {Key: "key__field_1__field_0", Value: "2"}, {Key: "key__field_1__field_1", Value: "3"}}, fields)
+	require.ElementsMatch(
+		t,
+		[]Field{
+			{Key: "key__field_0", Value: "1"},
+			{Key: "key__field_1__field_0", Value: "2"},
+			{Key: "key__field_1__field_1", Value: "3"},
+		},
+		fields,
+	)
 }
 
 func TestDatetime(t *testing.T) {
@@ -75,7 +89,11 @@ func TestDatetime(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, 1, len(fields))
-	require.Equal(t, []Field{{Key: "key", Value: flattener.FormatDatetime(ts)}}, fields)
+	require.Equal(
+		t,
+		[]Field{{Key: "key", Value: flattener.FormatDatetime(ts)}},
+		fields,
+	)
 }
 
 func TestInvalidType(t *testing.T) {

@@ -24,7 +24,11 @@ func NewStore() Store {
 	return component.New[*Observer, component.ID]()
 }
 
-func NewService(store Store, registryStore registry.Store, providerStore provider.Store) *Service {
+func NewService(
+	store Store,
+	registryStore registry.Store,
+	providerStore provider.Store,
+) *Service {
 	return &Service{
 		Store:         store,
 		registryStore: registryStore,
