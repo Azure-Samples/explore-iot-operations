@@ -78,7 +78,7 @@ func run() error {
 	outputs := NewOutputCollection(
 		configuration.Outputs,
 		func(oc *OutputCollection) {
-			oc.Logger = lg
+			oc.Logger = lg.Tag("outputs")
 		},
 	)
 
@@ -88,7 +88,7 @@ func run() error {
 	}
 
 	httpServer := New(app, configuration.HTTPServer, outputs, func(s *Server) {
-		s.Logger = lg
+		s.Logger = lg.Tag("server").Tag("http")
 	})
 
 	grpcOutputs := make([]Out, len(configuration.GRPCServer.Outputs))
@@ -100,7 +100,9 @@ func run() error {
 		grpcOutputs[index] = o
 	}
 
-	messageServer := NewGRPCMessageServer(grpcOutputs, &proto.ProtoEncoder{})
+	messageServer := NewGRPCMessageServer(grpcOutputs, &proto.ProtoEncoder{}, func(gs *GRPCMessageServer) {
+		gs.Logger = lg.Tag("server").Tag("grpc")
+	})
 	grpcServer := grpc.NewServer()
 	proto.RegisterSenderServer(grpcServer, messageServer)
 
