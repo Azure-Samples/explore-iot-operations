@@ -25,9 +25,9 @@
     "RESOURCE_GROUP": {
       "description": "Your Azure resource group"
     },
-    "REGION": {
+    "LOCATION": {
       "description": "Region to use, must be one of eastus, eastus2, westus, westus2, westus3, westeurope, or northeurope.",
-      "documentationUrl": "https://review.learn.microsoft.com/en-us/azure/iot-operations/deploy/howto-prepare-cluster"
+      "documentationUrl": "https://learn.microsoft.com/azure/iot-operations/deploy/howto-prepare-cluster"
     }
   },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
