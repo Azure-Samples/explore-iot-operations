@@ -119,7 +119,11 @@ func TestFiberErrorHandlerSendError(t *testing.T) {
 						require.Equal(t, (Mock{}).Error(), s2)
 						return feh.Logger
 					}, OnPrintf: func(s string, i ...interface{}) {
-						require.Equal(t, "error occurred when handling error", s)
+						require.Equal(
+							t,
+							"error occurred when handling error",
+							s,
+						)
 					},
 				}
 			},

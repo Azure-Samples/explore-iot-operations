@@ -10,7 +10,9 @@ WORKDIR /workdir/samples/krill
 
 RUN go mod download
 
-RUN go fmt ./...
+RUN go install github.com/magefile/mage@latest
+
+RUN mage ci
 
 RUN go build -o ./bin/krill ./cmd/krill
 

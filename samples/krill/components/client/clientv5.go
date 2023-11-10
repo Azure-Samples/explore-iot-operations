@@ -35,7 +35,9 @@ func (client *Clientv5) Connect() error {
 		CleanStart: true,
 	})
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).Printf("an error occurred when connecting to the broker")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			Printf("an error occurred when connecting to the broker")
 		return err
 	}
 	close(client.onConnect)
@@ -48,7 +50,9 @@ func (client *Clientv5) Disconnect() error {
 	client.Debug.Printf("attempting to disconnect from broker")
 	err := client.conn.Disconnect(&paho.Disconnect{})
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).Printf("an error occurred when disconnecting from the broker")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			Printf("an error occurred when disconnecting from the broker")
 		return err
 	}
 	close(client.onDisconnect)
@@ -63,7 +67,9 @@ func (client *Clientv5) Publish(
 	messagesRetained bool,
 	data []byte,
 ) error {
-	client.Trace.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("publishing new message")
+	client.Trace.With("topic", topic).
+		With("qos", fmt.Sprintf("%b", qos)).
+		Printf("publishing new message")
 	_, err := client.conn.Publish(client.ctx, &paho.Publish{
 		QoS:     qos,
 		Retain:  messagesRetained,
@@ -71,7 +77,11 @@ func (client *Clientv5) Publish(
 		Payload: data,
 	})
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("message publish failed")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			With("topic", topic).
+			With("qos", fmt.Sprintf("%b", qos)).
+			Printf("message publish failed")
 		return err
 	}
 
@@ -85,7 +95,9 @@ func (client *Clientv5) Subscribe(
 	qos byte,
 	onReceived func([]byte),
 ) error {
-	client.Debug.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("attempting new subscription")
+	client.Debug.With("topic", topic).
+		With("qos", fmt.Sprintf("%b", qos)).
+		Printf("attempting new subscription")
 
 	_, err := client.conn.Subscribe(client.ctx, &paho.Subscribe{
 		Subscriptions: map[string]paho.SubscribeOptions{
@@ -95,12 +107,18 @@ func (client *Clientv5) Subscribe(
 		},
 	})
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("failed to subscribe to the broker")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			With("topic", topic).
+			With("qos", fmt.Sprintf("%b", qos)).
+			Printf("failed to subscribe to the broker")
 		return err
 	}
 
 	client.conn.RegisterHandler(topic, func(p *paho.Publish) {
-		client.Trace.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("message received from broker")
+		client.Trace.With("topic", topic).
+			With("qos", fmt.Sprintf("%b", qos)).
+			Printf("message received from broker")
 		onReceived(p.Payload)
 	})
 
@@ -117,7 +135,10 @@ func (client *Clientv5) Unsubscribe(topic string) error {
 		Topics: []string{topic},
 	})
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).With("topic", topic).Printf("failed to unsubscribe from the broker")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			With("topic", topic).
+			Printf("failed to unsubscribe from the broker")
 		return err
 	}
 

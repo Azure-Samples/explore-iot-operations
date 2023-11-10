@@ -25,15 +25,18 @@ func TestStore(t *testing.T) {
 }
 
 func TestServiceExpression(t *testing.T) {
-	service := NewService(&component.MockStore[composition.Renderer, component.ID]{
-		OnCreate: func(entity composition.Renderer, identifier component.ID) error {
-			_, ok := entity.(*composition.Expression)
-			require.True(t, ok)
-			return nil
+	service := NewService(
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnCreate: func(entity composition.Renderer, identifier component.ID) error {
+				_, ok := entity.(*composition.Expression)
+				require.True(t, ok)
+				return nil
+			},
 		},
-	}, func(s *Service) {
-		s.Logger = &logger.NoopLogger{}
-	})
+		func(s *Service) {
+			s.Logger = &logger.NoopLogger{}
+		},
+	)
 
 	err := service.Create(MockID, &Component{
 		Type:          EXPRESSION,
@@ -43,13 +46,15 @@ func TestServiceExpression(t *testing.T) {
 }
 
 func TestServiceCollection(t *testing.T) {
-	service := NewService(&component.MockStore[composition.Renderer, component.ID]{
-		OnCreate: func(entity composition.Renderer, identifier component.ID) error {
-			_, ok := entity.(*composition.Collection)
-			require.True(t, ok)
-			return nil
+	service := NewService(
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnCreate: func(entity composition.Renderer, identifier component.ID) error {
+				_, ok := entity.(*composition.Collection)
+				require.True(t, ok)
+				return nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: COLLECTION,
@@ -58,13 +63,15 @@ func TestServiceCollection(t *testing.T) {
 }
 
 func TestServiceArray(t *testing.T) {
-	service := NewService(&component.MockStore[composition.Renderer, component.ID]{
-		OnCreate: func(entity composition.Renderer, identifier component.ID) error {
-			_, ok := entity.(*composition.Array)
-			require.True(t, ok)
-			return nil
+	service := NewService(
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnCreate: func(entity composition.Renderer, identifier component.ID) error {
+				_, ok := entity.(*composition.Array)
+				require.True(t, ok)
+				return nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: ARRAY,
@@ -73,13 +80,15 @@ func TestServiceArray(t *testing.T) {
 }
 
 func TestServiceTypeError(t *testing.T) {
-	service := NewService(&component.MockStore[composition.Renderer, component.ID]{
-		OnCreate: func(entity composition.Renderer, identifier component.ID) error {
-			_, ok := entity.(*composition.Array)
-			require.True(t, ok)
-			return nil
+	service := NewService(
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnCreate: func(entity composition.Renderer, identifier component.ID) error {
+				_, ok := entity.(*composition.Array)
+				require.True(t, ok)
+				return nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: MockInvalidType,

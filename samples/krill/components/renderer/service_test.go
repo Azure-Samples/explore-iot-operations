@@ -47,15 +47,19 @@ func TestRendererService(t *testing.T) {
 }
 
 func TestRendererServiceNodeStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[formatter.Formatter, component.ID]{
-		OnGet: func(identifier component.ID) (formatter.Formatter, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		&component.MockStore[formatter.Formatter, component.ID]{
+			OnGet: func(identifier component.ID) (formatter.Formatter, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[composition.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (composition.Renderer, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[composition.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (composition.Renderer, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		FormatterID: MockFormatterID,
@@ -65,11 +69,15 @@ func TestRendererServiceNodeStoreError(t *testing.T) {
 }
 
 func TestRendererServiceFormatterStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[formatter.Formatter, component.ID]{
-		OnGet: func(identifier component.ID) (formatter.Formatter, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[formatter.Formatter, component.ID]{
+			OnGet: func(identifier component.ID) (formatter.Formatter, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil)
+		nil,
+	)
 
 	err := service.Create(MockID, &Component{
 		FormatterID: MockFormatterID,

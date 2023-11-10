@@ -40,48 +40,55 @@ func TestServiceClientV5(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, &component.MockStore[PublisherSubscriber, component.ID]{
-		OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
-			require.Equal(t, MockID, string(identifier))
-			return nil
-		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			require.Equal(t, MockRegistryID, string(identifier))
-			return &registry.MockRegistry{}, nil
-		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			require.Equal(t, MockBrokerID, string(identifier))
-			return &broker.MockBroker{
-				OnEndpoint: func() string {
-					return MockEndpoint
-				},
-			}, nil
-		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			require.Equal(t, MockSiteID, string(identifier))
-			return &site.MockSite{
-				OnRender: func() string {
-					return MockSite
-				},
-			}, nil
-		},
-	}, func(s *Service) {
-		s.Dialer = &dialer.MockDialer{
-			OnDial: func(network, address string) (net.Conn, error) {
-				return &dialer.NoopConn{}, nil
+	service := NewService(
+		ctx,
+		&component.MockStore[PublisherSubscriber, component.ID]{
+			OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
+				require.Equal(t, MockID, string(identifier))
+				return nil
 			},
-		}
-		s.CreateV5Conn = func(conn *mqttv5.Client) V5Conn {
-			return &MockV5Wrapper{
-				OnConnect: func(ctx context.Context, cp *mqttv5.Connect) (*mqttv5.Connack, error) {
-					return nil, nil
+		},
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				require.Equal(t, MockRegistryID, string(identifier))
+				return &registry.MockRegistry{}, nil
+			},
+		},
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				require.Equal(t, MockBrokerID, string(identifier))
+				return &broker.MockBroker{
+					OnEndpoint: func() string {
+						return MockEndpoint
+					},
+				}, nil
+			},
+		},
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				require.Equal(t, MockSiteID, string(identifier))
+				return &site.MockSite{
+					OnRender: func() string {
+						return MockSite
+					},
+				}, nil
+			},
+		},
+		func(s *Service) {
+			s.Dialer = &dialer.MockDialer{
+				OnDial: func(network, address string) (net.Conn, error) {
+					return &dialer.NoopConn{}, nil
 				},
 			}
-		}
-	})
+			s.CreateV5Conn = func(conn *mqttv5.Client) V5Conn {
+				return &MockV5Wrapper{
+					OnConnect: func(ctx context.Context, cp *mqttv5.Connect) (*mqttv5.Connack, error) {
+						return nil, nil
+					},
+				}
+			}
+		},
+	)
 
 	err := service.Create(MockID, &Component{
 		RegistryID: MockRegistryID,
@@ -96,56 +103,63 @@ func TestServiceClientV3(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, &component.MockStore[PublisherSubscriber, component.ID]{
-		OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
-			require.Equal(t, MockID, string(identifier))
-			return nil
+	service := NewService(
+		ctx,
+		&component.MockStore[PublisherSubscriber, component.ID]{
+			OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
+				require.Equal(t, MockID, string(identifier))
+				return nil
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			require.Equal(t, MockRegistryID, string(identifier))
-			return &registry.MockRegistry{}, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				require.Equal(t, MockRegistryID, string(identifier))
+				return &registry.MockRegistry{}, nil
+			},
 		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			require.Equal(t, MockBrokerID, string(identifier))
-			return &broker.MockBroker{
-				OnEndpoint: func() string {
-					return MockEndpoint
-				},
-			}, nil
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				require.Equal(t, MockBrokerID, string(identifier))
+				return &broker.MockBroker{
+					OnEndpoint: func() string {
+						return MockEndpoint
+					},
+				}, nil
+			},
 		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			require.Equal(t, MockSiteID, string(identifier))
-			return &site.MockSite{
-				OnRender: func() string {
-					return MockSite
-				},
-			}, nil
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				require.Equal(t, MockSiteID, string(identifier))
+				return &site.MockSite{
+					OnRender: func() string {
+						return MockSite
+					},
+				}, nil
+			},
 		},
-	}, func(s *Service) {
-		s.CreateV3Conn = func(o *mqttv3.ClientOptions) mqttv3.Client {
-			require.Equal(t, MockEndpoint, o.Servers[0].Host)
-			require.Equal(t, MockName, o.ClientID)
-			require.Equal(t, MockPassword, o.Password)
-			require.Equal(t, MockUsername, o.Username)
-			require.True(t, o.CleanSession)
-			return &MockV3Conn{
-				OnConnect: func() mqttv3.Token {
-					return &MockToken{
-						OnDone: func() <-chan struct{} {
-							c := make(chan struct{})
-							close(c)
-							return c
-						}, OnError: func() error {
-							return nil
-						},
-					}
-				},
+		func(s *Service) {
+			s.CreateV3Conn = func(o *mqttv3.ClientOptions) mqttv3.Client {
+				require.Equal(t, MockEndpoint, o.Servers[0].Host)
+				require.Equal(t, MockName, o.ClientID)
+				require.Equal(t, MockPassword, o.Password)
+				require.Equal(t, MockUsername, o.Username)
+				require.True(t, o.CleanSession)
+				return &MockV3Conn{
+					OnConnect: func() mqttv3.Token {
+						return &MockToken{
+							OnDone: func() <-chan struct{} {
+								c := make(chan struct{})
+								close(c)
+								return c
+							}, OnError: func() error {
+								return nil
+							},
+						}
+					},
+				}
 			}
-		}
-	})
+		},
+	)
 
 	err := service.Create(MockID, &Component{
 		RegistryID:        MockRegistryID,
@@ -164,31 +178,37 @@ func TestServiceInvalidClientType(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, &component.MockStore[PublisherSubscriber, component.ID]{
-		OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
-			return nil
+	service := NewService(
+		ctx,
+		&component.MockStore[PublisherSubscriber, component.ID]{
+			OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
+				return nil
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return &registry.MockRegistry{}, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return &registry.MockRegistry{}, nil
+			},
 		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			return &broker.MockBroker{
-				OnEndpoint: func() string {
-					return MockEndpoint
-				},
-			}, nil
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				return &broker.MockBroker{
+					OnEndpoint: func() string {
+						return MockEndpoint
+					},
+				}, nil
+			},
 		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			return &site.MockSite{
-				OnRender: func() string {
-					return MockSite
-				},
-			}, nil
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				return &site.MockSite{
+					OnRender: func() string {
+						return MockSite
+					},
+				}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		RegistryID:        MockRegistryID,
@@ -209,51 +229,58 @@ func TestServiceClientV3ConnectionError(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, &component.MockStore[PublisherSubscriber, component.ID]{
-		OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
-			return nil
+	service := NewService(
+		ctx,
+		&component.MockStore[PublisherSubscriber, component.ID]{
+			OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
+				return nil
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return &registry.MockRegistry{}, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return &registry.MockRegistry{}, nil
+			},
 		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			return &broker.MockBroker{
-				OnEndpoint: func() string {
-					return MockEndpoint
-				},
-			}, nil
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				return &broker.MockBroker{
+					OnEndpoint: func() string {
+						return MockEndpoint
+					},
+				}, nil
+			},
 		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			return &site.MockSite{
-				OnRender: func() string {
-					return MockSite
-				},
-			}, nil
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				return &site.MockSite{
+					OnRender: func() string {
+						return MockSite
+					},
+				}, nil
+			},
 		},
-	}, func(s *Service) {
-		s.CreateV3Conn = func(o *mqttv3.ClientOptions) mqttv3.Client {
-			return &MockV3Conn{
-				OnConnect: func() mqttv3.Token {
-					return &MockToken{
-						OnDone: func() <-chan struct{} {
-							c := make(chan struct{})
-							close(c)
-							return c
-						}, OnError: func() error {
-							return &component.MockError{
-								OnError: func() string {
-									return ""
-								},
-							}
-						},
-					}
-				},
+		func(s *Service) {
+			s.CreateV3Conn = func(o *mqttv3.ClientOptions) mqttv3.Client {
+				return &MockV3Conn{
+					OnConnect: func() mqttv3.Token {
+						return &MockToken{
+							OnDone: func() <-chan struct{} {
+								c := make(chan struct{})
+								close(c)
+								return c
+							}, OnError: func() error {
+								return &component.MockError{
+									OnError: func() string {
+										return ""
+									},
+								}
+							},
+						}
+					},
+				}
 			}
-		}
-	})
+		},
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: V3,
@@ -266,37 +293,44 @@ func TestServiceClientV5DialError(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, &component.MockStore[PublisherSubscriber, component.ID]{
-		OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
-			return nil
-		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return &registry.MockRegistry{}, nil
-		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			return &broker.MockBroker{
-				OnEndpoint: func() string {
-					return MockEndpoint
-				},
-			}, nil
-		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			return &site.MockSite{
-				OnRender: func() string {
-					return MockSite
-				},
-			}, nil
-		},
-	}, func(s *Service) {
-		s.Dialer = &dialer.MockDialer{
-			OnDial: func(network, address string) (net.Conn, error) {
-				return nil, &component.MockError{}
+	service := NewService(
+		ctx,
+		&component.MockStore[PublisherSubscriber, component.ID]{
+			OnCreate: func(entity PublisherSubscriber, identifier component.ID) error {
+				return nil
 			},
-		}
-	})
+		},
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return &registry.MockRegistry{}, nil
+			},
+		},
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				return &broker.MockBroker{
+					OnEndpoint: func() string {
+						return MockEndpoint
+					},
+				}, nil
+			},
+		},
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				return &site.MockSite{
+					OnRender: func() string {
+						return MockSite
+					},
+				}, nil
+			},
+		},
+		func(s *Service) {
+			s.Dialer = &dialer.MockDialer{
+				OnDial: func(network, address string) (net.Conn, error) {
+					return nil, &component.MockError{}
+				},
+			}
+		},
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: V5,
@@ -312,11 +346,17 @@ func TestServiceRegistryStoreGetError(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		ctx,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil, nil)
+		nil,
+		nil,
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: V5,
@@ -328,15 +368,21 @@ func TestServiceBrokerError(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+	service := NewService(
+		ctx,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil)
+		nil,
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: V5,
@@ -348,19 +394,25 @@ func TestServiceSiteErrorRegistryNotFound(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := NewService(ctx, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.NotFoundError{}
+	service := NewService(
+		ctx,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.NotFoundError{}
+			},
 		},
-	}, &component.MockStore[broker.Source, component.ID]{
-		OnGet: func(identifier component.ID) (broker.Source, error) {
-			return nil, nil
+		&component.MockStore[broker.Source, component.ID]{
+			OnGet: func(identifier component.ID) (broker.Source, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[site.Site, component.ID]{
-		OnGet: func(identifier component.ID) (site.Site, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[site.Site, component.ID]{
+			OnGet: func(identifier component.ID) (site.Site, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{
 		Type: V5,

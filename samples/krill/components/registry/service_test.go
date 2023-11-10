@@ -16,12 +16,14 @@ func TestStore(t *testing.T) {
 }
 
 func TestService(t *testing.T) {
-	service := NewService(&component.MockStore[ObservableRegistry, component.ID]{
-		OnCreate: func(entity ObservableRegistry, identifier component.ID) error {
-			require.Equal(t, MockID, string(identifier))
-			return nil
+	service := NewService(
+		&component.MockStore[ObservableRegistry, component.ID]{
+			OnCreate: func(entity ObservableRegistry, identifier component.ID) error {
+				require.Equal(t, MockID, string(identifier))
+				return nil
+			},
 		},
-	})
+	)
 
 	require.NoError(t, service.Create(MockID, nil))
 }

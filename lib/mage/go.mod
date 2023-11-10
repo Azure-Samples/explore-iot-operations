@@ -1,4 +1,4 @@
-module github.com/Azure-Samples/explore-iot-operations/lib/mage
+module github.com/explore-iot-operations/lib/mage
 
 go 1.21.3
 

@@ -33,7 +33,10 @@ func TestPublisher(t *testing.T) {
 
 	reg := registry.NewRegistry()
 
-	ren := renderer.New(composition.NewCollection(), formatter.NewJsonFormatter())
+	ren := renderer.New(
+		composition.NewCollection(),
+		formatter.NewJsonFormatter(),
+	)
 
 	top := topic.New(reg)
 
@@ -50,9 +53,19 @@ func TestPublisher(t *testing.T) {
 
 	env := environment.New()
 
-	publisher := New(ctx, ren, cli, top, env, reg, tracer.NewNoopTracer(), lim, func(p *Publisher) {
-		p.QoS = 1
-	})
+	publisher := New(
+		ctx,
+		ren,
+		cli,
+		top,
+		env,
+		reg,
+		tracer.NewNoopTracer(),
+		lim,
+		func(p *Publisher) {
+			p.QoS = 1
+		},
+	)
 	go publisher.Start()
 	<-finished
 }
@@ -67,7 +80,10 @@ func TestPublisherWithPublishError(t *testing.T) {
 
 	reg := registry.NewRegistry()
 
-	ren := renderer.New(composition.NewCollection(), formatter.NewJsonFormatter())
+	ren := renderer.New(
+		composition.NewCollection(),
+		formatter.NewJsonFormatter(),
+	)
 	top := topic.New(reg)
 	cli := &client.MockClient{
 		OnConnect: make(chan struct{}),
@@ -93,10 +109,20 @@ func TestPublisherWithPublishError(t *testing.T) {
 
 	env := environment.New()
 
-	publisher := New(ctx, ren, cli, top, env, reg, tracer.NewNoopTracer(), lim, func(p *Publisher) {
-		p.QoS = 1
-		p.Logger = lg
-	})
+	publisher := New(
+		ctx,
+		ren,
+		cli,
+		top,
+		env,
+		reg,
+		tracer.NewNoopTracer(),
+		lim,
+		func(p *Publisher) {
+			p.QoS = 1
+			p.Logger = lg
+		},
+	)
 	go publisher.Start()
 	<-finished
 }
@@ -108,7 +134,10 @@ func TestPublisherDisconnectViaClientDisconnect(t *testing.T) {
 		C: make(chan struct{}, 1),
 	}
 	reg := registry.NewRegistry()
-	ren := renderer.New(composition.NewCollection(), formatter.NewJsonFormatter())
+	ren := renderer.New(
+		composition.NewCollection(),
+		formatter.NewJsonFormatter(),
+	)
 	top := topic.New(reg)
 	cli := &client.MockClient{
 		OnConnect:    make(chan struct{}),
@@ -135,7 +164,10 @@ func TestPublisherDisconnectViaCancellation(t *testing.T) {
 		C: make(chan struct{}, 1),
 	}
 	reg := registry.NewRegistry()
-	ren := renderer.New(composition.NewCollection(), formatter.NewJsonFormatter())
+	ren := renderer.New(
+		composition.NewCollection(),
+		formatter.NewJsonFormatter(),
+	)
 	top := topic.New(reg)
 	cli := &client.MockClient{
 		OnConnect:    make(chan struct{}),

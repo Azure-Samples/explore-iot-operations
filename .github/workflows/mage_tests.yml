@@ -2,6 +2,11 @@ name: mage_tests
 
 on:
   workflow_call:
+    inputs:
+      workdir:
+        required: true
+        type: string
+
 
 jobs:
   mage_test:
@@ -15,3 +20,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Go 1.21
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Install Mage
+        run: |
+          go install github.com/magefile/mage@latest
+
+      - name: Run CI Verification
+        working-directory: ${{ inputs.workdir }}
+        run: |
+          mage ci

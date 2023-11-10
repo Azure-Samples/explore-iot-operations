@@ -269,7 +269,7 @@ func TestClientv3WithMockObserver(t *testing.T) {
 			require.Equal(t, observed, f)
 		},
 	}
-	site := &site.MockSite{
+	ste := &site.MockSite{
 		Observable: &MockObserver{
 			onObserve: func(f float64) {
 				require.Equal(t, observed, f)
@@ -279,7 +279,7 @@ func TestClientv3WithMockObserver(t *testing.T) {
 			return ""
 		},
 	}
-	client := NewClientv3(nil, *New(context.Background(), mon, broker, site))
+	client := NewClientv3(nil, *New(context.Background(), mon, broker, ste))
 	client.Observe(observed)
 }
 

@@ -101,7 +101,10 @@ func (service *Service) Create(id component.ID, c *Component) error {
 
 	base := New(service.ctx, reg, brkr, ste, func(cli *Client) {
 		cli.Name = c.Name
-		cli.Logger = service.Logger.With("name", c.Name).With("site", ste.Render()).With("mqtt_version", string(c.Type)).With("broker_endpoint", brkr.Endpoint())
+		cli.Logger = service.Logger.With("name", c.Name).
+			With("site", ste.Render()).
+			With("mqtt_version", string(c.Type)).
+			With("broker_endpoint", brkr.Endpoint())
 	})
 	var cli PublisherSubscriber
 	switch c.Type {

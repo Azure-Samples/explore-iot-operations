@@ -1,16 +1,15 @@
-//go:build mage
-// +build mage
-
-package main
+package mage
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/magefile/mage/sh"
 	"github.com/princjef/mageutil/bintool"
+	"github.com/princjef/mageutil/shellcmd"
 )
 
 var (
@@ -28,37 +27,6 @@ var (
 		"0.4.1",
 		"https://github.com/princjef/gomarkdoc/releases/download/v{{.Version}}/gomarkdoc_{{.Version}}_{{.GOOS}}_{{.GOARCH}}{{.ArchiveExt}}",
 	))
-	releaser = bintool.Must(bintool.NewGo(
-		"github.com/goreleaser/goreleaser",
-		"v1.18.2",
-	))
-)
-
-const (
-	KRILL     project = "krill"
-)
-
-var projects = []project{
-	KRILL,
-}
-
-var buildProjectPathMap map[project]string = map[project]string{
-	KRILL:     "./cmd/krill",
-}
-
-var releasePathMap map[project]string = map[project]string{
-	KRILL:  "./releases/krill/.goreleaser.yaml",
-}
-
-const (
-	// UnitTestTimeoutMs specifies the maximum amount of time a unit test will be given before it is considered failed.
-	UnitTestTimeoutMs = 3000
-
-	// ExpectedBlockCoverage describes the minimum expected test coverage of each code block.
-	ExpectedBlockCoverage = 0.00
-
-	// ExpectedOverallCoverage describes the minimum expected test coverage of the overall codebase.
-	ExpectedOverallCoverage = 85.00
 )
 
 func ensureFormatter() error {
@@ -73,10 +41,6 @@ func ensureDocumenter() error {
 	return documenter.Ensure()
 }
 
-func ensureReleaser() error {
-	return releaser.Ensure()
-}
-
 func EnsureAllTools() error {
 	if err := ensureFormatter(); err != nil {
 		return err
@@ -87,10 +51,6 @@ func EnsureAllTools() error {
 	}
 
 	if err := ensureDocumenter(); err != nil {
-		return err
-	}
-
-	if err := ensureReleaser(); err != nil {
 		return err
 	}
 
@@ -132,7 +92,8 @@ func Clean() error {
 
 // Cover runs tests and generates coverage profiles for all tests.
 // The tests run in atomic mode and check for race conditions.
-func Cover() error {
+// UnitTestTimeoutMs specifies the maximum amount of time a unit test will be given before it is considered failed.
+func Cover(unitTestTimeoutMs int) error {
 	err := Clean()
 	if err != nil {
 		return err
@@ -142,7 +103,7 @@ func Cover() error {
 		"go",
 		"test",
 		"-timeout",
-		fmt.Sprintf("%dms", UnitTestTimeoutMs),
+		fmt.Sprintf("%dms", unitTestTimeoutMs),
 		"-cover",
 		"--coverprofile=cover.tmp.out",
 		"-covermode=atomic",
@@ -161,7 +122,6 @@ func Cover() error {
 	return sh.RunV("go", "tool", "cover", "-func=coverage.out")
 }
 
-
 // Package is a subset of the structure returned by the go list tool.
 type Package struct {
 	TestGoFiles  []string `json:"TestGoFiles"`
@@ -169,16 +129,11 @@ type Package struct {
 	ImportPath   string   `json:"ImportPath"`
 }
 
-// ImportPathRoot is the root import for all packages in this project.
-const ImportPathRoot = "dev.azure.com/msazure/One/_git/Digital-Operations-Experience/service/"
-
-// TestPackageExclusions is a set of packages which are excluded from the check for at least one test file.
-// This should only include the main package and any packages which only define types or constants.
-var TestPackageExclusions = map[string]any{}
-
 // EnsureTests ensures that every package besides those excluded via the "TestPackageExclusions" variable defined above must contain at least one test file.
 // This ensures that coverage will be measured for all packages and forces the creation of test files for all new packages.
-func EnsureTests() error {
+// TestPackageExclusions is a set of packages which are excluded from the check for at least one test file.
+// This should only include the main package and any packages which only define types or constants.
+func EnsureTests(importPathRoot string, testPackageExclusions map[string]any) error {
 	res, err := sh.Output("go", "list", "-json", "./...")
 	if err != nil {
 		return err
@@ -200,7 +155,7 @@ func EnsureTests() error {
 	}
 
 	for _, pack := range packages {
-		if _, ok := TestPackageExclusions[strings.TrimPrefix(pack.ImportPath, ImportPathRoot)]; ok {
+		if _, ok := testPackageExclusions[strings.TrimPrefix(pack.ImportPath, importPathRoot)]; ok {
 			continue
 		}
 		if len(pack.XTestGoFiles) < 1 && len(pack.TestGoFiles) < 1 {
@@ -221,7 +176,9 @@ func Bench() error {
 // EvaluateCoverage takes a coverage file and evaluates the coverage of code block and overall app unit test coverage.
 // If the coverage of any given block or the overall coverage of the application does not meet the above
 // thresholds, an error will be returned. Otherwise a message describing coverage will be reported.
-func EvaluateCoverage() error {
+// ExpectedBlockCoverage describes the minimum expected test coverage of each code block.
+// ExpectedOverallCoverage describes the minimum expected test coverage of the overall codebase.
+func EvaluateCoverage(expectedBlockCoverage, expectedOverallCoverage float64) error {
 	res, err := sh.Output(
 		"go",
 		"tool",
@@ -261,20 +218,20 @@ func EvaluateCoverage() error {
 			path:       components[0],
 			name:       components[1],
 			percentage: percentage,
-			expected: ExpectedBlockCoverage,
+			expected:   expectedBlockCoverage,
 		}
 	}
 
 	for _, coverage := range coverages {
-		if coverage.percentage < ExpectedBlockCoverage {
+		if coverage.percentage < expectedBlockCoverage {
 			return coverage
 		}
 	}
 
-	if totalCoverage.percentage < ExpectedOverallCoverage {
+	if totalCoverage.percentage < expectedOverallCoverage {
 		return &InadequateOverallCoverageError{
 			percentage: totalCoverage.percentage,
-			expected: ExpectedOverallCoverage,
+			expected:   expectedOverallCoverage,
 		}
 	}
 
@@ -286,57 +243,41 @@ func EvaluateCoverage() error {
 	return nil
 }
 
-func Build(proj string) error {
-
-	path, ok := buildProjectPathMap[project(proj)]
-	if !ok {
-		return fmt.Errorf("invalid project name, must be one of the following: %v", projects)
-	}
-
-	err := EnsureAllTools()
-	if err != nil {
-		return err
-	}
-
-	err = Cover()
-	if err != nil {
-		return err
-	}
-
+func Build(proj string, path string) error {
 	return sh.RunV("go", "build", "-o", proj, path)
 }
 
-func Release(proj string, version string, message string) error {
-
-	path, ok := releasePathMap[project(proj)]
-	if !ok {
-		return fmt.Errorf("invalid project name, must be one of the following: %v", projects)
-	}
+func CI(
+	importPathRoot string,
+	testPackageExclusions map[string]any,
+	unitTestTimeoutMs int,
+	expectedBlockCoverage, expectedOverallCoverage float64,
+) error {
 
 	err := EnsureAllTools()
 	if err != nil {
 		return err
 	}
 
-	err = Cover()
+	err = Lint()
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("goreleaser", "check", path)
+	err = Format()
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("git", "tag", "-a", version, "-m", message)
+	err = EnsureTests(importPathRoot, testPackageExclusions)
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("git", "push", "origin", version)
+	err = Cover(unitTestTimeoutMs)
 	if err != nil {
 		return err
 	}
 
-	return sh.RunV("goreleaser", "release", "--clean", "-f", path)
+	return EvaluateCoverage(expectedBlockCoverage, expectedOverallCoverage)
 }
