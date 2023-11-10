@@ -58,5 +58,8 @@ func (service *Service) Create(id component.ID, c *Component) error {
 		return err
 	}
 
-	return service.Store.Create(NewPrometheusOutlet(expression.New(psr), fmtr, reg), id)
+	return service.Store.Create(
+		NewPrometheusOutlet(expression.New(psr), fmtr, reg),
+		id,
+	)
 }

@@ -8,7 +8,7 @@ import (
 
 const (
 	NotFoundErrorMessage = "not found"
-	MockErrorMessage = "mock"
+	MockErrorMessage     = "mock"
 )
 
 func TestNotFoundError(t *testing.T) {

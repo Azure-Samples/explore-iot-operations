@@ -25,7 +25,8 @@ func TestSimpleHistogramProvider(t *testing.T) {
 
 	require.NoError(t, err)
 
-	histogramProvider.Cancel()
+	err = histogramProvider.Cancel()
+	require.NoError(t, err)
 }
 
 func TestHistogramProviderWithLabel(t *testing.T) {

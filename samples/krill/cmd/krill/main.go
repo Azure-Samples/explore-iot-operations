@@ -67,23 +67,28 @@ func run() error {
 		unmarshal = json.Unmarshal
 	}
 
-	configReader := env.New[krill.Configuration](func(cr *env.ConfigurationReader[krill.Configuration]) {
-		cr.Unmarshal = unmarshal
-		if *flags["stdin"].(*bool) {
-			cr.ReadFile = func(_ string) ([]byte, error) {
-				return io.ReadAll(os.Stdin)
+	configReader := env.New[krill.Configuration](
+		func(cr *env.ConfigurationReader[krill.Configuration]) {
+			cr.Unmarshal = unmarshal
+			if *flags["stdin"].(*bool) {
+				cr.ReadFile = func(_ string) ([]byte, error) {
+					return io.ReadAll(os.Stdin)
+				}
 			}
-		}
-	})
+		},
+	)
 
 	configuration, err := configReader.Read(*flags["config"].(*string))
 	if err != nil {
 		return err
 	}
 
-	lg := logger.NewZeroLoggerWrapper(log.Logger, func(zlw *logger.ZeroLoggerWrapper) {
-		zlw.LogLevel = configuration.LogLevel
-	})
+	lg := logger.NewZeroLoggerWrapper(
+		log.Logger,
+		func(zlw *logger.ZeroLoggerWrapper) {
+			zlw.LogLevel = configuration.LogLevel
+		},
+	)
 
 	lg.Printf("finished reading configuration")
 
@@ -113,29 +118,71 @@ func run() error {
 	svcTag := lg.Tag("service")
 
 	brokerService := broker.NewService(brokerStore, registryStore)
-	clientService := client.NewService(ctx, clientStore, registryStore, brokerStore, siteStore, func(s *client.Service) {
-		s.Logger = svcTag.Tag("client")
-	})
+	clientService := client.NewService(
+		ctx,
+		clientStore,
+		registryStore,
+		brokerStore,
+		siteStore,
+		func(s *client.Service) {
+			s.Logger = svcTag.Tag("client")
+		},
+	)
 	edgeService := edge.NewService(edgeStore, nodeStore)
 	formatterService := formatter.NewService(formatterStore)
 	limiterService := limiter.NewService(ctx, limiterStore)
 	nodeService := node.NewService(nodeStore, func(s *node.Service) {
 		s.Logger = svcTag.Tag("node")
 	})
-	observerService := observer.NewService(observerStore, registryStore, providerStore)
-	outletService := outlet.NewService(outletStore, formatterStore, registryStore)
-	providerService := provider.NewService(providerStore, reg, exp, func(s *provider.Service) {
-		s.Logger = svcTag.Tag("provider")
-	})
-	publisherService := publisher.NewService(ctx, publisherStore, registryStore, clientStore, topicStore, rendererStore, limiterStore, tracerStore, func(s *publisher.Service) {
-		s.Logger = svcTag.Tag("publisher")
-	})
+	observerService := observer.NewService(
+		observerStore,
+		registryStore,
+		providerStore,
+	)
+	outletService := outlet.NewService(
+		outletStore,
+		formatterStore,
+		registryStore,
+	)
+	providerService := provider.NewService(
+		providerStore,
+		reg,
+		exp,
+		func(s *provider.Service) {
+			s.Logger = svcTag.Tag("provider")
+		},
+	)
+	publisherService := publisher.NewService(
+		ctx,
+		publisherStore,
+		registryStore,
+		clientStore,
+		topicStore,
+		rendererStore,
+		limiterStore,
+		tracerStore,
+		func(s *publisher.Service) {
+			s.Logger = svcTag.Tag("publisher")
+		},
+	)
 	registryService := registry.NewService(registryStore)
-	rendererService := renderer.NewService(rendererStore, formatterStore, nodeStore)
+	rendererService := renderer.NewService(
+		rendererStore,
+		formatterStore,
+		nodeStore,
+	)
 	siteService := site.NewService(siteStore, registryStore)
-	subscriberService := subscriber.NewService(subscriberStore, clientStore, topicStore, outletStore, registryStore, tracerStore, func(s *subscriber.Service) {
-		s.Logger = svcTag.Tag("subscriber")
-	})
+	subscriberService := subscriber.NewService(
+		subscriberStore,
+		clientStore,
+		topicStore,
+		outletStore,
+		registryStore,
+		tracerStore,
+		func(s *subscriber.Service) {
+			s.Logger = svcTag.Tag("subscriber")
+		},
+	)
 	topicService := topic.NewService(topicStore, registryStore)
 	tracerService := tracer.NewService(tracerStore, registryStore)
 

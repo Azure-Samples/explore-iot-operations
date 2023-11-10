@@ -56,9 +56,12 @@ func (service *Service) Create(id component.ID, c *Component) error {
 			return err
 		}
 
-		node = composition.NewExpression(expression.New(psr), func(e *composition.Expression) {
-			e.Logger = service.Logger
-		})
+		node = composition.NewExpression(
+			expression.New(psr),
+			func(e *composition.Expression) {
+				e.Logger = service.Logger
+			},
+		)
 	case COLLECTION:
 		node = composition.NewCollection()
 	case ARRAY:

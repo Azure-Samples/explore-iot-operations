@@ -167,27 +167,34 @@ func TestServiceSubscriptionError(t *testing.T) {
 }
 
 func TestServiceTopicStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[client.PublisherSubscriber, component.ID]{
-		OnGet: func(identifier component.ID) (client.PublisherSubscriber, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		&component.MockStore[client.PublisherSubscriber, component.ID]{
+			OnGet: func(identifier component.ID) (client.PublisherSubscriber, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[topic.Renderer, component.ID]{
-		OnGet: func(identifier component.ID) (topic.Renderer, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[topic.Renderer, component.ID]{
+			OnGet: func(identifier component.ID) (topic.Renderer, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, &component.MockStore[outlet.Outlet, component.ID]{
-		OnGet: func(identifier component.ID) (outlet.Outlet, error) {
-			return nil, nil
+		&component.MockStore[outlet.Outlet, component.ID]{
+			OnGet: func(identifier component.ID) (outlet.Outlet, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[tracer.Tracer, component.ID]{
-		OnGet: func(identifier component.ID) (tracer.Tracer, error) {
-			return nil, nil
+		&component.MockStore[tracer.Tracer, component.ID]{
+			OnGet: func(identifier component.ID) (tracer.Tracer, error) {
+				return nil, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 
@@ -195,23 +202,30 @@ func TestServiceTopicStoreError(t *testing.T) {
 }
 
 func TestServiceClientStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[client.PublisherSubscriber, component.ID]{
-		OnGet: func(identifier component.ID) (client.PublisherSubscriber, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[client.PublisherSubscriber, component.ID]{
+			OnGet: func(identifier component.ID) (client.PublisherSubscriber, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil, &component.MockStore[outlet.Outlet, component.ID]{
-		OnGet: func(identifier component.ID) (outlet.Outlet, error) {
-			return nil, &component.NotFoundError{}
+		nil,
+		&component.MockStore[outlet.Outlet, component.ID]{
+			OnGet: func(identifier component.ID) (outlet.Outlet, error) {
+				return nil, &component.NotFoundError{}
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.NotFoundError{}
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.NotFoundError{}
+			},
 		},
-	}, &component.MockStore[tracer.Tracer, component.ID]{
-		OnGet: func(identifier component.ID) (tracer.Tracer, error) {
-			return nil, &component.NotFoundError{}
+		&component.MockStore[tracer.Tracer, component.ID]{
+			OnGet: func(identifier component.ID) (tracer.Tracer, error) {
+				return nil, &component.NotFoundError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 
@@ -219,19 +233,26 @@ func TestServiceClientStoreError(t *testing.T) {
 }
 
 func TestServiceOutletStoreError(t *testing.T) {
-	service := NewService(nil, nil, nil, &component.MockStore[outlet.Outlet, component.ID]{
-		OnGet: func(identifier component.ID) (outlet.Outlet, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		&component.MockStore[outlet.Outlet, component.ID]{
+			OnGet: func(identifier component.ID) (outlet.Outlet, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[tracer.Tracer, component.ID]{
-		OnGet: func(identifier component.ID) (tracer.Tracer, error) {
-			return nil, nil
+		&component.MockStore[tracer.Tracer, component.ID]{
+			OnGet: func(identifier component.ID) (tracer.Tracer, error) {
+				return nil, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 
@@ -239,15 +260,22 @@ func TestServiceOutletStoreError(t *testing.T) {
 }
 
 func TestServiceTracerStoreError(t *testing.T) {
-	service := NewService(nil, nil, nil, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[tracer.Tracer, component.ID]{
-		OnGet: func(identifier component.ID) (tracer.Tracer, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[tracer.Tracer, component.ID]{
+			OnGet: func(identifier component.ID) (tracer.Tracer, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 
@@ -255,11 +283,18 @@ func TestServiceTracerStoreError(t *testing.T) {
 }
 
 func TestServiceRegistryStoreError(t *testing.T) {
-	service := NewService(nil, nil, nil, nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil)
+		nil,
+	)
 
 	err := service.Create(MockID, &Component{})
 

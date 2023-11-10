@@ -26,7 +26,13 @@ func TestSubscribeAfterClientConnection(t *testing.T) {
 		}, OnDisconnect: make(chan struct{}),
 		OnConnect: make(chan struct{}),
 	}
-	sub := New(cli, topic.New(nil), &outlet.NoopOutlet{}, &registry.NoopRegistry{}, tracer.NewNoopTracer())
+	sub := New(
+		cli,
+		topic.New(nil),
+		&outlet.NoopOutlet{},
+		&registry.NoopRegistry{},
+		tracer.NewNoopTracer(),
+	)
 	go func() {
 		err := sub.Start()
 		require.NoError(t, err)
@@ -79,7 +85,13 @@ func TestReceivedChannelWithoutBlocking(t *testing.T) {
 		}, OnDisconnect: make(chan struct{}),
 		OnConnect: make(chan struct{}),
 	}
-	sub := New(cli, topic.New(nil), &outlet.NoopOutlet{}, &registry.NoopRegistry{}, tracer.NewNoopTracer())
+	sub := New(
+		cli,
+		topic.New(nil),
+		&outlet.NoopOutlet{},
+		&registry.NoopRegistry{},
+		tracer.NewNoopTracer(),
+	)
 	go func() {
 		err := sub.Start()
 		require.NoError(t, err)
@@ -104,7 +116,13 @@ func TestSubscriberCancelBeforeClientCancel(t *testing.T) {
 		}, OnDisconnect: make(chan struct{}),
 		OnConnect: make(chan struct{}),
 	}
-	sub := New(cli, topic.New(nil), &outlet.NoopOutlet{}, &registry.NoopRegistry{}, tracer.NewNoopTracer())
+	sub := New(
+		cli,
+		topic.New(nil),
+		&outlet.NoopOutlet{},
+		&registry.NoopRegistry{},
+		tracer.NewNoopTracer(),
+	)
 	go func() {
 		require.NoError(t, sub.Start())
 	}()
@@ -133,7 +151,13 @@ func TestSubscriberCancelAfterClientCancel(t *testing.T) {
 			return name
 		},
 	}
-	sub := New(cli, topic.New(nil), &outlet.NoopOutlet{}, &registry.NoopRegistry{}, tracer.NewNoopTracer())
+	sub := New(
+		cli,
+		topic.New(nil),
+		&outlet.NoopOutlet{},
+		&registry.NoopRegistry{},
+		tracer.NewNoopTracer(),
+	)
 	go func() {
 		require.NoError(t, sub.Start())
 	}()

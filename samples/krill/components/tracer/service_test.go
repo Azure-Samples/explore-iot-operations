@@ -63,13 +63,17 @@ func TestTracerServiceNoopRegistry(t *testing.T) {
 }
 
 func TestTracerServiceRegistryError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, func(s *Service) {
-		s.Logger = &logger.NoopLogger{}
-	})
+		func(s *Service) {
+			s.Logger = &logger.NoopLogger{}
+		},
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)

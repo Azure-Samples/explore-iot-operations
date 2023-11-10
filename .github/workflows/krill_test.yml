@@ -9,3 +9,5 @@ on:
 jobs:
   call-mage-test:
     uses: ./.github/workflows/mage_tests.yml
+    with:
+      workdir: samples/krill/

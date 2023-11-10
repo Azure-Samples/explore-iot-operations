@@ -9,8 +9,12 @@ import (
 )
 
 var (
-	ErrInvalidParsedResultType = errors.New("the observed message body must be parsed into a map of string to any")
-	ErrInvalidObservationType  = errors.New("only floats or integer values can be observed")
+	ErrInvalidParsedResultType = errors.New(
+		"the observed message body must be parsed into a map of string to any",
+	)
+	ErrInvalidObservationType = errors.New(
+		"only floats or integer values can be observed",
+	)
 )
 
 type Outlet interface {

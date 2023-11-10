@@ -15,10 +15,14 @@ import (
 )
 
 var (
-	ErrCannotFormatCSV         = errors.New("the CSV could not be formatted")
-	ErrInconsistentCSVColumns  = errors.New("each row in the CSV should be the same length")
+	ErrCannotFormatCSV        = errors.New("the CSV could not be formatted")
+	ErrInconsistentCSVColumns = errors.New(
+		"each row in the CSV should be the same length",
+	)
 	ErrCannotParseBinary       = errors.New("binary payloads cannot be parsed")
-	ErrInvalidBinaryFormatType = errors.New("cannot format this type into binary")
+	ErrInvalidBinaryFormatType = errors.New(
+		"cannot format this type into binary",
+	)
 )
 
 type Formatter interface {
@@ -94,7 +98,10 @@ type Writer interface {
 	WriteAll(records [][]string) error
 }
 
-func NewCSVFormatter(flattener flatten.Flattener, options ...func(*CSVFormatter)) *CSVFormatter {
+func NewCSVFormatter(
+	flattener flatten.Flattener,
+	options ...func(*CSVFormatter),
+) *CSVFormatter {
 	formatter := &CSVFormatter{
 		flattener: flattener,
 		CreateWriter: func(w io.Writer) Writer {
