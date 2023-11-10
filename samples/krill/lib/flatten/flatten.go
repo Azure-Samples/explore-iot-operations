@@ -46,7 +46,10 @@ type Field struct {
 	Value string
 }
 
-func (flattener *CSVFlattener) Flatten(parent string, entry any) ([]Field, error) {
+func (flattener *CSVFlattener) Flatten(
+	parent string,
+	entry any,
+) ([]Field, error) {
 
 	var fields []Field
 
@@ -98,6 +101,9 @@ type MockFlattener struct {
 	OnFlatten func(parent string, entry any) ([]Field, error)
 }
 
-func (flattener *MockFlattener) Flatten(parent string, entry any) ([]Field, error) {
+func (flattener *MockFlattener) Flatten(
+	parent string,
+	entry any,
+) ([]Field, error) {
 	return flattener.OnFlatten(parent, entry)
 }

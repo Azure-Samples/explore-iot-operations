@@ -59,11 +59,15 @@ func TestPrometheusOutletIntCast(t *testing.T) {
 }
 
 func TestPrometheusOutletFormatterError(t *testing.T) {
-	outlet := NewPrometheusOutlet(&expression.MockEvaluator{}, &formatter.MockFormatter{
-		OnParse: func(b []byte) (any, error) {
-			return nil, ErrMock
+	outlet := NewPrometheusOutlet(
+		&expression.MockEvaluator{},
+		&formatter.MockFormatter{
+			OnParse: func(b []byte) (any, error) {
+				return nil, ErrMock
+			},
 		},
-	}, &registry.MockObservable{})
+		&registry.MockObservable{},
+	)
 
 	err := outlet.Observe(nil)
 	require.Equal(t, ErrMock, err)

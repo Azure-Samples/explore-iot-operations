@@ -21,7 +21,10 @@ type BlockingTracer struct {
 	Trace  logger.Logger
 }
 
-func New(reg registry.Observable, options ...func(*BlockingTracer)) *BlockingTracer {
+func New(
+	reg registry.Observable,
+	options ...func(*BlockingTracer),
+) *BlockingTracer {
 	tracer := &BlockingTracer{
 		reg:    reg,
 		traces: make(chan struct{}),
@@ -47,7 +50,8 @@ func (tracer *BlockingTracer) Begin() chan struct{} {
 func (tracer *BlockingTracer) Received() {
 	start := <-tracer.times
 	duration := float64(time.Since(start).Milliseconds())
-	tracer.Trace.With("duration", fmt.Sprintf("%0.2f", duration)).Printf("ending trace")
+	tracer.Trace.With("duration", fmt.Sprintf("%0.2f", duration)).
+		Printf("ending trace")
 	tracer.reg.Observe(duration)
 	tracer.traces <- struct{}{}
 }

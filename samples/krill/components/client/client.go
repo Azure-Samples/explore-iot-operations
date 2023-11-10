@@ -145,14 +145,18 @@ func (client *Clientv3) Connect() error {
 
 	select {
 	case <-client.ctx.Done():
-		client.Debug.Printf("connection to broker was interrupted by context cancellation")
+		client.Debug.Printf(
+			"connection to broker was interrupted by context cancellation",
+		)
 		return nil
 	case <-token.Done():
 	}
 
 	err := token.Error()
 	if err != nil {
-		client.Logger.Level(logger.Error).With("error", err.Error()).Printf("an error occurred when connection to the broker")
+		client.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			Printf("an error occurred when connection to the broker")
 		return err
 	}
 
@@ -181,13 +185,17 @@ func (client *Clientv3) Publish(
 	data []byte,
 ) error {
 
-	client.Trace.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("publishing new message")
+	client.Trace.With("topic", topic).
+		With("qos", fmt.Sprintf("%b", qos)).
+		Printf("publishing new message")
 
 	token := client.conn.Publish(topic, qos, messagesRetained, data)
 
 	select {
 	case <-client.ctx.Done():
-		client.Debug.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("message publish cancelled due to context cancellation")
+		client.Debug.With("topic", topic).
+			With("qos", fmt.Sprintf("%b", qos)).
+			Printf("message publish cancelled due to context cancellation")
 		return nil
 	case <-token.Done():
 		return token.Error()
@@ -201,20 +209,26 @@ func (client *Clientv3) Subscribe(
 	qos byte,
 	onReceived func([]byte),
 ) error {
-	client.Debug.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("attempting new subscription")
+	client.Debug.With("topic", topic).
+		With("qos", fmt.Sprintf("%b", qos)).
+		Printf("attempting new subscription")
 
 	token := client.conn.Subscribe(
 		topic,
 		qos,
 		func(_ mqtt.Client, m mqtt.Message) {
-			client.Trace.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("message received from broker")
+			client.Trace.With("topic", topic).
+				With("qos", fmt.Sprintf("%b", qos)).
+				Printf("message received from broker")
 			onReceived(m.Payload())
 		},
 	)
 
 	select {
 	case <-client.ctx.Done():
-		client.Debug.With("topic", topic).With("qos", fmt.Sprintf("%b", qos)).Printf("subscription cancelled due to context cancellation")
+		client.Debug.With("topic", topic).
+			With("qos", fmt.Sprintf("%b", qos)).
+			Printf("subscription cancelled due to context cancellation")
 		return nil
 	case <-token.Done():
 		return token.Error()
@@ -319,11 +333,20 @@ func (mock *MockV3Conn) Disconnect(quiesce uint) {
 	mock.OnDisconnect(quiesce)
 }
 
-func (mock *MockV3Conn) Publish(topic string, qos byte, retained bool, payload interface{}) mqtt.Token {
+func (mock *MockV3Conn) Publish(
+	topic string,
+	qos byte,
+	retained bool,
+	payload interface{},
+) mqtt.Token {
 	return mock.OnPublish(topic, qos, retained, payload)
 }
 
-func (mock *MockV3Conn) Subscribe(topic string, qos byte, callback mqtt.MessageHandler) mqtt.Token {
+func (mock *MockV3Conn) Subscribe(
+	topic string,
+	qos byte,
+	callback mqtt.MessageHandler,
+) mqtt.Token {
 	return mock.OnSubscribe(topic, qos, callback)
 }
 

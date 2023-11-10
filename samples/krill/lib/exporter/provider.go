@@ -14,7 +14,10 @@ type CustomHistogramProvider struct {
 	Logger   logger.Logger
 }
 
-func New(exporter Exporter, options ...func(*CustomHistogramProvider)) (*CustomHistogramProvider, error) {
+func New(
+	exporter Exporter,
+	options ...func(*CustomHistogramProvider),
+) (*CustomHistogramProvider, error) {
 	provider := &CustomHistogramProvider{
 		Logger: &logger.NoopLogger{},
 	}
@@ -23,7 +26,12 @@ func New(exporter Exporter, options ...func(*CustomHistogramProvider)) (*CustomH
 		option(provider)
 	}
 
-	histProv, err := exporter.RegisterHistogram(provider.Name, provider.Help, provider.Start, provider.Width)
+	histProv, err := exporter.RegisterHistogram(
+		provider.Name,
+		provider.Help,
+		provider.Start,
+		provider.Width,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +44,9 @@ func New(exporter Exporter, options ...func(*CustomHistogramProvider)) (*CustomH
 func (provider *CustomHistogramProvider) Cancel() error {
 	err := provider.provider.Export()
 	if err != nil {
-		provider.Logger.Level(logger.Error).With("error", err.Error()).Printf("could not export data to file")
+		provider.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			Printf("could not export data to file")
 		return err
 	}
 

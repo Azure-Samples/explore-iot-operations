@@ -67,7 +67,9 @@ func (provider *HistogramProvider) Export() error {
 	return provider.file.Close()
 }
 
-func (provider *HistogramProvider) Label(label Label) registry.CancellableObservable {
+func (provider *HistogramProvider) Label(
+	label Label,
+) registry.CancellableObservable {
 	provider.mu.Lock()
 	defer provider.mu.Unlock()
 	histogram := &Histogram{
@@ -108,10 +110,22 @@ func NewExporter(opener Opener) *FileExporter {
 	}
 }
 
-func (exporter *FileExporter) RegisterHistogram(name, help string, start, width int) (Provider, error) {
+func (exporter *FileExporter) RegisterHistogram(
+	name, help string,
+	start, width int,
+) (Provider, error) {
 
 	now := time.Now()
-	f, err := exporter.opener.Open(fmt.Sprintf("D%s-T%d-%d-%d-histogram-%s.json", now.Format(time.DateOnly), now.Hour(), now.Minute(), now.Second(), name))
+	f, err := exporter.opener.Open(
+		fmt.Sprintf(
+			"D%s-T%d-%d-%d-histogram-%s.json",
+			now.Format(time.DateOnly),
+			now.Hour(),
+			now.Minute(),
+			now.Second(),
+			name,
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -149,5 +163,9 @@ func NewOpener(storage string, options ...func(*FileOpener)) *FileOpener {
 }
 
 func (fileOpener *FileOpener) Open(filename string) (io.WriteCloser, error) {
-	return fileOpener.OpenFile(filepath.Join(fileOpener.storage, filename), os.O_RDWR|os.O_CREATE, 0755)
+	return fileOpener.OpenFile(
+		filepath.Join(fileOpener.storage, filename),
+		os.O_RDWR|os.O_CREATE,
+		0o0755,
+	)
 }

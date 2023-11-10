@@ -23,7 +23,11 @@ func NewStore() Store {
 	return component.New[Renderer, component.ID]()
 }
 
-func NewService(store Store, formatterStore formatter.Store, nodeStore node.Store) *Service {
+func NewService(
+	store Store,
+	formatterStore formatter.Store,
+	nodeStore node.Store,
+) *Service {
 	return &Service{
 		Store:          store,
 		formatterStore: formatterStore,
