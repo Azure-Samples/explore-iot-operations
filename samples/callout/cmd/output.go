@@ -15,7 +15,10 @@ type InvalidOutputNameError struct {
 }
 
 func (err *InvalidOutputNameError) Error() string {
-	return fmt.Sprintf("the output with the name %q could not be found", err.name)
+	return fmt.Sprintf(
+		"the output with the name %q could not be found",
+		err.name,
+	)
 }
 
 type InvalidOutputTypeError struct {
@@ -36,7 +39,10 @@ type OutputCollection struct {
 	Logger  logger.Logger
 }
 
-func NewOutputCollection(outputs []Output, options ...func(*OutputCollection)) *OutputCollection {
+func NewOutputCollection(
+	outputs []Output,
+	options ...func(*OutputCollection),
+) *OutputCollection {
 	collection := &OutputCollection{
 		m:       make(map[string]Out),
 		outputs: outputs,
@@ -154,6 +160,8 @@ func NewStdoutOutput(options ...func(*StdoutOutput)) *StdoutOutput {
 }
 
 func (output *StdoutOutput) Out(content []byte) error {
-	output.Logger.Level(logger.Debug).With("content", string(content)).Printf("server received new content")
+	output.Logger.Level(logger.Debug).
+		With("content", string(content)).
+		Printf("server received new content")
 	return nil
 }
