@@ -36,7 +36,6 @@ func (server *GRPCMessageServer) Send(
 	ctx context.Context,
 	m *proto.Message,
 ) (*proto.Empty, error) {
-
 	server.Logger.Level(logger.Debug).Printf("received new grpc message")
 
 	res := server.encoder.Decode(m)
