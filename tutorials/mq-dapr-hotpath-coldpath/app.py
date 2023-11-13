@@ -34,7 +34,7 @@ PUBLISH_INTERVAL          = 10
 app = App()
 #stateLock = threading.Lock()
 publish_loop = Timeloop()
-tracked_sensors = set()
+tracked_sensors = {}
 
 @app.subscribe(pubsub_name=PUBSUB_COMPONENT_NAME, topic=PUBSUB_INPUT_TOPIC)
 def sensordata_topic(event: v1.Event) -> None:
@@ -58,7 +58,7 @@ def sensordata_topic(event: v1.Event) -> None:
         return
 
     # track the sensor for publishing window
-    tracked_sensors.add(sensor_id)
+    tracked_sensors[sensor_id] = True
 
     with DaprClient() as client:
         # fetch the existing state
@@ -88,6 +88,9 @@ def slidingWindowPublish():
 
     with DaprClient() as client:
         for sensor_id in tracked_sensors:
+            if not tracked_sensors[sensor_id]:
+                continue
+
             print(f"loop: processing sensor {sensor_id}")            
 
             # fetch the existing state
@@ -117,7 +120,8 @@ def slidingWindowPublish():
             # stop tracking if array is empty
             if not new_state:
                 print(f"loop: stopped tracking {sensor_id}")
-                tracked_sensors.remove(sensor_id)
+#                tracked_sensors.remove(sensor_id)
+                tracked_sensors[sensor_id] = False
 
 publish_loop.start(block=False)
 app.run(DAPR_SERVER_PORT)

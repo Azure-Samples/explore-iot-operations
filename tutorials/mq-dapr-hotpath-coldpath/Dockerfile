@@ -9,4 +9,4 @@ RUN python -m pip install --no-cache -r requirements.txt
 WORKDIR /app
 COPY . /app
 
-CMD ["python", "subscriber.py"]
+CMD ["python", "app.py"]
