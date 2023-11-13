@@ -30,7 +30,7 @@ SENSOR_PRESSURE           = "pressure"
 SENSOR_VIBRATION          = "vibration"
 
 TIMESTAMP_FORMAT          = "%Y-%m-%dT%H:%M:%S.%3NZ"
-WINDOW_SIZE               = 60
+WINDOW_SIZE               = 30
 PUBLISH_INTERVAL          = 10
 
 app = App()
@@ -43,20 +43,20 @@ def sensordata_topic(event: v1.Event) -> None:
     breakpoint()
     # extract the sensor_id to use as the key to DSS
     sensor_id = event.Extensions()[SENSOR_ID]
-    print(f"subscribe: received data from sensor: {sensor_id}")
+    print(f"subscribe: received {sensor_id}")
 
-    # extract sensor information
-    sensor = {}
-    sensor[SENSOR_TIMESTAMP] = datetime.now(timezone.utc).isoformat() #event.Extensions()[SENSOR_TIMESTAMP]
-    sensor[SENSOR_TEMPERATURE] = event.Extensions()[SENSOR_TEMPERATURE]
-    sensor[SENSOR_PRESSURE] = event.Extensions()[SENSOR_PRESSURE]
-    sensor[SENSOR_VIBRATION] = event.Extensions()[SENSOR_VIBRATION]
+    # extract sensor data
+    data = {}
+    data[SENSOR_TIMESTAMP] = datetime.now(timezone.utc).isoformat() #event.Extensions()[SENSOR_TIMESTAMP]
+    data[SENSOR_TEMPERATURE] = event.Extensions()[SENSOR_TEMPERATURE]
+    data[SENSOR_PRESSURE] = event.Extensions()[SENSOR_PRESSURE]
+    data[SENSOR_VIBRATION] = event.Extensions()[SENSOR_VIBRATION]
 
     # extract timestamp and check for validity
     try:
-        parser.parse(sensor[SENSOR_TIMESTAMP])
+        parser.parse(data[SENSOR_TIMESTAMP])
     except (ValueError, TypeError) as error:
-        print(f"subscribe: discarding invalid datetime {sensor[SENSOR_TIMESTAMP]} for {sensor_id}")
+        print(f"subscribe: discarding invalid datetime {data[SENSOR_TIMESTAMP]} for {sensor_id}")
         return
 
     # track the sensor for publishing window
@@ -64,90 +64,82 @@ def sensordata_topic(event: v1.Event) -> None:
 
     with DaprClient() as client:
         # fetch the existing state
-        response = client.get_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", state_metadata={"metakey": "metavalue"})
+        state = get_state(client)
 
-        try:
-            state = json.loads(response.data)
-            if type(state) != list:
-                print("subscribe: state is not an array, initialising")
-                state = []
-        except ValueError:
-            state = []
-            print("subscribe: state is invalid or empty, initialising")
-
-        # add the new value
-        state.append(sensor)
+        # add the new data
+        state.append(data)
 
         # store the state
         client.save_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", value=json.dumps(state))
-        print(f"subscribe: stored state {state}")
 
 @publish_loop.job(interval=timedelta(seconds=PUBLISH_INTERVAL))
 def slidingWindowPublish():
-    print("loop: start")
-
     time_now = datetime.now(timezone.utc)
 
     with DaprClient() as client:
         for sensor_id in tracked_sensors.copy():
-            print(f"loop: processing sensor {sensor_id}")            
+            print(f"loop: processing {sensor_id}")            
 
             temperatures = []
             pressures = []
             vibrations = []
 
             # fetch the existing state
-            response = client.get_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", state_metadata={"metakey": "metavalue"})
-            try:
-                state = json.loads(response.data)
-                if type(state) != list:
-                    state = []                
-            except ValueError:
-                state = []
+            state = get_state(client)
 
-            new_state = []
-
+            # remove stale values
+            for data in state.copy():
+                timestamp = parser.parse(data[SENSOR_TIMESTAMP])
+                if time_now - timestamp > timedelta(seconds=WINDOW_SIZE):
+                    print(f"loop: discarded age={(time_now - timestamp).total_seconds()}, data={data}")
+                    state.remove(data)
+ 
             # process current data, expire old data
-            for sensor in state:
-                timestamp = parser.parse(sensor[SENSOR_TIMESTAMP])
-                if timestamp + timedelta(seconds=WINDOW_SIZE) > time_now:
-                    print(f"loop: processing {timestamp}, {sensor}")
+            for data in state:
+                print(f"loop: processing {data}")
 
-                    # stash the values
-                    temperatures.append(sensor[SENSOR_TEMPERATURE])
-                    pressures.append(sensor[SENSOR_PRESSURE])
-                    vibrations.append(sensor[SENSOR_VIBRATION])
+                # stash the values
+                temperatures.append(data[SENSOR_TEMPERATURE])
+                pressures.append(data[SENSOR_PRESSURE])
+                vibrations.append(data[SENSOR_VIBRATION])
 
-                    # save the data for the next windows process
-                    new_state.append(sensor)
-                else:
-                    print(f"loop: discarded {sensor}")
-
-            # store the state
-            client.save_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", value=json.dumps(new_state))
-            print(f"loop: stored state {new_state}")
+            # store the new state
+            client.save_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", value=json.dumps(state))
 
             # publish window data
             publish_state = {}
-            append_state(publish_state, "temperature", temperatures)
-            append_state(publish_state, "pressure", pressures)
-            append_state(publish_state, "vibration", vibrations)
-
+            append_data(publish_state, "temperature", temperatures)
+            append_data(publish_state, "pressure", pressures)
+            append_data(publish_state, "vibration", vibrations)
             client.publish_event(pubsub_name=PUBSUB_COMPONENT_NAME, topic_name=PUBSUB_OUTPUT_TOPIC, data=json.dumps(publish_state))
 
-            # stop tracking sensor if array is empty
-            if not new_state:
+            # stop tracking sensor if state is empty
+            if not state:
                 print(f"loop: stopped tracking {sensor_id}")
                 tracked_sensors.remove(sensor_id)
 
-def append_state(state, sensor_name, sensor):
-    if sensor:
+def get_state(client):
+    response = client.get_state(store_name=STATESTORE_COMPONENT_NAME, key="{STATESTORE_SENSOR_KEY}/{sensor_id}", state_metadata={"metakey": "metavalue"})
+    
+    try:
+        state = json.loads(response.data)
+        if type(state) != list:
+            print("subscribe: state is not an array, initialising")
+            state = []
+    except ValueError:
+        state = []
+        print("subscribe: state is invalid or empty, initialising")
+
+    return state
+
+def append_data(state, sensor_name, data):
+    if data:
         state[sensor_name] = {
-            "min"    : min(sensor),
-            "max"    : max(sensor),
-            "mean"   : mean(sensor),
-            "median" : median(sensor),
-            "count"  : len(sensor),
+            "min"    : min(data),
+            "max"    : max(data),
+            "mean"   : mean(data),
+            "median" : median(data),
+            "count"  : len(data),
         }
 
 publish_loop.start(block=False)
