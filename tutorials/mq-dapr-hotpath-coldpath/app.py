@@ -141,8 +141,8 @@ def slidingWindowPublish():
                 tracked_sensors.remove(sensor_id)
 
 def append_state(state, sensor_name, sensor):
-    if state:
-        publish_state[sensor_name] = {
+    if sensor:
+        state[sensor_name] = {
             "min"    : min(sensor),
             "max"    : max(sensor),
             "mean"   : mean(sensor),
