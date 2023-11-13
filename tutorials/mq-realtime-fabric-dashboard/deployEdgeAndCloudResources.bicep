@@ -123,7 +123,7 @@ resource cluster 'Microsoft.Kubernetes/connectedClusters@2021-03-01' existing = 
 
 resource mqExtension 'Microsoft.KubernetesConfiguration/extensions@2022-03-01' = {
   scope: cluster
-  name: 'mq'
+  name: 'mq-${any(resourceGroup().name)}'
   identity: {
     type: 'SystemAssigned'
   }
