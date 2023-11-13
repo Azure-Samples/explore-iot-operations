@@ -32,8 +32,8 @@ spec:
 
   containers:
     # Container for the dapr quickstart application 
-    - name: dapr-python-subscriber
-      image: dapr/python-subscriber
+    - name: mq-dapr-coldpath
+      image: dapr/mq-dapr-coldpath
       imagePullPolicy: Never
 #      image: ghcr.io/azure-samples/explore-iot-operations/quickstart-sample:latest
 
