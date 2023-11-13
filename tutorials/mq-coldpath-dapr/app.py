@@ -93,7 +93,7 @@ def slidingWindowPublish():
                 if time_now - timestamp > timedelta(seconds=WINDOW_SIZE):
                     print(f"loop: discarded age={(time_now - timestamp).total_seconds()}, data={data}")
                     state.remove(data)
- 
+
             # process current data, expire old data
             for data in state:
                 print(f"loop: processing {data}")
