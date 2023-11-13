@@ -4,25 +4,25 @@ servers:
   http:
     port: 3333
     resources:
-      - path: /example
-        method: GET
+      - path: /example1 # PUT localhost:3333/example -Body { "field": 123 }
+        method: POST
         status: 200
         outputs: ["output1", "output2"]
         response: |
           {
             "hello": "world"
           }
-      - path: /example
+      - path: /example # POST localhost:3333/example
         method: POST
         status: 200
         outputs: ["output3", "output4"]
         response: |
           {
-            "hello": "world"
+            "hello": "world1"
           }
   grpc:
     port: 3334
-    outputs: ['output1', 'output2']
+    outputs: ['output1', 'output4']
 outputs:
   - name: output1
     type: stdout
@@ -39,5 +39,7 @@ outputs:
   - name: output4
     type: mqtt
     qos: 1
-    path: /myresource
+    path: grpc/example
     endpoint: localhost:1883
+
+

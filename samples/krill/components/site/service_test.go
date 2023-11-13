@@ -42,11 +42,14 @@ func TestSiteService(t *testing.T) {
 }
 
 func TestSiteServiceRegistryError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)

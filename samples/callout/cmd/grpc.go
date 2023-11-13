@@ -15,10 +15,15 @@ type GRPCMessageServer struct {
 	Logger  logger.Logger
 }
 
-func NewGRPCMessageServer(outputs []Out, encoder proto.Encoder, options ...func(*GRPCMessageServer)) *GRPCMessageServer {
+func NewGRPCMessageServer(
+	outputs []Out,
+	encoder proto.Encoder,
+	options ...func(*GRPCMessageServer),
+) *GRPCMessageServer {
 	server := &GRPCMessageServer{
 		outputs: outputs,
 		encoder: encoder,
+		Logger:  &logger.NoopLogger{},
 	}
 
 	for _, option := range options {
@@ -28,8 +33,10 @@ func NewGRPCMessageServer(outputs []Out, encoder proto.Encoder, options ...func(
 	return server
 }
 
-func (server *GRPCMessageServer) Send(ctx context.Context, m *proto.Message) (*proto.Empty, error) {
-
+func (server *GRPCMessageServer) Send(
+	ctx context.Context,
+	m *proto.Message,
+) (*proto.Empty, error) {
 	server.Logger.Level(logger.Debug).Printf("received new grpc message")
 
 	res := server.encoder.Decode(m)

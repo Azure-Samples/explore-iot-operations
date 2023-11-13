@@ -105,7 +105,9 @@ func (service *Service) Create(id component.ID, c *Component) error {
 
 	sub := New(cli, top, out, reg, tra, func(s *Subscriber) {
 		s.QoS = c.QoSLevel
-		s.Logger = service.Logger.With("topic", top.Render()).With("client", cli.GetName()).With("site", cli.Render())
+		s.Logger = service.Logger.With("topic", top.Render()).
+			With("client", cli.GetName()).
+			With("site", cli.Render())
 	})
 	err = sub.Start()
 	if err != nil {

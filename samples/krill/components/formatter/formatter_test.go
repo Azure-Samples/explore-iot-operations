@@ -147,7 +147,10 @@ func (marshaller *MockMarshallerUnmarshaller) Marshal(v any) ([]byte, error) {
 	return marshaller.OnMarshal(v)
 }
 
-func (marshaller *MockMarshallerUnmarshaller) Unmarshal(data []byte, v any) error {
+func (marshaller *MockMarshallerUnmarshaller) Unmarshal(
+	data []byte,
+	v any,
+) error {
 	return marshaller.OnUnmarshal(data, v)
 }
 

@@ -42,7 +42,12 @@ func NewStore() Store {
 	return component.New[Provider, component.ID]()
 }
 
-func NewService(store Store, registry prometheus.Registerer, exp exporter.Exporter, options ...func(*Service)) *Service {
+func NewService(
+	store Store,
+	registry prometheus.Registerer,
+	exp exporter.Exporter,
+	options ...func(*Service),
+) *Service {
 	service := &Service{
 		Store:    store,
 		registry: registry,
@@ -89,13 +94,16 @@ func (service *Service) Create(id component.ID, c *Component) error {
 			},
 		)
 	case CUSTOM_HISTOGRAM:
-		provider, err = exporter.New(service.exporter, func(chp *exporter.CustomHistogramProvider) {
-			chp.Name = c.Name
-			chp.Help = c.Help
-			chp.Start = int(c.Start)
-			chp.Width = int(c.Width)
-			chp.Logger = service.Logger
-		})
+		provider, err = exporter.New(
+			service.exporter,
+			func(chp *exporter.CustomHistogramProvider) {
+				chp.Name = c.Name
+				chp.Help = c.Help
+				chp.Start = int(c.Start)
+				chp.Width = int(c.Width)
+				chp.Logger = service.Logger
+			},
+		)
 	default:
 		return &InvalidTypeError{
 			identifier: string(id),

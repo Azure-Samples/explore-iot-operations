@@ -33,7 +33,7 @@ func run() error {
 	flags, err := flagParser.ReadFlags(map[string]any{
 		"config": "./config.yml",
 		"yaml":   true,
-		"stdin":  false,
+		"stdin":  true,
 	})
 	if err != nil {
 		return err
@@ -44,32 +44,43 @@ func run() error {
 		unmarshal = json.Unmarshal
 	}
 
-	configReader := env.New[Configuration](func(cr *env.ConfigurationReader[Configuration]) {
-		cr.Unmarshal = unmarshal
-		if *flags["stdin"].(*bool) {
-			cr.ReadFile = func(_ string) ([]byte, error) {
-				return io.ReadAll(os.Stdin)
+	configReader := env.New[Configuration](
+		func(cr *env.ConfigurationReader[Configuration]) {
+			cr.Unmarshal = unmarshal
+			if *flags["stdin"].(*bool) {
+				cr.ReadFile = func(_ string) ([]byte, error) {
+					return io.ReadAll(os.Stdin)
+				}
 			}
-		}
-	})
+		},
+	)
 
 	configuration, err := configReader.Read(*flags["config"].(*string))
 	if err != nil {
 		return err
 	}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", configuration.GRPCServer.Port))
+	lis, err := net.Listen(
+		"tcp",
+		fmt.Sprintf(":%d", configuration.GRPCServer.Port),
+	)
 	if err != nil {
 		return err
 	}
 
-	lg := logger.NewZeroLoggerWrapper(log.Logger, func(zlw *logger.ZeroLoggerWrapper) {
-		zlw.LogLevel = configuration.LoggerConfiguration.Level
-	})
+	lg := logger.NewZeroLoggerWrapper(
+		log.Logger,
+		func(zlw *logger.ZeroLoggerWrapper) {
+			zlw.LogLevel = configuration.LoggerConfiguration.Level
+		},
+	)
 
-	outputs := NewOutputCollection(configuration.Outputs, func(oc *OutputCollection) {
-		oc.Logger = lg
-	})
+	outputs := NewOutputCollection(
+		configuration.Outputs,
+		func(oc *OutputCollection) {
+			oc.Logger = lg.Tag("outputs")
+		},
+	)
 
 	err = outputs.Setup()
 	if err != nil {
@@ -77,7 +88,7 @@ func run() error {
 	}
 
 	httpServer := New(app, configuration.HTTPServer, outputs, func(s *Server) {
-		s.Logger = lg
+		s.Logger = lg.Tag("server").Tag("http")
 	})
 
 	grpcOutputs := make([]Out, len(configuration.GRPCServer.Outputs))
@@ -89,7 +100,9 @@ func run() error {
 		grpcOutputs[index] = o
 	}
 
-	messageServer := NewGRPCMessageServer(grpcOutputs, &proto.ProtoEncoder{})
+	messageServer := NewGRPCMessageServer(grpcOutputs, &proto.ProtoEncoder{}, func(gs *GRPCMessageServer) {
+		gs.Logger = lg.Tag("server").Tag("grpc")
+	})
 	grpcServer := grpc.NewServer()
 	proto.RegisterSenderServer(grpcServer, messageServer)
 

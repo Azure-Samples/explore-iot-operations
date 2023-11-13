@@ -12,7 +12,10 @@ type InvalidLimitError struct {
 }
 
 func (err *InvalidLimitError) Error() string {
-	return fmt.Sprintf("limiter cannot have a limit of less than 1 (provided value %d)", err.value)
+	return fmt.Sprintf(
+		"limiter cannot have a limit of less than 1 (provided value %d)",
+		err.value,
+	)
 }
 
 type InvalidPeriodSecondsError struct {
@@ -21,5 +24,8 @@ type InvalidPeriodSecondsError struct {
 }
 
 func (err *InvalidPeriodSecondsError) Error() string {
-	return fmt.Sprintf("limiter cannot have a period seconds value of less than 1 (provided value %d)", err.value)
+	return fmt.Sprintf(
+		"limiter cannot have a period seconds value of less than 1 (provided value %d)",
+		err.value,
+	)
 }

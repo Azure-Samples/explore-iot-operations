@@ -67,14 +67,14 @@ func TestMain(m *testing.M) {
 
 func TestParseExpressionNode(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				require.Equal(t, MockChildNodeID, string(identifier))
 				require.Equal(t, node.EXPRESSION, entity.Type)
 				require.Equal(t, MockNodeExpression, entity.Configuration)
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				require.Equal(t, MockEdgeID, string(identifier))
 				require.Equal(t, MockRootNodeID, string(entity.ParentNodeId))
@@ -86,13 +86,20 @@ func TestParseExpressionNode(t *testing.T) {
 		},
 	}
 
-	err := builder.ParseExpressionNode(MockRootNodeID, MockChildNodeID, MockEdgeID, MockNodeExpression, MockEdgeConfiguration, MockEdgeType)
+	err := builder.ParseExpressionNode(
+		MockRootNodeID,
+		MockChildNodeID,
+		MockEdgeID,
+		MockNodeExpression,
+		MockEdgeConfiguration,
+		MockEdgeType,
+	)
 	require.NoError(t, err)
 }
 
 func TestParseExpressionNodeNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return &component.MockError{}
 			},
@@ -105,14 +112,14 @@ func TestParseExpressionNodeNodeError(t *testing.T) {
 
 func TestParseCollectionNode(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				require.Equal(t, MockChildNodeID, string(identifier))
 				require.Equal(t, node.COLLECTION, entity.Type)
 				require.Equal(t, "", entity.Configuration)
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				require.Equal(t, MockEdgeID, string(identifier))
 				require.Equal(t, MockRootNodeID, string(entity.ParentNodeId))
@@ -124,13 +131,18 @@ func TestParseCollectionNode(t *testing.T) {
 		},
 	}
 
-	err := builder.ParseCollectionNode(MockRootNodeID, MockChildNodeID, MockEdgeID, MockEdgeConfiguration)
+	err := builder.ParseCollectionNode(
+		MockRootNodeID,
+		MockChildNodeID,
+		MockEdgeID,
+		MockEdgeConfiguration,
+	)
 	require.NoError(t, err)
 }
 
 func TestParseCollectionNodeNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return &component.MockError{}
 			},
@@ -143,14 +155,14 @@ func TestParseCollectionNodeNodeError(t *testing.T) {
 
 func TestParseRootNode(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				require.Equal(t, MockRootNodeID, string(identifier))
 				require.Equal(t, node.COLLECTION, entity.Type)
 				require.Equal(t, "", entity.Configuration)
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				require.Equal(t, MockRootNodeID, string(identifier))
 				require.Equal(t, MockFormatterID, string(entity.FormatterID))
@@ -160,13 +172,17 @@ func TestParseRootNode(t *testing.T) {
 		},
 	}
 
-	err := builder.ParseRootNode(MockFormatterID, MockRootNodeID, node.COLLECTION)
+	err := builder.ParseRootNode(
+		MockFormatterID,
+		MockRootNodeID,
+		node.COLLECTION,
+	)
 	require.NoError(t, err)
 }
 
 func TestParseRootNodeNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return &component.MockError{}
 			},
@@ -179,18 +195,18 @@ func TestParseRootNodeNodeError(t *testing.T) {
 
 func TestParseFormatter(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				require.Equal(t, MockFormatterID, string(identifier))
 				require.Equal(t, MockFormatterType, entity.Type)
 				return nil
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -203,16 +219,16 @@ func TestParseFormatter(t *testing.T) {
 
 func TestParseFormatterError(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				return &component.MockError{}
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -225,22 +241,22 @@ func TestParseFormatterError(t *testing.T) {
 
 func TestParseFlat(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				require.Equal(t, MockFormatterType, entity.Type)
 				require.Equal(t, MockSiteName, string(identifier))
 				return nil
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -263,7 +279,7 @@ func TestParseFlat(t *testing.T) {
 
 func TestParseFlatFormatterError(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				return &component.MockError{}
 			},
@@ -276,20 +292,20 @@ func TestParseFlatFormatterError(t *testing.T) {
 
 func TestParseFlatExpressionNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				return nil
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				return &component.MockError{}
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -309,16 +325,20 @@ func TestParseFlatExpressionNodeError(t *testing.T) {
 
 func TestParseJSONTag(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
-				require.Equal(t, "MockSiteName__MockTagID__0__child", string(entity.ChildNodeId))
+				require.Equal(
+					t,
+					"MockSiteName__MockTagID__0__child",
+					string(entity.ChildNodeId),
+				)
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -335,11 +355,11 @@ func TestParseJSONTag(t *testing.T) {
 
 func TestParseJSONTagRootNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return &component.MockError{}
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -352,15 +372,15 @@ func TestParseJSONTagRootNodeError(t *testing.T) {
 
 func TestParseJSONTagExpressionNodeError(t *testing.T) {
 	builder := &KrillBuilder{
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				return &component.MockError{}
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -373,22 +393,22 @@ func TestParseJSONTagExpressionNodeError(t *testing.T) {
 
 func TestParseJSONTagPerMessage(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				require.Equal(t, MockSiteName, string(identifier))
 				require.Equal(t, formatter.JSON, entity.Type)
 				return nil
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return nil
 			},
-		}, edge: &component.MockService[*edge.Component, component.ID]{
+		}, edgeService: &component.MockService[*edge.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *edge.Component) error {
 				return nil
 			},
-		}, renderer: &component.MockService[*renderer.Component, component.ID]{
+		}, rendererService: &component.MockService[*renderer.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *renderer.Component) error {
 				return nil
 			},
@@ -410,7 +430,7 @@ func TestParseJSONTagPerMessage(t *testing.T) {
 
 func TestParseJSONTagPerMessageFormatterError(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				return &component.MockError{}
 			},
@@ -423,12 +443,12 @@ func TestParseJSONTagPerMessageFormatterError(t *testing.T) {
 
 func TestParseJSONTagPerMessageParseJSONTagError(t *testing.T) {
 	builder := &KrillBuilder{
-		formatter: &component.MockService[*formatter.Component, component.ID]{
+		formatterService: &component.MockService[*formatter.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *formatter.Component) error {
 				return nil
 			},
 		},
-		node: &component.MockService[*node.Component, component.ID]{
+		nodeService: &component.MockService[*node.Component, component.ID]{
 			OnCreate: func(identifier component.ID, entity *node.Component) error {
 				return &component.MockError{}
 			},

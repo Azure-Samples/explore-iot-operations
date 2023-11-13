@@ -47,14 +47,18 @@ func (handler *FiberErrorHandler) HandleError(c Context, err error) error {
 	}
 
 	if code >= fiber.StatusInternalServerError {
-		handler.Logger.Level(logger.Error).With("code", fmt.Sprintf("%d", code)).Printf("an internal error occurred")
+		handler.Logger.Level(logger.Error).
+			With("code", fmt.Sprintf("%d", code)).
+			Printf("an internal error occurred")
 	} else {
 		handler.Logger.Level(logger.Debug).With("code", fmt.Sprintf("%d", code)).Printf("an non-500-level error occurred")
 	}
 
 	err = c.Status(code).Send([]byte(err.Error()))
 	if err != nil {
-		handler.Logger.Level(logger.Error).With("error", err.Error()).Printf("error occurred when handling error")
+		handler.Logger.Level(logger.Error).
+			With("error", err.Error()).
+			Printf("error occurred when handling error")
 		return err
 	}
 

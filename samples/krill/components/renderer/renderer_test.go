@@ -5,6 +5,7 @@ import (
 
 	"github.com/explore-iot-ops/samples/krill/components/formatter"
 	"github.com/explore-iot-ops/samples/krill/lib/composition"
+	"github.com/explore-iot-ops/samples/krill/lib/environment"
 	"github.com/stretchr/testify/require"
 )
 

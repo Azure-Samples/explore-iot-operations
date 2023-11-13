@@ -13,7 +13,7 @@ type Dialer interface {
 }
 
 // NetDialer is an implementation of Dialer which wraps the dial functionality of the net package dial function.
-type NetDialer struct{
+type NetDialer struct {
 	OnDial func(network string, address string) (net.Conn, error)
 }
 
@@ -30,7 +30,10 @@ func New(options ...func(*NetDialer)) *NetDialer {
 }
 
 // Dial calls the net package's dial function, passing through its network type and address parameters.
-func (dialer *NetDialer) Dial(network string, address string) (net.Conn, error) {
+func (dialer *NetDialer) Dial(
+	network string,
+	address string,
+) (net.Conn, error) {
 	return dialer.OnDial(network, address)
 }
 
@@ -38,7 +41,10 @@ type MockDialer struct {
 	OnDial func(network string, address string) (net.Conn, error)
 }
 
-func (dialer *MockDialer) Dial(network string, address string) (net.Conn, error) {
+func (dialer *MockDialer) Dial(
+	network string,
+	address string,
+) (net.Conn, error) {
 	return dialer.OnDial(network, address)
 }
 
@@ -99,7 +105,6 @@ func (addr *MockAddr) String() string {
 }
 
 type NoopConn struct {
-
 }
 
 func (*NoopConn) Read(b []byte) (n int, err error) {
@@ -135,7 +140,6 @@ func (*NoopConn) SetWriteDeadline(t time.Time) error {
 }
 
 type NoopAddr struct {
-	
 }
 
 func (*NoopAddr) Network() string {

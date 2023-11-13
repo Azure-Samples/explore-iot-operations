@@ -13,7 +13,10 @@ type InvalidPositionError struct {
 }
 
 func (err *InvalidPositionError) Error() string {
-	return fmt.Sprintf("could not create the edge with id %q -- for a position type edge, an integer value must be provided", err.identifier)
+	return fmt.Sprintf(
+		"could not create the edge with id %q -- for a position type edge, an integer value must be provided",
+		err.identifier,
+	)
 }
 
 type InvalidLabelError struct {
@@ -22,7 +25,10 @@ type InvalidLabelError struct {
 }
 
 func (err *InvalidLabelError) Error() string {
-	return fmt.Sprintf("could not create the edge with id %q -- for a label type edge, a string value must be provided", err.identifier)
+	return fmt.Sprintf(
+		"could not create the edge with id %q -- for a label type edge, a string value must be provided",
+		err.identifier,
+	)
 }
 
 type InvalidTypeError struct {
@@ -46,7 +52,11 @@ type InvalidParentNodeTypeError struct {
 }
 
 func (err *InvalidParentNodeTypeError) Error() string {
-	return fmt.Sprintf("the parent node with id %s of the edge with id %s must be of type collection of array", err.parentNodeIdentifier, err.identifier)
+	return fmt.Sprintf(
+		"the parent node with id %s of the edge with id %s must be of type collection of array",
+		err.parentNodeIdentifier,
+		err.identifier,
+	)
 }
 
 type IdentifierConflictError struct {
@@ -56,5 +66,9 @@ type IdentifierConflictError struct {
 }
 
 func (err *IdentifierConflictError) Error() string {
-	return fmt.Sprintf("edge with id %s cannot have identical child and parent identifiers (id %s)", err.identifier, err.invalid)
+	return fmt.Sprintf(
+		"edge with id %s cannot have identical child and parent identifiers (id %s)",
+		err.identifier,
+		err.invalid,
+	)
 }

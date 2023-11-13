@@ -23,7 +23,12 @@ type Server struct {
 	Logger        logger.Logger
 }
 
-func New(app *fiber.App, configuration HTTPServer, outputs *OutputCollection, options ...func(*Server)) *Server {
+func New(
+	app *fiber.App,
+	configuration HTTPServer,
+	outputs *OutputCollection,
+	options ...func(*Server),
+) *Server {
 	server := &Server{
 		app:           app,
 		configuration: configuration,
@@ -40,14 +45,20 @@ func New(app *fiber.App, configuration HTTPServer, outputs *OutputCollection, op
 
 func (server *Server) Start() error {
 	for _, resource := range server.configuration.Resources {
-		server.Logger.Level(logger.Info).With("method", resource.Method).With("status", fmt.Sprintf("%d", resource.Status)).With("path", resource.Path).Printf("registering new route")
+		server.Logger.Level(logger.Info).
+			With("method", resource.Method).
+			With("status", fmt.Sprintf("%d", resource.Status)).
+			With("path", resource.Path).
+			Printf("registering new route")
 		err := server.Resource(resource)
 		if err != nil {
 			return err
 		}
 	}
 
-	server.Logger.Level(logger.Info).With("port", fmt.Sprintf("%d", server.configuration.Port)).Printf("configuration parsed successfully, now hosting server")
+	server.Logger.Level(logger.Info).
+		With("port", fmt.Sprintf("%d", server.configuration.Port)).
+		Printf("configuration parsed successfully, now hosting server")
 	return server.app.Listen(fmt.Sprintf(":%d", server.configuration.Port))
 }
 
@@ -74,7 +85,9 @@ func (server *Server) Resource(resource Resource) error {
 	return nil
 }
 
-func (server *Server) Handlerfunc(resource Resource) (func(c *fiber.Ctx) error, error) {
+func (server *Server) Handlerfunc(
+	resource Resource,
+) (func(c *fiber.Ctx) error, error) {
 
 	outputs := make([]Out, len(resource.Outputs))
 
@@ -87,14 +100,19 @@ func (server *Server) Handlerfunc(resource Resource) (func(c *fiber.Ctx) error, 
 	}
 
 	return func(c *fiber.Ctx) error {
-		server.Logger.Level(logger.Debug).With("ip", c.IP()).With("method", c.Method()).Printf("incoming request")
+		server.Logger.Level(logger.Debug).
+			With("ip", c.IP()).
+			With("method", c.Method()).
+			Printf("incoming request")
 
 		body := c.Body()
 
 		for _, output := range outputs {
 			err := output.Out(body)
 			if err != nil {
-				server.Logger.Level(logger.Error).With("error", err.Error()).Printf("could not output request body")
+				server.Logger.Level(logger.Error).
+					With("error", err.Error()).
+					Printf("could not output request body")
 			}
 		}
 

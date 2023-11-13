@@ -10,7 +10,10 @@ type MockExporter struct {
 	OnRegisterHistogram func(name, help string, start, width int) (Provider, error)
 }
 
-func (exporter *MockExporter) RegisterHistogram(name, help string, start, width int) (Provider, error) {
+func (exporter *MockExporter) RegisterHistogram(
+	name, help string,
+	start, width int,
+) (Provider, error) {
 	return exporter.OnRegisterHistogram(name, help, start, width)
 }
 
@@ -44,6 +47,8 @@ func (provider *MockProvider) Export() error {
 	return provider.OnExport()
 }
 
-func (provider *MockProvider) Label(label Label) registry.CancellableObservable {
+func (provider *MockProvider) Label(
+	label Label,
+) registry.CancellableObservable {
 	return provider.OnLabel(label)
 }

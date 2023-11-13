@@ -71,45 +71,57 @@ func TestObserverService(t *testing.T) {
 }
 
 func TestObserverServiceRegistryStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, &component.MockError{}
+	service := NewService(
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	}, nil)
+		nil,
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)
 }
 
 func TestObserverServiceProviderStoreError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[provider.Provider, component.ID]{
-		OnGet: func(identifier component.ID) (provider.Provider, error) {
-			return nil, &component.MockError{}
+		&component.MockStore[provider.Provider, component.ID]{
+			OnGet: func(identifier component.ID) (provider.Provider, error) {
+				return nil, &component.MockError{}
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)
 }
 
 func TestObserverServiceProviderWithError(t *testing.T) {
-	service := NewService(nil, &component.MockStore[registry.ObservableRegistry, component.ID]{
-		OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
-			return nil, nil
+	service := NewService(
+		nil,
+		&component.MockStore[registry.ObservableRegistry, component.ID]{
+			OnGet: func(identifier component.ID) (registry.ObservableRegistry, error) {
+				return nil, nil
+			},
 		},
-	}, &component.MockStore[provider.Provider, component.ID]{
-		OnGet: func(identifier component.ID) (provider.Provider, error) {
-			return &provider.MockProvider{
-				OnWith: func(label string) (registry.CancellableObservable, error) {
-					return nil, &component.MockError{}
-				},
-			}, nil
+		&component.MockStore[provider.Provider, component.ID]{
+			OnGet: func(identifier component.ID) (provider.Provider, error) {
+				return &provider.MockProvider{
+					OnWith: func(label string) (registry.CancellableObservable, error) {
+						return nil, &component.MockError{}
+					},
+				}, nil
+			},
 		},
-	})
+	)
 
 	err := service.Create(MockID, &Component{})
 	require.Equal(t, &component.MockError{}, err)

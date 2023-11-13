@@ -106,10 +106,10 @@ type MockClient struct {
 	OnDisconnected func() chan struct{}
 }
 
-func (client *MockClient) Connected() chan struct{} {
-	return client.OnConnected()
+func (cli *MockClient) Connected() chan struct{} {
+	return cli.OnConnected()
 }
 
-func (client *MockClient) Disconnected() chan struct{} {
-	return client.OnDisconnected()
+func (cli *MockClient) Disconnected() chan struct{} {
+	return cli.OnDisconnected()
 }
