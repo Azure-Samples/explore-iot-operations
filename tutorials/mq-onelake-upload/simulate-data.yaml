@@ -1,0 +1,91 @@
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mqtt-publisher
+  namespace: azure-iot-operations
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-publisher-deployment
+  namespace: azure-iot-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-publisher
+  template:
+    metadata:
+      labels:
+        app: mqtt-publisher
+    spec:
+      serviceAccountName: mqtt-publisher
+      containers:
+      - name: mqtt-publisher
+        image: alpine/curl
+        env:
+        - name: MQTT_TOPIC
+          value: "sensor/data"
+        - name: MQTTUI_BROKER
+          value: 'mqtt://aio-mq-dmqtt-frontend:1883'
+        - name: MQTTUI_USERNAME
+          value: '$sat'
+        - name: SLEEP_DURATION_SECONDS
+          value: "0.75"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          apk add mqttui bc jq
+          export MQTTUI_PASSWORD=$(cat /var/run/secrets/tokens/mqtt-client-token)
+          MSG_COUNT=0
+          SECONDS=0
+          REPORT_INTERVAL=7
+          while true; do
+            # Generate random values for temperature, pressure and vibration
+            PRES=$(awk -v min=290 -v max=300 'BEGIN{srand(); print min+rand()*(max-min)}')
+            TEMP=$(awk -v min=50 -v max=60 'BEGIN{srand(); print min+rand()*(max-min)}')
+            VIB=$(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
+
+            DATA=$(jq -n \
+                      --arg id "Sensor-$(hostname)-$$" \
+                      --argjson temp "$TEMP" \
+                      --argjson pres "$PRES" \
+                      --argjson vib "$VIB" \
+                      '{
+                        sensor_id: $id,
+                        temperature: $temp,
+                        pressure: $pres,
+                        vibration: $vib
+                      }')
+
+            mqttui publish -i "iiot-scenario-walkthru" $MQTT_TOPIC "$DATA"
+
+            MSG_COUNT=$((MSG_COUNT+1))
+
+             # Use awk to add a floating point number to SECONDS
+            SECONDS=$(awk -v sec=$SECONDS -v dur=$SLEEP_DURATION_SECONDS 'BEGIN {print sec + dur}')
+            
+            if [ $(echo "$SECONDS / $REPORT_INTERVAL" | bc) -gt 0 ]; then
+              echo "Messages published in the last $REPORT_INTERVAL seconds: $MSG_COUNT"
+              MSG_COUNT=0
+              SECONDS=0
+            fi
+
+            SLEEP_DURATION_MICROSECONDS=$(echo "$SLEEP_DURATION_SECONDS*1000000/1" | bc)
+            usleep $SLEEP_DURATION_MICROSECONDS
+
+          done
+        volumeMounts:
+        - name: mqtt-client-token
+          mountPath: "/var/run/secrets/tokens"
+          readOnly: true
+      volumes:
+      - name: mqtt-client-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: mqtt-client-token
+              expirationSeconds: 86400
+              audience: "aio-mq"
