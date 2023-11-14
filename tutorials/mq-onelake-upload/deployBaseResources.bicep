@@ -68,7 +68,7 @@ param mqMode string = 'distributed'
   'medium'
   'high'
 ])
-param mqMemoryProfile string = 'tiny'
+param mqMemoryProfile string = 'medium'
 
 
 @allowed([
@@ -219,6 +219,9 @@ resource broker 'Microsoft.IoTOperationsMQ/mq/broker@2023-10-04-preview' = {
     mode: mqMode
     encryptInternalTraffic: false
     memoryProfile: mqMemoryProfile
+    diskBackedMessageBufferSettings: {
+      maxSize: '2Gi'
+    }
     cardinality: {
       backendChain: {
         partitions: mqBackendPartitions
