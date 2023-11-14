@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mq-event-driven-dapr
-  namespace: azure-iot-operations
+#  namespace: azure-iot-operations
 spec:
   replicas: 1
   selector:
@@ -24,11 +24,11 @@ spec:
         emptyDir: {}
 
       # SAT token used to authenticate between Dapr and the MQTT broker
-      - name: mq-sat
+      - name: mqtt-client-token
         projected:
           sources:
             - serviceAccountToken:
-                path: mq-sat
+                path: mqtt-client-token
                 audience: aio-mq
                 expirationSeconds: 86400
 
@@ -49,7 +49,7 @@ spec:
         volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
-        - name: mq-sat
+        - name: mqtt-client-token
           mountPath: /var/run/secrets/tokens/
         - name: aio-ca-trust-bundle
           mountPath: /var/run/certs/aio-mq-ca-cert/
@@ -60,7 +60,7 @@ spec:
         volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
-        - name: mq-sat
+        - name: mqtt-client-token
           mountPath: /var/run/secrets/tokens/
         - name: aio-ca-trust-bundle
           mountPath: /var/run/certs/aio-mq-ca-cert/
