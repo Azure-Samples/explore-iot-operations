@@ -2,6 +2,6 @@
 
 ## Build 
 
-`docker build . -t dapr/mq-dapr-coldpath`
+`docker build . -t dapr/mq-coldpath-dapr`
 
 ## Run

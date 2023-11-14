@@ -1,4 +1,5 @@
 cloudevents
 dapr
 dapr-ext-grpc
+numpy
 timeloop
