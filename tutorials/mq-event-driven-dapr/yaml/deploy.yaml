@@ -17,11 +17,12 @@ spec:
         dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
         dapr.io/app-id: "mq-event-driven-dapr"
         dapr.io/app-port: "6001"
-        dapr.io/app-protocol: "grpc"        
+        dapr.io/app-protocol: "grpc"
     spec:
       volumes:
       - name: dapr-unix-domain-socket
         emptyDir: {}
+
       # SAT token used to authenticate between Dapr and the MQTT broker
       - name: mqtt-client-token
         projected:
@@ -30,14 +31,17 @@ spec:
                 path: mqtt-client-token
                 audience: aio-mq-dmqtt
                 expirationSeconds: 86400
+
       # Certificate chain for Dapr to validate the MQTT broker
       - name: aio-mq-ca-cert-chain
         configMap:
           name: aio-mq-ca-cert-chain
+
       containers:
       # Container for the dapr quickstart application 
       - name: mq-event-driven-dapr
         image: ghcr.io/azure-samples/explore-iot-operations/mq-event-driven-dapr:latest
+
       # Container for the Pub/sub component
       - name: aio-mq-pubsub-pluggable
         image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
@@ -48,6 +52,7 @@ spec:
           mountPath: /var/run/secrets/tokens
         - name: aio-mq-ca-cert-chain
           mountPath: /certs/aio-mq-ca-cert/
+
       # Container for the State Management component
       - name: aio-mq-statestore-pluggable
         image: ghcr.io/azure/iot-mq-dapr-components/statestore:latest

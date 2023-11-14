@@ -9,7 +9,7 @@ For detailed instructions on running this tutorial, follow [Build event-driven a
 To build the application container, execute the following:
 
 ```bash
-docker build . -t dapr/mq-coldpath-dapr
+docker build . -t mq-event-driven-dapr
 ```
 
 ## Running
