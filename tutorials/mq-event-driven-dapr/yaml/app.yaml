@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mq-event-driven-dapr
-#  namespace: azure-iot-operations
+  namespace: azure-iot-operations
 spec:
   replicas: 1
   selector:
