@@ -24,23 +24,24 @@ spec:
         emptyDir: {}
 
       # SAT token used to authenticate between Dapr and the MQTT broker
-      - name: mqtt-client-token
+      - name: mq-sat
         projected:
           sources:
             - serviceAccountToken:
-                path: mqtt-client-token
-                audience: aio-mq-dmqtt
+                path: mq-sat
+                audience: aio-mq
                 expirationSeconds: 86400
 
       # Certificate chain for Dapr to validate the MQTT broker
-      - name: aio-mq-ca-cert-chain
+      - name: aio-ca-trust-bundle
         configMap:
-          name: aio-mq-ca-cert-chain
+          name: aio-ca-trust-bundle-test-only
 
       containers:
       # Container for the dapr quickstart application 
       - name: mq-event-driven-dapr
         image: ghcr.io/azure-samples/explore-iot-operations/mq-event-driven-dapr:latest
+        imagePullPolicy: Always
 
       # Container for the Pub/sub component
       - name: aio-mq-pubsub-pluggable
@@ -48,10 +49,10 @@ spec:
         volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
-        - name: mqtt-client-token
-          mountPath: /var/run/secrets/tokens
-        - name: aio-mq-ca-cert-chain
-          mountPath: /certs/aio-mq-ca-cert/
+        - name: mq-sat
+          mountPath: /var/run/secrets/tokens/
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/
 
       # Container for the State Management component
       - name: aio-mq-statestore-pluggable
@@ -59,7 +60,7 @@ spec:
         volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
-        - name: mqtt-client-token
-          mountPath: /var/run/secrets/tokens
-        - name: aio-mq-ca-cert-chain
-          mountPath: /certs/aio-mq-ca-cert/
+        - name: mq-sat
+          mountPath: /var/run/secrets/tokens/
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/
