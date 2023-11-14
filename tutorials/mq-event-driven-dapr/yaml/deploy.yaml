@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mq-dapr-coldpath
+  name: mq-event-driven-dapr
   namespace: azure-iot-operations
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mq-dapr-coldpath
+      app: mq-event-driven-dapr
   template:
     metadata:
       labels:
-        app: mq-dapr-coldpath
+        app: mq-event-driven-dapr
       annotations:
         dapr.io/enabled: "true"
         dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
-        dapr.io/app-id: "mq-dapr-coldpath"
+        dapr.io/app-id: "mq-event-driven-dapr"
         dapr.io/app-port: "6001"
         dapr.io/app-protocol: "grpc"        
     spec:
@@ -36,8 +36,8 @@ spec:
           name: aio-mq-ca-cert-chain
       containers:
       # Container for the dapr quickstart application 
-      - name: mq-dapr-coldpath
-        image: ghcr.io/azure-samples/explore-iot-operations/mq-coldpath-dapr:latest
+      - name: mq-event-driven-dapr
+        image: ghcr.io/azure-samples/explore-iot-operations/mq-event-driven-dapr:latest
       # Container for the Pub/sub component
       - name: aio-mq-pubsub-pluggable
         image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
