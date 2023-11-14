@@ -23,31 +23,29 @@ spec:
       serviceAccountName: mqtt-publisher
       containers:
       - name: mqtt-publisher
-        image: debian:stable-slim
+        image: alpine/curl
         env:
         - name: MQTT_TOPIC
           value: "sensor/data"
         - name: MQTTUI_BROKER
-          value: 'mqtts://aio-mq-dmqtt-frontend:8883'
+          value: 'mqtt://aio-mq-dmqtt-frontend:1883'
         - name: MQTTUI_USERNAME
           value: '$sat'
-        - name: SLEEP_DURATION
-          value: "0.2"
+        - name: SLEEP_DURATION_SECONDS
+          value: "0.75"
         command: ["/bin/sh"]
         args:
         - -c
         - |
-          apt-get update && apt-get install -y jq curl bc
-          curl -LO https://github.com/EdJoPaTo/mqttui/releases/download/v0.19.0/mqttui-v0.19.0-x86_64-unknown-linux-gnu.deb
-          apt-get install ./mqttui-v0.19.0-x86_64-unknown-linux-gnu.deb
+          apk add mqttui bc jq
           export MQTTUI_PASSWORD=$(cat /var/run/secrets/tokens/mqtt-client-token)
           MSG_COUNT=0
           SECONDS=0
-          REPORT_INTERVAL=10
+          REPORT_INTERVAL=7
           while true; do
             # Generate random values for temperature, pressure and vibration
             PRES=$(awk -v min=290 -v max=300 'BEGIN{srand(); print min+rand()*(max-min)}')
-            TEMP=$(awk -v min=550 -v max=600 'BEGIN{srand(); print min+rand()*(max-min)}')
+            TEMP=$(awk -v min=50 -v max=60 'BEGIN{srand(); print min+rand()*(max-min)}')
             VIB=$(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
 
             DATA=$(jq -n \
@@ -64,12 +62,12 @@ spec:
                         vibration: $vib
                       }')
 
-            mqttui publish -i "iiot-scenario-walkthru" --insecure $MQTT_TOPIC "$DATA"
+            mqttui publish -i "iiot-scenario-walkthru" $MQTT_TOPIC "$DATA"
 
             MSG_COUNT=$((MSG_COUNT+1))
 
              # Use awk to add a floating point number to SECONDS
-            SECONDS=$(awk -v sec=$SECONDS -v dur=$SLEEP_DURATION 'BEGIN {print sec + dur}')
+            SECONDS=$(awk -v sec=$SECONDS -v dur=$SLEEP_DURATION_SECONDS 'BEGIN {print sec + dur}')
             
             if [ $(echo "$SECONDS / $REPORT_INTERVAL" | bc) -gt 0 ]; then
               echo "Messages published in the last $REPORT_INTERVAL seconds: $MSG_COUNT"
@@ -77,7 +75,8 @@ spec:
               SECONDS=0
             fi
 
-            sleep $SLEEP_DURATION
+            SLEEP_DURATION_MICROSECONDS=$(echo "$SLEEP_DURATION_SECONDS*1000000/1" | bc)
+            usleep $SLEEP_DURATION_MICROSECONDS
 
           done
         volumeMounts:
