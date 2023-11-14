@@ -1,57 +1,58 @@
-# This is the user application that references the registered components
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: mq-dapr-coldpath
-  annotations:
-    dapr.io/enabled: "true"
-    dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
-    dapr.io/app-id: "dapr-python-subscriber"
-    dapr.io/app-port: "6001"      # Required for
-    dapr.io/app-protocol: "grpc"  # Subscriber clients
+  namespace: azure-iot-operations
 spec:
-  serviceAccountName: mqtt-client
-
-  volumes:
-    - name: dapr-unix-domain-socket
-      emptyDir: {}
-
-    # SAT token used to authenticate between Dapr and the MQTT broker
-    - name: mqtt-client-token
-      projected:
-        sources:
-          - serviceAccountToken:
-              path: mqtt-client-token
-              audience: aio-mq-dmqtt
-              expirationSeconds: 86400
-
-    # Certificate chain for Dapr to validate the MQTT broker
-    - name: aio-mq-ca-cert-chain
-      configMap:
-        name: aio-mq-ca-cert-chain
-
-  containers:
-    # Container for the dapr quickstart application 
-    - name: mq-dapr-coldpath
-      image: dapr/mq-dapr-coldpath
-      imagePullPolicy: Never
-#      image: ghcr.io/azure-samples/explore-iot-operations/quickstart-sample:latest
-
-    # Container for the Pub/sub component
-    - name: aio-mq-pubsub-pluggable
-      image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
-      volumeMounts:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mq-dapr-coldpath
+  template:
+    metadata:
+      labels:
+        app: mq-dapr-coldpath
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "mq-dapr-coldpath"
+        dapr.io/app-port: "6001"
+        dapr.io/app-protocol: "grpc"        
+    spec:
+      volumes:
+      - name: dapr-unix-domain-socket
+        emptyDir: {}
+      # SAT token used to authenticate between Dapr and the MQTT broker
+      - name: mqtt-client-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: mqtt-client-token
+                audience: aio-mq-dmqtt
+                expirationSeconds: 86400
+      # Certificate chain for Dapr to validate the MQTT broker
+      - name: aio-mq-ca-cert-chain
+        configMap:
+          name: aio-mq-ca-cert-chain
+      containers:
+      # Container for the dapr quickstart application 
+      - name: mq-dapr-coldpath
+        image: ghcr.io/azure-samples/explore-iot-operations/mq-coldpath-dapr:latest
+        imagePullPolicy: Never
+      # Container for the Pub/sub component
+      - name: aio-mq-pubsub-pluggable
+        image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
+        volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
         - name: mqtt-client-token
           mountPath: /var/run/secrets/tokens
         - name: aio-mq-ca-cert-chain
           mountPath: /certs/aio-mq-ca-cert/
-
-    # Container for the State Management component
-    - name: aio-mq-statestore-pluggable
-      image: ghcr.io/azure/iot-mq-dapr-components/statestore:latest
-      volumeMounts:
+      # Container for the State Management component
+      - name: aio-mq-statestore-pluggable
+        image: ghcr.io/azure/iot-mq-dapr-components/statestore:latest
+        volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
         - name: mqtt-client-token
