@@ -34,14 +34,6 @@ This project provides the following tools:
 
 1. (Add Krill and other instructions)
 
-## Resources
-
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
-
 ## Contributing
 
 Please view the developer guides in the docs directory to get started with contributions. Get started with the [Organization docs](./docs/ORGANIZATION.md).
