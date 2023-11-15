@@ -1,4 +1,7 @@
-// Package counter contains the counter-based implementations of a Provider.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package counter contains the counter-based implementations of a Provider.
 // Counter Providers represent and wrap the counterVec prometheus metrics.
 package counter
 

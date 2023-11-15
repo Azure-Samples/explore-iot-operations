@@ -1,4 +1,7 @@
-// Package registry contains the implementation of the monitor and observer components as well as other functionality related to configurable metrics and observability.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package registry contains the implementation of the monitor and observer components as well as other functionality related to configurable metrics and observability.
 package registry
 
 import "sync"

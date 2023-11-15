@@ -1,4 +1,7 @@
-// Package site provides the implementation of the site component of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package site provides the implementation of the site component of the simulation framework.
 package site
 
 import "github.com/explore-iot-ops/samples/krill/components/registry"

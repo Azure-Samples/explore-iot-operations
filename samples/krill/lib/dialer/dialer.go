@@ -1,4 +1,7 @@
-// Package dialers defines interfaces for GRPC and TCP dialers which are used across various parts of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package dialers defines interfaces for GRPC and TCP dialers which are used across various parts of the simulation framework.
 // It also contains mock implementations for testing purposes and wrappers around the dial functions provided by the net and google grpc packages.
 package dialer
 

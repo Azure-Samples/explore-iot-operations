@@ -1,4 +1,7 @@
-// Package topic provides the implementation for the topic component of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package topic provides the implementation for the topic component of the simulation framework.
 package topic
 
 import (

@@ -1,4 +1,7 @@
-// Package broker provides the implementation of the broker component of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package broker provides the implementation of the broker component of the simulation framework.
 package broker
 
 import (

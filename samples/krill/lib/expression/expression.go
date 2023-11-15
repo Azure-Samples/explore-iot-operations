@@ -1,4 +1,7 @@
-// Package expression provides functionality to evaluate simple mathematic expressions and functions.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package expression provides functionality to evaluate simple mathematic expressions and functions.
 package expression
 
 import (

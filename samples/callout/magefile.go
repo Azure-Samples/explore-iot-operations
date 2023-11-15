@@ -1,5 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 //go:build mage
 
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package main
 
 import (

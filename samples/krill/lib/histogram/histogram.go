@@ -1,4 +1,7 @@
-// Package histogram provides the histogram type implementation of the Provider interface.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package histogram provides the histogram type implementation of the Provider interface.
 // Histogram Providers represent the histogramVec prometheus metrics.
 package histogram
 

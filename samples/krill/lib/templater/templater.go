@@ -1,4 +1,7 @@
-// Package templater contains the templating functionality used to convert a general request body template into a body specific to a particular request.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package templater contains the templating functionality used to convert a general request body template into a body specific to a particular request.
 package templater
 
 import (

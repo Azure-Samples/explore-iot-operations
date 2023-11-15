@@ -1,4 +1,7 @@
-// Package client contains all MQTT client interfaces and implementations.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package client contains all MQTT client interfaces and implementations.
 // It defines several client implementations, including MQTT v3 and v5 compatible clients
 // as well as mocking clients for testing.
 package client
@@ -25,7 +28,10 @@ type PublisherSubscriber interface {
 	GetName() string
 }
 
-// Publisher is an interface whose implementation should include the observable functionality (see registry package),
+// Publisher is an interface whose implementation should include the observable functionality (see registry // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+package),
 // as well as the ability to publish a message on a given topic.
 type Publisher interface {
 	Publish(topic string, qos byte, messagesRetained bool, data []byte) error

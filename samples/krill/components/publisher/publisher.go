@@ -1,4 +1,7 @@
-// Package publisher provides the implementation for the publisher component of the simulation framework along with all associated interfaces.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package publisher provides the implementation for the publisher component of the simulation framework along with all associated interfaces.
 package publisher
 
 import (

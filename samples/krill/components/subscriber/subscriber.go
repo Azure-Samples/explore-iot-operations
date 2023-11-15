@@ -1,4 +1,7 @@
-// Package subscriber provides the implementation for the subscriber component of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package subscriber provides the implementation for the subscriber component of the simulation framework.
 package subscriber
 
 import (

@@ -1,4 +1,7 @@
-// Package formatter provides the implementation of the formatter component of the simulation framework.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// package formatter provides the implementation of the formatter component of the simulation framework.
 package formatter
 
 import (
