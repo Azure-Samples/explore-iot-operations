@@ -1,4 +1,4 @@
-module github.com/explore-iot-ops/samples/callout
+module github.com/explore-iot-ops/samples/http-grpc-callout
 
 go 1.21.3
 

@@ -4,9 +4,9 @@ FROM mcr.microsoft.com/oss/go/microsoft/golang:1.21-cbl-mariner2.0 AS build
 
 COPY ./lib /workdir/lib
 
-COPY ./samples/callout /workdir/samples/callout
+COPY ./samples/http-grpc-callout /workdir/samples/http-grpc-callout
 
-WORKDIR /workdir/samples/callout
+WORKDIR /workdir/samples/http-grpc-callout
 
 RUN go mod download
 
@@ -14,7 +14,7 @@ RUN go install github.com/magefile/mage@latest
 
 RUN mage ci
 
-RUN go build -o ./bin/callout ./cmd/callout
+RUN go build -o ./bin/http-grpc-callout ./cmd/http-grpc-callout
 
 EXPOSE 2112
 

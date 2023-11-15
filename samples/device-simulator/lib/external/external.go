@@ -230,7 +230,9 @@ func (builder *DeviceSimulatorBuilder) ParseTopicAndPublisher(
 	)
 }
 
-func (builder *DeviceSimulatorBuilder) ParseTags(configuration Site) ([]string, error) {
+func (builder *DeviceSimulatorBuilder) ParseTags(
+	configuration Site,
+) ([]string, error) {
 	switch configuration.PayloadFormat {
 	case "JSONTagPerMessage":
 		return builder.ParseJSONTagPerMessage(configuration)
@@ -251,7 +253,9 @@ func (builder *DeviceSimulatorBuilder) ParseTags(configuration Site) ([]string, 
 	}
 }
 
-func (builder *DeviceSimulatorBuilder) ParseAssets(configuration Site) ([]string, error) {
+func (builder *DeviceSimulatorBuilder) ParseAssets(
+	configuration Site,
+) ([]string, error) {
 	assets := make([]string, configuration.AssetCount)
 	for count := 0; count < configuration.AssetCount; count++ {
 		asset, err := builder.ParseAsset(configuration, count)
@@ -362,7 +366,9 @@ func (builder *DeviceSimulatorBuilder) ParseJSONTag(
 	return tagID, nil
 }
 
-func (builder *DeviceSimulatorBuilder) ParseOPCUA(configuration Site) ([]string, error) {
+func (builder *DeviceSimulatorBuilder) ParseOPCUA(
+	configuration Site,
+) ([]string, error) {
 	err := builder.ParseFormatter(
 		configuration.Name,
 		formatter.JSON,

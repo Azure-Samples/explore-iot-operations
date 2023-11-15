@@ -14,7 +14,7 @@ import (
 
 func CI() error {
 	return mage.CI(
-		"github.com/explore-iot-ops/samples/callout/",
+		"github.com/explore-iot-ops/samples/http-grpc-callout/",
 		map[string]any{"cmd": nil},
 		3000,
 		0.00,

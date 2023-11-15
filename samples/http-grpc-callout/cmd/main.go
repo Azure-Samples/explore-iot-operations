@@ -103,9 +103,13 @@ func run() error {
 		grpcOutputs[index] = o
 	}
 
-	messageServer := NewGRPCMessageServer(grpcOutputs, &proto.ProtoEncoder{}, func(gs *GRPCMessageServer) {
-		gs.Logger = lg.Tag("server").Tag("grpc")
-	})
+	messageServer := NewGRPCMessageServer(
+		grpcOutputs,
+		&proto.ProtoEncoder{},
+		func(gs *GRPCMessageServer) {
+			gs.Logger = lg.Tag("server").Tag("grpc")
+		},
+	)
 	grpcServer := grpc.NewServer()
 	proto.RegisterSenderServer(grpcServer, messageServer)
 
