@@ -1,4 +1,15 @@
+---
+page_type: sample
+description: Learn how to aggregate data at the edge using IoT MQ and Dapr.
+languages:
+- python
+products:
+- azure-iot-operations
+---
+
 # Building event driven apps with Dapr
+
+Learn how to aggregate data at the edge using IoT MQ and Dapr.
 
 ## Tutorial instructions
 
@@ -6,11 +17,11 @@ For detailed instructions on running this tutorial, follow [Build event-driven a
 
 ## Building
 
-To build the application container, execute the following:
+1. To build the application container, execute the following:
 
-```bash
-docker build . -t mq-event-driven-dapr
-```
+    ```bash
+    docker build . -t mq-event-driven-dapr
+    ```
 
 ## Running
 
