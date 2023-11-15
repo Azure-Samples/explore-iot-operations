@@ -1,0 +1,13 @@
+name: industrial_data_simulator_test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - samples/industrial-data-simulator/**
+
+jobs:
+  call-mage-test:
+    uses: ./.github/workflows/mage_tests.yml
+    with:
+      workdir: samples/industrial-data-simulator/
