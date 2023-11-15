@@ -28,4 +28,4 @@ Explore IoT Operations is a collection of tools and samples for customers of Azu
 
 ## Linting, Formatting, and Testing Requirements
 
-Linting, formatting, and testing are not required but are highly recommended. The mage library under `./lib/mage` is provided for golang projects and offers some basic commands for linting, formatting, building, testing, and assuring test coverage bars. Comments describe each function within the library. See `./samples/device-simulation/mage.go` for an example of how this library is used.
+Linting, formatting, and testing are not required but are highly recommended. The mage library under `./lib/mage` is provided for golang projects and offers some basic commands for linting, formatting, building, testing, and assuring test coverage bars. Comments describe each function within the library. See `./samples/industrial-data-simulator/mage.go` for an example of how this library is used.
