@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 /// Handles authentication of MQTT connections.
 mod authenticate;
