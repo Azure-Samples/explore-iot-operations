@@ -1,15 +1,14 @@
-# Azure IoT Operations Dev Toolbox
+# Explore IoT Operations
 
-This repo is the source of tools, samples, and other resources for customers of Azure IoT Operations.
+This repo is the source of tools, samples, tutorials, and other resources for customers of Azure IoT Operations.
 
 ## Features
 
-This project provides the following tools:
+This project provides the following:
 
 * Pre-configured codespace with [K3s](https://k3s.io/) cluster via [K3d](https://k3d.io/)
-* Krill MQTT Data Simulator
-* HTTP Callout Server
-* GRPC Callout Server
+* MQTT Device Simulator
+* HTTP & GRPC Callout Server
 
 > [!IMPORTANT]
 > Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use a validated environment from the official documentation.

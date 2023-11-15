@@ -1,55 +1,31 @@
-# Toolbox Organization
+# Explore IoT Operations Organization
 
 ## Structure
 
-The AIO toolbox is a collection of several tools for customers of AIO. To keep the project understandable and extensible to future additions, the following conventions should be followed for repository structure.
+Explore IoT Operations is a collection of tools and samples for customers of Azure IoT Operations. To keep the project understandable and extensible to future additions, the following conventions should be followed for repository structure.
 
 ```
-├── lib
-│   ├── library1
+├── lib/
+│   ├── library1/
 │   ├── ...
-│   ├── libraryN
-├── samples
-│   ├── tool1
-│   │   ├── config.yml
-│   │   ├── config.json
+│   ├── libraryN/
+├── samples/
+│   ├── sample1/
 │   ├── ...
-│   ├── toolN
-├── tools
-│   ├── tool1
-│   │   ├── cmd
-│   │   │   ├── main.go
-│   │   ├── pkg
-│   │   │   ├── pkg1
-│   ├── ...
-│   ├── toolN
-├── docker
-│   ├── tool1
-│   │   ├── Dockerfile
-│   ├── ...
-│   ├── toolN
-├── go.mod
-├── go.sum
-├── magefile.go
+│   ├── sampleN/
+├── scripts/
+├── tutorials/
 └── README.md
 ```
 
-__Libraries__ which are shared between multiple tools should be stored in the lib directory. This library can be incorporated into projects beyond AIO tools and such documentation will be available on the _go.dev_ documentation site.
+**Libraries** (`./lib`) are shared between multiple tools or samples.
 
-__Samples__ are configuration files which have been created for specific sample usages of a tool. Multiple configuration files can live in each sample folder for different samples which utilize the same tool.
+**Samples** (`./samples`) are tools or code samples which can be written in any language. They should be given a descriptive name which adequately describes their purpose, and should include some level of documentation regarding their usage.
 
-__Tools__ are AIO specific tools which may have their own internal packages stored within the pkg folder. Other top-level folders in each tool are allowed, though it is recommended to minimize the number of top-level folders. Each tool must also have its own cmd directory where the entrypoint is located.
+**Scripts** (`./scripts`) are bash scripts smaller than a tool or sample which are in some way used for setup.
 
-__Dockerfiles__ for relavent docker images are stored for each tool under the docker directory. They are siloed into their own directories for each tool.
+**Tutorials** (`./tutorials`) are collections of code and documentation which are used together to provide a step-by-step walkthrough to demonstrate the capabilities of some feature of Azure IoT Operations. These typically serve a more narrow scope than that of a tool or code sample, designed to exercise specific facets of Azure IoT Operations.
 
-__Mage Commands__ are located within the magefile.go. Mage commands should be written in such a way that they apply to any given tool based on a parameter. Mage commands should not be targeted at a specific tool itself. If such a command is required, a magefile within the tool directory should be produced.
+## Linting, Formatting, and Testing Requirements
 
-## Linting & Formatting Requirements
-
-Linting and formatting rules are applied to all tools and libraries based on a linting configuration set up and applied via mage commands.
-
-## Example Tool
-
-Please view the example tool in `tools/example` for an example of how to contribute a new tool to the AIO toolbox.
-
-_Note_: tools can be written in any language including minimal tools such as bash scripts. The tools are written in golang in this document for example purposes.
+Linting, formatting, and testing are not required but are highly recommended. The mage library under `./lib/mage` is provided for golang projects and offers some basic commands for linting, formatting, building, testing, and assuring test coverage bars. Comments describe each function within the library. See `./samples/device-simulation/mage.go` for an example of how this library is used.
