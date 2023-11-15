@@ -1,0 +1,15 @@
+bin
+.vscode/*
+/mako
+dns.yaml
+/src/**/config.json
+/bin
+/listen
+/mqtt
+/manager
+/simulator
+dist/
+cover.tmp.out
+coverage.out
+web
+cover.*
