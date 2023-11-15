@@ -1,0 +1,13 @@
+name: http_grpc_callout_test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - samples/http-grpc-callout/**
+
+jobs:
+  call-mage-test:
+    uses: ./.github/workflows/mage_tests.yml
+    with:
+      workdir: samples/http-grpc-callout/
