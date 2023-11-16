@@ -11,8 +11,11 @@ replace (
 
 require (
 	github.com/explore-iot-ops/lib/env v0.0.0-00010101000000-000000000000
+	github.com/explore-iot-ops/lib/logger v0.0.0-00010101000000-000000000000
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -29,5 +32,4 @@ require (
 	github.com/valyala/fasthttp v1.50.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

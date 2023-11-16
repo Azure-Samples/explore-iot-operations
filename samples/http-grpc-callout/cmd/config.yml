@@ -4,15 +4,15 @@ servers:
   http:
     port: 3333
     resources:
-      - path: /example1 # PUT localhost:3333/example -Body { "field": 123 }
-        method: POST
+      - path: /example
+        method: GET
         status: 200
         outputs: ["output1", "output2"]
         response: |
           {
             "hello": "world"
           }
-      - path: /example # POST localhost:3333/example
+      - path: /example
         method: POST
         status: 200
         outputs: ["output3", "output4"]
@@ -22,7 +22,7 @@ servers:
           }
   grpc:
     port: 3334
-    outputs: ['output1', 'output4']
+    outputs: ["output1", "output4"]
 outputs:
   - name: output1
     type: stdout
@@ -41,5 +41,3 @@ outputs:
     qos: 1
     path: grpc/example
     endpoint: localhost:1883
-
-

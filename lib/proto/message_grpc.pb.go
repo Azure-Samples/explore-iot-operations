@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SenderClient interface {
-	Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error)
+	Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
 type senderClient struct {
@@ -33,8 +33,8 @@ func NewSenderClient(cc grpc.ClientConnInterface) SenderClient {
 	return &senderClient{cc}
 }
 
-func (c *senderClient) Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *senderClient) Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
 	err := c.cc.Invoke(ctx, "/Sender/Send", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,14 +46,14 @@ func (c *senderClient) Send(ctx context.Context, in *Message, opts ...grpc.CallO
 // All implementations should embed UnimplementedSenderServer
 // for forward compatibility
 type SenderServer interface {
-	Send(context.Context, *Message) (*Empty, error)
+	Send(context.Context, *Message) (*Message, error)
 }
 
 // UnimplementedSenderServer should be embedded to have forward compatible implementations.
 type UnimplementedSenderServer struct {
 }
 
-func (UnimplementedSenderServer) Send(context.Context, *Message) (*Empty, error) {
+func (UnimplementedSenderServer) Send(context.Context, *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
 }
 
