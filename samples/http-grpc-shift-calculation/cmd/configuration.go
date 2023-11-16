@@ -16,5 +16,6 @@ type ServerConfiguration struct {
 }
 
 type CalculatorConfiguration struct {
-	Shifts int `json:"shifts" yaml:"shifts"`
+	Shifts      int    `json:"shifts" yaml:"shifts"`
+	InitialTime string `json:"initialTime" yaml:"initialTime"`
 }
