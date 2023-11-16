@@ -1,0 +1,13 @@
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: az-mqtt-non-tls-listener
+  namespace: azure-iot-operations
+spec:
+  brokerRef: broker
+  authenticationEnabled: false
+  authorizationEnabled: false
+  port: 1883
+
+  serviceName: aio-mq-dmqtt-frontend-nontls
+  serviceType: loadBalancer
