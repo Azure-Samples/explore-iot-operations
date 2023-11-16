@@ -1,9 +1,10 @@
 ---
 page_type: sample
-description: Learn how to aggregate data at the edge using IoT MQ and Dapr.
+description: Build event-driven apps with Dapr on the Edge
 languages:
 - python
 products:
+- azure-iot
 - azure-iot-operations
 ---
 
