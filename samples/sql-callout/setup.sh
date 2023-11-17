@@ -1,8 +1,11 @@
+
+# Create manifest file.
+cat << EOF > manifest.yml
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  namespace: default
+  namespace: $1
   name: pg-pv
   labels:
     app: postgres
@@ -19,7 +22,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  namespace: default
+  namespace: $1
   name: pg-pvc
   labels:
     app: postgres
@@ -34,19 +37,19 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: default
+  namespace: $1
   name: pg-config
   labels:
     app: postgres
 data:
-  POSTGRES_DB: database
-  POSTGRES_USER: username
-  POSTGRES_PASSWORD: password
+  POSTGRES_DB: $2
+  POSTGRES_USER: $3
+  POSTGRES_PASSWORD: $4
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: default
+  namespace: $1
   name: pg-svc
   labels:
     app: postgres
@@ -61,7 +64,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: default
+  namespace: $1
   name: pg-statefulset
   labels:
     app: postgres
@@ -91,3 +94,17 @@ spec:
       - name: pv-data
         persistentVolumeClaim:
           claimName: pg-pvc
+EOF
+
+# Delete resources from kubernetes if one already exists.
+kubectl delete -f manifest.yml
+
+# Apply newly created kubernetes manifest.
+kubectl apply -f manifest.yml
+
+# Wait for sql pod to be ready.
+kubectl wait --for=condition=ready --namespace $1 pod/pg-statefulset-0
+
+# Cat contents of SQL script into psql exec on new SQL pod.
+cat $5 | kubectl exec -it --namespace $1 pg-statefulset-0 -- psql postgresql://$3:$4@localhost:5432/$2
+
