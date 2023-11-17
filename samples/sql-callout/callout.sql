@@ -1,3 +1,6 @@
+-- Copyright (c) Microsoft Corporation.
+-- Licensed under the MIT License.
+
 CREATE TABLE assetinfo (
   assetID varchar(255),
   serialNumber varchar(255),
