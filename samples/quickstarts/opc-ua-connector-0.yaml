@@ -1,3 +1,4 @@
+# Important: do not use in production environments
 apiVersion: deviceregistry.microsoft.com/v1beta1
 kind: AssetEndpointProfile
 metadata:
