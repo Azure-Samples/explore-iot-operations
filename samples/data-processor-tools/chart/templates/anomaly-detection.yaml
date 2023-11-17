@@ -1,0 +1,27 @@
+{{ if .Values.tools.anomaly-detection.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.namespace }}
+  name: {{ .Release.Name }}-anomaly
+  labels:
+    app: {{ .release.name }}-anomaly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .release.name }}-anomaly
+  template:
+    metadata:
+      labels:
+        app: {{ .release.name }}-anomaly
+    spec:
+      containers:
+        - name: {{ .release.name }}-anomaly
+          image: {{ .Values.tools.anomaly-detection.image }}
+          imagePullPolicy: {{ .Values.tools.anomaly-detection.pullPolicy }}
+          ports:
+          - name: http
+            containerPort: {{ .Values.tools.anomaly-detection.ports.http }}
+{{ end }}

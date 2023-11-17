@@ -1,0 +1,31 @@
+tools:
+  anomaly-detection:
+    enabled: true
+    image: azbluefincr.azurecr.io/anomaly-detection:latest
+    pullPolicy: Always
+    ports:
+      http: 3333
+  http-grpc-callout:
+    enabled: true
+    image: azbluefincr.azurecr.io/http-grpc-callout:latest
+    pullPolicy: Always
+    ports:
+      http: 3334
+      grpc: 3335
+  http-grpc-shift-calculator:
+    enabled: true
+    image: azbluefincr.azurecr.io/http-grpc-shift-calculator:latest
+    pullPolicy: Always
+    ports:
+      http: 3336
+      grpc: 3337
+  industrial-data-simulator:
+    enabled: true
+    image: azbluefincr.azurecr.io/industrial-data-simulator:latest
+    pullPolicy: Always
+  sql-callout:
+    enabled: true
+    image: azbluefincr.azurecr.io/sql-callout:latest
+    pullPolicy: Always
+    ports:
+      http: 5432

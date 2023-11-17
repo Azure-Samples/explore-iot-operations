@@ -1,0 +1,7 @@
+apiVersion: v2
+name: dp-tools
+description: A helm chart which includes all Azure IoT Operations Data Processor related tools.
+type: application
+
+version: 0.0.1
+appVersion: "0.0.1"
