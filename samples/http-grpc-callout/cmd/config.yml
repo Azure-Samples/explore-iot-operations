@@ -22,7 +22,7 @@ servers:
           }
   grpc:
     port: 3334
-    outputs: ['output1', 'output4']
+    outputs: ["output1", "output4"]
 outputs:
   - name: output1
     type: stdout
@@ -41,5 +41,3 @@ outputs:
     qos: 1
     path: grpc/example
     endpoint: localhost:1883
-
-

@@ -5,7 +5,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/explore-iot-ops/lib/logger"
 	"github.com/explore-iot-ops/lib/proto"
@@ -13,19 +12,20 @@ import (
 
 type GRPCMessageServer struct {
 	proto.UnimplementedSenderServer
-	outputs []Out
+	handler func(any) (map[string]any, error)
 	encoder proto.Encoder
-	Logger  logger.Logger
+
+	Logger logger.Logger
 }
 
 func NewGRPCMessageServer(
-	outputs []Out,
+	handler func(any) (map[string]any, error),
 	encoder proto.Encoder,
 	options ...func(*GRPCMessageServer),
 ) *GRPCMessageServer {
 	server := &GRPCMessageServer{
-		outputs: outputs,
 		encoder: encoder,
+		handler: handler,
 		Logger:  &logger.NoopLogger{},
 	}
 
@@ -40,21 +40,15 @@ func (server *GRPCMessageServer) Send(
 	ctx context.Context,
 	m *proto.Message,
 ) (*proto.Message, error) {
-	server.Logger.Level(logger.Debug).Printf("received new grpc message")
+	server.Logger.Printf("received new grpc message")
 
-	res := server.encoder.Decode(m)
+	decoded := server.encoder.Decode(m)
 
-	content, err := json.Marshal(res)
+	res, err := server.handler(decoded)
 	if err != nil {
+		server.Logger.With("error", err.Error()).Printf("failed to calculate shift")
 		return nil, err
 	}
 
-	for _, output := range server.outputs {
-		err := output.Out(content)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &proto.Message{}, nil
+	return server.encoder.Encode(res), nil
 }

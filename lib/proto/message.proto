@@ -12,9 +12,6 @@ message Message {
     repeated Message array = 6;
 }
 
-message Empty {
-}
-
 service Sender {
-    rpc Send(Message) returns (Empty) {}
+    rpc Send(Message) returns (Message) {}
 }
