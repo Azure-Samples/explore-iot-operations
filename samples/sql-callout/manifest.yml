@@ -1,0 +1,10 @@
+---
+apiVersion: apps/v1
+kind: Statefulset
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+      
