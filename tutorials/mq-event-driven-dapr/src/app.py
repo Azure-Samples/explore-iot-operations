@@ -38,13 +38,13 @@ tracked_sensors = set()
 def sensordata_topic(event: v1.Event) -> None:
     # extract sensor data
     data = json.loads(event.Data())
-    print(f"subscribe: received {data[SENSOR_ID]}")
+    print(f"subscribe: received {data[SENSOR_ID]}", flush=True)
 
     # extract timestamp and check for validity
     try:
         parser.parse(data[SENSOR_TIMESTAMP])
     except (ValueError, TypeError) as error:
-        print(f"subscribe: discarding invalid datetime {data[SENSOR_TIMESTAMP]} for {data[SENSOR_ID]}")
+        print(f"subscribe: discarding invalid datetime {data[SENSOR_TIMESTAMP]} for {data[SENSOR_ID]}", flush=True)
         return
 
     # track the sensor for publishing window
@@ -69,32 +69,32 @@ def slidingWindowPublish():
 
     with DaprClient() as client:
         for sensor_id in tracked_sensors.copy():
-            print(f"loop: processing {sensor_id}")            
+            print(f"loop: processing {sensor_id}", flush=True)            
 
             temperatures = []
             pressures = []
             vibrations = []
 
-            # fetch the existing state
+            # fetch the current state from the state store
             state = get_state(client)
 
-            # remove stale data
+            # discard stale data
+            discard_count = 0
             for data in state.copy():
                 timestamp = parser.parse(data[SENSOR_TIMESTAMP])
                 if time_now - timestamp > timedelta(seconds=WINDOW_SIZE):
-                    print(f"loop: discarded age={(time_now - timestamp).total_seconds()}, data={data}")
                     state.remove(data)
+                    discard_count += 1
 
             # process current data
             for data in state:
-                print(f"loop: processing {data}")
-
-                # stash the values
                 temperatures.append(data[SENSOR_TEMPERATURE])
                 pressures.append(data[SENSOR_PRESSURE])
                 vibrations.append(data[SENSOR_VIBRATION])
+            
+            print(f"loop: processed={len(state)} discarded={discard_count}", flush=True)
 
-            # store the new state
+            # store the new state in the state store
             client.save_state(
                 store_name=STATESTORE_COMPONENT_NAME, 
                 key="{STATESTORE_SENSOR_KEY}/{sensor_id}", 
@@ -113,28 +113,28 @@ def slidingWindowPublish():
             client.publish_event(
                 pubsub_name=PUBSUB_COMPONENT_NAME, 
                 topic_name=PUBSUB_OUTPUT_TOPIC, 
-                data=json.dumps(publish_state), 
+                data=json.dumps(publish_state, indent=4), 
+                data_content_type='application/json',
                 publish_metadata={"rawPayload":"true"})
 
             # stop tracking sensor if state is empty
             if not state:
-                print(f"loop: stopped tracking {sensor_id}")
+                print(f"loop: stopped tracking {sensor_id}", flush=True)
                 tracked_sensors.remove(sensor_id)
 
 def get_state(client):
     response = client.get_state(
         store_name=STATESTORE_COMPONENT_NAME, 
-        key="{STATESTORE_SENSOR_KEY}/{sensor_id}", 
-        state_metadata={"metakey": "metavalue"})
+        key="{STATESTORE_SENSOR_KEY}/{sensor_id}")
     
     try:
         state = json.loads(response.data)
         if type(state) != list:
-            print("get_state: state is not an array, initialising")
+            print("get_state: state is not an array, initializing", flush=True)
             state = []
     except ValueError:
         state = []
-        print("get_state: state is invalid or empty, initialising")
+        print("get_state: state is invalid or empty, initializing", flush=True)
 
     return state
 
@@ -145,9 +145,15 @@ def append_data(state, sensor_name, data):
             "max"    : max(data),
             "mean"   : mean(data),
             "median" : median(data),
-            "75_per" : percentile(data, 75),
+            "75per"  : percentile(data, 75),
             "count"  : len(data),
         }
+        print(f"loop: sensor={sensor_name}"
+            f" min={state[sensor_name]['min']}"
+            f" max={state[sensor_name]['max']}"
+            f" mean={state[sensor_name]['mean']}"
+            f" median={state[sensor_name]['median']}"
+            f" 75%={state[sensor_name]['75per']}", flush=True)
 
 # Start the window publish loop
 publish_loop.start(block=False)
