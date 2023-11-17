@@ -21,6 +21,8 @@ docker build ../.. -f Dockerfile -t <yourcrhere>.azurecr.io/http-grpc-callout:la
 kubectl run http-grpc-callout --image=<yourcrhere>.azurecr.io/http-grpc-callout:latest --stdin < config.yml
 ```
 
+### Configuration
+
 ```yaml
 logger: # Log level (trace: 0, debug: 1, info: 2, warn: 3, error: 4, critical: 5, fatal: 6, panic: 7)
   level: 0
