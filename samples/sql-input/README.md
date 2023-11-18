@@ -6,5 +6,5 @@ A setup script is included to create the postgres database in SQL and load a pre
 
 ```sh
 # ./setup.sh $K8S_NAMESPACE $DB_NAME $DB_USERNAME $DB_PASSWORD $LOCAL_SQL_FILE_PATH
-./setup.sh default database username password ./initialization.sql
+./setup.sh azure-iot-operations database username password ./initialization.sql
 ```

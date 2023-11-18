@@ -13,7 +13,11 @@ import (
 func CI() error {
 	return mage.CI(
 		"github.com/explore-iot-ops/samples/anomaly-detection/",
-		map[string]any{"cmd": nil},
+		map[string]any{
+			"cmd":               nil,
+			"lib/configuration": nil,
+			"lib/payload":       nil,
+		},
 		3000,
 		0.00,
 		0.00,

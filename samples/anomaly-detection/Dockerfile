@@ -14,8 +14,8 @@ RUN go install github.com/magefile/mage@latest
 
 RUN mage ci
 
-RUN go build -o ./bin/anomaly-detection ./cmd/anomaly-detection
+RUN go build -o ./bin/anomaly-detection ./cmd
 
 EXPOSE 2112
 
-CMD [ "/bin/anomaly-detection" ]
+CMD [ "./bin/anomaly-detection" ]

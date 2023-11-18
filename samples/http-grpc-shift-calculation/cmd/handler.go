@@ -6,7 +6,7 @@ package main
 import (
 	"time"
 
-	"github.com/explore-iot-ops/samples/http-grpc-shift-calculator/lib/shift"
+	"github.com/explore-iot-ops/samples/http-grpc-shift-calculation/lib/shift"
 )
 
 type InvalidMessageTypeError struct{}
@@ -21,7 +21,7 @@ func (err *MissingTimestampError) Error() string {
 	return "missing timestamp"
 }
 
-type InvalidShiftTimestampError struct {}
+type InvalidShiftTimestampError struct{}
 
 func (err *InvalidShiftTimestampError) Error() string {
 	return "invalid shift timestamp"
