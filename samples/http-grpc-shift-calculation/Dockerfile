@@ -14,8 +14,8 @@ RUN go install github.com/magefile/mage@latest
 
 RUN mage ci
 
-RUN go build -o ./bin/http-grpc-shift-calculation ./cmd/http-grpc-shift-calculation
+RUN go build -o ./bin/http-grpc-shift-calculation ./cmd
 
 EXPOSE 2112
 
-CMD [ "/bin/http-grpc-shift-calculation" ]
+CMD [ "./bin/http-grpc-shift-calculation" ]
