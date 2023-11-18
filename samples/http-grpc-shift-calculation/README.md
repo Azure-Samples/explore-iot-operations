@@ -6,17 +6,17 @@
 
 ```sh
 # From the root of the http-grpc-shift-calculation directory.
-docker build ../.. -f Dockerfile -t <yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest
+docker build ../.. -f Dockerfile -t makocr.azurecr.io/http-grpc-shift-calculation:latest
 
 # Or if running from the root of the explore-iot-operations repository.
-# docker build . -f ./samples/http-grpc-shift-calculation/Dockerfile -t <yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest
+# docker build . -f ./samples/http-grpc-shift-calculation/Dockerfile -t makocr.azurecr.io/http-grpc-shift-calculation:latest
 
 # Push or load your newly built image into your cluster, depending on the k8s setup.
-# docker push <yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest # Using AKS + Connected ACR
-# minikube load <yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest # Using minikube
-# docker save <yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest | k3s ctr images import - # Using K3s
+# docker push makocr.azurecr.io/http-grpc-shift-calculation:latest # Using AKS + Connected ACR
+# minikube load makocr.azurecr.io/http-grpc-shift-calculation:latest # Using minikube
+# docker save makocr.azurecr.io/http-grpc-shift-calculation:latest | k3s ctr images import - # Using K3s
 
-kubectl run http-grpc-shift-calculation --image=<yourcrhere>.azurecr.io/http-grpc-shift-calculation:latest --stdin < config.yml
+kubectl apply -f manifest.yml
 ```
 
 ### Server Configuration

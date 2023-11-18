@@ -14,8 +14,8 @@ RUN go install github.com/magefile/mage@latest
 
 RUN mage ci
 
-RUN go build -o ./bin/http-grpc-callout ./cmd/http-grpc-callout
+RUN go build -o ./bin/http-grpc-callout ./cmd
 
 EXPOSE 2112
 
-CMD [ "/bin/http-grpc-callout" ]
+CMD [ "./bin/http-grpc-callout" ]

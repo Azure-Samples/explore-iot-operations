@@ -67,7 +67,6 @@ func TestSquareSum(t *testing.T) {
 	nextMean = ewma.Mean(5, obs, mean)
 	sum = ewma.SquareSum(obs, sum, nextMean, mean)
 	require.Equal(t, 65.2, sum)
-	mean = nextMean
 }
 
 func TestControlLimit(t *testing.T) {

@@ -1,8 +1,0 @@
-logger:
-  level: 0
-server:
-  httpPort: 3333
-  grpcPort: 4444
-calculator:
-  shifts: 3
-  initialTime: 2023-11-16T00:00:00-08:00

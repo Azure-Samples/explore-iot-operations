@@ -14,7 +14,7 @@ import (
 	"github.com/explore-iot-ops/lib/env"
 	"github.com/explore-iot-ops/lib/logger"
 	"github.com/explore-iot-ops/lib/proto"
-	"github.com/explore-iot-ops/samples/http-grpc-shift-calculator/lib/shift"
+	"github.com/explore-iot-ops/samples/http-grpc-shift-calculation/lib/shift"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 

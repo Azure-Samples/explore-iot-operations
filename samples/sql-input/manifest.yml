@@ -2,7 +2,7 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  namespace: default
+  namespace: azure-iot-operations
   name: pg-pv
   labels:
     app: postgres
@@ -19,7 +19,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  namespace: default
+  namespace: azure-iot-operations
   name: pg-pvc
   labels:
     app: postgres
@@ -34,7 +34,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: default
+  namespace: azure-iot-operations
   name: pg-config
   labels:
     app: postgres
@@ -46,7 +46,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: default
+  namespace: azure-iot-operations
   name: pg-svc
   labels:
     app: postgres
@@ -61,7 +61,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: default
+  namespace: azure-iot-operations
   name: pg-statefulset
   labels:
     app: postgres
