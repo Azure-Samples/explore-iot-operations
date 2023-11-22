@@ -1,0 +1,93 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  namespace: azure-iot-operations
+  name: pg-pv
+  labels:
+    app: postgres
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: azure-iot-operations
+  name: pg-pvc
+  labels:
+    app: postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: azure-iot-operations
+  name: pg-config
+  labels:
+    app: postgres
+data:
+  POSTGRES_DB: database
+  POSTGRES_USER: username
+  POSTGRES_PASSWORD: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-iot-operations
+  name: pg-svc
+  labels:
+    app: postgres
+spec:
+  ports:
+  - port: 5432
+    name: postgres
+  type: NodePort 
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: azure-iot-operations
+  name: pg-statefulset
+  labels:
+    app: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: mcr.microsoft.com/cbl-mariner/base/postgres:14
+        envFrom:
+        - configMapRef:
+            name: pg-config
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: pv-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: pv-data
+        persistentVolumeClaim:
+          claimName: pg-pvc

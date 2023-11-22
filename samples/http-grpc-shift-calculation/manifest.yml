@@ -1,0 +1,93 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: azure-iot-operations
+  name: shift-conf
+data:
+  config.yml: |-
+    logger:
+      level: 0
+    server:
+      httpPort: 3333
+      grpcPort: 3334
+    calculator:
+      shifts: 3
+      initialTime: 2023-11-16T00:00:00-08:00
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: azure-iot-operations
+  name: http-grpc-shift
+  labels:
+    app: http-grpc-shift
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-grpc-shift
+  template:
+    metadata:
+      labels:
+        app: http-grpc-shift
+    spec:
+      containers:
+        - name: http-grpc-shift
+          image: makocr.azurecr.io/http-grpc-shift-calculation:latest
+          imagePullPolicy: Always
+          ports:
+          - name: http
+            containerPort: 3333
+          - name: grpc
+            containerPort: 3334
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          command:
+            - "./bin/http-grpc-shift-calculation"
+            - "--stdin=false"
+            - "--config=/etc/http-grpc-shift/config.yml"
+          volumeMounts:
+            - mountPath: /etc/http-grpc-shift/config.yml
+              subPath: config.yml
+              name: config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: shift-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-iot-operations
+  name: shift-svc-http
+  labels:
+    app: http-grpc-shift
+spec:
+  ports:
+  - port: 3333
+    name: http
+  type: ClusterIP
+  selector:
+    app: http-grpc-shift
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-iot-operations
+  name: shift-svc-grpc
+  labels:
+    app: http-grpc-shift
+spec:
+  ports:
+  - port: 3334
+    name: grpc
+  type: ClusterIP
+  selector:
+    app: http-grpc-shift
