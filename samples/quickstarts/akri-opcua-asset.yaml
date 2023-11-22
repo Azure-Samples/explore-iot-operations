@@ -2,6 +2,7 @@ apiVersion: akri.sh/v0
 kind: Configuration
 metadata:
   name: akri-opcua-asset
+  namespace: azure-iot-operations
 spec:
   discoveryHandler: 
     name: opcua-asset
