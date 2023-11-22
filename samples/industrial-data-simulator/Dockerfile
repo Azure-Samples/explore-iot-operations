@@ -18,4 +18,4 @@ RUN go build -o ./bin/industrial-data-simulator ./cmd
 
 EXPOSE 2112
 
-CMD [ "/bin/industrial-data-simulator" ]
+CMD [ "./bin/industrial-data-simulator" ]

@@ -17,17 +17,17 @@ Industrial Data Simulator is a highly configurable MQTT asset simulator.
 
 ```sh
 # From the root of the industrial-data-simulator directory.
-docker build ../.. -f Dockerfile -t <yourcrhere>.azurecr.io/industrial-data-simulator:latest
+docker build ../.. -f Dockerfile -t makocr.azurecr.io/industrial-data-simulator:latest
 
 # Or if running from the root of the explore-iot-operations repository.
-# docker build . -f ./samples/industrial-data-simulator/Dockerfile -t <yourcrhere>.azurecr.io/industrial-data-simulator:latest
+# docker build . -f ./samples/industrial-data-simulator/Dockerfile -t makocr.azurecr.io/industrial-data-simulator:latest
 
 # Push or load your newly built image into your cluster, depending on the k8s setup.
-# docker push <yourcrhere>.azurecr.io/industrial-data-simulator:latest # Using AKS + Connected ACR
-# minikube load <yourcrhere>.azurecr.io/industrial-data-simulator:latest # Using minikube
-# docker save <yourcrhere>.azurecr.io/industrial-data-simulator:latest | k3s ctr images import - # Using K3s
+# docker push makocr.azurecr.io/industrial-data-simulator:latest # Using AKS + Connected ACR
+# minikube load makocr.azurecr.io/industrial-data-simulator:latest # Using minikube
+# docker save makocr.azurecr.io/industrial-data-simulator:latest | k3s ctr images import - # Using K3s
 
-kubectl run industrial-data-simulator --image=<yourcrhere>.azurecr.io/industrial-data-simulator:latest --stdin < config.yml
+kubectl apply -f manifest.yml
 ```
 
 Industrial Data simulator runs as a pod within the desired cluster using the kubectl run command. The configuration of choice is provided via stdin of the simulator process within the pod, provided in the command above using `--stdin < config.yml`. Alternative names for a configuration file may be used -- the command simply uses stdin piping to provide simulator with an appropriate configuration.
