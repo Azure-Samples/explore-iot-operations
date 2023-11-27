@@ -14,7 +14,7 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {
-      "extensions": "connectedk8s,k8s-extension"
+      "extensions": "connectedk8s,k8s-extension,azure-iot-ops"
     },
     "ghcr.io/rio/features/k3d:1": {}
   },
