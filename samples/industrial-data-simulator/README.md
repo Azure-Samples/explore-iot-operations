@@ -30,7 +30,7 @@ docker build ../.. -f Dockerfile -t makocr.azurecr.io/industrial-data-simulator:
 kubectl apply -f manifest.yml
 ```
 
-Industrial Data simulator runs as a pod within the desired cluster using the kubectl apply command with the provided manifest file (`./manifest.yml`). The configuration is passed as a config mapping in the kubernetes manifest, and can be altered to produce the desired simulation.
+Industrial Data simulator runs as a pod within the desired cluster using the kubectl apply command with the provided manifest file (`./manifest.yml`). The configuration is passed as a config mapping in the kubernetes manifest, and can be altered to produce the desired simulation (see configmap at top of manifest file).
 
 See the example YAML configuration below, with comments describing the various configurable fields.
 
