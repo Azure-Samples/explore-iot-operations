@@ -12,7 +12,7 @@ data:
     logLevel: 0
     simulation:
       target:
-        host: doe-mqtt
+        host: aio-mq-dmqtt-frontend
         port: 1883
       sites:
         - name: site0
