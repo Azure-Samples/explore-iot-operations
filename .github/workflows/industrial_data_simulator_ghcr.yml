@@ -1,0 +1,12 @@
+name: industrial_data_simulator_ghcr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-docker-build:
+    uses: ./.github/workflows/ghcr.yml
+    with:
+      name: industrial-data-simulator
+      file: samples/industrial-data-simulator/Dockerfile
+      context: .

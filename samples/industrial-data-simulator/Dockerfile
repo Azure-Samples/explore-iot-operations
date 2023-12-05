@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1
 
 FROM mcr.microsoft.com/oss/go/microsoft/golang:1.21-cbl-mariner2.0 AS build
+LABEL org.opencontainers.image.source=https://github.com/Azure-Samples/explore-iot-operations
+LABEL org.opencontainers.image.description="Industrial data simulator"
+LABEL org.opencontainers.image.licenses=MIT
 
 COPY ./lib /workdir/lib
 
