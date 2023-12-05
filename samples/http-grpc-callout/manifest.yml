@@ -84,7 +84,7 @@ spec:
     spec:
       containers:
         - name: http-grpc-callout
-          image: makocr.azurecr.io/http-grpc-callout:latest
+          image: ghcr.io/azure-samples/explore-iot-operations/http-grpc-callout:latest
           imagePullPolicy: Always
           ports:
           - name: http

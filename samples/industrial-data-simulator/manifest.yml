@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: data-simulator
-          image: makocr.azurecr.io/industrial-data-simulator:latest
+          image: ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest
           imagePullPolicy: Always
           ports:
           - name: prometheus

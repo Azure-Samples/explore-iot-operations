@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: anomaly-detection
-          image: makocr.azurecr.io/anomaly-detection:latest
+          image: ghcr.io/azure-samples/explore-iot-operations/anomaly-detection:latest
           imagePullPolicy: Always
           ports:
           - name: http

@@ -1,0 +1,12 @@
+name: http_grpc_shift_calculation_ghcr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-docker-build:
+    uses: ./.github/workflows/ghcr.yml
+    with:
+      name: http-grpc-shift-calculation
+      file: samples/http-grpc-shift-calculation/Dockerfile
+      context: .
