@@ -11,21 +11,27 @@
 
 Industrial Data Simulator is a highly configurable MQTT asset simulator.
 
+## Quick Start
+
+```sh
+kubectl apply -f manifest.yml
+```
+
 ## Usage
 
-### Industrial Data Simulator as K8s Pod
+### Build an Image and use Industrial Data Simulator as K8s Pod
 
 ```sh
 # From the root of the industrial-data-simulator directory.
-docker build ../.. -f Dockerfile -t makocr.azurecr.io/industrial-data-simulator:latest
+docker build ../.. -f Dockerfile -t ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest
 
 # Or if running from the root of the explore-iot-operations repository.
-# docker build . -f ./samples/industrial-data-simulator/Dockerfile -t makocr.azurecr.io/industrial-data-simulator:latest
+# docker build . -f ./samples/industrial-data-simulator/Dockerfile -t ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest
 
 # Push or load your newly built image into your cluster, depending on the k8s setup.
-# docker push makocr.azurecr.io/industrial-data-simulator:latest # Using AKS + Connected ACR
-# minikube load makocr.azurecr.io/industrial-data-simulator:latest # Using minikube
-# docker save makocr.azurecr.io/industrial-data-simulator:latest | k3s ctr images import - # Using K3s
+# docker push ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest # Using AKS + Connected ACR
+# minikube load ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest # Using minikube
+# docker save ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest | k3s ctr images import - # Using K3s
 
 kubectl apply -f manifest.yml
 ```

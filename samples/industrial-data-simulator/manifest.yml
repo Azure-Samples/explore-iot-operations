@@ -12,7 +12,7 @@ data:
     logLevel: 0
     simulation:
       target:
-        host: aio-mq-dmqtt-frontend
+        host: doe-mqtt
         port: 1883
       sites:
         - name: site0
@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: data-simulator
-          image: makocr.azurecr.io/industrial-data-simulator:latest
+          image: ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest
           imagePullPolicy: Always
           ports:
           - name: prometheus

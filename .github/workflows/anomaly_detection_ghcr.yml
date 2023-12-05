@@ -1,0 +1,12 @@
+name: anomaly_detection_ghcr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-docker-build:
+    uses: ./.github/workflows/ghcr.yml
+    with:
+      name: anomaly-detection
+      file: samples/anomaly-detection/Dockerfile
+      context: .
