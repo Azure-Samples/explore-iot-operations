@@ -20,14 +20,76 @@ data:
               {
                 "hello": "world"
               }
-          - path: /example
-            method: POST
+          - path: /ref_data
+            method: GET
             status: 200
             outputs: ["output1"]
             response: |
-              {
-                "hello": "world1"
-              }
+              [
+                {
+                  "asset_id": "Sea_O1",
+                  "serial_number": "SN001",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenance_status": "Done"
+                },
+                {
+                  "asset_id": "Red_O1",
+                  "serial_number": "SN002",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenance_status": "Upcoming"
+                },
+                {
+                  "asset_id": "Tac_O1",
+                  "serial_number": "SN003",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenance_status": "Overdue"
+                },
+                {
+                  "asset_id": "Sea_S1",
+                  "serial_number": "SN004",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenance_status": "Done"
+                },
+                {
+                  "asset_id": "Red_S1",
+                  "serial_number": "SN005",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenance_status": "Done"
+                },
+                {
+                  "asset_id": "Sea_M1",
+                  "serial_number": "SN007",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenance_status": "Done"
+                },
+                {
+                  "asset_id": "Red_M1",
+                  "serial_number": "SN008",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenance_status": "Overdue"
+                },
+                {
+                  "asset_id": "Tac_M1",
+                  "serial_number": "SN009",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenance_status": "Done"
+                },
+                {
+                  "asset_id": "Tac_S1",
+                  "serial_number": "SN010",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenance_status": "Upcoming"
+                }
+              ]
           - path: /ts
             method: GET
             status: 200
@@ -35,28 +97,6 @@ data:
             response: |
               {
                 "timestamp": "2023-11-16T8:18:10-08:00"
-              }
-          - path: /anomaly
-            method: GET
-            status: 200
-            outputs: ["output1"]
-            response: |
-              {
-                "Payload": {
-                  "assetID": "Tac_S1",
-                  "asset_id": "Tac_S1",
-                  "asset_name": "Tacoma_Slicer_Tacoma_Slicer__asset_0",
-                  "humidity": 82.34915832237789,
-                  "machine_status": 1,
-                  "maintenanceStatus": "Upcoming",
-                  "name": "Contoso",
-                  "operating_time": 5999,
-                  "serialNumber": "SN010",
-                  "site": "Tacoma",
-                  "source_timestamp": "2023-11-02T20:27:09.143Z",
-                  "temperature": 93.56069711661576,
-                  "vibration": 50.98858025013501
-                }
               }
       grpc:
         port: 3334
