@@ -27,7 +27,7 @@
     },
     "LOCATION": {
       "description": "Region to use, must be one of eastus, eastus2, westus, westus2, westus3, westeurope, or northeurope.",
-      "documentationUrl": "https://learn.microsoft.com/azure/iot-operations/deploy/howto-prepare-cluster"
+      "documentationUrl": "https://learn.microsoft.com/azure/iot-operations/deploy-iot-ops/howto-prepare-cluster"
     }
   },
   "containerEnv": {
