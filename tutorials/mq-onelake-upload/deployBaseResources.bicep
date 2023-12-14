@@ -102,7 +102,7 @@ var MQ_PROPERTIES = {
 
 var repo = 'mcr.microsoft.com/azureiotoperations'
 
-var __VERSION__ = '0.1.0-preview'
+var __VERSION__ = '0.2.0-preview'
 var __TRAIN__ = 'preview'
 
 
