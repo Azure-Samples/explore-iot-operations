@@ -98,6 +98,50 @@ data:
               {
                 "timestamp": "2023-11-16T8:18:10-08:00"
               }
+          - path: /productionData
+            method: GET
+            status: 200
+            outputs: ["output1"]
+            response: |
+              [
+                  {
+                      "Line":"Line1",
+                      "ProductId":"Donette",
+                      "Customer":"Contoso",
+                      "Manufacturer": "Robotech"
+                  },
+                  {
+                      "Line":"Line2",
+                      "ProductId":"Twinkies",
+                      "Customer":"Contoso",
+                      "Manufacturer": "ZenithTech"
+                  }
+              ]
+          - path: /operatorData
+            method: GET
+            status: 200
+            outputs: ["output1"]
+            response: |
+              [
+                  {
+                      "Shift":1,
+                      "Operator":"Bob",
+                      "PerformanceTarget":45,
+                      "PackagedProductTarget":12960
+                  },
+                  {
+                      "Shift":2,
+                      "Operator":"Anne",
+                      "PerformanceTarget":60,
+                      "PackagedProductTarget":17280
+                  },
+                  {
+                      "Shift":3,
+                      "Operator":"Cameron",
+                      "PerformanceTarget":50,
+                      "PackagedProductTarget":14400
+                  }
+              ]
       grpc:
         port: 3334
         outputs: ["output1"]
