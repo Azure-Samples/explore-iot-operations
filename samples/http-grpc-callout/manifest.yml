@@ -27,67 +27,67 @@ data:
             response: |
               [
                 {
-                  "asset_id": "Sea_O1",
-                  "serial_number": "SN001",
+                  "assetID": "Sea_O1",
+                  "serialNumber": "SN001",
                   "name": "Contoso",
                   "site": "Seattle",
-                  "maintenance_status": "Done"
+                  "maintenanceStatus": "Done"
                 },
                 {
-                  "asset_id": "Red_O1",
-                  "serial_number": "SN002",
+                  "assetID": "Red_O1",
+                  "serialNumber": "SN002",
                   "name": "Contoso",
                   "site": "Redmond",
-                  "maintenance_status": "Upcoming"
+                  "maintenanceStatus": "Upcoming"
                 },
                 {
-                  "asset_id": "Tac_O1",
-                  "serial_number": "SN003",
+                  "assetID": "Tac_O1",
+                  "serialNumber": "SN003",
                   "name": "Contoso",
                   "site": "Tacoma",
-                  "maintenance_status": "Overdue"
+                  "maintenanceStatus": "Overdue"
                 },
                 {
-                  "asset_id": "Sea_S1",
-                  "serial_number": "SN004",
+                  "assetID": "Sea_S1",
+                  "serialNumber": "SN004",
                   "name": "Contoso",
                   "site": "Seattle",
-                  "maintenance_status": "Done"
+                  "maintenanceStatus": "Done"
                 },
                 {
-                  "asset_id": "Red_S1",
-                  "serial_number": "SN005",
+                  "assetID": "Red_S1",
+                  "serialNumber": "SN005",
                   "name": "Contoso",
                   "site": "Redmond",
-                  "maintenance_status": "Done"
+                  "maintenanceStatus": "Done"
                 },
                 {
-                  "asset_id": "Sea_M1",
-                  "serial_number": "SN007",
+                  "assetID": "Sea_M1",
+                  "serialNumber": "SN007",
                   "name": "Contoso",
                   "site": "Seattle",
-                  "maintenance_status": "Done"
+                  "maintenanceStatus": "Done"
                 },
                 {
-                  "asset_id": "Red_M1",
-                  "serial_number": "SN008",
+                  "assetID": "Red_M1",
+                  "serialNumber": "SN008",
                   "name": "Contoso",
                   "site": "Redmond",
-                  "maintenance_status": "Overdue"
+                  "maintenanceStatus": "Overdue"
                 },
                 {
-                  "asset_id": "Tac_M1",
-                  "serial_number": "SN009",
+                  "assetID": "Tac_M1",
+                  "serialNumber": "SN009",
                   "name": "Contoso",
                   "site": "Tacoma",
-                  "maintenance_status": "Done"
+                  "maintenanceStatus": "Done"
                 },
                 {
-                  "asset_id": "Tac_S1",
-                  "serial_number": "SN010",
+                  "assetID": "Tac_S1",
+                  "serialNumber": "SN010",
                   "name": "Contoso",
                   "site": "Tacoma",
-                  "maintenance_status": "Upcoming"
+                  "maintenanceStatus": "Upcoming"
                 }
               ]
           - path: /ts
