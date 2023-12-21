@@ -1,0 +1,345 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: azure-iot-operations
+  name: simulator-conf
+data:
+  config.yml: |-
+    metrics:
+      type: prometheus
+      port: 2114
+    logLevel: 1
+    simulation:
+      target:
+        host: aio-mq-dmqtt-frontend
+        port: 1883
+      refData:
+        - name: ref0
+          columns:
+            - id: assetID
+              configuration: "\"Sea_O1\""
+              count: 1
+          format: JSON
+      sites:
+        - name: Seattle_Oven
+          assetCount: 1
+          tags:
+            - id: oven_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: oven_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: oven_temperature
+              configuration: (sin(float(x)) + tan(float(x)))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: oven_pressure
+              configuration: sin(float(x))*2.0 + 8.0 #Ranges from 6 to 10 bar
+              count: 1
+            - id: oven_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: oven_humidity
+              configuration: cos(float(x))*10.0 + 30.0 #Ranges from 80 to 100
+              count: 1
+            - id: oven_asset_id
+              configuration: "\"Sea_O1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Seattle/Oven/{{.TagName}}
+        - name: Seattle_Mixer
+          assetCount: 1
+          tags:
+            - id: mixer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: mixer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: mixer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: mixer_pressure
+              configuration: sin(float(x))*1.0 + 5.0 #Ranges from 4 to 6 bar
+              count: 1
+            - id: mixer_vibration
+              configuration: (sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: mixer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: mixer_asset_id
+              configuration: "\"Sea_M1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Seattle/Mixer/{{.TagName}}
+        - name: Seattle_Slicer
+          assetCount: 1
+          tags:
+            - id: slicer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: slicer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: slicer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: slicer_vibration
+              configuration: cos(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: slicer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: slicer_asset_id
+              configuration: "\"Sea_S1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Seattle/Slicer/{{.TagName}}
+        - name: Redmond_Oven
+          assetCount: 1
+          tags:
+            - id: oven_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: oven_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: oven_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: oven_pressure
+              configuration: sin(float(x))*2.0 + 8.0 #Ranges from 6 to 10 bar
+              count: 1
+            - id: oven_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: oven_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: oven_asset_id
+              configuration: "\"Red_O1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Redmond/Oven/{{.TagName}}
+        - name: Redmond_Mixer
+          assetCount: 1
+          tags:
+            - id: mixer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: mixer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: mixer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: mixer_pressure
+              configuration: sin(float(x))*1.0 + 5.0 #Ranges from 4 to 6 bar
+              count: 1
+            - id: mixer_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: mixer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: mixer_asset_id
+              configuration: "\"Red_M1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Redmond/Mixer/{{.TagName}}
+        - name: Redmond_Slicer
+          assetCount: 1
+          tags:
+            - id: slicer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: slicer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: slicer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: slicer_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: slicer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: slicer_asset_id
+              configuration: "\"Red_S1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Redmond/Slicer/{{.TagName}}
+        - name: Tacoma_Oven
+          assetCount: 1
+          tags:
+            - id: oven_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: oven_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: oven_temperature
+              configuration: abs(sin(float(x) / 3.0) * 100.0) #Ranges from 90 to 110f
+              count: 1
+            - id: oven_pressure
+              configuration: sin(float(x))*2.0 + 8.0 #Ranges from 6 to 10 bar
+              count: 1
+            - id: oven_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: oven_humidity
+              configuration: cos(float(x))*10.0 + 40.0 #Ranges from 80 to 100
+              count: 1
+            - id: oven_asset_id
+              configuration: "\"Tac_O1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Tacoma/Oven/{{.TagName}}
+        - name: Tacoma_Mixer
+          assetCount: 1
+          tags:
+            - id: mixer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: mixer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: mixer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: mixer_pressure
+              configuration: sin(float(x))*1.0 + 5.0 #Ranges from 4 to 6 bar
+              count: 1
+            - id: mixer_vibration
+              configuration: sin(sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: mixer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: mixer_asset_id
+              configuration: "\"Tac_M1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Tacoma/Mixer/{{.TagName}}
+        - name: Tacoma_Slicer
+          assetCount: 1
+          tags:
+            - id: slicer_operating_time
+              configuration: delta(now(), start)/1000 #Increase by 1 per second
+              count: 1
+            - id: slicer_machine_status
+              configuration: rand(0, 2)
+              count: 1
+            - id: slicer_temperature
+              configuration: sin(float(x))*10.0 + 100.0 #Ranges from 90 to 110f
+              count: 1
+            - id: slicer_vibration
+              configuration: (sin(float(x)) + tan(float(x)))*5.0 + 50.0 #Ranges from 45 to 55mm/sec
+              count: 1
+            - id: slicer_humidity
+              configuration: cos(float(x))*10.0 + 90.0 #Ranges from 80 to 100
+              count: 1
+            - id: slicer_asset_id
+              configuration: "\"Tac_S1\""
+              count: 1
+          rate:
+            messagesPerPeriod: 1
+            periodSeconds: 1
+            tagsPerMessage: 1
+          payloadFormat: OPCUA
+          topicFormat: ContosoLLC/Tacoma/Slicer/{{.TagName}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: azure-iot-operations
+  name: data-simulator
+  labels:
+    app: data-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-simulator
+  template:
+    metadata:
+      labels:
+        app: data-simulator
+    spec:
+      containers:
+        - name: data-simulator
+          image: ghcr.io/azure-samples/explore-iot-operations/industrial-data-simulator:latest
+          imagePullPolicy: Always
+          ports:
+          - name: prometheus
+            containerPort: 2114
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "1000m"
+            limits:
+              memory: "128Mi"
+              cpu: "1000m"
+          command:
+            - "./bin/industrial-data-simulator"
+            - "--stdin=false"
+            - "--config=/etc/data-simulator/config.yml"
+          volumeMounts:
+            - mountPath: /etc/data-simulator/config.yml
+              subPath: config.yml
+              name: config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: simulator-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-iot-operations
+  name: simulator-svc-prom
+  labels:
+    app: data-simulator
+spec:
+  ports:
+  - port: 2114
+    name: prometheus
+  type: ClusterIP
+  selector:
+    app: data-simulator

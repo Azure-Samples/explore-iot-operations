@@ -15,7 +15,7 @@ import (
 var (
 	linter = bintool.Must(bintool.New(
 		"golangci-lint{{.BinExt}}",
-		"1.51.1",
+		"1.55.2",
 		"https://github.com/golangci/golangci-lint/releases/download/v{{.Version}}/golangci-lint-{{.Version}}-{{.GOOS}}-{{.GOARCH}}{{.ArchiveExt}}",
 	))
 	golines = bintool.Must(bintool.NewGo(

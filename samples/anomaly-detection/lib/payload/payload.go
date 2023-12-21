@@ -12,14 +12,14 @@ type Payload[T any] struct {
 }
 
 type CommonPayload struct {
-	AssetID            string  `json:"asset_id"`
-	AssetName          string  `json:"asset_name"`
-	MaintainenceStatus string  `json:"maintainence_status"`
+	AssetID            string  `json:"assetId"`
+	AssetName          string  `json:"assetName"`
+	MaintainenceStatus string  `json:"maintainenceStatus"`
 	Name               string  `json:"name"`
 	SerialNumber       string  `json:"serialNumber"`
 	Site               string  `json:"site"`
-	SourceTimestamp    string  `json:"source_timestamp"`
-	OperatingTime      int     `json:"operating_time"`
+	SourceTimestamp    string  `json:"sourceTimestamp"`
+	OperatingTime      int     `json:"operatingTime"`
 	MachineStatus      int     `json:"machineStatus"`
 	Humidity           float64 `json:"humidity"`
 	Temperature        float64 `json:"temperature"`

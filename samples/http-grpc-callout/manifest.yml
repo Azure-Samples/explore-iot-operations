@@ -20,14 +20,76 @@ data:
               {
                 "hello": "world"
               }
-          - path: /example
-            method: POST
+          - path: /ref_data
+            method: GET
             status: 200
             outputs: ["output1"]
             response: |
-              {
-                "hello": "world1"
-              }
+              [
+                {
+                  "assetID": "Sea_O1",
+                  "serialNumber": "SN001",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenanceStatus": "Done"
+                },
+                {
+                  "assetID": "Red_O1",
+                  "serialNumber": "SN002",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenanceStatus": "Upcoming"
+                },
+                {
+                  "assetID": "Tac_O1",
+                  "serialNumber": "SN003",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenanceStatus": "Overdue"
+                },
+                {
+                  "assetID": "Sea_S1",
+                  "serialNumber": "SN004",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenanceStatus": "Done"
+                },
+                {
+                  "assetID": "Red_S1",
+                  "serialNumber": "SN005",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenanceStatus": "Done"
+                },
+                {
+                  "assetID": "Sea_M1",
+                  "serialNumber": "SN007",
+                  "name": "Contoso",
+                  "site": "Seattle",
+                  "maintenanceStatus": "Done"
+                },
+                {
+                  "assetID": "Red_M1",
+                  "serialNumber": "SN008",
+                  "name": "Contoso",
+                  "site": "Redmond",
+                  "maintenanceStatus": "Overdue"
+                },
+                {
+                  "assetID": "Tac_M1",
+                  "serialNumber": "SN009",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenanceStatus": "Done"
+                },
+                {
+                  "assetID": "Tac_S1",
+                  "serialNumber": "SN010",
+                  "name": "Contoso",
+                  "site": "Tacoma",
+                  "maintenanceStatus": "Upcoming"
+                }
+              ]
           - path: /ts
             method: GET
             status: 200
@@ -36,28 +98,50 @@ data:
               {
                 "timestamp": "2023-11-16T8:18:10-08:00"
               }
-          - path: /anomaly
+          - path: /productionData
             method: GET
             status: 200
             outputs: ["output1"]
             response: |
-              {
-                "Payload": {
-                  "assetID": "Tac_S1",
-                  "asset_id": "Tac_S1",
-                  "asset_name": "Tacoma_Slicer_Tacoma_Slicer__asset_0",
-                  "humidity": 82.34915832237789,
-                  "machine_status": 1,
-                  "maintenanceStatus": "Upcoming",
-                  "name": "Contoso",
-                  "operating_time": 5999,
-                  "serialNumber": "SN010",
-                  "site": "Tacoma",
-                  "source_timestamp": "2023-11-02T20:27:09.143Z",
-                  "temperature": 93.56069711661576,
-                  "vibration": 50.98858025013501
-                }
-              }
+              [
+                  {
+                      "Line":"Line1",
+                      "ProductId":"Donette",
+                      "Customer":"Contoso",
+                      "Manufacturer": "Robotech"
+                  },
+                  {
+                      "Line":"Line2",
+                      "ProductId":"Twinkies",
+                      "Customer":"Contoso",
+                      "Manufacturer": "ZenithTech"
+                  }
+              ]
+          - path: /operatorData
+            method: GET
+            status: 200
+            outputs: ["output1"]
+            response: |
+              [
+                  {
+                      "Shift":1,
+                      "Operator":"Bob",
+                      "PerformanceTarget":45,
+                      "PackagedProductTarget":12960
+                  },
+                  {
+                      "Shift":2,
+                      "Operator":"Anne",
+                      "PerformanceTarget":60,
+                      "PackagedProductTarget":17280
+                  },
+                  {
+                      "Shift":3,
+                      "Operator":"Cameron",
+                      "PerformanceTarget":50,
+                      "PackagedProductTarget":14400
+                  }
+              ]
       grpc:
         port: 3334
         outputs: ["output1"]
