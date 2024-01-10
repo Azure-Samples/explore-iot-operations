@@ -343,3 +343,16 @@ spec:
   type: ClusterIP
   selector:
     app: data-simulator
+---
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: industrial-data-simulator-listener
+  namespace: azure-iot-operations
+spec:
+  authenticationEnabled: false
+  authorizationEnabled: false
+  brokerRef: broker
+  port: 1883
+  serviceName: aio-mq-dmqtt-frontend
+  serviceType: clusterIp
