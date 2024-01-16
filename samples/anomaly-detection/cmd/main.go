@@ -40,7 +40,7 @@ func run() error {
 	flags, err := flagParser.ReadFlags(map[string]any{
 		"config": "./config.yml",
 		"yaml":   true,
-		"stdin":  false,
+		"stdin":  true,
 	})
 	if err != nil {
 		return err
