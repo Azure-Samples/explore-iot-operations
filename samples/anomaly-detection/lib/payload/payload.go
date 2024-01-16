@@ -4,7 +4,12 @@
 package payload
 
 type InputPayload struct {
-	Payload CommonPayload `json:"payload"`
+	Payload InputInnerPayload `json:"payload"`
+}
+
+type InputInnerPayload struct {
+	CommonPayload
+	MaintenanceStatus string `json:"maintenanceStatus"`
 }
 
 type Payload[T any] struct {
@@ -12,18 +17,18 @@ type Payload[T any] struct {
 }
 
 type CommonPayload struct {
-	AssetID            string  `json:"assetId"`
-	AssetName          string  `json:"assetName"`
-	MaintainenceStatus string  `json:"maintainenceStatus"`
-	Name               string  `json:"name"`
-	SerialNumber       string  `json:"serialNumber"`
-	Site               string  `json:"site"`
-	SourceTimestamp    string  `json:"sourceTimestamp"`
-	OperatingTime      int     `json:"operatingTime"`
-	MachineStatus      int     `json:"machineStatus"`
-	Humidity           float64 `json:"humidity"`
-	Temperature        float64 `json:"temperature"`
-	Vibration          float64 `json:"vibration"`
+	AssetID           string  `json:"assetId"`
+	AssetName         string  `json:"assetName"`
+	MaintenanceStatus string  `json:"maintenanceStatus"`
+	Name              string  `json:"name"`
+	SerialNumber      string  `json:"serialNumber"`
+	Site              string  `json:"site"`
+	SourceTimestamp   string  `json:"sourceTimestamp"`
+	OperatingTime     int     `json:"operatingTime"`
+	MachineStatus     int     `json:"machine_status"`
+	Humidity          float64 `json:"humidity"`
+	Temperature       float64 `json:"temperature"`
+	Vibration         float64 `json:"vibration"`
 }
 
 type OutputPayload struct {
@@ -32,6 +37,7 @@ type OutputPayload struct {
 
 type OutputInnerPayload struct {
 	CommonPayload
+	MachineStatus            int     `json:"machineStatus"`
 	HumidityAnomalyFactor    float64 `json:"humidityAnomalyFactor"`
 	HumidityAnomaly          bool    `json:"humidityAnomaly"`
 	TemperatureAnomalyFactor float64 `json:"temperatureAnomalyFactor"`
