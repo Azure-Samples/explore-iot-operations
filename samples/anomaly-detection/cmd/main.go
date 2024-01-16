@@ -15,9 +15,9 @@ import (
 	"github.com/explore-iot-ops/samples/anomaly-detection/lib/ewma"
 	"github.com/explore-iot-ops/samples/anomaly-detection/lib/payload"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func run() error {
 	flags, err := flagParser.ReadFlags(map[string]any{
 		"config": "./config.yml",
 		"yaml":   true,
-		"stdin":  true,
+		"stdin":  false,
 	})
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func run() error {
 			With("humidity", fmt.Sprintf("%0.2f", input.Payload.Payload.Humidity)).
 			With("asset_id", input.Payload.Payload.AssetID).
 			With("asset_name", input.Payload.Payload.AssetName).
-			With("status", input.Payload.Payload.MaintainenceStatus).
+			With("status", input.Payload.Payload.MaintenanceStatus).
 			With("name", input.Payload.Payload.Name).
 			With("serial_number", input.Payload.Payload.SerialNumber).
 			With("site", input.Payload.Payload.SerialNumber).
@@ -180,7 +180,8 @@ func run() error {
 		output := payload.Payload[payload.OutputPayload]{
 			Payload: payload.OutputPayload{
 				Payload: payload.OutputInnerPayload{
-					CommonPayload:            input.Payload.Payload,
+					CommonPayload:            input.Payload.Payload.CommonPayload,
+					MachineStatus:            input.Payload.Payload.MachineStatus,
 					HumidityAnomalyFactor:    humEwma,
 					HumidityAnomaly:          humAnomaly,
 					TemperatureAnomalyFactor: tempEwma,
