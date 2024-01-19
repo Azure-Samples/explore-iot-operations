@@ -9,7 +9,8 @@ type InputPayload struct {
 
 type InputInnerPayload struct {
 	CommonPayload
-	MaintenanceStatus string `json:"maintenanceStatus"`
+	OperatingTime int `json:"operating_time"`
+	MachineStatus int `json:"machine_status"`
 }
 
 type Payload[T any] struct {
@@ -24,8 +25,6 @@ type CommonPayload struct {
 	SerialNumber      string  `json:"serialNumber"`
 	Site              string  `json:"site"`
 	SourceTimestamp   string  `json:"sourceTimestamp"`
-	OperatingTime     int     `json:"operatingTime"`
-	MachineStatus     int     `json:"machine_status"`
 	Humidity          float64 `json:"humidity"`
 	Temperature       float64 `json:"temperature"`
 	Vibration         float64 `json:"vibration"`
@@ -37,6 +36,7 @@ type OutputPayload struct {
 
 type OutputInnerPayload struct {
 	CommonPayload
+	OperatingTime            int     `json:"operatingTime"`
 	MachineStatus            int     `json:"machineStatus"`
 	HumidityAnomalyFactor    float64 `json:"humidityAnomalyFactor"`
 	HumidityAnomaly          bool    `json:"humidityAnomaly"`
