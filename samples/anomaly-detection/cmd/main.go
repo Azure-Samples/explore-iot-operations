@@ -182,6 +182,7 @@ func run() error {
 				Payload: payload.OutputInnerPayload{
 					CommonPayload:            input.Payload.Payload.CommonPayload,
 					MachineStatus:            input.Payload.Payload.MachineStatus,
+					OperatingTime:            input.Payload.Payload.OperatingTime,
 					HumidityAnomalyFactor:    humEwma,
 					HumidityAnomaly:          humAnomaly,
 					TemperatureAnomalyFactor: tempEwma,
