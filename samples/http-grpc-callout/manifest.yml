@@ -124,19 +124,19 @@ data:
             response: |
               [
                   {
-                      "Shift":1,
+                      "Shift":0,
                       "Operator":"Bob",
                       "PerformanceTarget":45,
                       "PackagedProductTarget":12960
                   },
                   {
-                      "Shift":2,
+                      "Shift":1,
                       "Operator":"Anne",
                       "PerformanceTarget":60,
                       "PackagedProductTarget":17280
                   },
                   {
-                      "Shift":3,
+                      "Shift":2,
                       "Operator":"Cameron",
                       "PerformanceTarget":50,
                       "PackagedProductTarget":14400
