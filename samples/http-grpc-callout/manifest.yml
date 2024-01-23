@@ -106,15 +106,15 @@ data:
               [
                   {
                       "Line":"Line1",
-                      "ProductId":"Donette",
+                      "ProductId":"Bagel",
                       "Customer":"Contoso",
-                      "Manufacturer": "Robotech"
+                      "Manufacturer": "Fabrikam"
                   },
                   {
                       "Line":"Line2",
-                      "ProductId":"Twinkies",
+                      "ProductId":"Donut",
                       "Customer":"Contoso",
-                      "Manufacturer": "ZenithTech"
+                      "Manufacturer": "Northwind"
                   }
               ]
           - path: /operatorData
