@@ -32,5 +32,6 @@ jobs:
 
       - name: "Build Inventory Image"
         run: |
-          docker build ${{ inputs.context }} -f ${{ inputs.file }} --tag ghcr.io/azure-samples/explore-iot-operations/${{ inputs.name }}:latest
-          docker push ghcr.io/azure-samples/explore-iot-operations/${{ inputs.name }}:latest
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build ${{ inputs.context }} -f ${{ inputs.file }} --tag ghcr.io/$owner/explore-iot-operations/${{ inputs.name }}:latest
+          docker push ghcr.io/$owner/explore-iot-operations/${{ inputs.name }}:latest
