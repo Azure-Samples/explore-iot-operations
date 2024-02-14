@@ -118,7 +118,7 @@ go run . < config.yml
 ```sh
 # With Golang installed, build a binary of the simulator.
 go build -o ./bin/industrial-data-simulator ./cmd
-./industrial-data-simulator < config.yml
+./bin/industrial-data-simulator < config.yml
 
 # Or by reading in a file instead of stdin:
 # ./industrial-data-simulator --stdin=false --config=config.yml
