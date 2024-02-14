@@ -340,14 +340,13 @@ func (builder *DeviceSimulatorBuilder) ParseJSONTagPerMessage(
 
 func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tag Tag, count int) string {
 	var tagIDFormat string
-    if tag.IDTemplate != "" {
-        tagIDFormat = tag.IDTemplate
-    } else {
-        tagIDFormat = TagIDDefaultFormat
-    }
-    return fmt.Sprintf(tagIDFormat, siteName, tag.ID, count)
+	if tag.IDTemplate != "" {
+		tagIDFormat = tag.IDTemplate
+	} else {
+		tagIDFormat = TagIDDefaultFormat
+	}
+	return fmt.Sprintf(tagIDFormat, siteName, tag.ID, count)
 }
-
 
 func (builder *DeviceSimulatorBuilder) ParseJSONTag(
 	siteName string,
