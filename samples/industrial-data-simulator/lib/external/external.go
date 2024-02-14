@@ -338,16 +338,23 @@ func (builder *DeviceSimulatorBuilder) ParseJSONTagPerMessage(
 	return tagNames, nil
 }
 
-func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tagID int, count int) string {
-    return fmt.Sprintf(TagIDFormat, siteName, tagID, count)
+func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tag Tag, count int) string {
+	var tagIDFormat string
+    if tag.IDTemplate != "" {
+        tagIDFormat = tag.IDTemplate
+    } else {
+        tagIDFormat = TagIDDefaultFormat
+    }
+    return fmt.Sprintf(tagIDFormat, siteName, tag.ID, count)
 }
+
 
 func (builder *DeviceSimulatorBuilder) ParseJSONTag(
 	siteName string,
 	tag Tag,
 	count int,
 ) (string, error) {
-	tagID := builder.GenerateTagID(siteName, tag.ID, count)
+	tagID := builder.GenerateTagID(siteName, tag, count)
 	childID := fmt.Sprintf(TagChildIDFormat, tagID)
 
 	err := builder.ParseRootNode(siteName, tagID, node.COLLECTION)
@@ -454,7 +461,7 @@ func (builder *DeviceSimulatorBuilder) ParseOPCUATag(
 	tag Tag,
 	count int,
 ) error {
-	tagID := builder.GenerateTagID(configuration.Name, tag.ID, count)
+	tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 	err := builder.ParseCollectionNode(rootId, tagID, tagID, tagID)
 	if err != nil {
@@ -537,7 +544,7 @@ func (builder *DeviceSimulatorBuilder) ParseComplex(
 
 	for _, tag := range configuration.Tags {
 		for count := 0; count < tag.Count; count++ {
-			tagID := builder.GenerateTagID(configuration.Name, tag.ID, count)
+			tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 			err := builder.ParseExpressionNode(
 				configuration.Name,
@@ -605,7 +612,7 @@ func (builder *DeviceSimulatorBuilder) ParseFlat(
 	field := 0
 	for _, tag := range configuration.Tags {
 		for count := 0; count < tag.Count; count++ {
-			tagID := builder.GenerateTagID(configuration.Name, tag.ID, count)
+			tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 			err := builder.ParseExpressionNode(
 				configuration.Name,
