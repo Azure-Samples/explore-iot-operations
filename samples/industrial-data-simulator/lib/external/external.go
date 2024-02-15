@@ -6,6 +6,7 @@ package external
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"io"
 
 	"github.com/explore-iot-ops/samples/industrial-data-simulator/components/broker"
@@ -345,7 +346,13 @@ func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tag Tag, c
 	} else {
 		tagIDFormat = TagIDDefaultFormat
 	}
-	return fmt.Sprintf(tagIDFormat, siteName, tag.ID, count)
+
+	// Counting how many format specifiers came (tag can be %s_%s to ignore the id %d)
+	n := strings.Count(tagIDFormat, "%")
+	
+	args := []interface{}{siteName, tag.ID, count}
+
+	return fmt.Sprintf(tagIDFormat, args[:n]...)
 }
 
 func (builder *DeviceSimulatorBuilder) ParseJSONTag(
