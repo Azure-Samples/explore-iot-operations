@@ -6,8 +6,8 @@ package external
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"io"
+	"strings"
 
 	"github.com/explore-iot-ops/samples/industrial-data-simulator/components/broker"
 	"github.com/explore-iot-ops/samples/industrial-data-simulator/components/client"
@@ -349,7 +349,7 @@ func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tag Tag, c
 
 	// Counting how many format specifiers came (tag can be %s_%s to ignore the id %d)
 	n := strings.Count(tagIDFormat, "%")
-	
+
 	args := []interface{}{siteName, tag.ID, count}
 
 	return fmt.Sprintf(tagIDFormat, args[:n]...)
