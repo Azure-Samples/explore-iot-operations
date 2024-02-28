@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/explore-iot-ops/samples/industrial-data-simulator/components/broker"
 	"github.com/explore-iot-ops/samples/industrial-data-simulator/components/client"
@@ -338,12 +339,28 @@ func (builder *DeviceSimulatorBuilder) ParseJSONTagPerMessage(
 	return tagNames, nil
 }
 
+func (builder *DeviceSimulatorBuilder) GenerateTagID(siteName string, tag Tag, count int) string {
+	var tagIDFormat string
+	if tag.IDTemplate != "" {
+		tagIDFormat = tag.IDTemplate
+	} else {
+		tagIDFormat = TagIDDefaultFormat
+	}
+
+	// Counting how many format specifiers came (tag can be %s_%s to ignore the id %d)
+	n := strings.Count(tagIDFormat, "%")
+
+	args := []interface{}{siteName, tag.ID, count}
+
+	return fmt.Sprintf(tagIDFormat, args[:n]...)
+}
+
 func (builder *DeviceSimulatorBuilder) ParseJSONTag(
 	siteName string,
 	tag Tag,
 	count int,
 ) (string, error) {
-	tagID := fmt.Sprintf(TagIDFormat, siteName, tag.ID, count)
+	tagID := builder.GenerateTagID(siteName, tag, count)
 	childID := fmt.Sprintf(TagChildIDFormat, tagID)
 
 	err := builder.ParseRootNode(siteName, tagID, node.COLLECTION)
@@ -450,7 +467,7 @@ func (builder *DeviceSimulatorBuilder) ParseOPCUATag(
 	tag Tag,
 	count int,
 ) error {
-	tagID := fmt.Sprintf(TagIDFormat, configuration.Name, tag.ID, count)
+	tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 	err := builder.ParseCollectionNode(rootId, tagID, tagID, tagID)
 	if err != nil {
@@ -533,7 +550,7 @@ func (builder *DeviceSimulatorBuilder) ParseComplex(
 
 	for _, tag := range configuration.Tags {
 		for count := 0; count < tag.Count; count++ {
-			tagID := fmt.Sprintf(TagIDFormat, configuration.Name, tag.ID, count)
+			tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 			err := builder.ParseExpressionNode(
 				configuration.Name,
@@ -601,7 +618,7 @@ func (builder *DeviceSimulatorBuilder) ParseFlat(
 	field := 0
 	for _, tag := range configuration.Tags {
 		for count := 0; count < tag.Count; count++ {
-			tagID := fmt.Sprintf(TagIDFormat, configuration.Name, tag.ID, count)
+			tagID := builder.GenerateTagID(configuration.Name, tag, count)
 
 			err := builder.ParseExpressionNode(
 				configuration.Name,
