@@ -12,6 +12,7 @@ type (
 		Configuration string `json:"configuration" yaml:"configuration"`
 		Count         int    `json:"count" yaml:"count"`
 		MissingChance int    `json:"missingChance" yaml:"missingChance"`
+		IDTemplate    string `json:"idTemplate" yaml:"idTemplate"`
 	}
 
 	// Rate describes the flow of message publishes from the simulator,
@@ -84,13 +85,13 @@ type (
 )
 
 const (
-	BrokerID          = "0"
-	ClientIDFormat    = "%s__asset_%d"
-	TopicIDFormat     = "%s__%s__%s"
-	TagIDFormat       = "%s__%s__%d"
-	TagParentIDFormat = "%s__parent"
-	TagChildIDFormat  = "%s__child"
-	ProviderIDFormat  = "industrial_data_simulator_%s_asset_publish_counter"
+	BrokerID           = "0"
+	ClientIDFormat     = "%s__asset_%d"
+	TopicIDFormat      = "%s__%s__%s"
+	TagIDDefaultFormat = "%s__%s__%d"
+	TagParentIDFormat  = "%s__parent"
+	TagChildIDFormat   = "%s__child"
+	ProviderIDFormat   = "industrial_data_simulator_%s_asset_publish_counter"
 
 	TagTimestampIDFormat   = "%s__timestamp"
 	OPCUATimeExpression    = "now()"
