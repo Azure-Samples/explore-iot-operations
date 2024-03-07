@@ -38,7 +38,7 @@ EOF
 openssl ecparam -name prime256v1 -genkey -noout -out "$CA_CERT_NAME-key.pem"
 openssl req -new -key "$CA_CERT_NAME-key.pem" -subj "/CN=TestCA" -out "$CA_CERT_NAME-req.pem"
 openssl x509 -req -in "$CA_CERT_NAME-req.pem" -signkey "$CA_CERT_NAME-key.pem" \
-    -extfile extensions.conf -extensions ca_cert -out "$CA_CERT_NAME.pem" -days 3650
+    -extfile extensions.conf -extensions ca_cert -out "$CA_CERT_NAME.pem"
 rm "$CA_CERT_NAME-req.pem"
 
 kubectl create cm "$CA_CERT_NAME" --from-file="$CA_CERT_NAME"="$CA_CERT_NAME.pem"
@@ -47,7 +47,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out "$SERVER_CERT_NAME-key.pem"
 openssl req -new -key "$SERVER_CERT_NAME-key.pem" -subj "/CN=TestServer" -out "$SERVER_CERT_NAME-req.pem"
 openssl x509 -req -in "$SERVER_CERT_NAME-req.pem" \
     -CA "$CA_CERT_NAME.pem" -CAkey "$CA_CERT_NAME-key.pem" -CAcreateserial \
-    -extfile extensions.conf -extensions server_cert -out "$SERVER_CERT_NAME.pem" -days 3650
+    -extfile extensions.conf -extensions server_cert -out "$SERVER_CERT_NAME.pem"
 rm "$SERVER_CERT_NAME-req.pem"
 
 cat "$CA_CERT_NAME.pem" >> "$SERVER_CERT_NAME.pem"
@@ -61,7 +61,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out "$CLIENT_CERT_NAME-key.pem"
 openssl req -new -key "$CLIENT_CERT_NAME-key.pem" -subj "/CN=TestClientCert" -out "$CLIENT_CERT_NAME-req.pem"
 openssl x509 -req -in "$CLIENT_CERT_NAME-req.pem" \
     -CA "$CA_CERT_NAME.pem" -CAkey "$CA_CERT_NAME-key.pem" -CAcreateserial \
-    -extfile extensions.conf -extensions client_cert -out "$CLIENT_CERT_NAME.pem" -days 3650
+    -extfile extensions.conf -extensions client_cert -out "$CLIENT_CERT_NAME.pem"
 rm "$CLIENT_CERT_NAME-req.pem"
 
 cat "$CA_CERT_NAME.pem" >> "$CLIENT_CERT_NAME.pem"
