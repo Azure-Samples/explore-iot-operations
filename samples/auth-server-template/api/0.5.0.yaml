@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: Custom Authentication API
+  title: IoT MQ Custom Authentication API
   description: |-
-    This is the HTTP API used for custom authentication. Custom authentication allows you to extend client authentication beyond the provided authentication methods. With custom authentication, the MQ broker will forward the credentials of connecting clients to an external custom authentication server. The custom authentication server will decide whether to accept clients and determine each client's authorization attributes.
+    This is the HTTP API used for custom authentication. Custom authentication allows you to extend client authentication beyond the provided authentication methods. With custom authentication, the IoT MQ broker will forward the credentials of connecting clients to an external custom authentication server. The custom authentication server will decide whether to accept clients and determine each client's authorization attributes.
 
-    The MQ broker will make requests to the custom authentication server with the formats specified below. Likewise, the custom authentication server must respond with the specified response format.
+    The IoT MQ broker will make requests to the custom authentication server with the formats specified below. Likewise, the custom authentication server must respond with the specified response format.
   version: 0.5.0
 servers:
   - url: https://custom-auth-endpoint/
@@ -20,7 +20,7 @@ paths:
       summary: Authenticate client
       operationId: authClient
       description: |-
-        This request from the MQ broker to the custom authentication server forwards the connecting client's credentials to the custom authentication server. The custom authentication server must then use the provided information to accept or reject the client.
+        This request from the IoT MQ broker to the custom authentication server forwards the connecting client's credentials to the custom authentication server. The custom authentication server must then use the provided information to accept or reject the client.
       parameters:
       - in: query
         name: api-version
@@ -31,7 +31,7 @@ paths:
         required: true
       requestBody:
         description: |-
-          Request from the MQ broker to the custom authentication server. The request body contains the information from either an MQTT CONNECT or AUTH packet.
+          Request from the IoT MQ broker to the custom authentication server. The request body contains the information from either an MQTT CONNECT or AUTH packet.
 
           AUTH packets are only applicable to MQTT v5 clients.
         content:
@@ -147,13 +147,13 @@ components:
           example: 135
         message:
           type: string
-          description: Error message for the MQ broker to log
+          description: Error message for the IoT MQ broker to log
           example: error message
       required:
       - reason
     ErrorResponse:
       type: string
-      description: Error message for the MQ broker to log
+      description: Error message for the IoT MQ broker to log
       example: error message
     UnsupportedVersionResponse:
       type: object

@@ -1,8 +1,8 @@
 # auth-server-template
 
-This is a sample server for MQ broker custom authentication.
+This is a sample server for Azure IoT MQ broker custom authentication.
 
-The custom authentication feature of the MQ broker provides an extension point that allows customers to plug in an authentication server to authenticate clients that connect to the MQTT broker. The server here is intended as a sample for how such a custom authentication can be implemented.
+The custom authentication feature of the IoT MQ broker provides an extension point that allows customers to plug in an authentication server to authenticate clients that connect to the MQTT broker. The server here is intended as a sample for how such a custom authentication can be implemented.
 
 ## Deploying the template
 
