@@ -6,7 +6,7 @@ The custom authentication feature of the IoT MQ broker provides an extension poi
 
 ## Deploying the template
 
-A private preview image of the template is available with the tag `e4kpreview.azurecr.io/auth-server-template:latest`. You only need to deploy the template yourself once you make modifications.
+A private preview image of the template is available with the tag `ghcr.io/azure-samples/explore-iot-operations/auth-server-template:0.5.0`. You only need to deploy the template yourself once you make modifications.
 
 The template server needs to be built and deployed as a Kubernetes service. You will need to provide the repository for hosting its container image.
 

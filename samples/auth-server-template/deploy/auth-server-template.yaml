@@ -8,7 +8,7 @@ spec:
   containers:
   - name: auth-server-template
     # Change this if you are using your own container registry.
-    image: e4kpreview.azurecr.io/auth-server-template:latest
+    image: ghcr.io/azure-samples/explore-iot-operations/auth-server-template:0.5.0
     imagePullPolicy: Always
     ports:
       - name: https
