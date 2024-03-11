@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: IoT MQ Custom Authentication API
+  title: Azure IoT Operations MQ Custom Authentication API
   description: |-
     This is the HTTP API used for custom authentication. Custom authentication allows you to extend client authentication beyond the provided authentication methods. With custom authentication, the IoT MQ broker will forward the credentials of connecting clients to an external custom authentication server. The custom authentication server will decide whether to accept clients and determine each client's authorization attributes.
 
