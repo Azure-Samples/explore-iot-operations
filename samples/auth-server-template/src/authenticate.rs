@@ -3,30 +3,64 @@
 
 use std::collections::BTreeMap;
 
+use hyper::{header, Method, StatusCode};
 use openssl::x509::X509;
 
 use crate::http::{ParsedRequest, Response};
 
+/// Returned when the client requests an invalid API version. Contains a list of
+/// supported API versions.
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SupportedApiVersions {
+    /// List of supported API versions.
+    supported_versions: Vec<String>,
+}
+
+impl Default for SupportedApiVersions {
+    fn default() -> Self {
+        SupportedApiVersions {
+            supported_versions: vec!["0.5.0".to_string()],
+        }
+    }
+}
+
 /// Authenticate the connecting MQTT client.
 pub(crate) async fn authenticate(req: ParsedRequest) -> Response {
     // Check that the request follows the authentication spec.
-    if req.method != hyper::Method::POST {
+    if req.method != Method::POST {
         return Response::method_not_allowed(&req.method);
     }
 
-    let body = if let Some(body) = req.body {
-        body
-    } else {
+    if let Some(content_type) = req.headers.get(header::CONTENT_TYPE.as_str()) {
+        if content_type.to_lowercase() != "application/json" {
+            return Response::bad_request(format!("invalid content-type: {content_type}"));
+        }
+    }
+
+    let Some(body) = req.body else {
         return Response::bad_request("missing body");
     };
 
-    if req.uri != "/" {
-        return Response::not_found(format!("{} not found", req.uri));
+    if req.path != "/" {
+        return Response::not_found(format!("{} not found", req.path));
+    }
+
+    if let Some(api_version) = req.query.get("api-version") {
+        // Currently, the custom auth API supports only version 0.5.0.
+        if api_version != "0.5.0" {
+            return Response::json(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                SupportedApiVersions::default(),
+            );
+        }
+    } else {
+        return Response::bad_request("missing api-version");
     }
 
     let body: ClientAuthRequest = match serde_json::from_str(&body) {
         Ok(body) => body,
-        Err(err) => return Response::bad_request(format!("invalid client request body: {}", err)),
+        Err(err) => return Response::bad_request(format!("invalid client request body: {err}")),
     };
 
     Response::from(auth_client(body).await)
@@ -96,19 +130,22 @@ struct AuthPassResponse {
 impl From<ClientAuthResponse> for Response {
     fn from(response: ClientAuthResponse) -> Response {
         match response {
-            ClientAuthResponse::Allow(response) => Response::json(hyper::StatusCode::OK, response),
+            ClientAuthResponse::Allow(response) => Response::json(StatusCode::OK, response),
 
             ClientAuthResponse::Deny { reason } => {
                 let body = serde_json::json!({
                     "reason": reason,
                 });
 
-                Response::json(hyper::StatusCode::FORBIDDEN, body)
+                Response::json(StatusCode::FORBIDDEN, body)
             }
         }
     }
 }
 
+// This implementation is a placeholder. The actual implementation may need to be async, so allow unused async
+// in the signature.
+#[allow(clippy::unused_async)]
 async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
     match body {
         ClientAuthRequest::Connect {
@@ -118,15 +155,12 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
         } => {
             // TODO: Authenticate the client with provided credentials. For now, this template just logs the
             // credentials. Note the password is base64-encoded.
-            println!(
-                "Got MQTT CONNECT; username: {:?}, password: {:?}",
-                username, password
-            );
+            println!("Got MQTT CONNECT; username: {username:?}, password: {password:?}");
 
             // TODO: Authenticate the client with provided certs. For now, this template just logs the certs.
             if let Some(certs) = certs {
                 println!("Got certs:");
-                println!("{:#?}", certs);
+                println!("{certs:#?}");
             }
 
             // TODO: Get attributes associated with the presented certificate. For now, this template
@@ -139,7 +173,8 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             // expiry and allows clients to remain connected indefinitely.
             let example_expiry = username.as_ref().and_then(|username| {
                 if username.starts_with("expire") {
-                    let example_expiry = chrono::Utc::now() + chrono::Duration::seconds(10);
+                    let example_expiry = chrono::Utc::now()
+                        + chrono::TimeDelta::try_seconds(10).expect("invalid hardcoded time value");
 
                     Some(example_expiry.to_rfc3339_opts(chrono::SecondsFormat::Secs, true))
                 } else {

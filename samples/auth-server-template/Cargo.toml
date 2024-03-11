@@ -5,13 +5,15 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4"
+clap = { version = "4", features = ["derive"] }
 futures = "0.3"
 futures-core = "0.3"
 futures-util = "0.3"
-hyper = { version = "0.14", features = ["http1", "server", "tcp"] }
+http-body-util = "0.1"
+hyper = { version = "1.2", features = ["http1", "server"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
 openssl = "0.10"
-structopt = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread"] }
 tokio-openssl = "0.6"
