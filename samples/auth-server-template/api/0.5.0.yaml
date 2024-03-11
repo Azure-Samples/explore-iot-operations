@@ -1,13 +1,11 @@
 openapi: 3.0.3
 info:
-  title: IoT MQ Custom Authentication API
+  title: Azure IoT Operations MQ Custom Authentication API
   description: |-
     This is the HTTP API used for custom authentication. Custom authentication allows you to extend client authentication beyond the provided authentication methods. With custom authentication, the IoT MQ broker will forward the credentials of connecting clients to an external custom authentication server. The custom authentication server will decide whether to accept clients and determine each client's authorization attributes.
 
     The IoT MQ broker will make requests to the custom authentication server with the formats specified below. Likewise, the custom authentication server must respond with the specified response format.
-
-    This API is currently in preview, and may change before GA.
-  version: preview
+  version: 0.5.0
 servers:
   - url: https://custom-auth-endpoint/
     description: User-specified endpoint
@@ -23,6 +21,14 @@ paths:
       operationId: authClient
       description: |-
         This request from the IoT MQ broker to the custom authentication server forwards the connecting client's credentials to the custom authentication server. The custom authentication server must then use the provided information to accept or reject the client.
+      parameters:
+      - in: query
+        name: api-version
+        description: API version of custom authentication API
+        schema:
+          type: string
+          example: "0.5.0"
+        required: true
       requestBody:
         description: |-
           Request from the IoT MQ broker to the custom authentication server. The request body contains the information from either an MQTT CONNECT or AUTH packet.
@@ -73,6 +79,12 @@ paths:
             text/plain:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        422:
+          description: Unprocessable content in request. Returned when the custom authentication API version in the request is unsupported by the server. The response body will contain the server's supported API versions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsupportedVersionResponse'
 components:
   schemas:
     AuthRequest:
@@ -143,3 +155,15 @@ components:
       type: string
       description: Error message for the IoT MQ broker to log
       example: error message
+    UnsupportedVersionResponse:
+      type: object
+      description: Returned when a request's api-version is unsupported
+      properties:
+        supportedVersions:
+          type: array
+          items:
+            type: string
+          description: Supported custom authentication API versions. The MQTT broker should automatically retry with one of these versions.
+          example: ["0.5.0"]
+      required:
+      - supportedVersions
