@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mq-event-driven-dapr
+  namespace: azure-iot-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mq-event-driven-dapr
+  template:
+    metadata:
+      labels:
+        app: mq-event-driven-dapr
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "mq-event-driven-dapr"
+        dapr.io/app-port: "6001"
+        dapr.io/app-protocol: "grpc"
+    spec:
+      serviceAccountName: mqtt-client
+
+      volumes:
+      - name: dapr-unix-domain-socket
+        emptyDir: {}
+
+      # SAT token used to authenticate between Dapr and the MQTT broker
+      - name: mqtt-client-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: mqtt-client-token
+                audience: aio-mq
+                expirationSeconds: 86400
+
+      # Certificate chain for Dapr to validate the MQTT broker
+      - name: aio-ca-trust-bundle
+        configMap:
+          name: aio-ca-trust-bundle-test-only
+
+      containers:
+      # Container for the dapr quickstart application 
+      - name: mq-event-driven-dapr
+        image: ghcr.io/azure-samples/explore-iot-operations/mq-event-driven-dapr:latest
+
+      # Container for the Pub/sub component
+      - name: aio-mq-pubsub-pluggable
+        image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
+        volumeMounts:
+        - name: dapr-unix-domain-socket
+          mountPath: /tmp/dapr-components-sockets
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/
+
+      # Container for the State Management component
+      - name: aio-mq-statestore-pluggable
+        image: ghcr.io/azure/iot-mq-dapr-components/statestore:latest
+        volumeMounts:
+        - name: dapr-unix-domain-socket
+          mountPath: /tmp/dapr-components-sockets
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/
