@@ -1,0 +1,117 @@
+# Pub/sub component
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: aio-mq-pubsub
+  namespace: azure-iot-operations
+spec:
+  type: pubsub.aio-mq-pubsub-pluggable
+  version: v1
+  metadata:
+  - name: url
+    value: "aio-mq-dmqtt-frontend:8883"
+  - name: satTokenPath
+    value: "/var/run/secrets/tokens/mqtt-client-token"
+  - name: tlsEnabled
+    value: true
+  - name: caCertPath
+    value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
+  - name: logLevel
+    value: "Info"
+---
+# Service bus component
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: servicebus-binding
+  namespace: azure-iot-operations
+spec:
+  type: bindings.azure.servicebusqueues
+  version: v1
+  metadata:
+  - name: connectionString
+#    value: "Endpoint=sb://{ServiceBusNamespace}.servicebus.windows.net/;SharedAccessKeyName={PolicyName};SharedAccessKey={Key};EntityPath={QueueName}"
+    value: "Endpoint=sb://aioryan.servicebus.windows.net/;SharedAccessKeyName=dapr;SharedAccessKey=sQMOWtu8oNkmEf3pV8ZML3fzlUGNudS9q+ASbHY22ig=;EntityPath=dapr"
+  - name: queueName
+#    value: {replace-with-queue-name}
+    value: dapr
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dapr-client
+  namespace: azure-iot-operations
+  annotations:
+    aio-mq-broker-auth/group: dapr-workload
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapr-workload-service-bus
+  namespace: azure-iot-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapr-workload-service-bus
+  template:
+    metadata:
+      labels:
+        app: dapr-workload-service-bus
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "dapr-workload-service-bus"
+#        dapr.io/enable-api-logging: "true"
+        dapr.io/app-port: "6001"
+        dapr.io/app-protocol: "http"
+#        dapr.io/log-level: "debug"
+#        dapr.io/sidecar-liveness-probe-delay-seconds: "10"
+#        dapr.io/sidecar-liveness-probe-timeout-seconds: "5"
+#        dapr.io/volume-mounts-rw: "iotedge-spiffe-agent-socket:/run/azedge/sockets/"
+    spec:
+      serviceAccountName: dapr-client
+      volumes:
+        - name: dapr-unix-domain-socket
+          emptyDir: {}
+        - name: mqtt-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400    
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+      containers:
+      - name: subscriber
+        image: dapr-service-bus:0.0.1
+      # Container for the aio pluggable component
+      - name: aio-mq-components
+        image: ghcr.io/azure/iot-mq-dapr-components:0.3
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: dapr-unix-domain-socket
+          mountPath: /tmp/dapr-components-sockets
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/     
+#---
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: dapr-workload-servicebus
+#   labels:
+#     app: user-workload
+# spec:
+#   selector:
+#     app: user-workload
+#   ports:
+#   - protocol: TCP
+#     port: 6001
+#     targetPort: 6001
+#   type: LoadBalancer
+
+
