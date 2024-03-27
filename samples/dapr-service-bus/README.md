@@ -41,4 +41,4 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     mosquitto_pub -L mqtts://localhost/servicebus -m helloworld --cert ./client.crt --key ./client.key --cafile ./chain.pem --insecure
     ```
 
-1. View the output in the Using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
+1. View the output using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
