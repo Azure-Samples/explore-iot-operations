@@ -31,9 +31,9 @@ spec:
   version: v1
   metadata:
   - name: connectionString
-    value: "Endpoint=sb://{ServiceBusNamespace}.servicebus.windows.net/;SharedAccessKeyName={PolicyName};SharedAccessKey={Key};EntityPath={QueueName}"
+    value: "{connectionString}"
   - name: queueName
-    value: {replace-with-queue-name}
+    value: "{queueName}"
 ---
 apiVersion: v1
 kind: ServiceAccount
