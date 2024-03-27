@@ -1,4 +1,6 @@
-# Pub/sub component
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -19,7 +21,6 @@ spec:
   - name: logLevel
     value: "Info"
 ---
-# Service bus component
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -30,11 +31,9 @@ spec:
   version: v1
   metadata:
   - name: connectionString
-#    value: "Endpoint=sb://{ServiceBusNamespace}.servicebus.windows.net/;SharedAccessKeyName={PolicyName};SharedAccessKey={Key};EntityPath={QueueName}"
-    value: "Endpoint=sb://aioryan.servicebus.windows.net/;SharedAccessKeyName=dapr;SharedAccessKey=sQMOWtu8oNkmEf3pV8ZML3fzlUGNudS9q+ASbHY22ig=;EntityPath=dapr"
+    value: "Endpoint=sb://{ServiceBusNamespace}.servicebus.windows.net/;SharedAccessKeyName={PolicyName};SharedAccessKey={Key};EntityPath={QueueName}"
   - name: queueName
-#    value: {replace-with-queue-name}
-    value: dapr
+    value: {replace-with-queue-name}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -62,13 +61,8 @@ spec:
         dapr.io/enabled: "true"
         dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
         dapr.io/app-id: "dapr-workload-service-bus"
-#        dapr.io/enable-api-logging: "true"
         dapr.io/app-port: "6001"
         dapr.io/app-protocol: "http"
-#        dapr.io/log-level: "debug"
-#        dapr.io/sidecar-liveness-probe-delay-seconds: "10"
-#        dapr.io/sidecar-liveness-probe-timeout-seconds: "5"
-#        dapr.io/volume-mounts-rw: "iotedge-spiffe-agent-socket:/run/azedge/sockets/"
     spec:
       serviceAccountName: dapr-client
       volumes:
@@ -87,10 +81,8 @@ spec:
       containers:
       - name: subscriber
         image: dapr-service-bus:0.0.1
-      # Container for the aio pluggable component
       - name: aio-mq-components
-        image: ghcr.io/azure/iot-mq-dapr-components:0.3
-        imagePullPolicy: Never
+        image: ghcr.io/azure/iot-mq-dapr-components:latest
         volumeMounts:
         - name: dapr-unix-domain-socket
           mountPath: /tmp/dapr-components-sockets
@@ -98,20 +90,3 @@ spec:
           mountPath: /var/run/secrets/tokens
         - name: aio-ca-trust-bundle
           mountPath: /var/run/certs/aio-mq-ca-cert/     
-#---
-# kind: Service
-# apiVersion: v1
-# metadata:
-#   name: dapr-workload-servicebus
-#   labels:
-#     app: user-workload
-# spec:
-#   selector:
-#     app: user-workload
-#   ports:
-#   - protocol: TCP
-#     port: 6001
-#     targetPort: 6001
-#   type: LoadBalancer
-
-

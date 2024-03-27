@@ -33,17 +33,12 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
 ## Testing
 
-1. Extract the trust bundle for IoT MQ.
+1. Configure the cluster to allow external access to IoT MQ.
 
-1. Publish a message to the broker using mosquitto.
+1. Publish a message to the broker using Mosquitto.
 
     ```
-    mosquitto_pub 
+    mosquitto_pub -L mqtts://localhost/servicebus -m helloworld --cert ./client.crt --key ./client.key --cafile ./chain.pem --insecure
     ```
 
-1. View the output in the Service Bus Queue
-
-* Publish  local MQTT messages using instructions in the [Quickstart](https://preview.e4k.dev/docs/quickstart/connect-clients/#publish)
-
-
-
+1. View the output in the Using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
