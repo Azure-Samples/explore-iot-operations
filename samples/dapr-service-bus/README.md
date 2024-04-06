@@ -52,4 +52,16 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     mosquitto_pub -L mqtt://localhost/servicebus -m helloworld
     ```
 
-1. View the output using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
+1. View the log of the deployment to confirm the message was received and sent to ServiceBus:
+
+    ```
+    kubectl logs -l app=dapr-workload-service-bus -n azure-iot-operations
+    ```
+
+    ```output
+    dapr client initializing for: 127.0.0.1:50001
+    event: Topic:aio-mq-pubsub, ID:servicebus, Data:dca8a449-297e-43ac-a5b0-78bb1e230c74%!(EXTRA []uint8=[104 101 108 108 111 119 111 114 108 100])
+    event: Send message to service bus
+    ```
+
+1. View the output in the Azure Portal using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
