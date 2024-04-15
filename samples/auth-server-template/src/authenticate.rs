@@ -72,7 +72,7 @@ pub(crate) async fn authenticate(req: ParsedRequest) -> Response {
 #[serde(tag = "type", rename_all = "camelCase")]
 enum ClientAuthRequest {
     /// Data from an MQTT CONNECT packet.
-    #[serde(alias = "connect")]
+    #[serde(alias = "connect", rename_all = "camelCase")]
     Connect {
         /// Username, if provided.
         username: Option<String>,
@@ -88,7 +88,7 @@ enum ClientAuthRequest {
         enhanced_authentication: Option<EnhancedAuthentication>,
     },
 
-    #[serde(alias = "auth")]
+    #[serde(alias = "auth", rename_all = "camelCase")]
     Auth {
         /// Enhanced authentication data, if provided.
         enhanced_authentication: EnhancedAuthentication,
