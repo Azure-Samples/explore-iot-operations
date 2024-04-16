@@ -69,10 +69,10 @@ pub(crate) async fn authenticate(req: ParsedRequest) -> Response {
 /// MQTT client authentication request. Contains the information from either a CONNECT
 /// or AUTH packet.
 #[derive(Debug, serde::Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 enum ClientAuthRequest {
     /// Data from an MQTT CONNECT packet.
-    #[serde(alias = "connect")]
+    #[serde(alias = "connect", rename_all = "camelCase")]
     Connect {
         /// Username, if provided.
         username: Option<String>,
@@ -83,7 +83,27 @@ enum ClientAuthRequest {
         /// Client certificate chain, if provided.
         #[serde(default, deserialize_with = "deserialize_cert_chain")]
         certs: Option<Vec<X509>>,
+
+        /// Enhanced authentication data, if provided.
+        enhanced_authentication: Option<EnhancedAuthentication>,
     },
+
+    #[serde(alias = "auth", rename_all = "camelCase")]
+    Auth {
+        /// Enhanced authentication data, if provided.
+        enhanced_authentication: EnhancedAuthentication,
+    },
+}
+
+/// Fields from MQTT v5 enhanced authentication.
+#[derive(Debug, serde::Deserialize)]
+struct EnhancedAuthentication {
+    /// Enhanced authentication method.
+    method: String,
+
+    /// Enhanced authentication data.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<String>,
 }
 
 fn deserialize_cert_chain<'de, D>(deserializer: D) -> Result<Option<Vec<X509>>, D::Error>
@@ -120,10 +140,11 @@ struct AuthPassResponse {
     /// RFC 3339 timestamp that states the expiry time for the client's
     /// provided credentials. Clients will be disconnected when the expiry time passes.
     /// Omit `expiry` to allow clients to remain connected indefinitely.
+    #[serde(skip_serializing_if = "Option::is_none")]
     expiry: Option<String>,
 
-    /// The client's authorization attributes. The response must contain
-    /// a body, so pass an empty map if there are no authorization attributes.
+    /// The client's authorization attributes.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     attributes: BTreeMap<String, String>,
 }
 
@@ -152,10 +173,11 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             username,
             password,
             certs,
+            enhanced_authentication,
         } => {
             // TODO: Authenticate the client with provided credentials. For now, this template just logs the
-            // credentials. Note the password is base64-encoded.
-            println!("Got MQTT CONNECT; username: {username:?}, password: {password:?}");
+            // credentials. Note that password and enhanced authentication data are base64-encoded.
+            println!("Got MQTT CONNECT; username: {username:?}, password: {password:?}, enhancedAuthentication: {enhanced_authentication:?}");
 
             // TODO: Authenticate the client with provided certs. For now, this template just logs the certs.
             if let Some(certs) = certs {
@@ -168,32 +190,69 @@ async fn auth_client(body: ClientAuthRequest) -> ClientAuthResponse {
             let mut example_attributes = BTreeMap::new();
             example_attributes.insert("example_key".to_string(), "example_value".to_string());
 
-            // TODO: Determine when the client's credentials should expire. For now, this template sets
-            // an expiry of 10 seconds if the username starts with 'expire'; otherwise, it does not set
-            // expiry and allows clients to remain connected indefinitely.
-            let example_expiry = username.as_ref().and_then(|username| {
-                if username.starts_with("expire") {
-                    let example_expiry = chrono::Utc::now()
-                        + chrono::TimeDelta::try_seconds(10).expect("invalid hardcoded time value");
+            authentication_example(username.as_deref(), example_attributes)
+        }
 
-                    Some(example_expiry.to_rfc3339_opts(chrono::SecondsFormat::Secs, true))
+        ClientAuthRequest::Auth {
+            enhanced_authentication,
+        } => {
+            // TODO: Authenticate the client with provided credentials. For now, this template just logs the
+            // credentials. Note that password and enhanced authentication data are base64-encoded.
+            println!("Got MQTT AUTH; enhancedAuthentication: {enhanced_authentication:?}");
+
+            // Decode enhanced authentication method as 'username'.
+            let engine = base64::engine::general_purpose::STANDARD;
+            let method = enhanced_authentication.method;
+
+            if let Ok(username) = base64::Engine::decode(&engine, method) {
+                if let Ok(username) = std::str::from_utf8(&username) {
+                    println!("Decoded enhanced authentication method: {username}");
+
+                    // Enhanced authentication data is not used in this example, so silence the
+                    // unused field warning.
+                    let _ = enhanced_authentication.data;
+
+                    authentication_example(Some(username), BTreeMap::new())
                 } else {
-                    None
+                    ClientAuthResponse::Deny { reason: 135 }
                 }
-            });
+            } else {
+                println!("Failed to decode enhanced authentication method");
 
-            // Example responses to client authentication. This template denies authentication to clients
-            // who present usernames that begin with 'deny', but allows all others.
-            if let Some(username) = username {
-                if username.starts_with("deny") {
-                    return ClientAuthResponse::Deny { reason: 135 };
-                }
+                ClientAuthResponse::Deny { reason: 135 }
             }
-
-            ClientAuthResponse::Allow(AuthPassResponse {
-                expiry: example_expiry,
-                attributes: example_attributes,
-            })
         }
     }
+}
+
+fn authentication_example(
+    username: Option<&str>,
+    attributes: BTreeMap<String, String>,
+) -> ClientAuthResponse {
+    // TODO: Determine when the client's credentials should expire. For now, this template sets
+    // an expiry of 10 seconds if the username starts with 'expire'; otherwise, it does not set
+    // expiry and allows clients to remain connected indefinitely.
+    let example_expiry = username.and_then(|username| {
+        if username.starts_with("expire") {
+            let example_expiry = chrono::Utc::now()
+                + chrono::TimeDelta::try_seconds(10).expect("invalid hardcoded time value");
+
+            Some(example_expiry.to_rfc3339_opts(chrono::SecondsFormat::Secs, true))
+        } else {
+            None
+        }
+    });
+
+    // Example responses to client authentication. This template denies authentication to clients
+    // who present usernames that begin with 'deny', but allows all others.
+    if let Some(username) = username {
+        if username.starts_with("deny") {
+            return ClientAuthResponse::Deny { reason: 135 };
+        }
+    }
+
+    ClientAuthResponse::Allow(AuthPassResponse {
+        expiry: example_expiry,
+        attributes,
+    })
 }
