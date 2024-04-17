@@ -33,10 +33,7 @@ func init() {
 }
 
 func main() {
-	ctx := context.Background()
-	
 	c, err := dapr.NewClient()
-	c.Wait(ctx, 10)
 	if err != nil {
 		panic(err)
 	}

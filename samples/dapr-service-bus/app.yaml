@@ -95,4 +95,5 @@ spec:
             name: aio-ca-trust-bundle-test-only
       containers:
       - name: subscriber
-        image: dapr-service-bus:0.0.1
+        image: ghcr.io/azure-samples/explore-iot-operations/dapr-service-bus:0.0.1
+        imagePullPolicy: Always
