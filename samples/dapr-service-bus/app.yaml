@@ -46,9 +46,9 @@ spec:
   version: v1
   metadata:
   - name: connectionString
-    value: "Endpoint=sb://aioryan.servicebus.windows.net/;SharedAccessKeyName=dapr;SharedAccessKey=sQMOWtu8oNkmEf3pV8ZML3fzlUGNudS9q+ASbHY22ig=;EntityPath=dapr"
+    value: "{connectionString}"
   - name: queueName
-    value: "dapr"
+    value: "{queueName}"
 
 ---
 apiVersion: v1
