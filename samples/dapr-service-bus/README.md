@@ -8,7 +8,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
 1. An [AIO deployment](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy)
 1. An [Azure Service Bus queue](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-portal)
-1. Install [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/)
+1. [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/)
 1. mosquitto_pub from the [Mosquitto](https://mosquitto.org/download/) installer
 
 > WARNING:
@@ -33,7 +33,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. Install Dapr to the cluster:
 
     ```
-    dapr init -k --runtime-version 1.11.0
+    dapr init -k
     ```
 
 1. Deploy the yaml:

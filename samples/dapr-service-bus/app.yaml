@@ -6,6 +6,22 @@ kind: Component
 metadata:
   name: aio-mq-pubsub
   namespace: azure-iot-operations
+  annotations:
+    dapr.io/component-container: >
+      {
+        "name": "aio-mq-components",
+        "image": "ghcr.io/azure/iot-mq-dapr-components:latest",
+        "volumeMounts": [
+          {
+            "name": "mqtt-client-token",
+            "mountPath": "/var/run/secrets/tokens"
+          },
+          {
+            "name": "aio-ca-trust-bundle",
+            "mountPath": "/var/run/certs/aio-mq-ca-cert"
+          }
+        ]
+      }
 spec:
   type: pubsub.aio-mq-pubsub-pluggable
   version: v1
@@ -18,8 +34,7 @@ spec:
     value: true
   - name: caCertPath
     value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
-  - name: logLevel
-    value: "Info"
+
 ---
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -31,9 +46,10 @@ spec:
   version: v1
   metadata:
   - name: connectionString
-    value: "{connectionString}"
+    value: "Endpoint=sb://aioryan.servicebus.windows.net/;SharedAccessKeyName=dapr;SharedAccessKey=sQMOWtu8oNkmEf3pV8ZML3fzlUGNudS9q+ASbHY22ig=;EntityPath=dapr"
   - name: queueName
-    value: "{queueName}"
+    value: "dapr"
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -42,6 +58,7 @@ metadata:
   namespace: azure-iot-operations
   annotations:
     aio-mq-broker-auth/group: dapr-workload
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -59,15 +76,13 @@ spec:
         app: dapr-workload-service-bus
       annotations:
         dapr.io/enabled: "true"
-        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/inject-pluggable-components: "true"
         dapr.io/app-id: "dapr-workload-service-bus"
         dapr.io/app-port: "6001"
         dapr.io/app-protocol: "http"
     spec:
       serviceAccountName: dapr-client
       volumes:
-        - name: dapr-unix-domain-socket
-          emptyDir: {}
         - name: mqtt-client-token
           projected:
             sources:
@@ -81,12 +96,3 @@ spec:
       containers:
       - name: subscriber
         image: dapr-service-bus:0.0.1
-      - name: aio-mq-components
-        image: ghcr.io/azure/iot-mq-dapr-components:latest
-        volumeMounts:
-        - name: dapr-unix-domain-socket
-          mountPath: /tmp/dapr-components-sockets
-        - name: mqtt-client-token
-          mountPath: /var/run/secrets/tokens
-        - name: aio-ca-trust-bundle
-          mountPath: /var/run/certs/aio-mq-ca-cert/     

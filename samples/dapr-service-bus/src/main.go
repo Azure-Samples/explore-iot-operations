@@ -33,8 +33,10 @@ func init() {
 }
 
 func main() {
-
+	ctx := context.Background()
+	
 	c, err := dapr.NewClient()
+	c.Wait(ctx, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +55,6 @@ func main() {
 }
 
 func eventHandler(c dapr.Client) common.TopicEventHandler {
-
 	return func(ctx context.Context, e *common.TopicEvent) (retry bool, err error) {
 		log.Printf("event: Topic:%s, ID:%s, Data:%s", e.PubsubName, e.Topic, e.ID, e.Data)
 
