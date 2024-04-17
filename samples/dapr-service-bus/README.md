@@ -32,8 +32,8 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
 1. Edit `app.yaml` and update the location of the dapr-service-bus container.
 
-    > [!NOTE]
-    > You can also leave it at the default and it will utilize a pre-build image.
+> [!NOTE]
+> You can also leave it at the default and it will utilize a pre-build image.
 
 1. Install Dapr to the cluster:
 
