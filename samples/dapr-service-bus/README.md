@@ -11,7 +11,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/)
 1. mosquitto_pub from the [Mosquitto](https://mosquitto.org/download/) installer
 
-> WARNING:
+> [!WARNING]
 > If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the Mosquitto broker and IoT MQ.
 
 ## Setup
@@ -29,6 +29,11 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
     1. Update the Service Bus components `connectionString` using a policy with the Manage access
     1. Update the Service Bus components `queueName` with the Service Bus queues name
+
+1. Edit `app.yaml` and update the location of the dapr-service-bus container.
+
+> [!NOTE]
+> You can also leave it at the default and it will utilize a pre-build image.
 
 1. Install Dapr to the cluster:
 
