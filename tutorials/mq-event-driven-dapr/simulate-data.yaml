@@ -56,8 +56,6 @@ spec:
                 \"vibration\": $(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
               }"
 
-            echo $DATA
-
             mosquitto_pub -i dapr-publisher -L mqtts://aio-mq-dmqtt-frontend/sensor/data -m "$DATA" -u \$sat -P $(cat /var/run/secrets/tokens/mqtt-client-token) --cafile /var/run/certs/aio-mq-ca-cert/ca.crt
 
             MSG_COUNT=$((MSG_COUNT+1))
