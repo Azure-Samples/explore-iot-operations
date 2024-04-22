@@ -1,4 +1,3 @@
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -21,74 +20,60 @@ spec:
         app: mqtt-publisher
     spec:
       serviceAccountName: mqtt-publisher
-      containers:
-      - name: mqtt-publisher
-        image: debian:stable-slim
-        env:
-        - name: MQTT_TOPIC
-          value: "sensor/data"
-        - name: MQTTUI_BROKER
-          value: 'mqtts://aio-mq-dmqtt-frontend:8883'
-        - name: MQTTUI_USERNAME
-          value: '$sat'
-        - name: SLEEP_DURATION
-          value: "1"
-        command: ["/bin/sh"]
-        args:
-        - -c
-        - |
-          apt-get update && apt-get install -y jq curl bc
-          curl -LO https://github.com/EdJoPaTo/mqttui/releases/download/v0.19.0/mqttui-v0.19.0-x86_64-unknown-linux-gnu.deb
-          apt-get install ./mqttui-v0.19.0-x86_64-unknown-linux-gnu.deb
-          export MQTTUI_PASSWORD=$(cat /var/run/secrets/tokens/mqtt-client-token)
-          MSG_COUNT=0
-          SECONDS=0
-          REPORT_INTERVAL=10
-          while true; do
-            # Generate random values for temperature, pressure and vibration
-            PRES=$(awk -v min=290 -v max=300 'BEGIN{srand(); print min+rand()*(max-min)}')
-            TEMP=$(awk -v min=550 -v max=600 'BEGIN{srand(); print min+rand()*(max-min)}')
-            VIB=$(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
 
-            DATA=$(jq -n \
-                      --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")" \
-                      --arg id "Sensor-$(hostname)-$$" \
-                      --argjson temp "$TEMP" \
-                      --argjson pres "$PRES" \
-                      --argjson vib "$VIB" \
-                      '{
-                        timestamp: $ts,
-                        sensor_id: $id,
-                        temperature: $temp,
-                        pressure: $pres,
-                        vibration: $vib
-                      }')
-
-            mqttui publish -i "iiot-scenario-walkthru" --insecure $MQTT_TOPIC "$DATA"
-
-            MSG_COUNT=$((MSG_COUNT+1))
-
-            # Use awk to add a floating point number to SECONDS
-            SECONDS=$(awk -v sec=$SECONDS -v dur=$SLEEP_DURATION 'BEGIN {print sec + dur}')
-            
-            if [ $(echo "$SECONDS / $REPORT_INTERVAL" | bc) -gt 0 ]; then
-              echo "Messages published in the last $REPORT_INTERVAL seconds: $MSG_COUNT"
-              MSG_COUNT=0
-              SECONDS=0
-            fi
-
-            sleep $SLEEP_DURATION
-
-          done
-        volumeMounts:
-        - name: mqtt-client-token
-          mountPath: "/var/run/secrets/tokens"
-          readOnly: true
       volumes:
       - name: mqtt-client-token
         projected:
           sources:
           - serviceAccountToken:
               path: mqtt-client-token
+              audience: aio-mq
               expirationSeconds: 86400
-              audience: "aio-mq"
+      - name: aio-ca-trust-bundle
+        configMap:
+          name: aio-ca-trust-bundle-test-only
+
+      containers:
+      - name: mqtt-publisher
+        image: alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          apk --no-cache add mosquitto-clients
+
+          SLEEP_DURATION=5
+          REPORT_INTERVAL=10
+
+          MSG_COUNT=0
+          SECONDS=0
+          
+          while true; do
+            DATA="{
+                \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")\",
+                \"sensor_id\": \"Sensor-$(hostname)-$$\",
+                \"temperature\": $(awk -v min=550 -v max=600 'BEGIN{srand(); print min+rand()*(max-min)}'),
+                \"pressure\": $(awk -v min=290 -v max=300 'BEGIN{srand(); print min+rand()*(max-min)}'),
+                \"vibration\": $(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
+              }"
+
+            echo $DATA
+
+            mosquitto_pub -i dapr-publisher -L mqtts://aio-mq-dmqtt-frontend/sensor/data -m "$DATA" -u \$sat -P $(cat /var/run/secrets/tokens/mqtt-client-token) --cafile /var/run/certs/aio-mq-ca-cert/ca.crt
+
+            MSG_COUNT=$((MSG_COUNT+1))
+            SECONDS=$((SECONDS+$SLEEP_DURATION))
+            
+            if [ $SECONDS -ge $REPORT_INTERVAL ]; then
+              echo "Messages published in the last $REPORT_INTERVAL seconds: $MSG_COUNT"
+              MSG_COUNT=0
+              SECONDS=0
+            fi
+
+            sleep $SLEEP_DURATION
+          done
+        volumeMounts:
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert
+ 
