@@ -1,0 +1,69 @@
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: DataLakeConnector
+metadata:
+  name: my-datalake-connector
+  namespace: azure-iot-operations
+spec:
+  protocol: v5
+  image:
+    repository: mcr.microsoft.com/azureiotoperations/datalake
+    tag: 0.2.0-preview
+    pullPolicy: IfNotPresent
+  instances: 1
+  logLevel: info
+  databaseFormat: delta
+  target:
+    fabricOneLake:
+      endpoint: https://msit-onelake.dfs.fabric.microsoft.com
+      names:
+        workspaceName: <your-workspace-name>
+        lakehouseName: aiomqdestination
+      fabricPath: tables
+      authentication:
+        systemAssignedManagedIdentity:
+          audience: https://storage.azure.com
+  localBrokerConnection:
+    endpoint: aio-mq-dmqtt-frontend:8883
+    tls:
+      tlsEnabled: true
+      trustedCaCertificateConfigMap: aio-ca-trust-bundle-test-only
+    authentication:
+      kubernetes: {}
+---
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: DataLakeConnectorTopicMap
+metadata:
+  name: datalake-topicmap
+  namespace: azure-iot-operations
+spec:
+  dataLakeConnectorRef: "my-datalake-connector"
+  mapping:
+    allowedLatencySecs: 1
+    messagePayloadType: "json"
+    maxMessagesPerBatch: 10
+    clientId: id
+    mqttSourceTopic: "azure-iot-operations/data/thermostat"
+    qos: 1
+    table:
+      tableName: OPCUA
+      schema:
+      - name: externalAssetId
+        format: utf8
+        optional: false
+        mapping: $property.externalAssetId
+      - name: assetName
+        format: utf8
+        optional: false
+        mapping: DataSetWriterName
+      - name: CurrentTemperature
+        format: float32
+        optional: false
+        mapping: Payload.temperature.Value
+      - name: Pressure
+        format: float32
+        optional: true
+        mapping: "Payload.Tag 10.Value"
+      - name: Timestamp
+        format: timestamp
+        optional: false
+        mapping: $received_time
