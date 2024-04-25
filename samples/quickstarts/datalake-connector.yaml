@@ -14,7 +14,7 @@ spec:
   databaseFormat: delta
   target:
     fabricOneLake:
-      endpoint: https://msit-onelake.dfs.fabric.microsoft.com
+      endpoint: https://onelake.dfs.fabric.microsoft.com
       names:
         workspaceName: <your-workspace-name>
         lakehouseName: aiomqdestination
