@@ -24,6 +24,7 @@ data:
       sites:
         - name: Seattle_Oven
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: oven_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -54,6 +55,7 @@ data:
           topicFormat: ContosoLLC/Seattle/Oven/{{.TagName}}
         - name: Seattle_Mixer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: mixer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -84,6 +86,7 @@ data:
           topicFormat: ContosoLLC/Seattle/Mixer/{{.TagName}}
         - name: Seattle_Slicer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: slicer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -111,6 +114,7 @@ data:
           topicFormat: ContosoLLC/Seattle/Slicer/{{.TagName}}
         - name: Redmond_Oven
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: oven_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -141,6 +145,7 @@ data:
           topicFormat: ContosoLLC/Redmond/Oven/{{.TagName}}
         - name: Redmond_Mixer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: mixer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -171,6 +176,7 @@ data:
           topicFormat: ContosoLLC/Redmond/Mixer/{{.TagName}}
         - name: Redmond_Slicer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: slicer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -198,6 +204,7 @@ data:
           topicFormat: ContosoLLC/Redmond/Slicer/{{.TagName}}
         - name: Tacoma_Oven
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: oven_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -228,6 +235,7 @@ data:
           topicFormat: ContosoLLC/Tacoma/Oven/{{.TagName}}
         - name: Tacoma_Mixer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: mixer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -258,6 +266,7 @@ data:
           topicFormat: ContosoLLC/Tacoma/Mixer/{{.TagName}}
         - name: Tacoma_Slicer
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: slicer_operating_time
               configuration: delta(now(), start)/1000 #Increase by 1 per second
@@ -343,3 +352,16 @@ spec:
   type: ClusterIP
   selector:
     app: data-simulator
+---
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: industrial-data-simulator-listener
+  namespace: azure-iot-operations
+spec:
+  authenticationEnabled: false
+  authorizationEnabled: false
+  brokerRef: broker
+  port: 1883
+  serviceName: aio-mq-dmqtt-frontend
+  serviceType: clusterIp

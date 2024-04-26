@@ -12,11 +12,12 @@ data:
     logLevel: 1
     simulation:
       target:
-        host: localhost
+        host: aio-mq-dmqtt-frontend
         port: 1883
       sites:
         - name: RLine1_1
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: assembly_lastcycletime
               configuration: rand(4900,5000)
@@ -66,6 +67,7 @@ data:
 
         - name: RLine1_2
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: test_lastcycletime
               configuration: rand(4900,5000)
@@ -100,6 +102,7 @@ data:
 
         - name: RLine1_3
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: packaging_lastcycletime
               configuration: rand(4900,5000)
@@ -134,6 +137,7 @@ data:
 
         - name: RLine2_1
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: assembly_lastcycletime
               configuration: rand(4900,5000)
@@ -189,6 +193,7 @@ data:
 
         - name: RLine2_2
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: test_lastcycletime
               configuration: rand(4900,5000)
@@ -226,6 +231,7 @@ data:
 
         - name: RLine2_3
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: packaging_lastcycletime
               configuration: rand(4900,5000)
@@ -263,6 +269,7 @@ data:
 
         - name: SLine1_1
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: assembly_lastcycletime
               configuration: rand(4900,5000)
@@ -318,6 +325,7 @@ data:
 
         - name: SLine1_2
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: test_lastcycletime
               configuration: rand(4900,5000)
@@ -355,6 +363,7 @@ data:
 
         - name: SLine1_3
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: packaging_lastcycletime
               configuration: rand(4900,5000)
@@ -392,6 +401,7 @@ data:
 
         - name: SLine2_1
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: assembly_lastcycletime
               configuration: rand(4900,5000)
@@ -447,6 +457,7 @@ data:
 
         - name: SLine2_2
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: test_lastcycletime
               configuration: rand(4900,5000)
@@ -484,6 +495,7 @@ data:
 
         - name: SLine2_3
           assetCount: 1
+          mqttVersion: v5
           tags:
             - id: packaging_lastcycletime
               configuration: rand(4900,5000)
@@ -578,3 +590,16 @@ spec:
   type: ClusterIP
   selector:
     app: data-simulator
+---
+apiVersion: mq.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: industrial-data-simulator-listener
+  namespace: azure-iot-operations
+spec:
+  authenticationEnabled: false
+  authorizationEnabled: false
+  brokerRef: broker
+  port: 1883
+  serviceName: aio-mq-dmqtt-frontend
+  serviceType: clusterIp
