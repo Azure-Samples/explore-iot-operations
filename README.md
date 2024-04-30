@@ -21,17 +21,21 @@ This project provides the following:
 
    [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/explore-iot-operations?quickstart=1)
 
-1. (Optional) Enter your Azure details to store them as environment variables inside the codespace. 
+1. (Optional) Enter your Azure details to store them as environment variables inside the codespace.
 
-1. Wait for the post creation commands to finish, then connect your new cluster to Azure Arc.
+1. **Important**: Open the codespace in VS Code Desktop with **Ctrl/Cmd + Shift + P** > **Codespaces: Open in VS Code Desktop**. This is required to login to Azure CLI properly.
+
+1. Connect your new cluster to Azure Arc.
 
    ```bash
-   az connectedk8s connect --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --subscription $SUBSCRIPTION_ID --location $REGION
+   az login
+   az account set -s $SUBSCRIPTION_ID
+   az connectedk8s connect -n $CLUSTER_NAME -g $RESOURCE_GROUP -l $LOCATION
    ```
 
-1. Follow [Azure IoT Operations docs](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy&tabs=codespaces) to finish deploying.
+2. Follow [Azure IoT Operations docs](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy?tabs=codespaces) to finish deploying.
 
-1. Explore!
+3. Explore!
 
 ## Contributing
 
