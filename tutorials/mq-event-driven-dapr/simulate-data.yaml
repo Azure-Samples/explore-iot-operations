@@ -49,7 +49,7 @@ spec:
           
           while true; do
             DATA="{
-                \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")\",
+                \"timestamp\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\",
                 \"sensor_id\": \"Sensor-$(hostname)-$$\",
                 \"temperature\": $(awk -v min=550 -v max=600 'BEGIN{srand(); print min+rand()*(max-min)}'),
                 \"pressure\": $(awk -v min=290 -v max=300 'BEGIN{srand(); print min+rand()*(max-min)}'),
