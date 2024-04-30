@@ -29,7 +29,7 @@ This project provides the following:
    az connectedk8s connect --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --subscription $SUBSCRIPTION_ID --location $REGION
    ```
 
-1. Follow [Azure IoT Operations docs](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy?branch=release-alice-springs&tabs=codespaces) to finish deploying.
+1. Follow [Azure IoT Operations docs](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy&tabs=codespaces) to finish deploying.
 
 1. Explore!
 
