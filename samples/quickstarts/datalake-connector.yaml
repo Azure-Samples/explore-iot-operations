@@ -7,7 +7,7 @@ spec:
   protocol: v5
   image:
     repository: mcr.microsoft.com/azureiotoperations/datalake
-    tag: 0.2.0-preview
+    tag: 0.4.0-preview
     pullPolicy: IfNotPresent
   instances: 1
   logLevel: info
