@@ -1,3 +1,9 @@
+1. dotnet build
+1. dotnet publish --os linux --arch x64
+1. push to container registry
+1. update app.yaml to point at image
+1. update app.yaml with service bus endpoint information
+
 # Dapr Service Bus sample
 
 ## Overview
@@ -19,8 +25,8 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. Build the container:
 
     ```bash
-    cd src
-    docker build src -t dapr-service-bus:0.0.1
+    dotnet build
+    dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
     ```
 
 1. Push to a container registry if desired.
@@ -34,7 +40,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
     1. You can also leave it at the default and it will utilize a pre-build image.
 
-1. Install Dapr to the K8s cluster:
+1. Install Dapr to the cluster:
 
     ```bash
     dapr init -k
@@ -69,3 +75,4 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     ```
 
 1. View the output in the Azure Portal using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
+

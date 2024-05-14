@@ -1,0 +1,49 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dapr-client
+  namespace: azure-iot-operations
+  annotations:
+    aio-mq-broker-auth/group: dapr-workload
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapr-workload-service-bus-dotnet
+  namespace: azure-iot-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapr-workload-service-bus-dotnet
+  template:
+    metadata:
+      labels:
+        app: dapr-workload-service-bus-dotnet
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/inject-pluggable-components: "true"
+        dapr.io/app-id: "dapr-workload-service-bus-dotnet"
+        dapr.io/app-port: "6001"
+        dapr.io/app-protocol: "http"
+        dapr.io/log-level: "debug"
+    spec:
+      serviceAccountName: dapr-client
+      volumes:
+        - name: dapr-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: dapr-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400    
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+      containers:
+      - name: dapr-workload-service-bus-dotnet
+        image: dapr-service-bus-dotnet
+        imagePullPolicy: Never
