@@ -25,13 +25,13 @@ internal class Program
         // Dapr subscription in [Topic] routes orders topic to this route
         app.MapPost("/servicebus", [Topic(pubSubName, "servicebus")] async (JsonDocument json) => {
             // the payload is base64 encoded
-            var data64 = json.RootElement.GetProperty("data_base64").ToString();
-            var data = Encoding.UTF8.GetString(Convert.FromBase64String(data64));
+            var payload64 = json.RootElement.GetProperty("data_base64").ToString();
+            var payload = Encoding.UTF8.GetString(Convert.FromBase64String(payload64));
 
-		    app.Logger.LogInformation("event: data:" + data);
+		    app.Logger.LogInformation("event: data:" + payload);
 
             using var client = new DaprClientBuilder().Build();
-            await client.InvokeBindingAsync(bindingName: serviceBusName, operation: "create", data: data);
+            await client.InvokeBindingAsync(bindingName: serviceBusName, operation: "create", data: payload);
 
 		    app.Logger.LogInformation("event: Sent message to service bus");
 
@@ -41,13 +41,3 @@ internal class Program
         app.Run("http://localhost:6001");
     }
 }
-
-		// log.Printf("event: Topic:%s, ID:%s, Data:%s", e.Topic, e.ID, e.Data)
-
-		// // Send to service bus
-		// BINDING_OPERATION := "create"
-		// in := &dapr.InvokeBindingRequest{Name: SERVICE_BUS_NAME, Operation: BINDING_OPERATION, Data: []byte(e.RawData)}
-		// if err := c.InvokeOutputBinding(ctx, in); err != nil {
-		// 	panic(err)
-		// }
-		// log.Println("event: Sent message to service bus")

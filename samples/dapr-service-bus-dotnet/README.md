@@ -29,7 +29,11 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
     ```
 
-1. Push to a container registry if desired.
+1. Push to the cluster:
+
+    ```bash
+    k3d image import dapr-service-bus-dotnet
+    ```
 
 1. Edit `app.yaml` with the following changes:
 
@@ -65,13 +69,22 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. View the log of the deployment to confirm the message was received and sent to ServiceBus:
 
     ```bash
-    kubectl logs -l app=dapr-workload-service-bus -n azure-iot-operations
+    kubectl logs -l app=dapr-workload-service-bus-dotnet -n azure-iot-operations
     ```
 
+    output:
     ```output
-    dapr client initializing for: 127.0.0.1:50001
-    event: Topic:aio-mq-pubsub, ID:servicebus, Data:dca8a449-297e-43ac-a5b0-78bb1e230c74%!(EXTRA []uint8=[104 101 108 108 111 119 111 114 108 100])
-    event: Send message to service bus
+    Defaulted container "dapr-workload-service-bus-dotnet" out of: dapr-workload-service-bus-dotnet, daprd, aio-mq-components
+    info: dapr-service-bus-dotnet[0]
+          event: data:helloworld
+    info: dapr-service-bus-dotnet[0]
+          event: Sent message to service bus
+    info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+          Setting HTTP status code 200.
+    info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+          Executed endpoint 'HTTP: POST /servicebus'
+    info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+          Request finished HTTP/1.1 POST http://127.0.0.1:6001/servicebus - 200 0 - 52.9646ms
     ```
 
 1. View the output in the Azure Portal using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)

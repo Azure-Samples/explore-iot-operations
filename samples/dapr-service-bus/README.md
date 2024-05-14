@@ -19,11 +19,14 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. Build the container:
 
     ```bash
-    cd src
-    docker build src -t dapr-service-bus:0.0.1
+    docker build src -t dapr-service-bus
     ```
 
-1. Push to a container registry if desired.
+1. Push to the CodeSpaces cluster:
+
+    ```bash
+    k3d image import dapr-service-bus
+    ```
 
 1. Edit `app.yaml` with the following changes:
 
