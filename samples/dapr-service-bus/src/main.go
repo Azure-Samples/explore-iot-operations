@@ -8,12 +8,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dapr/go-sdk/service/common"
 	dapr "github.com/dapr/go-sdk/client"
+	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
 )
 
-var PUBSUB_NAME = "aio-mq-pubsub" 
+var PUBSUB_NAME = "aio-mq-pubsub"
 var SERVICE_BUS_NAME = "servicebus-binding"
 
 var (
@@ -26,7 +26,7 @@ var messageSub = &common.Subscription{
 	PubsubName: PUBSUB_NAME,
 	Topic:      "servicebus",
 	Route:      "/servicebus",
-	Metadata:   map[string]string {"rawPayload": "true"},
+	Metadata:   map[string]string{"rawPayload": "true"},
 }
 
 func init() {
@@ -53,15 +53,14 @@ func main() {
 
 func eventHandler(c dapr.Client) common.TopicEventHandler {
 	return func(ctx context.Context, e *common.TopicEvent) (retry bool, err error) {
-		log.Printf("event: Topic:%s, ID:%s, Data:%s", e.PubsubName, e.Topic, e.ID, e.Data)
+		log.Printf("event: Topic:%s, ID:%s, Data:%s", e.Topic, e.ID, e.Data)
 
 		// Send to service bus
-		BINDING_OPERATION := "create"
-		in := &dapr.InvokeBindingRequest{Name: SERVICE_BUS_NAME, Operation: BINDING_OPERATION, Data: []byte(e.RawData)}
+		in := &dapr.InvokeBindingRequest{Name: SERVICE_BUS_NAME, Operation: "create", Data: []byte(e.RawData)}
 		if err := c.InvokeOutputBinding(ctx, in); err != nil {
 			panic(err)
 		}
-		log.Println("event: Send message to service bus")
+		log.Println("event: Sent message to service bus")
 
 		return false, nil
 	}
