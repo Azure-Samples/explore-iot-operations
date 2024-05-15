@@ -1,4 +1,4 @@
-module quickstart-sample
+module dapr-service-bus
 
 go 1.21.8
 
