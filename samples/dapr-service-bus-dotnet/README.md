@@ -1,10 +1,4 @@
-1. dotnet build
-1. dotnet publish --os linux --arch x64
-1. push to container registry
-1. update app.yaml to point at image
-1. update app.yaml with service bus endpoint information
-
-# Dapr Service Bus sample
+# Dapr Service Bus Dotnet sample
 
 ## Overview
 
@@ -29,7 +23,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
     ```
 
-1. Push to the cluster:
+1. Import to the CodeSpaces cluster:
 
     ```bash
     k3d image import dapr-service-bus-dotnet
@@ -39,10 +33,6 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
     1. Update the Service Bus components `connectionString` using a policy with the Manage access
     1. Update the Service Bus components `queueName` with the Service Bus queues name
-
-1. Edit `app.yaml` and update the location of the dapr-service-bus container.
-
-    1. You can also leave it at the default and it will utilize a pre-build image.
 
 1. Install Dapr to the cluster:
 
