@@ -22,7 +22,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     docker build src -t dapr-service-bus
     ```
 
-1. Push to the CodeSpaces cluster:
+1. Import to the CodeSpaces cluster:
 
     ```bash
     k3d image import dapr-service-bus
@@ -33,11 +33,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     1. Update the Service Bus components `connectionString` using a policy with the Manage access
     1. Update the Service Bus components `queueName` with the Service Bus queues name
 
-1. Edit `app.yaml` and update the location of the dapr-service-bus container.
-
-    1. You can also leave it at the default and it will utilize a pre-build image.
-
-1. Install Dapr to the K8s cluster:
+1. Install Dapr to the cluster:
 
     ```bash
     dapr init -k
