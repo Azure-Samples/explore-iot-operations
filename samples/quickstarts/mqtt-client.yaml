@@ -17,6 +17,13 @@ spec:
     name: mqtt-client
     command: ["sh", "-c"]
     args: ["apk add mosquitto-clients mqttui && sleep infinity"]
+    resources:
+      limits:
+        cpu: 500m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
     volumeMounts:
     - name: mq-sat
       mountPath: /var/run/secrets/tokens
