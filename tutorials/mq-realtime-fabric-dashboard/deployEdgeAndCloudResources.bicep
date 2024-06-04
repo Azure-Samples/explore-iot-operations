@@ -352,7 +352,7 @@ resource kcTopicmap 'Microsoft.IoTOperationsMQ/mq/kafkaConnector/topicMap@2023-1
 param eventHubSku string = 'Standard'
 
 
-resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
+resource eventHubNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
   name: 'ehns-${uniqueString(resourceGroup().id)}'
   location: location
   sku: {
@@ -363,6 +363,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   properties: {
     isAutoInflateEnabled: false
     maximumThroughputUnits: 0
+    minimumTlsVersion: '1.2'
   }
 }
 
