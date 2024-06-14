@@ -38,13 +38,9 @@ param customLocationName string = '${any(resourceGroup().name)}-cl'
 
 param mqInstanceName string = 'mq-instance'
 
-param mqFrontendServer string = 'mq-dmqtt-frontend'
-
 param mqListenerName string = 'listener'
 
 param mqBrokerName string = 'broker'
-
-param mqAuthnName string = 'authn'
 
 param mqFrontendReplicas int = 1
 
@@ -92,17 +88,9 @@ var AIO_EXTENSION_SCOPE = {
 }
 
 
-var MQ_PROPERTIES = {
-  domain: 'aio-mq-dmqtt-frontend.${AIO_CLUSTER_RELEASE_NAMESPACE}'
-  port: 1883
-  localUrl: 'mqtts://aio-mq-dmqtt-frontend.${AIO_CLUSTER_RELEASE_NAMESPACE}:1883'
-  name: 'aio-mq-dmqtt-frontend'
-  satAudience: 'aio-mq'
-}
-
 var repo = 'mcr.microsoft.com/azureiotoperations'
 
-var __VERSION__ = '0.1.0-preview'
+var __VERSION__ = '0.4.0-preview'
 var __TRAIN__ = 'preview'
 
 
@@ -295,7 +283,7 @@ resource kafkaConnector 'Microsoft.IoTOperationsMQ/mq/kafkaConnector@2023-10-04-
     }
     instances: 2
     kafkaConnection: {
-      endpoint: concat(eventHubNamespace.name, '.servicebus.windows.net:9093')
+      endpoint: '${eventHubNamespace.name}.servicebus.windows.net:9093'
       tls: {
         tlsEnabled: true
       }
@@ -309,9 +297,6 @@ resource kafkaConnector 'Microsoft.IoTOperationsMQ/mq/kafkaConnector@2023-10-04-
       }
     }
   }
-  dependsOn: [
-    eventHubNamespace
-  ]
 }
 
 resource kcTopicmap 'Microsoft.IoTOperationsMQ/mq/kafkaConnector/topicMap@2023-10-04-preview' = {
@@ -362,6 +347,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
   properties: {
     isAutoInflateEnabled: false
+    disableLocalAuth: true
     maximumThroughputUnits: 0
   }
 }
