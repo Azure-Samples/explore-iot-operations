@@ -347,7 +347,6 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
   properties: {
     isAutoInflateEnabled: false
-    disableLocalAuth: true
     maximumThroughputUnits: 0
   }
 }
