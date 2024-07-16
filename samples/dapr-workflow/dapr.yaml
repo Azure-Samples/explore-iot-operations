@@ -1,0 +1,15 @@
+version: 1
+common:
+  resourcesPath: ./resources/
+  environment:  # any environment variable shared among apps
+    - DEBUG: true
+apps:
+  - appID: dapr-workflow-app
+    appDirPath: .
+#    appPort: 6001
+#    appProtocol: http
+    grpcPort: 50001
+    command: ["./src/dapr-workflow-app"]
+    appLogDestination: fileAndConsole
+    daprdLogDestination: file
+    

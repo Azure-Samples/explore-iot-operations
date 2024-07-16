@@ -1,0 +1,12 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: aio-mq-statestore
+spec:
+  type: state.aio-mq-statestore-pluggable
+  version: v1
+  metadata:
+  - name: actorStateStore
+    value: false
+  - name: url
+    value: localhost:1883
