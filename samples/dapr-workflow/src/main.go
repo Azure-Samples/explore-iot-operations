@@ -11,18 +11,10 @@ import (
 	"log"
 	"net/http"
 
+	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 	"github.com/dapr/go-sdk/workflow"
-)
-
-var (
-//	wfClient *workflow.Client
-//	wfId     string
-
-// daprClient client.Client
-// err        error
-// ctx        context.Context
 )
 
 var messageSub = &common.Subscription{
@@ -32,8 +24,6 @@ var messageSub = &common.Subscription{
 	Metadata:   map[string]string{"rawPayload": "true"},
 }
 
-//var stage = 0
-
 const (
 	appPort        = ":6001"
 	pubSubName     = "aio-mq-pubsub"
@@ -42,12 +32,6 @@ const (
 
 func main() {
 	fmt.Println("Starting app")
-
-	// daprClient, err := client.NewClient()
-	// if err != nil {
-	// 	log.Fatal("Failed to create Dapr client: ", err)
-	// }
-	// defer daprClient.Close()
 
 	w, err := workflow.NewWorker()
 	if err != nil {
@@ -77,21 +61,16 @@ func main() {
 	}
 	fmt.Println("Runner started")
 
-	// Create workflow client
-	// wfClient, err = workflow.NewClient()
-	// if err != nil {
-	// 	log.Fatal("Failed to create workflow client: ", err)
-	// }
-	// fmt.Println("Workflow client created")
+	client, err := dapr.NewClient()
+	if err != nil {
+		panic(err)
+	}
 
-	//	fmt.Printf("stage: %d\n", stage)
-
-	// ctx := context.Background()
-	// id, err := wfClient.ScheduleNewWorkflow(ctx, "TestWorkflow", workflow.WithInput(1))
-	// if err != nil {
-	// 	log.Fatal("Failed to schedule a new workflow: ", err)
-	// }
-	// fmt.Println("Workflow started with id: ", id)
+	ctx := context.Background()
+	if err := client.SaveState(ctx, stateStoreName, "hello", []byte("there"), nil); err != nil {
+		log.Printf("Error saving state: %v", err)
+	}
+	fmt.Println("Tested saving state")
 
 	// Create a Dapr service
 	daprService, err := daprd.NewService(appPort)
@@ -113,22 +92,6 @@ func main() {
 	}
 
 	fmt.Println("Complete")
-	//	fmt.Printf("stage: %d\n", stage)
-
-	// if err := wfClient.RaiseEvent(ctx, id, "testEvent"); err != nil {
-	// 	log.Fatal("Failed to raise event: ", err)
-	// }
-	// fmt.Println("Event raised")
-
-	///	fmt.Printf("stage: %d\n", stage)
-
-	// metadata, err := wfClient.WaitForWorkflowCompletion(ctx, id)
-	// if err != nil {
-	// 	log.Fatal("Failed to wait for workflow: ", err)
-	// }
-	// fmt.Println("Workflow complete status:", metadata.RuntimeStatus.String())
-
-	// fmt.Printf("stage: %d\n", stage)
 }
 
 func subscribeHandler(ctx context.Context, e *common.TopicEvent) (retry bool, err error) {
@@ -171,8 +134,6 @@ func TestWorkflow(ctx *workflow.WorkflowContext) (any, error) {
 		fmt.Println("Failed to get workflow input")
 		return nil, err
 	}
-
-	//	fmt.Println("Workflow input ", data)
 
 	//	var output SensorPayload
 	if err := ctx.CallActivity(FahrenheitToCelciusActivity, workflow.ActivityInput(data)).Await(&data); err != nil {
