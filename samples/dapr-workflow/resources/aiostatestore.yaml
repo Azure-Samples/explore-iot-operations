@@ -7,6 +7,6 @@ spec:
   version: v1
   metadata:
   - name: actorStateStore
-    value: false
+    value: true
   - name: url
     value: localhost:1883

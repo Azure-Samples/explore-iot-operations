@@ -81,7 +81,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     
     ```bash
     mkdir /tmp/dapr-components-sockets
-    docker run --name aio-dapr --network host -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-mq-dapr-components:latest
+    docker run --name aio-dapr --network host --restart unless-stopped -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-mq-dapr-components:latest
     ```
 
 1. Build the applications:
