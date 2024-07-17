@@ -6,10 +6,9 @@ common:
 apps:
   - appID: dapr-workflow-app
     appDirPath: .
+#    appProtocol: grpc
 #    appPort: 6001
-#    appProtocol: http
-    grpcPort: 50001
-    command: ["./src/dapr-workflow-app"]
+    command: ["./src/dapr-workflow"]
     appLogDestination: fileAndConsole
     daprdLogDestination: file
     
