@@ -1,4 +1,4 @@
-module dapr-workflow
+module daprworkflow
 
 go 1.22.5
 
