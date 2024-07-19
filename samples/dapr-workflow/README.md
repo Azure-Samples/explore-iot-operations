@@ -1,8 +1,8 @@
-# Dapr Service Bus sample
+# Dapr Workflow sample
 
 ## Overview
 
-This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this data to an Azure Service Bus Queue.
+This sample uses Dapr to execute a workflow that listens to the topic `sensor/in`, does a simple conversion from Farenheit to Celsius and then writes to topic `sensor/out`.
 
 ## Prerequisites
 
@@ -12,26 +12,28 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. mosquitto_pub from the [Mosquitto](https://mosquitto.org/download/) installer
 
 > [!WARNING]
-> If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the Mosquitto broker and IoT MQ.
+> If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the IoT Operations MQTT broker.
 
 ## Setup
+
+The application can be deployed into the Kubernetes cluster, or it can be run locally.
+
+> [!NOTE]
+> To run **locally** the MQTT Broker must be available to the host machine. This is the default if running this sample in Codespaces.
+
+### Kubernetes
 
 1. Build the container:
 
     ```bash
-    docker build src -t dapr-service-bus
+    docker build . -t dapr-workflow-sample
     ```
 
 1. Import to the CodeSpaces cluster:
 
     ```bash
-    k3d image import dapr-service-bus
+    k3d image import dapr-workflow-sample
     ```
-
-1. Edit `app.yaml` with the following changes:
-
-    1. Update the Service Bus components `connectionString` using a policy with the Manage access
-    1. Update the Service Bus components `queueName` with the Service Bus queues name
 
 1. Install Dapr to the cluster:
 
@@ -44,54 +46,47 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     ```bash
     kubectl apply -f app.yaml
     ```
+### Local
 
-## Testing
+1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to simply publishing from the host machine.
 
-1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to IoT MQ for debugging purposes.
-
-1. Publish a message to the broker using Mosquitto:
-
-    ```bash
-    mosquitto_pub -L mqtt://localhost/servicebus -m helloworld
-    ```
-
-1. View the log of the deployment to confirm the message was received and sent to ServiceBus:
-
-    ```bash
-    kubectl logs -l app=dapr-workload-service-bus -n azure-iot-operations
-    ```
-
-    ```output
-    dapr client initializing for: 127.0.0.1:50001
-    event: Topic:aio-mq-pubsub, ID:servicebus, Data:dca8a449-297e-43ac-a5b0-78bb1e230c74%!(EXTRA []uint8=[104 101 108 108 111 119 111 114 108 100])
-    event: Send message to service bus
-    ```
-
-1. View the output in the Azure Portal using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
-
-## Local development
-
-1. Initialise the local Dapr environment:
-
-    ```bash
-    dapr init
-    ```
-
-1. Run the IoT Operations pluggable components:
+1. Install the IoT Operations pluggable component:
     
     ```bash
     mkdir /tmp/dapr-components-sockets
     docker run --name aio-dapr --network host --restart unless-stopped -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-mq-dapr-components:latest
     ```
 
-1. Build the applications:
+1. Initialize the local Dapr environment:
 
     ```bash
-    go build -C src
+    dapr init
     ```
-    
-1. Run the Dapr application:
+
+1. Run the workflow sample:
 
     ```bash
-    dapr run -f .
+    dapr run --app-port 6001 --app-protocol grpc --resources-path resources -- go run .
+    ```
+
+## Testing
+
+1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to simplify publishing from the host machine.
+
+1. Subscribe to the workflow output:
+
+    ```bash
+    mosquitto_sub -L mqtt://localhost/sensor/out
+    ```
+
+1. In another terminal, publish a message to the broker using Mosquitto:
+
+    ```bash
+    mosquitto_pub -L mqtt://localhost/sensor/in -m '{ "name":"mysensor", "temperature_f":100 }'
+    ```
+
+1. Confirm the resulting output from the subscribe containing the Celsius conversion:
+
+    ```json
+    {"name":"mysensor","temperature_f":100,"temperature_c":37.77778}
     ```

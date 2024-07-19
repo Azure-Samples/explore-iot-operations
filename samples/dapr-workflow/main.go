@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"daprworkflow/publishWorkflow"
+	"daprworkflow/publishworkflow"
 
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
@@ -53,12 +53,12 @@ func main() {
 	}
 
 	// Register my test workflow
-	target := publishWorkflow.Target{
+	target := publishworkflow.Target{
 		Client:    daprClient,
 		Component: pubSubName,
 		Topic:     "sensor/out",
 	}
-	publishWorkflow.RegisterWorkflow(w, target)
+	publishworkflow.RegisterWorkflow(w, target)
 
 	// Create a Dapr service
 	daprService, err := daprd.NewService(appPort)
@@ -83,7 +83,7 @@ func main() {
 }
 
 func subscribeHandler(ctx context.Context, e *common.TopicEvent) (retry bool, err error) {
-	var sensor publishWorkflow.Sensor
+	var sensor publishworkflow.Sensor
 	if err := json.Unmarshal(e.RawData, &sensor); err != nil {
 		fmt.Println("Invalid sensor data")
 		return false, nil

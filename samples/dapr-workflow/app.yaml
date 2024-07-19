@@ -82,23 +82,23 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dapr-workload-service-bus
+  name: dapr-workflow-sample
   namespace: azure-iot-operations
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dapr-workload-service-bus
+      app: dapr-workflow-sample
   template:
     metadata:
       labels:
-        app: dapr-workload-service-bus
+        app: dapr-workflow-sample
       annotations:
         dapr.io/enabled: "true"
         dapr.io/inject-pluggable-components: "true"
-        dapr.io/app-id: "dapr-workload-service-bus"
+        dapr.io/app-id: "dapr-workflow-sample"
         dapr.io/app-port: "6001"
-        dapr.io/app-protocol: "http"
+        dapr.io/app-protocol: "grpc"
     spec:
       serviceAccountName: dapr-client
       volumes:
@@ -113,6 +113,6 @@ spec:
           configMap:
             name: aio-ca-trust-bundle-test-only
       containers:
-      - name: dapr-workload-service-bus
-        image: dapr-service-bus
+      - name: dapr-workload-sample
+        image: dapr-workflow-sample
         imagePullPolicy: Never

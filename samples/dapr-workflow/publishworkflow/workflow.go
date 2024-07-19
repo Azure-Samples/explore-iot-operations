@@ -1,4 +1,7 @@
-package publishWorkflow
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+package publishworkflow
 
 import (
 	"fmt"
@@ -41,24 +44,24 @@ func RegisterWorkflow(w *workflow.WorkflowWorker, _target Target) {
 func PublishWorkflow(ctx *workflow.WorkflowContext) (any, error) {
 	var sensor Sensor
 	if err := ctx.GetInput(&sensor); err != nil {
-		fmt.Println("Failed to get payload input")
+		fmt.Println("Failed to get input")
 		return sensor, err
 	}
 
 	var enrichedSensor Sensor
 	if err := ctx.CallActivity(FahrenheitToCelciusActivity, workflow.ActivityInput(sensor)).Await(&enrichedSensor); err != nil {
 		fmt.Println("FahrenheitToCelciusActivity failed ", err)
-		return 0, err
+		return sensor, err
 	}
 
 	if err := ctx.CallActivity(printToConsoleActivity, workflow.ActivityInput(enrichedSensor)).Await(nil); err != nil {
 		fmt.Println("consoleActivity failed ", err)
-		return 0, err
+		return sensor, err
 	}
 
 	if err := ctx.CallActivity(publishToTopicActivity, workflow.ActivityInput(enrichedSensor)).Await(nil); err != nil {
 		fmt.Println("consoleActivity failed ", err)
-		return 0, err
+		return sensor, err
 	}
 
 	return enrichedSensor, nil
@@ -92,7 +95,8 @@ func publishToTopicActivity(ctx workflow.ActivityContext) (any, error) {
 
 	fmt.Printf("publishToTopicActivity: topic:%s, payload:%+v\n", target.Topic, payload)
 
-	if err := target.Client.PublishEvent(ctx.Context(), target.Component, target.Topic, payload); err != nil {
+	// Publish to the topic as a raw payload
+	if err := target.Client.PublishEvent(ctx.Context(), target.Component, target.Topic, payload, dapr.PublishEventWithRawPayload()); err != nil {
 		fmt.Println("Failed to publish")
 		return payload, err
 	}
