@@ -10,12 +10,12 @@ import (
 	"log"
 	"net/http"
 
-	"daprworkflow/publishworkflow"
-
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 	"github.com/dapr/go-sdk/workflow"
+
+	"daprworkflow/publishworkflow"
 )
 
 var messageSub = &common.Subscription{

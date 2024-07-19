@@ -5,8 +5,8 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies
-COPY go.mod go.sum main.go ./
+# Copy src files into container
+COPY . ./
 
 # Download dependencies
 RUN go mod download

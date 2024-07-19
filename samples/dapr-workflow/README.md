@@ -4,6 +4,11 @@
 
 This sample uses Dapr to execute a workflow that listens to the topic `sensor/in`, does a simple conversion from Farenheit to Celsius and then writes to topic `sensor/out`.
 
+> [!CAUTION]
+> The IoT Operations State Store does not support [transactional operations](https://docs.dapr.io/developing-applications/building-blocks/state-management/state-management-overview/#actor-state) and therefor can't be used to store actor state.
+>
+> An alternative state store should be used for this purpose.
+
 ## Prerequisites
 
 1. An [AIO deployment](https://learn.microsoft.com/azure/iot-operations/get-started/quickstart-deploy)
@@ -11,7 +16,7 @@ This sample uses Dapr to execute a workflow that listens to the topic `sensor/in
 1. [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/)
 1. mosquitto_pub from the [Mosquitto](https://mosquitto.org/download/) installer
 
-> [!WARNING]
+> [!CAUTION]
 > If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the IoT Operations MQTT broker.
 
 ## Setup
@@ -29,7 +34,7 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
     docker build . -t dapr-workflow-sample
     ```
 
-1. Import to the CodeSpaces cluster:
+1. Import image into the CodeSpaces cluster:
 
     ```bash
     k3d image import dapr-workflow-sample
@@ -44,8 +49,9 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
 1. Deploy the yaml:
 
     ```bash
-    kubectl apply -f app.yaml
+    kubectl apply -f deploy.yaml
     ```
+
 ### Local
 
 1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to simply publishing from the host machine.
@@ -57,15 +63,10 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
     docker run --name aio-dapr --network host --restart unless-stopped -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-mq-dapr-components:latest
     ```
 
-1. Initialize the local Dapr environment:
+1. Initialize Dapr and run the workflow sample:
 
     ```bash
     dapr init
-    ```
-
-1. Run the workflow sample:
-
-    ```bash
     dapr run --app-port 6001 --app-protocol grpc --resources-path resources -- go run .
     ```
 
