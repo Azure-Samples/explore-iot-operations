@@ -10,7 +10,7 @@ products:
 
 # Building an event driven app with Dapr
 
-Learn how to aggregate data at the edge using IoT MQ and Dapr.
+Learn how to aggregate data at the edge using Azure IoT Operations and Dapr.
 
 ## Tutorial instructions
 
@@ -18,26 +18,16 @@ For detailed instructions on running this tutorial, follow [Build an event-drive
 
 ## Building and deploying from source
 
-1. To build the application container, execute the following:
+1. Build the application and push the container to the cluster:
 
     ```bash
     docker build src -t mq-event-driven-dapr
-    ```
-
-1. Import to the CodeSpaces cluster:
-
-    ```bash
     k3d image import mq-event-driven-dapr
     ```
 
-1. Install Dapr to the cluster:
+1. Deploy dapr and the app:
 
     ```bash
     dapr init -k
-    ```
-
-1. Deploy the yaml:
-
-    ```bash
     kubectl apply -f deploy.yaml
     ```
