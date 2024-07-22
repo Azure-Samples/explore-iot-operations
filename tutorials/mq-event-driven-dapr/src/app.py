@@ -26,6 +26,7 @@ SENSOR_TIMESTAMP          = "timestamp"
 SENSOR_TEMPERATURE        = "temperature"
 SENSOR_PRESSURE           = "pressure"
 SENSOR_VIBRATION          = "vibration"
+MSG_NUMBER                = "msg_number"
 
 WINDOW_SIZE               = 30
 PUBLISH_INTERVAL          = 10
@@ -33,12 +34,15 @@ PUBLISH_INTERVAL          = 10
 app = App()
 publish_loop = Timeloop()
 tracked_sensors = set()
+msg_number = 0
 
 @app.subscribe(pubsub_name=PUBSUB_COMPONENT_NAME, topic=PUBSUB_INPUT_TOPIC, metadata={"rawPayload":"true"})
 def sensordata_topic(event: v1.Event) -> None:
+    global msg_number
+
     # extract sensor data
     data = json.loads(event.Data())
-    print(f"subscribe: received {data[SENSOR_ID]}", flush=True)
+    print(f"subscribe: received sensor={data[SENSOR_ID]} number={data[MSG_NUMBER]}", flush=True)
 
     # extract timestamp and check for validity
     try:
@@ -46,6 +50,8 @@ def sensordata_topic(event: v1.Event) -> None:
     except (ValueError, TypeError) as error:
         print(f"subscribe: discarding invalid datetime {data[SENSOR_TIMESTAMP]} for {data[SENSOR_ID]}", flush=True)
         return
+    
+    msg_number = data[MSG_NUMBER]
 
     # track the sensor for publishing window
     tracked_sensors.add(data[SENSOR_ID])
