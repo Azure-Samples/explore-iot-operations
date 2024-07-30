@@ -21,8 +21,8 @@ type OrderDetails struct {
 }
 
 const (
-	stateStoreComponentName = "aio-mq-statestore"
-	pubSubComponentName     = "aio-mq-pubsub"
+	stateStoreComponentName = "iotoperations-statestore"
+	pubSubComponentName     = "iotoperations-pubsub"
 	daprServerPort          = ":6001"
 )
 

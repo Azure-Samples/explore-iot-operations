@@ -26,7 +26,7 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
 > [!NOTE]
 > To run **locally** the MQTT Broker must be available to the host machine. This is the default if running this sample in Codespaces.
 
-### Kubernetes
+### Kubernetes deployment
 
 1. Build the container:
 
@@ -49,10 +49,10 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
 1. Deploy the yaml:
 
     ```bash
-    kubectl apply -f deploy.yaml
+    kubectl apply -f app.yaml
     ```
 
-### Local
+### Local debugging
 
 1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to simply publishing from the host machine.
 

@@ -19,7 +19,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. Build the container:
 
     ```bash
-    docker build src -t dapr-service-bus
+    docker build . -t dapr-service-bus
     ```
 
 1. Import to the CodeSpaces cluster:

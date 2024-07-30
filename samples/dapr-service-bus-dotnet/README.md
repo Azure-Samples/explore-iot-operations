@@ -19,7 +19,6 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. Build the container:
 
     ```bash
-    dotnet build
     dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
     ```
 
@@ -63,6 +62,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     ```
 
     output:
+
     ```output
     Defaulted container "dapr-workload-service-bus-dotnet" out of: dapr-workload-service-bus-dotnet, daprd, aio-mq-components
     info: dapr-service-bus-dotnet[0]
@@ -78,4 +78,3 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
     ```
 
 1. View the output in the Azure Portal using [Service Bus Explorer](https://learn.microsoft.com/azure/service-bus-messaging/explorer)
-
