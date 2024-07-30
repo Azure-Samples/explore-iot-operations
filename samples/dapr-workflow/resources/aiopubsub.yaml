@@ -1,0 +1,10 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: aio-mq-pubsub
+spec:
+  type: pubsub.aio-mq-pubsub-pluggable
+  version: v1
+  metadata:
+  - name: url
+    value: localhost:1883

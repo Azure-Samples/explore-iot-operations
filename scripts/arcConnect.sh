@@ -24,10 +24,10 @@ if [[ "$RESPONSE" != "y" ]]; then
 fi
 
 # Default values
-DEFAULT_LOCATION="westus3"
+DEFAULT_LOCATION="westus2"
 DEFAULT_RESOURCE_GROUP="$CODESPACE_NAME"
 CLUSTER_NAME="iotops-quickstart-cluster"
-SUPPORTED_LOCATIONS=("eastus" "eastus2" "westus2" "westus3")
+SUPPORTED_LOCATIONS=("eastus" "eastus2" "westus2" "westus" "westeurope" "northeurope")
 
 # Ask the user if they want to provide their own values
 echo -e "\n"
