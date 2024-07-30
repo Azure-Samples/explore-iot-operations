@@ -2,7 +2,7 @@
 
 ## Overview
 
-This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this data to an Azure Service Bus Queue.
+This sample uses Dapr to subscribe to a topic on the MQTT Broker and then publish this data to an Azure Service Bus Queue.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 1. mosquitto_pub from the [Mosquitto](https://mosquitto.org/download/) installer
 
 > [!WARNING]
-> If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the Mosquitto broker and IoT MQ.
+> If installing Mosquitto for Windows, deselect the `Service` component as you may have conflicts with the MQTT Broker.
 
 ## Setup
 
@@ -47,7 +47,7 @@ This sample uses Dapr to subscribe to a topic on IoT MQ and then publish this da
 
 ## Testing
 
-1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) to IoT MQ for debugging purposes.
+1. Configure the cluster with [No TLS and no authentications](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-connectivity/howto-test-connection#no-tls-and-no-authentication) for debugging purposes.
 
 1. Publish a message to the broker using Mosquitto:
 

@@ -60,7 +60,7 @@ The application can be deployed into the Kubernetes cluster, or it can be run lo
     
     ```bash
     mkdir /tmp/dapr-components-sockets
-    docker run --name aio-dapr --network host --restart unless-stopped -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-mq-dapr-components:latest
+    docker run --name aio-dapr --network host --restart unless-stopped -v /tmp/dapr-components-sockets:/tmp/dapr-components-sockets -d ghcr.io/azure/iot-operations-dapr-components:latest
     ```
 
 1. Initialize Dapr and run the workflow sample:

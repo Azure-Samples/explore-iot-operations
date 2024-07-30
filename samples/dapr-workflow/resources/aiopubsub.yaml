@@ -1,9 +1,9 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: aio-mq-pubsub
+  name: iotoperations-pubsub
 spec:
-  type: pubsub.aio-mq-pubsub-pluggable
+  type: pubsub.iotoperations-pubsub
   version: v1
   metadata:
   - name: url
