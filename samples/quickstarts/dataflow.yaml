@@ -48,7 +48,7 @@ spec:
       sourceSettings:
         endpointRef: mq-source
         dataSources:
-        - $share/group/azure-iot-operations/data/thermostat
+        - azure-iot-operations/data
     - operationType: destination
       destinationSettings:
         endpointRef: kafka-target
