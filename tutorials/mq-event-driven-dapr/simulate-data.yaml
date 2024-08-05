@@ -22,9 +22,25 @@ spec:
         app: mqtt-publisher
     spec:
       serviceAccountName: mqtt-publisher
+      volumes:
+      - name: mqtt-client-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: mqtt-client-token
+              audience: aio-mq
+              expirationSeconds: 86400
+      - name: aio-ca-trust-bundle
+        configMap:
+          name: aio-ca-trust-bundle-test-only      
       containers:
       - name: mqtt-publisher
         image: alpine
+        volumeMounts:
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert        
         command: ["sh", "-c"]
         args:
         - |
@@ -46,7 +62,7 @@ spec:
                 \"vibration\": $(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
               }"
 
-            mosquitto_pub -i mqtt-publisher -q 1 -L mqtt://aio-mq-dmqtt-frontend/sensor/data -m "$DATA"
+            mosquitto_pub -V mqttv311 -i mqtt-publisher -q 1 -L mqtts://aio-mq-dmqtt-frontend/sensor/data -m "$DATA" -u K8S-SAT -P $(cat /var/run/secrets/tokens/mqtt-client-token) --cafile /var/run/certs/aio-mq-ca-cert/ca.crt
             if [ $? -eq 0 ]; then
               MSG_COUNT=$((MSG_COUNT+1))
             else
