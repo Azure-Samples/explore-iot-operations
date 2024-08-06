@@ -15,6 +15,7 @@ After downloading the tool to the desired directory, the tool can be run using t
 
 ```bash
 ./dss_set --key key1 --file "dss_reference_data.json" --address localhost --port 1883
+```
 
 ### Notes and Parameters
 
