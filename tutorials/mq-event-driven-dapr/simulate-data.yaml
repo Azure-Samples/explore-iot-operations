@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -20,7 +22,6 @@ spec:
         app: mqtt-publisher
     spec:
       serviceAccountName: mqtt-publisher
-
       volumes:
       - name: mqtt-client-token
         projected:
@@ -31,11 +32,15 @@ spec:
               expirationSeconds: 86400
       - name: aio-ca-trust-bundle
         configMap:
-          name: aio-ca-trust-bundle-test-only
-
+          name: aio-ca-trust-bundle-test-only      
       containers:
       - name: mqtt-publisher
         image: alpine
+        volumeMounts:
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert        
         command: ["sh", "-c"]
         args:
         - |
@@ -43,10 +48,10 @@ spec:
 
           SLEEP_DURATION=2
           REPORT_INTERVAL=10
-
           MSG_COUNT=0
           SECONDS=0
           
+          echo "Starting simulator"
           while true; do
             DATA="{
                 \"timestamp\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\",
@@ -57,7 +62,7 @@ spec:
                 \"vibration\": $(awk -v min=0.001 -v max=0.005 'BEGIN{srand(); print min+rand()*(max-min)}')
               }"
 
-            mosquitto_pub -i mqtt-publisher -q 1 -L mqtts://aio-mq-dmqtt-frontend/sensor/data -m "$DATA" -u \$sat -P $(cat /var/run/secrets/tokens/mqtt-client-token) --cafile /var/run/certs/aio-mq-ca-cert/ca.crt
+            mosquitto_pub -V mqttv311 -i mqtt-publisher -q 1 -L mqtts://aio-mq-dmqtt-frontend/sensor/data -m "$DATA" -u K8S-SAT -P $(cat /var/run/secrets/tokens/mqtt-client-token) --cafile /var/run/certs/aio-mq-ca-cert/ca.crt
             if [ $? -eq 0 ]; then
               MSG_COUNT=$((MSG_COUNT+1))
             else
@@ -73,9 +78,4 @@ spec:
 
             sleep $SLEEP_DURATION
           done
-        volumeMounts:
-        - name: mqtt-client-token
-          mountPath: /var/run/secrets/tokens
-        - name: aio-ca-trust-bundle
-          mountPath: /var/run/certs/aio-mq-ca-cert
  

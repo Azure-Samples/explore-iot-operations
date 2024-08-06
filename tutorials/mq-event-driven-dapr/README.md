@@ -21,7 +21,7 @@ For detailed instructions on running this tutorial, follow [Build an event-drive
 1. Build the application and push the container to the cluster:
 
     ```bash
-    docker build src -t mq-event-driven-dapr
+    docker build . -t mq-event-driven-dapr
     k3d image import mq-event-driven-dapr
     ```
 
@@ -29,5 +29,5 @@ For detailed instructions on running this tutorial, follow [Build an event-drive
 
     ```bash
     dapr init -k
-    kubectl apply -f deploy.yaml
+    kubectl apply -f app.yaml
     ```

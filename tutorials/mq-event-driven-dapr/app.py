@@ -14,8 +14,8 @@ from numpy import percentile
 from timeloop import Timeloop
 
 DAPR_SERVER_PORT          = "6001"
-PUBSUB_COMPONENT_NAME     = "aio-mq-pubsub"
-STATESTORE_COMPONENT_NAME = "aio-mq-statestore"
+PUBSUB_COMPONENT_NAME     = "iotoperations-pubsub"
+STATESTORE_COMPONENT_NAME = "iotoperations-statestore"
 
 PUBSUB_INPUT_TOPIC        = "sensor/data"
 PUBSUB_OUTPUT_TOPIC       = "sensor/window_data"
