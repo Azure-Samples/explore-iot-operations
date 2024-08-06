@@ -82,14 +82,14 @@ spec:
       serviceAccountName: dapr-client
 
       volumes:
-      # SAT token used to authenticate between Dapr and the MQTT broker      
+      # SAT token used to authenticate between Dapr and the MQTT broker
       - name: mqtt-client-token
         projected:
           sources:
           - serviceAccountToken:
               path: mqtt-client-token
               audience: aio-mq
-              expirationSeconds: 600
+              expirationSeconds: 86400
 
       # Certificate chain for Dapr to validate the MQTT broker
       - name: aio-ca-trust-bundle
