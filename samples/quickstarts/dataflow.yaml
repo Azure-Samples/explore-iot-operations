@@ -48,7 +48,7 @@ spec:
       sourceSettings:
         endpointRef: mq-source
         dataSources:
-        - azure-iot-operations/data
+        - azure-iot-operations/data/#
     - operationType: destination
       destinationSettings:
         endpointRef: kafka-target
