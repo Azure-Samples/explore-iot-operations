@@ -34,16 +34,22 @@ spec:
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: servicebus-binding
+  name: iotoperations-statestore
   namespace: azure-iot-operations
 spec:
-  type: bindings.azure.servicebusqueues
+  type: state.azure.iotoperations
   version: v1
   metadata:
-  - name: connectionString
-    value: "{connectionString}" # Insert your Service Bus connection string here
-  - name: queueName
-    value: "{queueName}"        # Insert the Service bus queue name here
+  - name: hostname
+    value: aio-mq-dmqtt-frontend
+  - name: tcpPort
+    value: 8883
+  - name: useTls
+    value: true
+  - name: caFile
+    value: /var/run/certs/aio-mq-ca-cert/ca.crt
+  - name: satAuthFile
+    value: /var/run/secrets/tokens/mqtt-client-token
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -56,37 +62,36 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dapr-workload-service-bus
+  name: dapr-workflow-sample
   namespace: azure-iot-operations
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: dapr-workload-service-bus
+      app: dapr-workflow-sample
   template:
     metadata:
       labels:
-        app: dapr-workload-service-bus
+        app: dapr-workflow-sample
       annotations:
         dapr.io/enabled: "true"
         dapr.io/inject-pluggable-components: "true"
-        dapr.io/app-id: "dapr-workload-service-bus"
+        dapr.io/app-id: "dapr-workflow-sample"
         dapr.io/app-port: "6001"
-        dapr.io/app-protocol: "http"
+        dapr.io/app-protocol: "grpc"
     spec:
       serviceAccountName: dapr-client
       volumes:
-        - name: mqtt-client-token
-          projected:
-            sources:
-              - serviceAccountToken:
-                  path: mqtt-client-token
-                  audience: aio-mq
-                  expirationSeconds: 86400    
-        - name: aio-ca-trust-bundle
-          configMap:
+      - name: mqtt-client-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: mqtt-client-token
+                audience: aio-mq
+                expirationSeconds: 86400    
+      - name: aio-ca-trust-bundle
+        configMap:
             name: aio-ca-trust-bundle-test-only
       containers:
-      - name: dapr-workload-service-bus
-        image: dapr-service-bus
+      - name: dapr-workload-sample
+        image: dapr-workflow-sample
         imagePullPolicy: Never

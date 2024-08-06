@@ -27,7 +27,7 @@ var messageSub = &common.Subscription{
 
 const (
 	appPort    = ":6001"
-	pubSubName = "aio-mq-pubsub"
+	pubSubName = "iotoperations-pubsub"
 )
 
 func main() {

@@ -8,7 +8,7 @@ using Dapr.Client;
 
 internal class Program
 {
-    const string pubSubName = "aio-mq-pubsub";
+    const string pubSubName = "iotoperations-pubsub";
     const string serviceBusName = "servicebus-binding";
 
     private static void Main(string[] args)

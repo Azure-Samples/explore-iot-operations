@@ -13,7 +13,7 @@ import (
 	daprd "github.com/dapr/go-sdk/service/http"
 )
 
-var PUBSUB_NAME = "aio-mq-pubsub"
+var PUBSUB_NAME = "iotoperations-pubsub"
 var SERVICE_BUS_NAME = "servicebus-binding"
 
 var (
