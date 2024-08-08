@@ -90,3 +90,18 @@ This is a .NET sample used to demonstrate how to connect an in-cluster applicati
     ```bash
     kubectl logs mqtt-client-dotnet
     ```
+
+    expected output:
+    ```output
+    Started MQTT client.
+    Reading environment variables.
+    CA cert read.
+    SAT token read.
+    The MQTT client is connected.
+    The MQTT client published the message: samplepayload1
+    The MQTT client published the message: samplepayload2
+    The MQTT client published the message: samplepayload3
+    The MQTT client published the message: samplepayload4
+    The MQTT client published the message: samplepayload5
+    ...
+    ```
