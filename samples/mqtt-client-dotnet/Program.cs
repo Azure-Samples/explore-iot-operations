@@ -11,36 +11,47 @@ namespace SampleDotnetMqtt
 {
     class Program
     {
-        const string token_path = "/var/run/secrets/tokens/mqtt-client-token";
-        const string cert_path = "/certs/aio-mq-ca-cert/ca.pem";
-        
-        static string host_name = "aio-mq-dmqtt-frontend";
-        static bool tls_enabled = true;
-        static int port = 8883;
+        static string hostname = "aio-mq-dmqtt-frontend";
+        static int tcp_port = 8883;
+        static bool use_tls = true;
+        static string ca_file = "/var/run/certs/aio-mq-ca-cert/ca.crt";
+        static string sat_auth_file = "/var/run/secrets/tokens/mqtt-client-token";
 
         public static int Main() => MainAsync().Result;
 
         static void LoadEnv()
         {
             Console.WriteLine("Reading environment variables.");
-            var _host_name = Environment.GetEnvironmentVariable("IOT_MQ_HOST_NAME");
-            var _port = Environment.GetEnvironmentVariable("IOT_MQ_PORT");
-            var _tls_enabled = Environment.GetEnvironmentVariable("IOT_MQ_TLS_ENABLED");
+            var _hostname = Environment.GetEnvironmentVariable("hostname");
+            var _tcp_port = Environment.GetEnvironmentVariable("tcpPort");
+            var _use_tls = Environment.GetEnvironmentVariable("useTls");
+            var _ca_file = Environment.GetEnvironmentVariable("caFile");
+            var _sat_auth_file = Environment.GetEnvironmentVariable("satAuthFile");
 
-            if (_host_name != null)
+            if (_hostname != null)
             {
-                host_name = _host_name;
+                hostname = _hostname;
             }
 
-            if (_port != null)
+            if (_tcp_port != null)
             {
-                Int32.TryParse(_port, out port);
+                Int32.TryParse(_tcp_port, out tcp_port);
             }
 
-            if (_tls_enabled != null)
+            if (_use_tls != null)
             {
-                tls_enabled = (_tls_enabled.ToLower() == "true");
+                use_tls = (_use_tls.ToLower() == "true");
             }
+
+            if (_ca_file != null)
+            {
+                ca_file = _ca_file;
+            }
+
+            if (_sat_auth_file != null)
+            {
+                sat_auth_file = _sat_auth_file;
+            }                        
         }
 
         static async Task<int> MainAsync()
@@ -50,25 +61,25 @@ namespace SampleDotnetMqtt
             LoadEnv();
 
             // Read cert
-            var ca_certs = File.ReadAllText(cert_path);
+            var ca_certs = File.ReadAllText(ca_file);
             Console.WriteLine("CA cert read.");
 
             // Read SAT Token
-            var satToken = File.ReadAllText(token_path);
+            var satToken = File.ReadAllText(sat_auth_file);
             Console.WriteLine("SAT token read.");
             
-            // Create a new MQTT client.
+            // Create a new MQTT client
             var mqttFactory = new MqttFactory();
             using (var mqttClient = mqttFactory.CreateMqttClient())
             {
                 // Create TCP based options using the builder amd connect to broker
                 var mqttClientOptions = new MqttClientOptionsBuilder()
-                    .WithTcpServer(host_name, port)
-                    .WithProtocolVersion(MqttProtocolVersion.V500)
-                    .WithClientId("sampleid")
-                    .WithCredentials("$sat", satToken);
+                    .WithTcpServer(hostname, tcp_port)
+                    .WithProtocolVersion(MqttProtocolVersion.V311)
+                    .WithClientId("mqtt-client-dotnet")
+                    .WithCredentials("K8S-SAT", satToken);
 
-                if (tls_enabled)
+                if (use_tls)
                 {
                     mqttClientOptions.WithTlsOptions(
                         o =>
