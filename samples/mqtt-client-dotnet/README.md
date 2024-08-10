@@ -1,4 +1,4 @@
-# .NET sample application for E4k
+# .NET sample application
 
 This is a .NET sample used to demonstrate how to connect an in-cluster application using MQTTnet to the IoT Operations MQTT Brokerm using a Kubernetes service account token (SAT) for authentication.
 
@@ -10,7 +10,7 @@ This is a .NET sample used to demonstrate how to connect an in-cluster applicati
 1. Build the container:
 
     ```bash
-    dotnet publish --os linux --arch x64 /t:PublishContainer    
+    dotnet publish --os linux --arch x64 /t:PublishContainer
     ```
 
 1. Tag and push the container to your container registry:

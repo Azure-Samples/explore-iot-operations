@@ -65,7 +65,7 @@ namespace SampleDotnetMqtt
             Console.WriteLine("CA cert read.");
 
             // Read SAT Token
-            var satToken = File.ReadAllText(sat_auth_file);
+            var satToken = File.ReadAllBytes(sat_auth_file);
             Console.WriteLine("SAT token read.");
             
             // Create a new MQTT client
@@ -75,9 +75,9 @@ namespace SampleDotnetMqtt
                 // Create TCP based options using the builder amd connect to broker
                 var mqttClientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer(hostname, tcp_port)
-                    .WithProtocolVersion(MqttProtocolVersion.V311)
+                    .WithProtocolVersion(MqttProtocolVersion.V500)
                     .WithClientId("mqtt-client-dotnet")
-                    .WithCredentials("K8S-SAT", satToken);
+                    .WithAuthentication("K8S-SAT", satToken);
 
                 if (use_tls)
                 {
