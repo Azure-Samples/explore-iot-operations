@@ -20,7 +20,7 @@ This is a .NET sample used to demonstrate how to connect an in-cluster applicati
     docker push $CONTAINER_REGISTRY/mqtt-client-dotnet
     ```
 
-    **or** push to your k3d cluster:
+    **or** push to your k3d cluster directly:
 
     ```bash
     k3d image import mqtt-client-dotnet
@@ -29,55 +29,8 @@ This is a .NET sample used to demonstrate how to connect an in-cluster applicati
 ## Run the application
 
 > [!TIP] 
-> The Pod definition below uses a pre-built image. Substitute with the image from your own container registry if desired.
-
-1. Create a file named `app.yaml` with the following:
-
-    ```yaml
-    apiVersion: v1
-    kind: ServiceAccount
-    metadata:
-      name: mqtt-client
-      namespace: azure-iot-operations
-    ---
-    apiVersion: v1
-    kind: Pod
-    metadata:
-      name: mqtt-client-dotnet
-      namespace: azure-iot-operations
-    spec:
-      serviceAccountName: mqtt-client
-      volumes: 
-      - name: mqtt-client-token
-        projected:
-          sources:
-          - serviceAccountToken:
-              path: mqtt-client-token
-              audience: aio-mq
-              expirationSeconds: 86400
-      - name: aio-ca-trust-bundle
-        configMap:
-          name: aio-ca-trust-bundle-test-only
-      containers:
-      - name: mqtt-client-dotnet
-        image: ghcr.io/azure-samples/explore-iot-operations/mqtt-client-dotnet:latest
-        volumeMounts:
-        - name: mqtt-client-token
-          mountPath: /var/run/secrets/tokens/
-        - name: aio-ca-trust-bundle
-          mountPath: /var/run/certs/aio-mq-ca-cert/
-        env:
-        - name: hostname
-          value: "aio-mq-dmqtt-frontend"
-        - name: tcpPort
-          value: "8883"
-        - name: useTls
-          value: "true"
-        - name: caFile
-          value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
-        - name: satAuthFile
-          value: "/var/run/secrets/tokens/mqtt-client-token"
-    ```
+> The Pod definition for this sample uses a pre-built image. Substitute with the image from your own container registry if desired.
+> If using a image imported into k3d, set the `imagePullPolicy` to `Never`.
 
 2. Deploy the pod to your cluster:
 
@@ -85,7 +38,7 @@ This is a .NET sample used to demonstrate how to connect an in-cluster applicati
     kubectl apply -f app.yaml
     ```
 
-3. View the logs:
+3. View the logs to verify the application is publishing successfully:
 
     ```bash
     kubectl logs mqtt-client-dotnet
