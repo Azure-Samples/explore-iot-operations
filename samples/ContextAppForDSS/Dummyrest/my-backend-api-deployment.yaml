@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-backend-api-d
+  labels:
+    app: my-backend-api-d
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-backend-api-d
+  template:
+    metadata:
+      labels:
+        app: my-backend-api-d
+    spec:
+      containers:
+      - name: my-backend-api-d
+        image: dockeroliva/my-backend-api

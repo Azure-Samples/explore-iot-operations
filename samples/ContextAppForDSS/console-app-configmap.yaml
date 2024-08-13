@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: console-app-config
+data:
+  REQUEST_INTERVAL_SECONDS: "15"
+  AUTH_TYPE: "basic"
+  ENDPOINT_TYPE: "http"
+  DSS_KEY: "quality"
+  MQTT_HOST: "10.43.44.15"

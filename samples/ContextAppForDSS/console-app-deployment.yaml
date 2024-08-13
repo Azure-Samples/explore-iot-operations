@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console-app-deployment
+  template:
+    metadata:
+      labels:
+        app: console-app-deployment
+    spec:
+      containers:
+      - name: console-app-deployment
+        image: dockeroliva/context-app-for-dss:v3
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: console-app-config
+        env:
+        - name: USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: console-app-credentials
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: console-app-credentials
+              key: password

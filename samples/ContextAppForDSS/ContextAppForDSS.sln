@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContextAppForDSS", "ContextAppForDSS\ContextAppForDSS.csproj", "{0554A40C-0D32-402E-A0F6-9D892B842385}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8BFF4F9A-2258-4D2B-9888-E4BB8A3EE646}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0554A40C-0D32-402E-A0F6-9D892B842385}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0554A40C-0D32-402E-A0F6-9D892B842385}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0554A40C-0D32-402E-A0F6-9D892B842385}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0554A40C-0D32-402E-A0F6-9D892B842385}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C3AAC6C1-1059-4554-A96A-159367698D4E}
+	EndGlobalSection
+EndGlobal
