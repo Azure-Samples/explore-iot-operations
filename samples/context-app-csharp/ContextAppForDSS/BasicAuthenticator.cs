@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ContextualDataIngestor
 {
-    public class BasicAuthenticator : IAuthenticator
+    public class BasicAuthenticator : IAuthConfig
     {
         private readonly string _username;
         private readonly string _password;

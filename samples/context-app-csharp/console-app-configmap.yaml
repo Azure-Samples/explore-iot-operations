@@ -8,3 +8,5 @@ data:
   ENDPOINT_TYPE: "http"
   DSS_KEY: "quality"
   MQTT_HOST: "10.43.44.15"
+  MQTT_CLIENT_ID : "console-app"
+  DS_ENDPOINT: "http://my-backend-api-s.default.svc.cluster.local"

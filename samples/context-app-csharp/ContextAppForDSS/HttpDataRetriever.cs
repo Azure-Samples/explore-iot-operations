@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -14,13 +15,25 @@ namespace ContextualDataIngestor
     internal class HttpDataRetriever : IDataRetriever
     {
         private readonly HttpClient _httpClient;
-        private readonly IAuthenticator _authenticator;
+        private readonly HttpRetrievalConfig _httpConfig;
+        private readonly IAuthConfig _authConfig;
         private static readonly TimeSpan _defaultOperationTimeout = TimeSpan.FromSeconds(100);
         private bool _disposed = false;
-        public HttpDataRetriever(string connectionStringOrBaseUrl, IAuthenticator authenticator)
+        public HttpDataRetriever(HttpRetrievalConfig retrievalConfig, IAuthConfig authConfig)
         {
-            _httpClient = CreateHttpClient(connectionStringOrBaseUrl);
-            _authenticator = authenticator;
+            _httpConfig = retrievalConfig;
+            _httpClient = CreateHttpClient(_httpConfig.ConnectionStringOrBaseUrl);
+            _authConfig = authConfig;
+        }
+
+        private void Authenticate()
+        {
+            if (_authConfig.GetType() == typeof(HttpBasicAuth))
+            {
+                HttpBasicAuth basicAuth = (HttpBasicAuth)_authConfig;
+                var byteArray = Encoding.ASCII.GetBytes($"{basicAuth.Username}:{basicAuth.Password}");
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            }
         }
 
         /*
@@ -35,11 +48,11 @@ namespace ContextualDataIngestor
         sweetness: 0.82
         particle_size: 0.72
         */
-        public async Task<string> RetrieveDataAsync(RetrievalConfig userConfig)
+        public async Task<string> RetrieveDataAsync()
         {
-            _authenticator.ApplyAuthentication(_httpClient);
             // Implement HTTP data retrieval logic
-            var response = await _httpClient.GetAsync(userConfig.Endpoint);
+            Authenticate();
+            var response = await _httpClient.GetAsync(_httpConfig.Endpoint);
             if (response.IsSuccessStatusCode)
             {
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -62,7 +75,7 @@ namespace ContextualDataIngestor
             }
             else
             {
-                throw new HttpRequestException($"Request to {userConfig.ConnectionStringOrBaseUrl} failed with status code {response.StatusCode}");
+                throw new HttpRequestException($"Request to {_httpConfig.ConnectionStringOrBaseUrl} failed with status code {response.StatusCode}");
             }
         }
 

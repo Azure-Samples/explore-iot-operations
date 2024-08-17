@@ -1,6 +1,6 @@
 ﻿namespace ContextualDataIngestor
 {
-    internal class RetrievalConfig
+    internal class HttpRetrievalConfig
     {
         public required string ConnectionStringOrBaseUrl { get; set; }
         public required string Endpoint { get; set; }

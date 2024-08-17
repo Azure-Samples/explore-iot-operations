@@ -15,7 +15,7 @@ namespace ContextualDataIngestor
             _connectionString = connectionString + ";Integrated Security=True;";
         }
 
-        public async Task<string> RetrieveDataAsync(RetrievalConfig userconfig)
+        public async Task<string> RetrieveDataAsync()
         {
             
             throw new NotImplementedException();

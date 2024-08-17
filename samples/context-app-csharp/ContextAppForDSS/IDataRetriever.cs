@@ -9,6 +9,6 @@ namespace ContextualDataIngestor
 {
     internal interface IDataRetriever : IDisposable
     {
-        Task<string> RetrieveDataAsync(RetrievalConfig userConfig);
+        Task<string> RetrieveDataAsync();
     }
 }
