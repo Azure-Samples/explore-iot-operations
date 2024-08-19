@@ -14,7 +14,11 @@ namespace ContextualDataIngestor
                out var parsedType)
                    ? parsedType
                    : throw new ArgumentException("Invalid or missing ENDPOINT_TYPE environment variable");
-            ContextualDataOperation operation = new ContextualDataOperation(dataSourceType, CreateParametersFromEnvironmentVariables(), logger);
+            
+            Dictionary<string, string> parameters = CreateParametersFromEnvironmentVariables();
+            IDataRetriever dataRetriever = DataRetrieverFactory.CreateDataRetriever(dataSourceType, parameters);
+
+            ContextualDataOperation operation = new ContextualDataOperation(dataRetriever, parameters, logger);
             await operation.PopulateContextualDataAsync();
         }
 

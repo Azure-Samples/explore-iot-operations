@@ -10,21 +10,20 @@ namespace ContextAppForDSS
 {
     internal class ContextualDataOperation
     {
-        private readonly DataSourceType _dataSourceType;
+        private IDataRetriever _dataRetriever;
         private ILogger _logger;
         private readonly Dictionary<string, string> _parameters;
-        private int _intervalSeconds;
 
-        public ContextualDataOperation(DataSourceType dataSourceType, Dictionary<string, string> parameters, ILogger logger)
+        public ContextualDataOperation(IDataRetriever dataRetriever, Dictionary<string, string> parameters, ILogger logger)
         {
             _parameters = parameters;
-            _dataSourceType = dataSourceType;
+            _dataRetriever = dataRetriever;
             _logger = logger;
         }
 
         public async Task PopulateContextualDataAsync()
         {
-            IDataRetriever dataRetriever = DataRetrieverFactory.CreateDataRetriever(_dataSourceType, _parameters);
+            
             // MQTT Communication
             await using MqttSessionClient mqttClient = await SetupMqttClient();
             IStateStoreClient stateStoreClient = new StateStoreClient(mqttClient);
@@ -41,7 +40,7 @@ namespace ContextAppForDSS
                     try
                     {
                         _logger.LogInformation("Retrieve data from at source.");
-                        string stateStoreValue = await dataRetriever.RetrieveDataAsync();
+                        string stateStoreValue = await _dataRetriever.RetrieveDataAsync();
                         _logger.LogInformation("Store data in Distributed State Store");
                         StateStoreSetResponse setResponse =
                         await stateStoreClient.SetAsync(stateStoreKey, stateStoreValue);
@@ -66,7 +65,7 @@ namespace ContextAppForDSS
             finally
             {
                 await stateStoreClient.DisposeAsync(true);
-                dataRetriever.Dispose();
+                _dataRetriever.Dispose();
             }
         }
  

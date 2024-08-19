@@ -57,6 +57,7 @@ Currently this service works on username and password authentication.
 		- `HTTP_BASE_URL`: The base URL of the HTTP endpoint. This Kubernetes service DNS name indicates it's accessing a service named "my-backend-api-s" in the "default" namespace.
 		- `HTTP_PATH`: The path or specfic resource to the HTTP endpoint.
 
+
 2. Deploy the above secret and config map before deploying the app. Run the following commands:
 	```bash
 	kubectl apply -f console-app-secret.yaml
