@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: console-app-deployment
-        image: dockeroliva/context-app-for-dss:v5
+        image: my-registry/context-app-for-dss:latest
         imagePullPolicy: Always
         envFrom:
         - configMapRef:

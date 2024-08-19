@@ -1,6 +1,6 @@
 ﻿namespace ContextualDataIngestor
 {
-    public enum EndpointType
+    public enum DataSourceType
     {
         Sql,
         Http

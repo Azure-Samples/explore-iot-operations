@@ -3,10 +3,11 @@ kind: ConfigMap
 metadata:
   name: console-app-config
 data:
+  ENDPOINT_TYPE: "http"  
+  AUTH_TYPE: "httpbasic"
   REQUEST_INTERVAL_SECONDS: "15"
-  AUTH_TYPE: "basic"
-  ENDPOINT_TYPE: "http"
   DSS_KEY: "quality"
   MQTT_HOST: "10.43.44.15"
   MQTT_CLIENT_ID : "console-app"
-  DS_ENDPOINT: "http://my-backend-api-s.default.svc.cluster.local"
+  HTTP_BASE_URL: "http://my-backend-api-s.default.svc.cluster.local"
+  HTTP_PATH: "contexts/quality"

@@ -9,27 +9,54 @@ namespace ContextualDataIngestor
 {
     internal class DataRetrieverFactory
     {
-        public static IDataRetriever CreateDataRetriever(EndpointType endpointType, string connectionStringOrBaseUrl, IAuthConfig authConfig)
-        {
-            return endpointType switch
+        public static IDataRetriever CreateDataRetriever(DataSourceType endpointType, Dictionary<string, string> parameters)
+        { 
+            switch (endpointType)
             {
-                EndpointType.Sql => new SqlDataRetriever(connectionStringOrBaseUrl),
-                EndpointType.Http => CreateHttpDataRetriever(connectionStringOrBaseUrl, authConfig),
-                _ => throw new ArgumentException("Invalid endpoint type", nameof(endpointType))
-            };
+                case DataSourceType.Sql:
+                    return new SqlDataRetriever(
+                        parameters["DbConnectionString"] ?? throw new ArgumentException("Connection string variable is not set for SQL.")
+                    );
+                case DataSourceType.Http:
+                    IAuthStrategy httpAuthStrategy = CreateAuthStrategy(parameters);
+                    var retrievalRequest = new HttpRetrievalConfig
+                    {
+                        ConnectionStringOrBaseUrl = parameters["HttpBaseURL"] ?? throw new ArgumentException("Base url variable is not set for HTTP."),
+                        Endpoint = parameters["HttpPath"] ?? throw new ArgumentException("full path variable is not set for HTTP."),
+                        RequestBody = null,
+                        DataFormat = null,
+                        QueryParams = null,
+                    };
+                    return new HttpDataRetriever(
+                        retrievalRequest,
+                        httpAuthStrategy
+                    );
+                default:
+                    throw new ArgumentException("Invalid endpoint type", nameof(endpointType));
+            }
         }
 
-        private static IDataRetriever CreateHttpDataRetriever(string connectionStringOrBaseUrl, IAuthConfig authConfig)
+        private static IAuthStrategy CreateAuthStrategy(Dictionary<string, string> parameters)
         {
-            var retrievalRequest = new HttpRetrievalConfig
+            AuthType authType = Enum.TryParse<AuthType>(parameters["AuthType"],
+            true,
+            out var parsedType)
+                ? parsedType
+                : throw new ArgumentException("Invalid or missing ENDPOINT_TYPE environment variable");
+
+            switch (authType)
             {
-                ConnectionStringOrBaseUrl = connectionStringOrBaseUrl,
-                Endpoint = "contexts/quality",
-                RequestBody = null,
-                DataFormat = null,
-                QueryParams = null,
-            };
-            return new HttpDataRetriever(retrievalRequest, authConfig);
+                case AuthType.Httpbasic:
+                    return new HttpBasicAuth
+                    {
+                        Username = parameters["HttpUsername"] ?? throw new ArgumentException("username variable is not set for basic auth strategy in HTTP"),
+                        Password = parameters["HttpPassword"] ?? throw new ArgumentException("password variable is not set for basic auth strategy in HTTP")
+                    };
+                case AuthType.Sqlbasic:
+                    return new SqlBasicAuth();
+                default:
+                    throw new ArgumentException("Invalid auth type");
+            }
         }
     }
 }

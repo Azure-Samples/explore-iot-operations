@@ -1,6 +1,6 @@
 namespace ContextualDataIngestor
 {
-    public class SqlBasicAuth : IAuthConfig
+    public class SqlBasicAuth : IAuthStrategy
     {
     }
 }

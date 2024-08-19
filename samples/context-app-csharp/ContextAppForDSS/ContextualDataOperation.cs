@@ -1,64 +1,89 @@
 ﻿using Akri.Mq.StateStore;
+using Akri.Mqtt.Connection;
+using Akri.Mqtt.Session;
 using ContextualDataIngestor;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
+using Akri.Mqtt.Models;
 
 namespace ContextAppForDSS
 {
     internal class ContextualDataOperation
     {
-        private IStateStoreClient _stateStoreClient;
-        private IDataRetriever _dataRetriever;
+        private readonly DataSourceType _dataSourceType;
         private ILogger _logger;
+        private readonly Dictionary<string, string> _parameters;
         private int _intervalSeconds;
-        private string _stateStoreKey;
-        public ContextualDataOperation(IStateStoreClient stateStoreClient, IDataRetriever dataRetriever, string stateStoreKey, int intervalSeconds)
+
+        public ContextualDataOperation(DataSourceType dataSourceType, Dictionary<string, string> parameters, ILogger logger)
         {
-            _stateStoreClient = stateStoreClient;
-            _dataRetriever = dataRetriever;
-            _intervalSeconds = intervalSeconds;
-            _stateStoreKey = stateStoreKey;
-            // Create LoggerFactory and ILogger
-            using var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole();
-            });
-            _logger = loggerFactory.CreateLogger<ContextualDataOperation>();
-        }
-        public async Task PopulateContextualDataLoopAsync()
-        {
-            while (true)
-            {
-                try
-                {
-                    string stateStoreValue = await _dataRetriever.RetrieveDataAsync();
-                    _logger.LogInformation("Store data in Distributed State Store");
-                    await StoreDataAsync(stateStoreValue);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error retrieving or storing data: " + e.Message);
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(_intervalSeconds));
-
-                _logger.LogInformation("Processing complete.");
-            }
-
+            _parameters = parameters;
+            _dataSourceType = dataSourceType;
+            _logger = logger;
         }
 
-        private async Task StoreDataAsync(string stateStoreValue)
+        public async Task PopulateContextualDataAsync()
         {
-            StateStoreSetResponse setResponse =
-                await _stateStoreClient.SetAsync(_stateStoreKey, stateStoreValue);
+            IDataRetriever dataRetriever = DataRetrieverFactory.CreateDataRetriever(_dataSourceType, _parameters);
+            // MQTT Communication
+            await using MqttSessionClient mqttClient = await SetupMqttClient();
+            IStateStoreClient stateStoreClient = new StateStoreClient(mqttClient);
 
-            if (setResponse.Success)
+            // Read interval from environment variable, default to 5 seconds if not set
+            int intervalSeconds = int.TryParse(_parameters["IntervalSecs"], out int interval) ? interval : 5;
+            string stateStoreKey = _parameters["DssKey"] ?? throw new ArgumentException("Dss Key variable is not set for the store operation to happen.");
+
+            try
             {
-                _logger.LogInformation($"Successfully set key {_stateStoreKey} with value {stateStoreValue}");
+                _logger.LogInformation("Starting.");
+                while (true)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Retrieve data from at source.");
+                        string stateStoreValue = await dataRetriever.RetrieveDataAsync();
+                        _logger.LogInformation("Store data in Distributed State Store");
+                        StateStoreSetResponse setResponse =
+                        await stateStoreClient.SetAsync(stateStoreKey, stateStoreValue);
+
+                        if (setResponse.Success)
+                        {
+                            _logger.LogInformation($"Successfully set key {stateStoreKey} with value {stateStoreValue}");
+                        }
+                        else
+                        {
+                            _logger.LogError($"Failed to set key {stateStoreKey} with value {stateStoreValue}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError("Error retrieving or storing data: " + e.Message);
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(intervalSeconds));
+                }
             }
-            else
+            finally
             {
-                _logger.LogError($"Failed to set key {_stateStoreKey} with value {stateStoreValue}");
+                await stateStoreClient.DisposeAsync(true);
+                dataRetriever.Dispose();
             }
+        }
+ 
+        private async Task<MqttSessionClient> SetupMqttClient()
+        {
+            var mqttClient = new MqttSessionClient();
+
+            string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
+            string clientId = _parameters["MqttClientId"];
+            MqttConnectionSettings connectionSettings = new(host) { TcpPort = 1883, ClientId = clientId, UseTls = false };
+            MqttClientConnectResult result = await mqttClient.ConnectAsync(connectionSettings);
+
+            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            {
+                throw new Exception($"Failed to connect to MQTT broker. Code: {result.ResultCode} Reason: {result.ReasonString}");
+            }
+            return mqttClient;
         }
     }
 }

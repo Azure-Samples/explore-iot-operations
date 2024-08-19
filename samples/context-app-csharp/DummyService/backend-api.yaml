@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
       - name: my-backend-api-d
-        image: dockeroliva/my-backend-api
+        image: my-registry/my-backend-api
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: my-backend-api-s
   labels:
-    app: my-backend-api-d  # Changed to match Deployment labels
+    app: my-backend-api-d 
 spec:
   type: ClusterIP
   ports:
@@ -31,4 +31,4 @@ spec:
     protocol: TCP
     targetPort: 80
   selector:
-    app: my-backend-api-d  # Changed to match Deployment labels
+    app: my-backend-api-d

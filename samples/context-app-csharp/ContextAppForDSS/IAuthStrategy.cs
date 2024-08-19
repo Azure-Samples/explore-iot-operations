@@ -2,7 +2,7 @@ using System.Net.Http;
 
 namespace ContextualDataIngestor
 {
-    public interface IAuthConfig
+    public interface IAuthStrategy
     {
     }
 }

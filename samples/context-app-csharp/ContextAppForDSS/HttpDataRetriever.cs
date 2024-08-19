@@ -16,10 +16,10 @@ namespace ContextualDataIngestor
     {
         private readonly HttpClient _httpClient;
         private readonly HttpRetrievalConfig _httpConfig;
-        private readonly IAuthConfig _authConfig;
+        private readonly IAuthStrategy _authConfig;
         private static readonly TimeSpan _defaultOperationTimeout = TimeSpan.FromSeconds(100);
         private bool _disposed = false;
-        public HttpDataRetriever(HttpRetrievalConfig retrievalConfig, IAuthConfig authConfig)
+        public HttpDataRetriever(HttpRetrievalConfig retrievalConfig, IAuthStrategy authConfig)
         {
             _httpConfig = retrievalConfig;
             _httpClient = CreateHttpClient(_httpConfig.ConnectionStringOrBaseUrl);
