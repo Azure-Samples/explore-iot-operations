@@ -17,7 +17,7 @@ namespace ContextualDataIngestor
 
         public async Task<string> RetrieveDataAsync()
         {
-            
+
             throw new NotImplementedException();
         }
 

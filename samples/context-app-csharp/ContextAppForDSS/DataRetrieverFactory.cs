@@ -10,7 +10,7 @@ namespace ContextualDataIngestor
     internal class DataRetrieverFactory
     {
         public static IDataRetriever CreateDataRetriever(DataSourceType endpointType, Dictionary<string, string> parameters)
-        { 
+        {
             switch (endpointType)
             {
                 case DataSourceType.Sql:
