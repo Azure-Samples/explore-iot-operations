@@ -8,7 +8,7 @@ using Akri.Mqtt.Models;
 
 namespace ContextAppForDSS
 {
-    internal class ContextualDataOperation
+    internal class ContextualDataOperation : IDisposable
     {
         private IDataRetriever _dataRetriever;
         private ILogger _logger;
@@ -25,51 +25,43 @@ namespace ContextAppForDSS
         {
 
             // MQTT Communication
-            await using MqttSessionClient mqttClient = await SetupMqttClient();
-            IStateStoreClient stateStoreClient = new StateStoreClient(mqttClient);
+            await using MqttSessionClient mqttClient = await SetupMqttClientAsync();
+            await using IStateStoreClient stateStoreClient = new StateStoreClient(mqttClient);
 
             // Read interval from environment variable, default to 5 seconds if not set
             int intervalSeconds = int.TryParse(_parameters["IntervalSecs"], out int interval) ? interval : 5;
             string stateStoreKey = _parameters["DssKey"] ?? throw new ArgumentException("Dss Key variable is not set for the store operation to happen.");
 
-            try
+            _logger.LogInformation("Starting.");
+            while (true)
             {
-                _logger.LogInformation("Starting.");
-                while (true)
+                try
                 {
-                    try
-                    {
-                        _logger.LogInformation("Retrieve data from at source.");
-                        string stateStoreValue = await _dataRetriever.RetrieveDataAsync();
-                        _logger.LogInformation("Store data in Distributed State Store");
-                        StateStoreSetResponse setResponse =
-                        await stateStoreClient.SetAsync(stateStoreKey, stateStoreValue);
+                    _logger.LogInformation("Retrieve data from at source.");
+                    string stateStoreValue = await _dataRetriever.RetrieveDataAsync();
+                    _logger.LogInformation("Store data in Distributed State Store");
+                    StateStoreSetResponse setResponse =
+                    await stateStoreClient.SetAsync(stateStoreKey, stateStoreValue);
 
-                        if (setResponse.Success)
-                        {
-                            _logger.LogInformation($"Successfully set key {stateStoreKey} with value {stateStoreValue}");
-                        }
-                        else
-                        {
-                            _logger.LogError($"Failed to set key {stateStoreKey} with value {stateStoreValue}");
-                        }
-                    }
-                    catch (Exception e)
+                    if (setResponse.Success)
                     {
-                        _logger.LogError("Error retrieving or storing data: " + e.Message);
+                        _logger.LogInformation($"Successfully set key {stateStoreKey} with value {stateStoreValue}");
                     }
-
-                    await Task.Delay(TimeSpan.FromSeconds(intervalSeconds));
+                    else
+                    {
+                        _logger.LogError($"Failed to set key {stateStoreKey} with value {stateStoreValue}");
+                    }
                 }
-            }
-            finally
-            {
-                await stateStoreClient.DisposeAsync(true);
-                _dataRetriever.Dispose();
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Error retrieving or storing data.");
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(intervalSeconds));
             }
         }
 
-        private async Task<MqttSessionClient> SetupMqttClient()
+        private async Task<MqttSessionClient> SetupMqttClientAsync()
         {
             var mqttClient = new MqttSessionClient();
 
@@ -83,6 +75,11 @@ namespace ContextAppForDSS
                 throw new Exception($"Failed to connect to MQTT broker. Code: {result.ResultCode} Reason: {result.ReasonString}");
             }
             return mqttClient;
+        }
+
+        public void Dispose()
+        {
+            _dataRetriever.Dispose();
         }
     }
 }
