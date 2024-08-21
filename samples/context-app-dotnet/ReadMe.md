@@ -3,7 +3,7 @@
 This application reads from a endpoint that could be either a HTTP endpoint or a SQL endpoint and 
 inserts the data to State Store which is running as a part of MQTT broker. The application has 2 parts:
 1. A sample Node.js Service (just for testing)
-2. Context App for State Store in C#
+2. Contextual App for State Store in C#
 
 
 ## 1: A sample Node.js Service (just for testing)
@@ -80,22 +80,48 @@ Replace these values in the above file with the base64 encoded value.
 	```bash
 	dotnet build
 	```
-4. Containerize and push the application by running the following command.
+4. This project contains the necessary `.csproj` to containerize the application with `dotnet publish`. Replace the registry name with the chosen registry. 
+The following is an example of pushing to local registry. Skip steps 5 and 6 if using this method.
 	```bash
-	docker build -t my-registry/my-context-app .
-    docker push my-registry/my-context-app
+	dotnet publish /t:PublishContainer ContextAppForDSS/ContextAppForDSS.csproj /p:ContainerRegistry=localhost:5500
 	```
-5. If using local k3d registry (instead of step 4), you can use the following command to push the image:
-	```bash
-    docker build -t localhost:5500/my-context-app .
-	docker push localhost:5500/my-context-app
-	```
+5. In case of docker commands please use the Dockerfile in the project root to build and push the image.
+```docker
+# Use the official .NET SDK image as a build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-6. Deploy the Context App for State Store to Kubernetes by running the following command:
+# Set the working directory
+WORKDIR /app
+
+# Copy the NuGet.config file
+COPY NuGet.config ./
+
+# Copy the project file and restore dependencies
+COPY ContextAppForDSS/ContextAppForDSS.csproj ./ContextAppForDSS/
+RUN dotnet restore ./ContextAppForDSS/ContextAppForDSS.csproj
+
+# Copy the remaining source code and build the application
+COPY ContextAppForDSS/ ./ContextAppForDSS/
+RUN dotnet publish ./ContextAppForDSS/ContextAppForDSS.csproj -c Release -o out
+
+# Use the official .NET runtime image as a runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/out .
+
+# Set the entry point for the application
+ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
+```
+6. Containerize and push the application by running the following command choosing the correct registry.
+	```bash
+	docker build -t my-registry/context-app-for-dss .
+    docker push my-registry/context-app-for-dss
+	```
+7. Deploy the Context App for State Store to Kubernetes by running the following command:
 	```bash
 	kubectl apply -f console-app-deployment.yaml
 	```
-7. On the logs of the pod, the following message should be seen with regular intervals:
+8. On the logs of the pod, the following message should be seen with regular intervals:
 	```bash
     kubectl logs $(kubectl get pods -l app=console-app-deployment -o jsonpath="{.items[0].metadata.name}")
 	Retrieve data from at source.
