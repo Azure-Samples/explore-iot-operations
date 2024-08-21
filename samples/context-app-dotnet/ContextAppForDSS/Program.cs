@@ -19,7 +19,7 @@ namespace ContextualDataIngestor
                    : throw new ArgumentException("Invalid or missing ENDPOINT_TYPE environment variable");
 
             Dictionary<string, string> parameters = CreateParametersFromEnvironmentVariables();
-            IDataRetriever dataRetriever = DataRetrieverFactory.CreateDataRetriever(dataSourceType, parameters);
+            using IDataRetriever dataRetriever = DataRetrieverFactory.CreateDataRetriever(dataSourceType, parameters);
 
             ContextualDataOperation operation = new ContextualDataOperation(dataRetriever, parameters, logger);
             await operation.PopulateContextualDataAsync();

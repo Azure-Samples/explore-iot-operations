@@ -19,30 +19,25 @@ k3d registry create registry.localhost --port 5500
 k3d cluster create -p '1883:1883@loadbalancer' -p '8883:8883@loadbalancer' --registry-use k3d-registry.localhost:5500
 ```
 
+All commands assume that a local registry is  being used. If not, please replace the registry name with the chosen registry.
+
 ### 1. Run the Node.js Service
 
 1. Navigate to the `DummyService` directory
 2. Build and push the container image using the following command with:
 	```bash
-	docker build -t my-registry/my-backend-api .
-    docker push my-registry/my-backend-api
-	```
-   Note: Replace `my-registry` with the chosen container registry.
-
-3. If using local k3d registry (instead of step 2), you can use the following command to push the image:
-	```bash
     docker build -t localhost:5500/my-backend-api .
 	docker push localhost:5500/my-backend-api
 	```
-4. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
+3. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
 	```bash
 	kubectl apply -f backend-api.yaml
 	```
-5. Verify that the Node.js Service is running by running the following command:
+4. Verify that the Node.js Service is running by running the following command:
 	```bash
 	kubectl get pods -A
 	```
-6. On the logs of the pod, the following message should be seen:
+5. On the logs of the pod, the following message should be seen:
 	```bash
 	kubectl logs $(kubectl get pods -l app=my-backend-api-d -o jsonpath="{.items[0].metadata.name}")
     Server listening on port 80
@@ -114,8 +109,8 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 ```
 6. Containerize and push the application by running the following command choosing the correct registry.
 	```bash
-	docker build -t my-registry/context-app-for-dss .
-    docker push my-registry/context-app-for-dss
+	docker build -t localhost:5500/context-app-for-dss .
+    docker push localhost:5500/context-app-for-dss
 	```
 7. Deploy the Context App for State Store to Kubernetes by running the following command:
 	```bash
