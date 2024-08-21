@@ -1,4 +1,6 @@
-﻿namespace ContextualDataIngestor
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+namespace ContextualDataIngestor
 {
     internal class HttpRetrievalConfig
     {

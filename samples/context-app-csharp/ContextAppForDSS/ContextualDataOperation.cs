@@ -1,4 +1,7 @@
-﻿using Akri.Mq.StateStore;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Akri.Mq.StateStore;
 using Akri.Mqtt.Connection;
 using Akri.Mqtt.Session;
 using ContextualDataIngestor;

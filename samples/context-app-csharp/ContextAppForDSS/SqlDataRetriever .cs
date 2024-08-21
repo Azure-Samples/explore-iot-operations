@@ -1,4 +1,7 @@
-﻿using ContextualDataIngestor;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using ContextualDataIngestor;
 using System;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -18,7 +21,7 @@ namespace ContextualDataIngestor
         public async Task<string> RetrieveDataAsync()
         {
 
-            throw new NotImplementedException();
+            throw new NotImplementedException("SQL data retrieval is not implemented as of now.");
         }
 
 

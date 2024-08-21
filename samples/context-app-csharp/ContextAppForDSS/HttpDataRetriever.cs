@@ -1,4 +1,6 @@
-﻿using ContextualDataIngestor;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+using ContextualDataIngestor;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
