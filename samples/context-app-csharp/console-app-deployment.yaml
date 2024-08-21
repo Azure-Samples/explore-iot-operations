@@ -20,12 +20,12 @@ spec:
         - configMapRef:
             name: console-app-config
         env:
-        - name: USERNAME
+        - name: HTTP_USERNAME
           valueFrom:
             secretKeyRef:
               name: console-app-credentials
               key: username
-        - name: PASSWORD
+        - name: HTTP_PASSWORD
           valueFrom:
             secretKeyRef:
               name: console-app-credentials
