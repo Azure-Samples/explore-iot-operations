@@ -1,7 +1,7 @@
 ﻿# Steps to create a Contextual app for state store
 
 This application reads from a endpoint that could be either a HTTP endpoint or a SQL endpoint and 
-inserts the data to State Store which is running as a part of MQTT broker. The application has 2 parts:
+inserts the data to State Store which is running as a part of MQTT broker. The application has 3 parts:
 1. A sample Node.js Service (just for testing)
 2. A sample SQL Server (just for testing)
 3. Contextual App for State Store in C#
@@ -40,7 +40,7 @@ All commands assume that a local registry is being used. If not, please replace 
 	```
 5. On the logs of the pod, the following message should be seen:
 	```bash
-	kubectl logs $(kubectl get pods -l app=my-backend-api-d -o jsonpath="{.items[0].metadata.name}")
+	kubectl logs -l app=my-backend-api-d --all-containers=true --since=0s --tail=-1 --max-log-requests=1
     Server listening on port 80
 	```
 
@@ -51,20 +51,20 @@ All commands assume that a local registry is being used. If not, please replace 
 	```bash
 	kubectl apply -f sql-configmap.yaml
 	```
-3. Create a base64 encoded password which would be used as password for teh default user of "sa". This password must contain special characters and digits.
+3. Create a base64 encoded password which would be used as password for the default user of "sa". This password must contain special characters and digits.
 	```bash
     echo -n 'Mystrongpassword@123' | base64
 	```
-4. Use the base64 value obtained above in the secret definition portion of the "sql-server.yaml" Deploy the SQL Server deployment. 
+4. Use the base64 value obtained above in the secret definition portion of the "sql-server.yaml"
+5. Deploy the SQL Server deployment. 
 	```bash
 	kubectl apply -f sql-server.yaml
 	```
-6. The above deployment takes some time to complete as it also sets up necessary database, tables and rows. 
-   After a while verify that the SQL Server is running by doing the following command:
+6. The SQL server deployment may take some time to complete. After a few minutes, verify SQL Server is running by executing the following command:
 	```bash
-	kubectl logs $(kubectl get pods -l app=mssql -o jsonpath="{.items[0].metadata.name}")
+	kubectl logs -l app=mssql --all-containers=true --since=0s --tail=-1 --max-log-requests=1
 	```
-5. On the logs of the pod, the following message should be seen:
+7. On the logs of the pod, the following message should be seen:
 	```bash
 	Changed database context to 'master'.
 	2024-08-20 22:07:53.01 spid51      [5]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
@@ -79,14 +79,14 @@ All commands assume that a local registry is being used. If not, please replace 
 	Created and populated CountryMeasurements table
 	Setup script completed
 	```
-6. The following steps (7-10) are optional and more for verification purposes. 
-   Set an environment for the password of the "sa" user ( SA_PASSWORD=Mystrongpassword@123) before doing the following steps.
+8. The remaining steps are optional and verify the database, table, rows have been created successfully
+   Set an environment variable for the password of the "sa" user ( SA_PASSWORD=Mystrongpassword@123) before doing the following steps.
 
-7. Verify user "sa" with the password before can actually login. This will open a SQL command prompt). Type QUIT to exit the prompt.
+9.  Verify user "sa" can login (this will open a SQL command prompt). Type QUIT to exit the prompt.
 	```bash
 	kubectl exec -it $(kubectl get pods -l app=mssql -o jsonpath="{.items[0].metadata.name}") -- /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P $SA_PASSWORD -C
 	```
-8. Verify that database exist by doing:
+10. Verify that database exists by executing the following:
 	```bash
 	kubectl exec -it $(kubectl get pods -l app=mssql -o jsonpath="{.items[0].metadata.name}") -- /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q "SELECT name FROM sys.databases WHERE name = 'MySampleDB'" -C
 	
@@ -96,7 +96,7 @@ All commands assume that a local registry is being used. If not, please replace 
 
 	(1 rows affected)
 	```
-9. Verify table existence:
+11. Verify table existence:
 	```bash
 	kubectl exec -it $(kubectl get pods -l app=mssql -o jsonpath="{.items[0].metadata.name}") -- /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -d MySampleDB -Q "SELECT name FROM sys.tables WHERE name = 'CountryMeasurements'" -C
 	name
@@ -106,7 +106,7 @@ All commands assume that a local registry is being used. If not, please replace 
 	(1 rows affected)
 	```
 
-10. Verify data in table:
+12. Verify data in table:
 	```bash
 	kubectl exec -it $(kubectl get pods -l app=mssql -o jsonpath="{.items[0].metadata.name}") -- /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -d MySampleDB -Q "SELECT * FROM CountryMeasurements" -C
 
@@ -168,7 +168,7 @@ Some examples of values if using the DummyService or SQL Server:
 	kubectl apply -f console-app-secret.yaml
 	kubectl apply -f context-app-configmap.yaml
 	```
-4. Dotnet build the application by running the following command:
+4. Build the application by running the following command:
 	```bash
 	dotnet build
 	```
@@ -215,7 +215,7 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 	```
 10. On the logs of the pod, the following message should be seen with regular intervals:
 	```bash
-    kubectl logs $(kubectl get pods -l app=console-app-deployment -o jsonpath="{.items[0].metadata.name}")
+    kubectl logs -l app=console-app-deployment --all-containers=true --since=0s --tail=-1 --max-log-requests=1
 	Retrieve data from at source.
 	Store data in Distributed State Store.
 	```

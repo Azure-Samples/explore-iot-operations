@@ -40,38 +40,30 @@ namespace ContextualDataIngestor
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                try
+
+                await connection.OpenAsync();
+                using (SqlCommand command = new SqlCommand(_query, connection))
                 {
-                    await connection.OpenAsync();
-                    using (SqlCommand command = new SqlCommand(_query, connection))
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
-                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        if (reader.HasRows)
                         {
-                            if (reader.HasRows)
+                            while (await reader.ReadAsync())
                             {
-                                while (await reader.ReadAsync())
-                                {
-                                    string formattedRow = $"{{ \"country\" : \"{reader["Country"]}\" , \"viscosity\" : {reader["Viscosity"]}, \"sweetness\" : {reader["Sweetness"]}, \"particle_size\" : {reader["ParticleSize"]}, \"overall\" : {reader["Overall"]} }}";
-                                    result.AppendLine(formattedRow);
-                                }
-                            }
-                            else
-                            {
-                                result.AppendLine("No data found.");
+                                string formattedRow = $"{{ \"country\" : \"{reader["Country"]}\" , \"viscosity\" : {reader["Viscosity"]}, \"sweetness\" : {reader["Sweetness"]}, \"particle_size\" : {reader["ParticleSize"]}, \"overall\" : {reader["Overall"]} }}";
+                                result.AppendLine(formattedRow);
                             }
                         }
+                        else
+                        {
+                            result.AppendLine("No data found.");
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    throw;
                 }
             }
 
             return result.ToString();
         }
-
-
 
         public void Dispose()
         {
