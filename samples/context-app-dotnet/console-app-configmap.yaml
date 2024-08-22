@@ -3,11 +3,16 @@ kind: ConfigMap
 metadata:
   name: console-app-config
 data:
-  HTTP_BASE_URL: "http://my-backend-api-s.default.svc.cluster.local:80" # The URL of the backend API. Replace with your own value.
-  HTTP_PATH: "contexts/quality"
+  ENDPOINT_TYPE: "http" # http or sql
+  AUTH_TYPE: "httpbasic" # httpbasic or sqlbasic
   REQUEST_INTERVAL_SECONDS: "10"
-  AUTH_TYPE: "httpbasic"
-  ENDPOINT_TYPE: "http"
   DSS_KEY: "quality"
   MQTT_HOST: "10.10.10.10" # The ip of the BROKER API. Replace with your own value.
   MQTT_CLIENT_ID: "console-app" # The client ID of the MQTT client. Replace with your own value.
+
+  HTTP_BASE_URL: "http://my-backend-api-s.default.svc.cluster.local:80" # The URL of the backend API. Replace with your own value.
+  HTTP_PATH: "contexts/quality" # The path of the API endpoint. Replace with your own value.
+  
+  SQL_SERVER_NAME: "sqlserver-service" # The name of the SQL Server service. Replace with your own value.
+  SQL_DB_NAME: "MySampleDB" # The name of the database. Replace with your own value.
+  SQL_TABLE_NAME: "CountryMeasurements" # The name of the table. Replace with your own value.

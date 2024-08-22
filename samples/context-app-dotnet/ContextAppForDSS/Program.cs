@@ -37,7 +37,12 @@ namespace ContextualDataIngestor
                 { "IntervalSecs", Environment.GetEnvironmentVariable("REQUEST_INTERVAL_SECONDS") ?? string.Empty },
                 { "DssKey", Environment.GetEnvironmentVariable("DSS_KEY") ?? string.Empty },
                 { "MqttHost", Environment.GetEnvironmentVariable("MQTT_HOST") ?? string.Empty },
-                { "MqttClientId", Environment.GetEnvironmentVariable("MQTT_CLIENT_ID") ?? "someClientId"}
+                { "MqttClientId", Environment.GetEnvironmentVariable("MQTT_CLIENT_ID") ?? "someClientId"},
+                { "SqlServerName",  Environment.GetEnvironmentVariable("SQL_SERVER_NAME") ?? string.Empty },
+                { "SqlDatabaseName",  Environment.GetEnvironmentVariable("SQL_DB_NAME") ?? string.Empty },
+                { "SqlTableName",  Environment.GetEnvironmentVariable("SQL_TABLE_NAME") ?? string.Empty },
+                { "SqlUsername",  Environment.GetEnvironmentVariable("SQL_USERNAME") ?? "sa" },
+                { "SqlPassword",  Environment.GetEnvironmentVariable("SQL_PASSWORD") ?? string.Empty },
             };
 
             return parameters;
