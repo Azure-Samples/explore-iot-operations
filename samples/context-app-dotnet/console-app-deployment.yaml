@@ -23,10 +23,21 @@ spec:
         - name: HTTP_USERNAME
           valueFrom:
             secretKeyRef:
-              name: console-app-credentials
-              key: username
+              name: console-app-secret
+              key: httpusername
         - name: HTTP_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: console-app-credentials
-              key: password
+              name: console-app-secret
+              key: httppassword
+        # Uncomment the following lines if you are using SQL Server with some other username than "SA"
+        #- name: SQL_USERNAME
+          #valueFrom:
+            #secretKeyRef:
+              #name: console-app-secret
+              #key: sqlusername
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: console-app-secret
+              key: sqlpassword
