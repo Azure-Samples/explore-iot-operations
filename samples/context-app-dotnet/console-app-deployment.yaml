@@ -41,3 +41,27 @@ spec:
             secretKeyRef:
               name: console-app-secret
               key: sqlpassword
+        - name: CA_FILE_PATH
+          value: "/app/certs/cafile.crt"
+        - name: SAT_TOKEN_PATH
+          value: "/app/secrets/sat_token"
+        volumeMounts:
+        - name: ca-cert-file
+          mountPath: /app/certs
+          readOnly: true
+        - name: sat-token
+          mountPath: /app/secrets
+          readOnly: true
+      volumes:
+      - name: ca-cert-file
+        secret:
+          secretName: test-ca
+          items:
+          - key: tls.crt
+            path: cafile.crt
+      - name: sat-token
+        secret:
+          secretName: sat-token-secret
+          items:
+          - key: token
+            path: sat_token

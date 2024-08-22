@@ -63,14 +63,29 @@ namespace ContextAppForDSS
                 await Task.Delay(TimeSpan.FromSeconds(intervalSeconds));
             }
         }
-
         private async Task<MqttSessionClient> SetupMqttClientAsync()
         {
+            _logger.LogInformation("Setting up MQTT client");
             var mqttClient = new MqttSessionClient();
 
             string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
             string clientId = _parameters["MqttClientId"];
             MqttConnectionSettings connectionSettings = new(host) { TcpPort = 1883, ClientId = clientId, UseTls = false };
+
+            bool useTls = bool.TryParse(Environment.GetEnvironmentVariable("USE_TLS"), out bool parsedTls) ? parsedTls : false;
+
+            if (useTls)
+            {
+                _logger.LogInformation("Using TLS");
+                string tokenPath = _parameters["SatTokenPath"] ?? throw new InvalidOperationException("Service Account Token is not set");
+                Console.WriteLine("read token to see contents");
+                Console.WriteLine(File.ReadAllText(tokenPath).Trim());
+                string caFilePath = _parameters["CaFilePath"] ?? throw new InvalidOperationException("Certificate authority file path is not set");
+                Console.WriteLine("read ca file to see contents");
+                Console.WriteLine(File.ReadAllText(caFilePath).Trim());
+                connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, SatAuthFile = tokenPath, CaFile = caFilePath };
+            }
+
             MqttClientConnectResult result = await mqttClient.ConnectAsync(connectionSettings);
 
             if (result.ResultCode != MqttClientConnectResultCode.Success)
