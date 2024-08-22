@@ -6,6 +6,7 @@ inserts the data to State Store which is running as a part of MQTT broker. The a
 2. A sample SQL Server (just for testing)
 3. Contextual App for State Store in C#
 
+Please refer to [official documentation](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/overview-iot-mq) for broker information and how to set up the broker.
 
 ## 1: A sample Node.js Service (just for testing)
 A sample Node.js service has been created to test the Contextual app for State Store. 
@@ -141,19 +142,23 @@ Please populate base64 encoded values accordingly if using any other user.
 
 2.`context-app-configmap.yaml` : This file contains the configuration for the Context App for State Store. The following values need to be updated:
 
-| Variable Name             | What It Means                                                                                       | Type   | Is It Required | Default Value      |
-|---------------------------|-----------------------------------------------------------------------------------------------------|--------|----------------|--------------------|
-| `ENDPOINT_TYPE`           | Specifies the type of endpoint to connect to. Values are "http" or "sql".                           | string | Yes            | None               |
-| `AUTH_TYPE`               | Defines the authentication method. Values are "httpbasic" and "sqlbasic".                           | string | Yes            | None               |
-| `REQUEST_INTERVAL_SECONDS`| The interval in seconds between consecutive requests to the data source.                            | integer| No             | 5                  |
-| `DSS_KEY`                 | A key used to identify or categorize the data being processed.                                      | string | Yes            | None               |
-| `MQTT_HOST`               | The IP address or hostname of the MQTT broker.                                                      | string | Yes            | None               |
-| `MQTT_CLIENT_ID`          | The client ID used to connect to the MQTT broker. Should be unique for each client.                 | string | Yes            | None               |
-| `HTTP_BASE_URL`           | The base URL of the HTTP endpoint.                                                                  | string | Yes (if `ENDPOINT_TYPE` is `http`) | None |
-| `HTTP_PATH`               | The specific path or resource to access on the HTTP endpoint.                                       | string | Yes (if `ENDPOINT_TYPE` is `http`) | None |
-| `SQL_SERVER_NAME`         | The name of the SQL server to connect to.                                                           | string | Yes (if `ENDPOINT_TYPE` is `sql`)  | None |
-| `SQL_DB_NAME`             | The name of the database to connect to on the SQL server.                                           | string | Yes (if `ENDPOINT_TYPE` is `sql`)  | None |
-| `SQL_TABLE_NAME`          | The name of the table to access within the specified SQL database.                                  | string | Yes (if `ENDPOINT_TYPE` is `sql`)  | None |
+| Variable Name              | What It Means                                                                                       | Type    | Is It Required                        | Default Value |
+|----------------------------|-----------------------------------------------------------------------------------------------------|---------|---------------------------------------|---------------|
+| `ENDPOINT_TYPE`            | Specifies the type of endpoint to connect to. Values are "http" or "sql".                           | string  | Yes                                   | None          |
+| `AUTH_TYPE`                | Defines the authentication method. Values are "httpbasic" and "sqlbasic".                           | string  | Yes                                   | None          |
+| `REQUEST_INTERVAL_SECONDS` | The interval in seconds between consecutive requests to the data source.                            | integer | No                                    | 5             |
+| `DSS_KEY`                  | A key used to identify or categorize the data being processed.                                      | string  | Yes                                   | None          |
+| `MQTT_HOST`                | The IP address or hostname of the MQTT broker.                                                      | string  | Yes                                   | None          |
+| `MQTT_CLIENT_ID`           | The client ID used to connect to the MQTT broker. Should be unique for each client.                 | string  | Yes                                   | None          |
+| `HTTP_BASE_URL`            | The base URL of the HTTP endpoint.                                                                  | string  | Yes (if `ENDPOINT_TYPE` is `http`)    | None          |
+| `HTTP_PATH`                | The specific path or resource to access on the HTTP endpoint.                                       | string  | Yes (if `ENDPOINT_TYPE` is `http`)    | None          |
+| `SQL_SERVER_NAME`          | The name of the SQL server to connect to.                                                           | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
+| `SQL_DB_NAME`              | The name of the database to connect to on the SQL server.                                           | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
+| `SQL_TABLE_NAME`           | The name of the table to access within the specified SQL database.                                  | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
+| `USE_TLS`                  | Enabling TLS for the broker, by default no TLS is used                                              | string  | No                                    | false         |
+
+NOTE : If using TLS then either service account token or x509 certificates needs to be created. 
+Please refer to the official [MQTT broker documentation](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-tls-auto?tabs=test)
 
 Some examples of values if using the DummyService or SQL Server:
 ```yaml

@@ -16,3 +16,5 @@ data:
   SQL_SERVER_NAME: "sqlserver-service" # The name of the SQL Server service. Replace with your own value.
   SQL_DB_NAME: "MySampleDB" # The name of the database. Replace with your own value.
   SQL_TABLE_NAME: "CountryMeasurements" # The name of the table. Replace with your own value.
+
+  USE_TLS: "true"

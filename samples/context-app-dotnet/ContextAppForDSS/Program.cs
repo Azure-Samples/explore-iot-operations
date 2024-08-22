@@ -43,6 +43,9 @@ namespace ContextualDataIngestor
                 { "SqlTableName",  Environment.GetEnvironmentVariable("SQL_TABLE_NAME") ?? string.Empty },
                 { "SqlUsername",  Environment.GetEnvironmentVariable("SQL_USERNAME") ?? "sa" },
                 { "SqlPassword",  Environment.GetEnvironmentVariable("SQL_PASSWORD") ?? string.Empty },
+                { "UseTls", Environment.GetEnvironmentVariable("USE_TLS") ?? "false"},
+                { "SatTokenPath", Environment.GetEnvironmentVariable("SAT_TOKEN_PATH") ?? string.Empty},
+                { "CaFilePath", Environment.GetEnvironmentVariable("CA_FILE_PATH") ?? string.Empty},
             };
 
             return parameters;
