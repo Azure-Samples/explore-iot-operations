@@ -139,7 +139,6 @@ While being in the folder `ContextAppForDSS` directory there are 2 yamls that ne
 If using SQL the username is always "sa" when using the default user and the password is the one set in the previous steps.
 Please populate base64 encoded values accordingly if using any other user.
 
-
 2.`console-app-configmap.yaml` : This file contains the configuration for the Context App for State Store. The following values need to be updated:
 
 #### HTTP TABLE
@@ -196,7 +195,6 @@ Some secrets are needed in `console-app-deployment.yaml` when TLS is being used.
 ```bash
 kubectl create secret generic sat-token-secret --from-literal=token=$(kubectl create token --duration=8760h --audience=aio-mq)
 ```
-
 
 2. For using X509 authentication the deployment requires `x509-secret` with keys `x509.crt` and `x509.key`. 
 Optionally if the key is password protected `x509_password` is also needed. For creating the above secret with correct keys one can do:
