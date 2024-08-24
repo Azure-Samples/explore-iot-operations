@@ -7,13 +7,14 @@
     <Nullable>enable</Nullable>
     <PublishProfile>DefaultContainer</PublishProfile>
     <ContainerImageName>context-app-for-dss</ContainerImageName>
-    <ContainerRegistry>localhost:5500</ContainerRegistry>
+    <ContainerRegistry>k3d-registry.localhost:5500</ContainerRegistry>
     <IsPublishable>true</IsPublishable>
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akri.Mq" Version="0.4.188-alpha" />
+    <PackageReference Include="Akri.Mq" Version="0.4.219-alpha" />
+    <PackageReference Include="Akri.Mqtt.MqttNetAdapter" Version="0.4.219-alpha" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.401" />

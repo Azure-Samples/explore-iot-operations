@@ -46,6 +46,9 @@ namespace ContextualDataIngestor
                 { "UseTls", Environment.GetEnvironmentVariable("USE_TLS") ?? "false"},
                 { "SatTokenPath", Environment.GetEnvironmentVariable("SAT_TOKEN_PATH") ?? string.Empty},
                 { "CaFilePath", Environment.GetEnvironmentVariable("CA_FILE_PATH") ?? string.Empty},
+                { "ClientCertFilePath", Environment.GetEnvironmentVariable("CLIENT_CERT_FILE") ?? string.Empty},
+                { "ClientCertKeyFilePath", Environment.GetEnvironmentVariable("CLIENT_KEY_FILE") ?? string.Empty},
+                { "ClientKeyPassword", Environment.GetEnvironmentVariable("CLIENT_KEY_PASSWORD") ?? string.Empty},
             };
 
             return parameters;
