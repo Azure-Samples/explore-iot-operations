@@ -193,7 +193,7 @@ Please refer to the official [MQTT broker documentation](https://learn.microsoft
 Some secrets are needed in `console-app-deployment.yaml` when TLS is being used.
 1. For using SAT authentication the deployment requires the secret `sat-token-secret` with key `token`. To create this secret with correct key one can do:
 ```bash
-kubectl create secret generic sat-token-secret --from-literal=token=$(kubectl create token --duration=8760h --audience=aio-mq)
+kubectl create secret generic sat-token-secret --from-literal=token=$(kubectl create token default --duration=8760h --audience=aio-mq)
 ```
 
 2. For using X509 authentication the deployment requires `x509-secret` with keys `x509.crt` and `x509.key`. 
@@ -256,7 +256,7 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 8. Containerize and push the application by running the following command choosing the correct registry.
 	```bash
 	docker build -t k3d-registry.localhost:5500/context-app-for-dss:latest .
-    docker push k3d-registry.localhost:5500/context-app-for-dss:latest
+        docker push k3d-registry.localhost:5500/context-app-for-dss:latest
 	```
 9. Deploy the Context App for State Store to Kubernetes by running the following command:
 	```bash
