@@ -184,10 +184,10 @@ Please refer to the official [MQTT broker documentation](https://learn.microsoft
 | `SQL_USERNAME`             | The username for SQL basic authentication.                         | string    | "sa" for default user | Yes (if `ENDPOINT_TYPE` is `sql` and NOT default user)| console-app-secret |
 | `SQL_PASSWORD`             | The password for SQL basic authentication.                         | string    | None                  | Yes (if `ENDPOINT_TYPE` is `sql`)                     | console-app-secret |
 | `CA_FILE_PATH`             | The path to the CA certificate file for TLS verification.          | string    | None                  | Yes (if TLS is used)                                  | test-ca            |
-| `SAT_TOKEN_PATH`           | The path to the service account token for secure authentication.   | string    | None                  | Yes (if TLS is used)                                  | sat-token-secret   |
-| `CLIENT_CERT_FILE`         | The path to the client certificate file for authentication.        | string    | None                  | Yes (if TLS is used)                                  | x509-secret        |
-| `CLIENT_KEY_FILE`          | The path to the client private key file for authentication.        | string    | None                  | Yes (if TLS is used)                                  | x509-secret        |
-| `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS is used & key is encrypted)               | x509-secret        |
+| `SAT_TOKEN_PATH`           | The path to the service account token for secure authentication.   | string    | None                  | Yes (if auth is used)                                 | sat-token-secret   |
+| `CLIENT_CERT_FILE`         | The path to the client certificate file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
+| `CLIENT_KEY_FILE`          | The path to the client private key file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
+| `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
 
 
 #### USING TLS
