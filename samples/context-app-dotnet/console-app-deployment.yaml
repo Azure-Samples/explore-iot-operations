@@ -13,6 +13,7 @@ spec:
         app: console-app-deployment
     spec:
       containers:
+      
       - name: console-app-deployment
         image: my-registry/context-app-for-dss:latest
         imagePullPolicy: Always
@@ -43,15 +44,31 @@ spec:
               key: sqlpassword
         - name: CA_FILE_PATH
           value: "/app/certs/cafile.crt"
+        # Section for SAT environment variable
         - name: SAT_TOKEN_PATH
           value: "/app/secrets/sat_token"
+        # Section for x509 environment variables , uncomment when using x509
+        #- name: CLIENT_CERT_FILE
+          #value: /etc/mqtt-certs/x509.crt
+        #- name: CLIENT_KEY_FILE
+          #value: /etc/mqtt-certs/x509.key
+        #- name: CLIENT_KEY_PASSWORD
+          #valueFrom:
+            #secretKeyRef:
+              #name: x509-secret
+              #key: x509_password
         volumeMounts:
         - name: ca-cert-file
           mountPath: /app/certs
           readOnly: true
+        # SAT TOKEN volume mount
         - name: sat-token
           mountPath: /app/secrets
           readOnly: true
+        # x509 volume mount, uncomment when using x509
+        #- name: client-certs
+          #mountPath: /etc/mqtt-certs
+          #readOnly: true
       volumes:
       - name: ca-cert-file
         secret:
@@ -59,9 +76,19 @@ spec:
           items:
           - key: tls.crt
             path: cafile.crt
+      # SAT TOKEN Volume
       - name: sat-token
         secret:
           secretName: sat-token-secret
           items:
           - key: token
             path: sat_token
+      # x509 Volume, uncomment when using x509
+      #- name: client-certs
+        #secret:
+          #secretName: x509-secret
+          #items:
+          #- key: x509.crt
+            #path: x509.crt
+          #- key: x509.key
+            #path: x509.key
