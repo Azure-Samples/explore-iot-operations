@@ -3,7 +3,7 @@
 
 using Akri.Mq.StateStore;
 using Akri.Mqtt.Connection;
-using Akri.Mqtt.Session;
+using Akri.Mqtt.MqttNetAdapter.Session;
 using ContextualDataIngestor;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
@@ -70,20 +70,46 @@ namespace ContextAppForDSS
 
             string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
             string clientId = _parameters["MqttClientId"];
-            MqttConnectionSettings connectionSettings = new(host) { TcpPort = 1883, ClientId = clientId, UseTls = false };
+            int tcpPort = int.Parse(_parameters["MqttPort"] ?? "1883");
+            MqttConnectionSettings connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = false };
 
             bool useTls = bool.TryParse(Environment.GetEnvironmentVariable("USE_TLS"), out bool parsedTls) ? parsedTls : false;
 
             if (useTls)
             {
                 _logger.LogInformation("Using TLS");
-                string tokenPath = _parameters["SatTokenPath"] ?? throw new InvalidOperationException("Service Account Token is not set");
-                Console.WriteLine("read token to see contents");
-                Console.WriteLine(File.ReadAllText(tokenPath).Trim());
-                string caFilePath = _parameters["CaFilePath"] ?? throw new InvalidOperationException("Certificate authority file path is not set");
-                Console.WriteLine("read ca file to see contents");
-                Console.WriteLine(File.ReadAllText(caFilePath).Trim());
-                connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, SatAuthFile = tokenPath, CaFile = caFilePath };
+                tcpPort = int.Parse(_parameters["MqttPort"] ?? "8883");
+                string caFilePath = _parameters["CaFilePath"] ?? throw new ArgumentException("Certificate authority file path is not set");
+
+                bool hasSatToken = !string.IsNullOrEmpty(_parameters["SatTokenPath"]) && File.Exists(_parameters["SatTokenPath"]);
+                bool hasClientPublicCert = !string.IsNullOrEmpty(_parameters["ClientCertFilePath"]) && File.Exists(_parameters["ClientCertFilePath"]);
+                bool hasClientPrivateKey = !string.IsNullOrEmpty(_parameters["ClientCertKeyFilePath"]) && File.Exists(_parameters["ClientCertKeyFilePath"]);
+                bool hasClientKeyPassword = !string.IsNullOrEmpty(_parameters["ClientKeyPassword"]);
+
+                if (hasSatToken)
+                {
+                    _logger.LogInformation("SAT Token path is set and will be used for authentication.");
+                    string tokenPath = _parameters["SatTokenPath"];
+                    connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, CaFile = caFilePath, SatAuthFile = tokenPath };
+                }
+                else if (hasClientPublicCert && hasClientPrivateKey)
+                {
+                    _logger.LogInformation("Client certificate and key are set and will be used for authentication.");
+                    if (!hasClientKeyPassword)
+                    {
+                        _logger.LogWarning("Client key password is not set. Ensure the key is not password-protected.");
+                    }
+                    string clientCertFile = _parameters["ClientCertFilePath"];
+                    string clientKeyFile = _parameters["ClientCertKeyFilePath"];
+                    string keyPassword = _parameters["ClientKeyPassword"] ?? string.Empty;
+
+                    connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = true, CaFile = caFilePath, CertFile = clientCertFile, KeyFile = clientKeyFile, KeyFilePassword = keyPassword };
+                }
+                else
+                {
+                    _logger.LogError("Neither SAT Token path nor Client Certificate with Key are properly configured.");
+                    throw new InvalidOperationException("TLS is enabled but no authentication method is set. Please ensure either SAT token or both Client Cert and Client Key files are set.");
+                }
             }
 
             MqttClientConnectResult result = await mqttClient.ConnectAsync(connectionSettings);

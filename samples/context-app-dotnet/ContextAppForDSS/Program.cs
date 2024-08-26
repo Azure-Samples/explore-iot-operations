@@ -38,6 +38,7 @@ namespace ContextualDataIngestor
                 { "DssKey", Environment.GetEnvironmentVariable("DSS_KEY") ?? string.Empty },
                 { "MqttHost", Environment.GetEnvironmentVariable("MQTT_HOST") ?? string.Empty },
                 { "MqttClientId", Environment.GetEnvironmentVariable("MQTT_CLIENT_ID") ?? "someClientId"},
+                { "MqttPort", Environment.GetEnvironmentVariable("MQTT_PORT") ?? string.Empty },
                 { "SqlServerName",  Environment.GetEnvironmentVariable("SQL_SERVER_NAME") ?? string.Empty },
                 { "SqlDatabaseName",  Environment.GetEnvironmentVariable("SQL_DB_NAME") ?? string.Empty },
                 { "SqlTableName",  Environment.GetEnvironmentVariable("SQL_TABLE_NAME") ?? string.Empty },
@@ -46,6 +47,9 @@ namespace ContextualDataIngestor
                 { "UseTls", Environment.GetEnvironmentVariable("USE_TLS") ?? "false"},
                 { "SatTokenPath", Environment.GetEnvironmentVariable("SAT_TOKEN_PATH") ?? string.Empty},
                 { "CaFilePath", Environment.GetEnvironmentVariable("CA_FILE_PATH") ?? string.Empty},
+                { "ClientCertFilePath", Environment.GetEnvironmentVariable("CLIENT_CERT_FILE") ?? string.Empty},
+                { "ClientCertKeyFilePath", Environment.GetEnvironmentVariable("CLIENT_KEY_FILE") ?? string.Empty},
+                { "ClientKeyPassword", Environment.GetEnvironmentVariable("CLIENT_KEY_PASSWORD") ?? string.Empty},
             };
 
             return parameters;
