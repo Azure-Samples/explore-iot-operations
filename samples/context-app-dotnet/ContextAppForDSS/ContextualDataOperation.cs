@@ -66,52 +66,61 @@ namespace ContextAppForDSS
         private async Task<MqttSessionClient> SetupMqttClientAsync()
         {
             _logger.LogInformation("Setting up MQTT client");
-            var mqttClient = new MqttSessionClient();
 
             string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
             string clientId = _parameters["MqttClientId"];
             int tcpPort = int.Parse(_parameters["MqttPort"] ?? "1883");
-            MqttConnectionSettings connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = false };
+
+            MqttConnectionSettings connectionSettings = new(host)
+            {
+                TcpPort = tcpPort,
+                ClientId = clientId,
+                UseTls = false,
+            };
 
             bool useTls = bool.TryParse(Environment.GetEnvironmentVariable("USE_TLS"), out bool parsedTls) ? parsedTls : false;
-
             if (useTls)
             {
-                _logger.LogInformation("Using TLS");
-                tcpPort = int.Parse(_parameters["MqttPort"] ?? "8883");
-                string caFilePath = _parameters["CaFilePath"] ?? throw new ArgumentException("Certificate authority file path is not set");
-
-                bool hasSatToken = !string.IsNullOrEmpty(_parameters["SatTokenPath"]) && File.Exists(_parameters["SatTokenPath"]);
-                bool hasClientPublicCert = !string.IsNullOrEmpty(_parameters["ClientCertFilePath"]) && File.Exists(_parameters["ClientCertFilePath"]);
-                bool hasClientPrivateKey = !string.IsNullOrEmpty(_parameters["ClientCertKeyFilePath"]) && File.Exists(_parameters["ClientCertKeyFilePath"]);
-                bool hasClientKeyPassword = !string.IsNullOrEmpty(_parameters["ClientKeyPassword"]);
-
-                if (hasSatToken)
-                {
-                    _logger.LogInformation("SAT Token path is set and will be used for authentication.");
-                    string tokenPath = _parameters["SatTokenPath"];
-                    connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, CaFile = caFilePath, SatAuthFile = tokenPath };
-                }
-                else if (hasClientPublicCert && hasClientPrivateKey)
-                {
-                    _logger.LogInformation("Client certificate and key are set and will be used for authentication.");
-                    if (!hasClientKeyPassword)
-                    {
-                        _logger.LogWarning("Client key password is not set. Ensure the key is not password-protected.");
-                    }
-                    string clientCertFile = _parameters["ClientCertFilePath"];
-                    string clientKeyFile = _parameters["ClientCertKeyFilePath"];
-                    string keyPassword = _parameters["ClientKeyPassword"] ?? string.Empty;
-
-                    connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = true, CaFile = caFilePath, CertFile = clientCertFile, KeyFile = clientKeyFile, KeyFilePassword = keyPassword };
-                }
-                else
-                {
-                    _logger.LogError("Neither SAT Token path nor Client Certificate with Key are properly configured.");
-                    throw new InvalidOperationException("TLS is enabled but no authentication method is set. Please ensure either SAT token or both Client Cert and Client Key files are set.");
-                }
+                _logger.LogInformation("TLS is enabled. Certificate authority is needed. Port 8883 will be used unless a custom value has been set.");
+                connectionSettings.TcpPort = int.Parse(_parameters["MqttPort"] ?? "8883");
+                connectionSettings.UseTls = true;
+                connectionSettings.CaFile = _parameters["CaFilePath"] ?? throw new ArgumentException("TLS is set but certificate authority file path is not set");
+            }
+            else
+            {
+                _logger.LogInformation("TLS is disabled.");
             }
 
+            // SAT can happen with or without TLS
+            if (!string.IsNullOrEmpty(_parameters["SatTokenPath"]))
+            {
+                _logger.LogInformation("SAT Token path is set and will be used for authentication.");
+                connectionSettings.SatAuthFile = _parameters["SatTokenPath"];
+            }
+
+            bool hasClientPublicCert = !string.IsNullOrEmpty(_parameters["ClientCertFilePath"]) && File.Exists(_parameters["ClientCertFilePath"]);
+            bool hasClientPrivateKey = !string.IsNullOrEmpty(_parameters["ClientCertKeyFilePath"]) && File.Exists(_parameters["ClientCertKeyFilePath"]);
+            bool hasClientKeyPassword = !string.IsNullOrEmpty(_parameters["ClientKeyPassword"]);
+
+            if (hasClientPublicCert && hasClientPrivateKey)
+            {
+                if (!useTls)
+                {
+                    throw new InvalidOperationException("X509 authentication method is set but TLS is disabled.");
+                }
+
+                _logger.LogInformation("Client certificate and key are set and will be used for authentication.");
+                if (!hasClientKeyPassword)
+                {
+                    _logger.LogWarning("Client key password is not set. Ensure the key is not password-protected.");
+                }
+
+                connectionSettings.CertFile = _parameters["ClientCertFilePath"];
+                connectionSettings.KeyFile = _parameters["ClientCertKeyFilePath"];
+                connectionSettings.KeyFilePassword = _parameters["ClientKeyPassword"] ?? string.Empty;
+            }
+
+            var mqttClient = new MqttSessionClient();
             MqttClientConnectResult result = await mqttClient.ConnectAsync(connectionSettings);
 
             if (result.ResultCode != MqttClientConnectResultCode.Success)

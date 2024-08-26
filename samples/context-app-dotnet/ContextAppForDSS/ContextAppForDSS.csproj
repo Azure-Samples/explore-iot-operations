@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akri.Mq" Version="0.4.219-alpha" />
-    <PackageReference Include="Akri.Mqtt.MqttNetAdapter" Version="0.4.219-alpha" />
+    <PackageReference Include="Akri.Mq" Version="0.4.222-alpha" />
+    <PackageReference Include="Akri.Mqtt.MqttNetAdapter" Version="0.4.222-alpha" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.401" />
