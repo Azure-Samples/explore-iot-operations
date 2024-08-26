@@ -70,19 +70,20 @@ namespace ContextAppForDSS
 
             string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
             string clientId = _parameters["MqttClientId"];
-            MqttConnectionSettings connectionSettings = new(host) { TcpPort = 1883, ClientId = clientId, UseTls = false };
+            int tcpPort = int.Parse(_parameters["MqttPort"] ?? "1883");
+            MqttConnectionSettings connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = false };
 
             bool useTls = bool.TryParse(Environment.GetEnvironmentVariable("USE_TLS"), out bool parsedTls) ? parsedTls : false;
 
             if (useTls)
             {
                 _logger.LogInformation("Using TLS");
-
+                tcpPort = int.Parse(_parameters["MqttPort"] ?? "8883");
                 string caFilePath = _parameters["CaFilePath"] ?? throw new ArgumentException("Certificate authority file path is not set");
 
                 bool hasSatToken = !string.IsNullOrEmpty(_parameters["SatTokenPath"]) && File.Exists(_parameters["SatTokenPath"]);
-                bool hasClientCert = !string.IsNullOrEmpty(_parameters["ClientCertFilePath"]) && File.Exists(_parameters["ClientCertFilePath"]);
-                bool hasClientCertKey = !string.IsNullOrEmpty(_parameters["ClientCertKeyFilePath"]) && File.Exists(_parameters["ClientCertKeyFilePath"]);
+                bool hasClientPublicCert = !string.IsNullOrEmpty(_parameters["ClientCertFilePath"]) && File.Exists(_parameters["ClientCertFilePath"]);
+                bool hasClientPrivateKey = !string.IsNullOrEmpty(_parameters["ClientCertKeyFilePath"]) && File.Exists(_parameters["ClientCertKeyFilePath"]);
                 bool hasClientKeyPassword = !string.IsNullOrEmpty(_parameters["ClientKeyPassword"]);
 
                 if (hasSatToken)
@@ -91,7 +92,7 @@ namespace ContextAppForDSS
                     string tokenPath = _parameters["SatTokenPath"];
                     connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, CaFile = caFilePath, SatAuthFile = tokenPath };
                 }
-                else if (hasClientCert && hasClientCertKey)
+                else if (hasClientPublicCert && hasClientPrivateKey)
                 {
                     _logger.LogInformation("Client certificate and key are set and will be used for authentication.");
                     if (!hasClientKeyPassword)
@@ -102,7 +103,7 @@ namespace ContextAppForDSS
                     string clientKeyFile = _parameters["ClientCertKeyFilePath"];
                     string keyPassword = _parameters["ClientKeyPassword"] ?? string.Empty;
 
-                    connectionSettings = new(host) { TcpPort = 8883, ClientId = clientId, UseTls = true, CaFile = caFilePath, CertFile = clientCertFile, KeyFile = clientKeyFile, KeyFilePassword = keyPassword };
+                    connectionSettings = new(host) { TcpPort = tcpPort, ClientId = clientId, UseTls = true, CaFile = caFilePath, CertFile = clientCertFile, KeyFile = clientKeyFile, KeyFilePassword = keyPassword };
                 }
                 else
                 {

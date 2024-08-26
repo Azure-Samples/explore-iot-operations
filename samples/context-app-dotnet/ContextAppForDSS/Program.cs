@@ -38,6 +38,7 @@ namespace ContextualDataIngestor
                 { "DssKey", Environment.GetEnvironmentVariable("DSS_KEY") ?? string.Empty },
                 { "MqttHost", Environment.GetEnvironmentVariable("MQTT_HOST") ?? string.Empty },
                 { "MqttClientId", Environment.GetEnvironmentVariable("MQTT_CLIENT_ID") ?? "someClientId"},
+                { "MqttPort", Environment.GetEnvironmentVariable("MQTT_PORT") ?? string.Empty },
                 { "SqlServerName",  Environment.GetEnvironmentVariable("SQL_SERVER_NAME") ?? string.Empty },
                 { "SqlDatabaseName",  Environment.GetEnvironmentVariable("SQL_DB_NAME") ?? string.Empty },
                 { "SqlTableName",  Environment.GetEnvironmentVariable("SQL_TABLE_NAME") ?? string.Empty },

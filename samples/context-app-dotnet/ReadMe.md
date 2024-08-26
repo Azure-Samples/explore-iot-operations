@@ -151,6 +151,7 @@ Please populate base64 encoded values accordingly if using any other user.
 | `DSS_KEY`                  | A key used to identify or categorize the data being processed.                                      | string  | Yes                                   | None          |
 | `MQTT_HOST`                | The IP address or hostname of the MQTT broker.                                                      | string  | Yes                                   | None          |
 | `MQTT_CLIENT_ID`           | The client ID used to connect to the MQTT broker. Should be unique for each client.                 | string  | Yes                                   | None          |
+| `MQTT_PORT`                | Port number for the MQTT Broker if anything other than 1883 (insecure) or 8883 (secure) is chosen.  | string  | Yes                                   | 1883 or 8883  |
 | `HTTP_BASE_URL`            | The base URL of the HTTP endpoint.                                                                  | string  | Yes (if `ENDPOINT_TYPE` is `http`)    | None          |
 | `HTTP_PATH`                | The specific path or resource to access on the HTTP endpoint.                                       | string  | Yes (if `ENDPOINT_TYPE` is `http`)    | None          |
 | `USE_TLS`                  | Enabling TLS for the broker, by default no TLS is used                                              | string  | No                                    | false         |
@@ -165,6 +166,7 @@ Please populate base64 encoded values accordingly if using any other user.
 | `DSS_KEY`                  | A key used to identify or categorize the data being processed.                                      | string  | Yes                                   | None          |
 | `MQTT_HOST`                | The IP address or hostname of the MQTT broker.                                                      | string  | Yes                                   | None          |
 | `MQTT_CLIENT_ID`           | The client ID used to connect to the MQTT broker. Should be unique for each client.                 | string  | Yes                                   | None          |
+| `MQTT_PORT`                | Port number for the MQTT Broker if anything other than 1883 (insecure) or 8883 (secure) is chosen.  | string  | Yes                                   | 1883 or 8883  |
 | `SQL_SERVER_NAME`          | The name of the SQL server to connect to.                                                           | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
 | `SQL_DB_NAME`              | The name of the database to connect to on the SQL server.                                           | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
 | `SQL_TABLE_NAME`           | The name of the table to access within the specified SQL database.                                  | string  | Yes (if `ENDPOINT_TYPE` is `sql`)     | None          |
@@ -182,7 +184,7 @@ Please refer to the official [MQTT broker documentation](https://learn.microsoft
 | `SQL_USERNAME`             | The username for SQL basic authentication.                         | string    | "sa" for default user | Yes (if `ENDPOINT_TYPE` is `sql` and NOT default user)| console-app-secret |
 | `SQL_PASSWORD`             | The password for SQL basic authentication.                         | string    | None                  | Yes (if `ENDPOINT_TYPE` is `sql`)                     | console-app-secret |
 | `CA_FILE_PATH`             | The path to the CA certificate file for TLS verification.          | string    | None                  | Yes (if TLS is used)                                  | test-ca            |
-| `SAT_TOKEN_PATH`           | The path to the SAT token for secure authentication.               | string    | None                  | Yes (if TLS is used)                                  | sat-token-secret   |
+| `SAT_TOKEN_PATH`           | The path to the service account token for secure authentication.   | string    | None                  | Yes (if TLS is used)                                  | sat-token-secret   |
 | `CLIENT_CERT_FILE`         | The path to the client certificate file for authentication.        | string    | None                  | Yes (if TLS is used)                                  | x509-secret        |
 | `CLIENT_KEY_FILE`          | The path to the client private key file for authentication.        | string    | None                  | Yes (if TLS is used)                                  | x509-secret        |
 | `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS is used & key is encrypted)               | x509-secret        |
@@ -256,7 +258,7 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 8. Containerize and push the application by running the following command choosing the correct registry.
 	```bash
 	docker build -t k3d-registry.localhost:5500/context-app-for-dss:latest .
-        docker push k3d-registry.localhost:5500/context-app-for-dss:latest
+    docker push k3d-registry.localhost:5500/context-app-for-dss:latest
 	```
 9. Deploy the Context App for State Store to Kubernetes by running the following command:
 	```bash
