@@ -1,0 +1,109 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-deployment
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-deployment
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-deployment
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-config
+        env:
+        {{- if eq .Values.endpointType "http" }}
+        - name: HTTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: httpusername
+        - name: HTTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: httppassword
+        {{- else if eq .Values.endpointType "sql" }}
+        {{- if and .Values.secrets.sqlUsername (ne .Values.secrets.sqlUsername "") }}
+        - name: SQL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: sqlusername
+        {{- end }}
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: sqlpassword
+        {{- end }}
+        {{- if .Values.useTLS }}
+        - name: CA_FILE_PATH
+          value: "/app/certs/cafile.crt"
+        {{- end }}
+        {{- if eq .Values.clientAuthMethod "sat" }}
+        - name: SAT_TOKEN_PATH
+          value: {{ .Values.sat.tokenPath }}
+        {{- else if eq .Values.clientAuthMethod "x509" }}
+        - name: CLIENT_CERT_FILE
+          value: {{ .Values.x509.certPath }}
+        - name: CLIENT_KEY_FILE
+          value: {{ .Values.x509.keyPath }}
+        {{- if .Values.x509.passwordEnabled }}
+        - name: CLIENT_KEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.x509.secretName }}
+              key: x509_password
+        {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.useTLS }}
+        - name: ca-cert-file
+          mountPath: /app/certs
+          readOnly: true
+        {{- end }}
+        {{- if eq .Values.clientAuthMethod "sat" }}
+        - name: sat-token
+          mountPath: {{ dir .Values.sat.tokenPath }}
+          readOnly: true
+        {{- else if eq .Values.clientAuthMethod "x509" }}
+        - name: client-certs
+          mountPath: {{ dir .Values.x509.certPath }}
+          readOnly: true
+        {{- end }}
+      volumes:
+      {{- if .Values.useTLS }}
+      - name: ca-cert-file
+        secret:
+          secretName: {{ .Values.volumes.caCert.secretName }}
+          items:
+          - key: tls.crt
+            path: cafile.crt
+      {{- end }}
+      {{- if eq .Values.clientAuthMethod "sat" }}
+      - name: sat-token
+        secret:
+          secretName: {{ .Values.sat.secretName }}
+          items:
+          - key: token
+            path: {{ base .Values.sat.tokenPath }}
+      {{- else if eq .Values.clientAuthMethod "x509" }}
+      - name: client-certs
+        secret:
+          secretName: {{ .Values.x509.secretName }}
+          items:
+          - key: x509.crt
+            path: {{ base .Values.x509.certPath }}
+          - key: x509.key
+            path: {{ base .Values.x509.keyPath }}
+      {{- end }}

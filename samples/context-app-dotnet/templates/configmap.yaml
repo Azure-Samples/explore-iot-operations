@@ -1,0 +1,21 @@
+# templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  ENDPOINT_TYPE: {{ .Values.endpointType | quote }}
+  AUTH_TYPE: {{ .Values.authType | quote }}
+  REQUEST_INTERVAL_SECONDS: {{ .Values.config.requestIntervalSeconds | quote }}
+  DSS_KEY: {{ .Values.config.dssKey | quote }}
+  MQTT_HOST: {{ .Values.config.mqttHost | quote }}
+  MQTT_CLIENT_ID: {{ .Values.config.mqttClientId | quote }}
+  {{- if eq .Values.endpointType "http" }}
+  HTTP_BASE_URL: {{ .Values.config.httpBaseUrl | quote }}
+  HTTP_PATH: {{ .Values.config.httpPath | quote }}
+  {{- else if eq .Values.endpointType "sql" }}
+  SQL_SERVER_NAME: {{ .Values.config.sqlServerName | quote }}
+  SQL_DB_NAME: {{ .Values.config.sqlDbName | quote }}
+  SQL_TABLE_NAME: {{ .Values.config.sqlTableName | quote }}
+  {{- end }}
+  USE_TLS: {{ .Values.useTLS | quote }}

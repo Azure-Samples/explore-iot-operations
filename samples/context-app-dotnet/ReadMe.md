@@ -190,7 +190,7 @@ Please refer to the official [MQTT broker documentation](https://learn.microsoft
 | `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
 
 
-#### USING TLS
+#### USING AUTHENTICATION FOR CLIENTS
 
 Some secrets are needed in `console-app-deployment.yaml` when TLS is being used.
 1. For using SAT authentication the deployment requires the secret `sat-token-secret` with key `token`. To create this secret with correct key one can do:
