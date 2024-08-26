@@ -53,7 +53,8 @@ spec:
         {{- if eq .Values.clientAuthMethod "sat" }}
         - name: SAT_TOKEN_PATH
           value: {{ .Values.sat.tokenPath }}
-        {{- else if eq .Values.clientAuthMethod "x509" }}
+        {{- end }}
+        {{- if and .Values.useTLS (eq .Values.clientAuthMethod "x509") }}
         - name: CLIENT_CERT_FILE
           value: {{ .Values.x509.certPath }}
         - name: CLIENT_KEY_FILE
@@ -76,7 +77,8 @@ spec:
         - name: sat-token
           mountPath: {{ dir .Values.sat.tokenPath }}
           readOnly: true
-        {{- else if eq .Values.clientAuthMethod "x509" }}
+        {{- end }}
+        {{- if and .Values.useTLS (eq .Values.clientAuthMethod "x509") }}
         - name: client-certs
           mountPath: {{ dir .Values.x509.certPath }}
           readOnly: true
@@ -97,7 +99,8 @@ spec:
           items:
           - key: token
             path: {{ base .Values.sat.tokenPath }}
-      {{- else if eq .Values.clientAuthMethod "x509" }}
+      {{- end }}
+      {{- if and .Values.useTLS (eq .Values.clientAuthMethod "x509") }}
       - name: client-certs
         secret:
           secretName: {{ .Values.x509.secretName }}
