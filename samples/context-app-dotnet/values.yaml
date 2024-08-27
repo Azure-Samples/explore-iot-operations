@@ -5,10 +5,14 @@ image:
   tag: x4
   pullPolicy: Always
 
-endpointType: "http"  # "http" or "sql"
-authType: "httpbasic"  # "httpbasic" or "sqlbasic"
-useTLS: false
-clientAuthMethod: "sat"  # "sat" or "x509"
+endpointType: "sql"  # "http" or "sql"
+authType: "sqlbasic"  # "httpbasic" or "sqlbasic"
+useTLS: true
+clientAuthMethod: "x509"  # "sat" or "x509"
+
+volumes: 
+  caCert: 
+    secretName: test-ca
 
 sat:
   tokenPath: "/app/secrets/sat_token"

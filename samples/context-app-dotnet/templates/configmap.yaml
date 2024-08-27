@@ -10,6 +10,9 @@ data:
   DSS_KEY: {{ .Values.config.dssKey | quote }}
   MQTT_HOST: {{ .Values.config.mqttHost | quote }}
   MQTT_CLIENT_ID: {{ .Values.config.mqttClientId | quote }}
+  {{- if .Values.config.mqttPort }}
+  MQTT_PORT: {{ .Values.config.mqttPort | quote }}
+  {{- end }}
   {{- if eq .Values.endpointType "http" }}
   HTTP_BASE_URL: {{ .Values.config.httpBaseUrl | quote }}
   HTTP_PATH: {{ .Values.config.httpPath | quote }}
