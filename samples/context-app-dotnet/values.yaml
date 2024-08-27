@@ -36,6 +36,6 @@ config:
   sqlTableName: "CountryMeasurements"
 
 secrets:
-  httpUsername: "hp"
-  httpPassword: "alohomora"
+  httpUsername: "randomusername"
+  httpPassword: "someVeryRandomPassword"
   sqlPassword: "MyExtremelyStrongpassword@123" 
