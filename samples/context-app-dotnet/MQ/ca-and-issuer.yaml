@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-ca-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: selfsigned-ca-cert
+spec:
+  isCA: true
+  commonName: test-ca
+  secretName: test-ca
+  issuerRef:
+    # Must match Issuer name above
+    name: selfsigned-ca-issuer
+    # Must match Issuer kind above
+    kind: Issuer
+    group: cert-manager.io
+  # Override default private key config to use an EC key
+  privateKey:
+    rotationPolicy: Always
+    algorithm: ECDSA
+    size: 256
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: my-issuer
+spec:
+  ca:
+    # Must match secretName of generated or imported CA cert
+    secretName: test-ca

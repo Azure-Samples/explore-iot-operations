@@ -1,0 +1,64 @@
+## Simple deployment of the broker. This is a minimal configuration to get the broker running.
+## It deploys 2 frontends and 2 backend chains of length 2. Each pod has 2 workers available.
+## It uses no authentication and no authorization. It does not enable TLS. It uses the default namespace
+
+############################################################
+##
+## A at least one BrokerListener CR should be deployed before Broker,
+## so that the Broker resource will not fail with missing BrokerListener.
+##
+############################################################
+---
+apiVersion: mqttbroker.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: listener
+  namespace: default
+spec:
+  brokerRef: broker
+  serviceType: LoadBalancer
+  ## This port will only be accessible within the cluster. If you want to access it from outside the cluster, you will need to expose it.
+  ## Either use `kubectl port-forward aio-mq-dmqtt-frontend-0 1883` for low traffic testing or use a nodeport as shown in `deployment.complex.yaml`.
+  ports:
+  - port: 1883
+
+
+############################################################
+##
+## This defines the broker itself
+##
+############################################################
+---
+apiVersion: mqttbroker.iotoperations.azure.com/v1beta1
+kind: Broker
+metadata:
+  name: broker
+  namespace: default
+spec:
+  advanced:
+    ## Internal tls has a dependency on cert manager. This case isn't covered in the simple deployment.
+    encryptInternalTraffic: Disabled
+  cardinality:
+    frontend:
+      ## This determines how many frontend pods are deployed. This scales both availability and reliability, but requires sufficient backend capacity to function.
+      replicas: 2
+      ## This determines how many workers each pod will create. More powerful nodes can support more workers in each pod.
+      workers: 2
+    backendChain:
+      ## This determines how many pods will be in each backend chain. Increasing this improves availability but increases latency.
+      ## As long as one pod in each backend chain is functional, the broker be fully functional and lose no messages.
+      redundancyFactor: 2
+      ## This is how the broker scales capacity. Increasing this will increase the volume of messages the broker can handle, as long as messages are evenly distributed among topics.
+      partitions: 2
+      ## This determines how many workers each pod will create.
+      workers: 2
+  ## This will check that there are enough cores available on the cluster for each worker to have its own.
+  ## If this is true (the default value) and not enough cores are available, the broker will not start.
+  generateResourceLimits:
+    cpu: Disabled
+  ## Possible values
+  ## - Tiny
+  ## - Low
+  ## - Medium (default)
+  ## - High
+  memoryProfile: "Medium"
