@@ -69,11 +69,10 @@ namespace ContextAppForDSS
 
             string host = _parameters["MqttHost"] ?? throw new ArgumentException("Mqtt host name is not set.");
             string clientId = _parameters["MqttClientId"];
-            int tcpPort = int.Parse(_parameters["MqttPort"] ?? "1883");
 
             MqttConnectionSettings connectionSettings = new(host)
             {
-                TcpPort = tcpPort,
+                TcpPort = string.IsNullOrEmpty(_parameters["MqttPort"]) ? 1883 : int.Parse(_parameters["MqttPort"]),
                 ClientId = clientId,
                 UseTls = false,
             };
@@ -82,7 +81,7 @@ namespace ContextAppForDSS
             if (useTls)
             {
                 _logger.LogInformation("TLS is enabled. Certificate authority is needed. Port 8883 will be used unless a custom value has been set.");
-                connectionSettings.TcpPort = int.Parse(_parameters["MqttPort"] ?? "8883");
+                connectionSettings.TcpPort = string.IsNullOrEmpty(_parameters["MqttPort"]) ? 8883 : int.Parse(_parameters["MqttPort"]);
                 connectionSettings.UseTls = true;
                 connectionSettings.CaFile = _parameters["CaFilePath"] ?? throw new ArgumentException("TLS is set but certificate authority file path is not set");
             }

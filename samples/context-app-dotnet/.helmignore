@@ -1,0 +1,7 @@
+# .helmignore
+.git
+.gitignore
+*.swp
+*.bak
+*.tmp
+.vs/
