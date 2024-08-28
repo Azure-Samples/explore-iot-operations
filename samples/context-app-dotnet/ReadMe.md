@@ -311,3 +311,7 @@ helm install mytestrelease oci://registry-1.docker.io/dockeroliva/contextualizat
 ```bash
 kubectl logs -l app=mytestrelease-deployment
 ```
+* To uninstall do:
+```bash
+helm uninstall mytestrelease
+```
