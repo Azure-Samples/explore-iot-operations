@@ -1,0 +1,6 @@
+# Chart.yaml
+apiVersion: v2
+name: contextualization-app
+description: A Helm chart for the Contextual Application to store data in Distributed State Stores
+version: 0.1.0
+type: application
