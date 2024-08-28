@@ -270,3 +270,44 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 	Retrieve data from at source.
 	Store data in Distributed State Store.
 	```
+
+## HELM Package 
+
+All examples are done with Docker with a version of 0.1.0 and the name being `contextualization-app`
+
+* Helm package it by being in folder `context-app-dotnet` by doing:
+```bash
+helm package .
+```
+* This will create a tgz file which can be pushed to a registry. Output will look something like:
+```
+Successfully packaged chart and saved it to: /context-app-dotnet/contextualization-app-0.1.0.tgz
+```
+* Store the above charts in OCI-compatible registries.
+```bash
+helm push contextualization-app-0.1.0.tgz oci://registry-1.docker.io/<dockerhubusername> 
+```
+* If any authentication issues are encountered, login with credentials: 
+ ```bash
+helm registry login registry-1.docker.io -u yourusername 
+```
+* After pushing, same chart can be pulled by using: 
+```bash
+helm pull oci://registry-1.docker.io/dockeroliva/contextualization-app --version 0.1.0 
+```
+* If a Helm chart needs to be examined using helm directly, do:
+```bash
+helm show all contextualization-app-0.1.0.tgz 
+```
+* To extract and view all files in some directory (example helmextract)
+```bash
+tar -xvf contextualization-app-0.1.0.tgz -C helmextract 
+```
+* And for direct install with a release name (mytestrelease), which will only work if updated with correct values in `values.yaml`
+```bash
+helm install mytestrelease oci://registry-1.docker.io/dockeroliva/contextualization-app --version 0.1.0 
+```
+* The above command will create a pod that starts with `mytestrelease-deployment` which can be checked by running:
+```bash
+kubectl logs -l app=mytestrelease-deployment
+```
