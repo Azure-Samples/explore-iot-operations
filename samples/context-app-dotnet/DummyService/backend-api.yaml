@@ -1,3 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-backend-api-secrets
+type: Opaque
+data:
+  SERVICE_USERNAME: <base64 encoded username>
+  SERVICE_PASSWORD: <base64 encoded password>
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +25,18 @@ spec:
     spec:
       containers:
       - name: my-backend-api-d
-        image: my-registry/my-backend-api
+        image: k3d-registry.localhost:5500/my-backend-api:test
+        env:
+        - name: SERVICE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: my-backend-api-secrets
+              key: SERVICE_USERNAME
+        - name: SERVICE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-backend-api-secrets
+              key: SERVICE_PASSWORD
 ---
 apiVersion: v1
 kind: Service

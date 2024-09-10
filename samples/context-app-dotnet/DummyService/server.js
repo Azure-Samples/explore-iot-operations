@@ -5,9 +5,12 @@ const app = express();
 
 const port = 80;
 
+const USERNAME = process.env.SERVICE_USERNAME;
+const PASSWORD = process.env.SERVICE_PASSWORD;
+
 // In-memory store for users (for demonstration purposes)
 const users = {
-    'hp': 'alohomora'
+    [USERNAME]: PASSWORD
 };
 
 // Middleware to check Basic Authentication
