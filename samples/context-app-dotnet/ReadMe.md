@@ -31,15 +31,21 @@ All commands assume that a local registry is being used. If not, please replace 
     docker build -t k3d-registry.localhost:5500/my-backend-api:latest .
 	docker push k3d-registry.localhost:5500/my-backend-api:latest 
 	```
-3. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
+3. Choose username/password that the Node JS service will use to authenticate. Base 64 encode them and replace it in the secret named `my-backend-api-secrets`in the `backend_api.yaml`.
+   ```bash
+	echo -n "your-username" | base64
+    echo -n "your-password" | base64
+   ```
+NOTE : The contextual app will use the same username and password to authenticate with the Node.js service.
+4. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
 	```bash
 	kubectl apply -f backend-api.yaml
 	```
-4. Verify that the Node.js Service is running by running the following command:
+5. Verify that the Node.js Service is running by running the following command:
 	```bash
 	kubectl get pods -A
 	```
-5. On the logs of the pod, the following message should be seen:
+6. On the logs of the pod, the following message should be seen:
 	```bash
 	kubectl logs -l app=my-backend-api-d --all-containers=true --since=0s --tail=-1 --max-log-requests=1
     Server listening on port 80
@@ -122,7 +128,10 @@ All commands assume that a local registry is being used. If not, please replace 
 	```
 ### 3. Run the Contextual App for State Store
 
-While being in the folder `ContextAppForDSS` directory there are 2 yamls that need to be prepopulated with the correct values
+If helm is being used, the following steps can be skipped and a appropriate output yaml can be generated from helm.
+But `values.yaml` needs to be updated with correct values before generating the output yaml. However what values need to be used it is better to go through this section.
+
+While being in the folder `context-app-dontnet` directory there are 2 yamls that need to be prepopulated with the correct values
 
 1. `console-app-secret.yaml` : This file contains base64 encoded username/password either for Node.js service or for SQL Server. Base64 encoding can be done using the following command:
 	```bash
@@ -175,19 +184,19 @@ Please populate base64 encoded values accordingly if using any other user.
 NOTE : If using TLS then either service account token or x509 certificates needs to be created. 
 Please refer to the official [MQTT broker documentation](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-tls-auto?tabs=test)
 
-3. Some additional ENV VARS
+3. Some additional ENV VARS that are used in various secrets.
 
-| Environment Variable       | What It Means                                                      | Data Type | Default Value         | Is It Required                                        | Obtained From      |
-|----------------------------|--------------------------------------------------------------------|-----------|-----------------------|-------------------------------------------------------|--------------------|
-| `HTTP_USERNAME`            | The username for HTTP basic authentication.                        | string    | None                  | Yes (if `ENDPOINT_TYPE` is `http`)                    | console-app-secret |
-| `HTTP_PASSWORD`            | The password for HTTP basic authentication.                        | string    | None                  | Yes (if `ENDPOINT_TYPE` is `http`)                    | console-app-secret |
-| `SQL_USERNAME`             | The username for SQL basic authentication.                         | string    | "sa" for default user | Yes (if `ENDPOINT_TYPE` is `sql` and NOT default user)| console-app-secret |
-| `SQL_PASSWORD`             | The password for SQL basic authentication.                         | string    | None                  | Yes (if `ENDPOINT_TYPE` is `sql`)                     | console-app-secret |
-| `CA_FILE_PATH`             | The path to the CA certificate file for TLS verification.          | string    | None                  | Yes (if TLS is used)                                  | test-ca            |
-| `SAT_TOKEN_PATH`           | The path to the service account token for secure authentication.   | string    | None                  | Yes (if auth is used)                                 | sat-token-secret   |
-| `CLIENT_CERT_FILE`         | The path to the client certificate file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
-| `CLIENT_KEY_FILE`          | The path to the client private key file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
-| `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        |
+| Environment Variable       | What It Means                                                      | Data Type | Default Value         | Is It Required                                        | Obtained From      | Where It Is Used                               |
+|----------------------------|--------------------------------------------------------------------|-----------|-----------------------|-------------------------------------------------------|--------------------|------------------------------------------------|
+| `HTTP_USERNAME`            | The username for HTTP basic authentication.                        | string    | None                  | Yes (if `ENDPOINT_TYPE` is `http`)                    | console-app-secret | HTTP authentication for REST endpoints         |
+| `HTTP_PASSWORD`            | The password for HTTP basic authentication.                        | string    | None                  | Yes (if `ENDPOINT_TYPE` is `http`)                    | console-app-secret | HTTP authentication for REST endpoints         |
+| `SQL_USERNAME`             | The username for SQL basic authentication.                         | string    | "sa" for default user | Yes (if `ENDPOINT_TYPE` is `sql` and NOT default user)| console-app-secret | SQL database authentication                    |
+| `SQL_PASSWORD`             | The password for SQL basic authentication.                         | string    | None                  | Yes (if `ENDPOINT_TYPE` is `sql`)                     | console-app-secret | SQL database authentication                    |
+| `CA_FILE_PATH`             | The path to the CA certificate file for TLS verification.          | string    | None                  | Yes (if TLS is used)                                  | test-ca            | TLS verification for secure connections        |
+| `SAT_TOKEN_PATH`           | The path to the service account token for secure authentication.   | string    | None                  | Yes (if auth is used)                                 | sat-token-secret   | Kubernetes service account authentication      |
+| `CLIENT_CERT_FILE`         | The path to the client certificate file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        | Client authentication using certificates in secure connections    |
+| `CLIENT_KEY_FILE`          | The path to the client private key file for authentication.        | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        | Client authentication using certificates in secure connections    |
+| `CLIENT_KEY_PASSWORD`      | The password for the client private key file.                      | string    | None                  | Yes (if TLS and auth are used)                        | x509-secret        | Client private key decryption using certificates in secure connections |
 
 
 #### USING AUTHENTICATION FOR CLIENTS
@@ -217,14 +226,14 @@ Some examples of values if using the DummyService or SQL Server:
 3. Deploy the above secret and config map before deploying the app. Run the following commands:
 	```bash
 	kubectl apply -f console-app-secret.yaml
-	kubectl apply -f context-app-configmap.yaml
+	kubectl apply -f console-app-configmap.yaml
 	```
 4. Build the application by running the following command:
 	```bash
 	dotnet build
 	```
 6. This project contains the necessary `.csproj` to containerize the application with `dotnet publish`. Replace the registry name with the chosen registry. 
-The following is an example of pushing to local registry. Skip steps 5 and 6 if using this method.
+The following is an example of pushing to local registry. Skip following steps if using this method.
 	```bash
 	dotnet publish /t:PublishContainer ContextAppForDSS/ContextAppForDSS.csproj /p:ContainerRegistry=k3d-registry.localhost:5500
 	```

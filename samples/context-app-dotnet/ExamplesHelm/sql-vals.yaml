@@ -1,0 +1,31 @@
+replicaCount: 1
+
+image:
+  repository: k3d-registry.localhost:5500/context-app-for-dss
+  tag: demo1
+  pullPolicy: Always
+
+endpointType: "sql"  # "http" or "sql"
+authType: "sqlbasic"  # "httpbasic" or "sqlbasic"
+useTLS: true
+clientAuthMethod: "sat"  # "sat" or "x509"
+
+volumes:
+  caCert:
+    secretName: test-ca
+
+sat:
+  tokenPath: "/app/secrets/sat_token"
+  secretName: sat-token-secret
+
+config:
+  requestIntervalSeconds: "10"
+  dssKey: "quality"
+  mqttHost: "aio-mq-dmqtt-frontend.default.svc.cluster.local"
+  mqttClientId: "app-id"
+  sqlServerName: "sqlserver-service"
+  sqlDbName: "MySampleDB"
+  sqlTableName: "CountryMeasurements"
+
+secrets:
+  sqlPassword: "MyExtremelyStrongpassword@123"
