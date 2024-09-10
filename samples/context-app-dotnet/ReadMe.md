@@ -31,15 +31,21 @@ All commands assume that a local registry is being used. If not, please replace 
     docker build -t k3d-registry.localhost:5500/my-backend-api:latest .
 	docker push k3d-registry.localhost:5500/my-backend-api:latest 
 	```
-3. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
+3. Choose username/password that the Node JS service will use to authenticate. Base 64 encode them and replace it in the secret named `my-backend-api-secrets`in the `backend_api.yaml`.
+   ```bash
+	echo -n "your-username" | base64
+    echo -n "your-password" | base64
+   ```
+NOTE : The contextual app will use the same username and password to authenticate with the Node.js service.
+4. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
 	```bash
 	kubectl apply -f backend-api.yaml
 	```
-4. Verify that the Node.js Service is running by running the following command:
+5. Verify that the Node.js Service is running by running the following command:
 	```bash
 	kubectl get pods -A
 	```
-5. On the logs of the pod, the following message should be seen:
+6. On the logs of the pod, the following message should be seen:
 	```bash
 	kubectl logs -l app=my-backend-api-d --all-containers=true --since=0s --tail=-1 --max-log-requests=1
     Server listening on port 80

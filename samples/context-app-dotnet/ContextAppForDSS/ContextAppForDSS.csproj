@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <PublishProfile>DefaultContainer</PublishProfile>
     <ContainerImageName>context-app-for-dss</ContainerImageName>
+    <ContainerImageTag>demo1</ContainerImageTag>
     <ContainerRegistry>k3d-registry.localhost:5500</ContainerRegistry>
     <IsPublishable>true</IsPublishable>
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
