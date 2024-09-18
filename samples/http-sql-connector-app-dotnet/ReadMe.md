@@ -1,15 +1,15 @@
-﻿# Steps to create a Contextual app for state store
+﻿# Steps to create a HTTP SQL Connector For Data Enrichment and Storing it in state store
 
 This application reads from a endpoint that could be either a HTTP endpoint or a SQL endpoint and 
 inserts the data to State Store which is running as a part of MQTT broker. The application has 3 parts:
 1. A sample Node.js Service (just for testing)
 2. A sample SQL Server (just for testing)
-3. Contextual App for State Store in C#
+3. HTTP SQL Connector App for State Store in C#
 
 Please refer to [official documentation](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/overview-iot-mq) for broker information and how to set up the broker.
 
 ## 1: A sample Node.js Service (just for testing)
-A sample Node.js service has been created to test the Contextual app for State Store. 
+A sample Node.js service has been created to test the HTTP SQL Connector app for State Store. 
 The service is a simple Express.js server that listens on port 80 and returns a JSON response.
 The service has been containerized and can be deployed to Kubernetes.
 Currently this service works using username and password authentication.
@@ -36,7 +36,7 @@ All commands assume that a local registry is being used. If not, please replace 
 	echo -n "your-username" | base64
     echo -n "your-password" | base64
    ```
-NOTE : The contextual app will use the same username and password to authenticate with the Node.js service.
+NOTE : The HTTP SQL Connector app will use the same username and password to authenticate with the Node.js service.
 4. Deploy the Node.js Service to Kubernetes by running the following command. Please use the correct image name in the yaml file.
 	```bash
 	kubectl apply -f backend-api.yaml
@@ -126,12 +126,12 @@ NOTE : The contextual app will use the same username and password to authenticat
 
 	(4 rows affected)
 	```
-### 3. Run the Contextual App for State Store
+### 3. Run the HTTP SQL Connector App for State Store
 
 If helm is being used, the following steps can be skipped and a appropriate output yaml can be generated from helm.
 But `values.yaml` needs to be updated with correct values before generating the output yaml. However what values need to be used it is better to go through this section.
 
-While being in the folder `context-app-dontnet` directory there are 2 yamls that need to be prepopulated with the correct values
+While being in the folder `http-sql-connector-app-dotnet` directory there are 2 yamls that need to be prepopulated with the correct values
 
 1. `console-app-secret.yaml` : This file contains base64 encoded username/password either for Node.js service or for SQL Server. Base64 encoding can be done using the following command:
 	```bash
@@ -148,7 +148,7 @@ While being in the folder `context-app-dontnet` directory there are 2 yamls that
 If using SQL the username is always "sa" when using the default user and the password is the one set in the previous steps.
 Please populate base64 encoded values accordingly if using any other user.
 
-2.`console-app-configmap.yaml` : This file contains the configuration for the Context App for State Store. The following values need to be updated:
+2.`console-app-configmap.yaml` : This file contains the configuration for the HTTP SQL Connector App for State Store. The following values need to be updated:
 
 #### HTTP TABLE
 
@@ -235,7 +235,7 @@ Some examples of values if using the DummyService or SQL Server:
 6. This project contains the necessary `.csproj` to containerize the application with `dotnet publish`. Replace the registry name with the chosen registry. 
 The following is an example of pushing to local registry. Skip following steps if using this method.
 	```bash
-	dotnet publish /t:PublishContainer ContextAppForDSS/ContextAppForDSS.csproj /p:ContainerRegistry=k3d-registry.localhost:5500
+	dotnet publish /t:PublishContainer HttpSqlConnector/HttpSqlConnector.csproj /p:ContainerRegistry=k3d-registry.localhost:5500
 	```
 7. In case of docker commands please use the Dockerfile in the project root to build and push the image.
 ```docker
@@ -249,12 +249,12 @@ WORKDIR /app
 COPY NuGet.config ./
 
 # Copy the project file and restore dependencies
-COPY ContextAppForDSS/ContextAppForDSS.csproj ./ContextAppForDSS/
-RUN dotnet restore ./ContextAppForDSS/ContextAppForDSS.csproj
+COPY HttpSqlConnector/HttpSqlConnector.csproj ./HttpSqlConnector/
+RUN dotnet restore ./HttpSqlConnector/HttpSqlConnector.csproj
 
 # Copy the remaining source code and build the application
-COPY ContextAppForDSS/ ./ContextAppForDSS/
-RUN dotnet publish ./ContextAppForDSS/ContextAppForDSS.csproj -c Release -o out
+COPY HttpSqlConnector/ ./HttpSqlConnector/
+RUN dotnet publish ./HttpSqlConnector/HttpSqlConnector.csproj -c Release -o out
 
 # Use the official .NET runtime image as a runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
@@ -262,14 +262,14 @@ WORKDIR /app
 COPY --from=build /app/out .
 
 # Set the entry point for the application
-ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
+ENTRYPOINT ["dotnet", "HttpSqlConnector.dll"]
 ```
 8. Containerize and push the application by running the following command choosing the correct registry.
 	```bash
-	docker build -t k3d-registry.localhost:5500/context-app-for-dss:latest .
-    docker push k3d-registry.localhost:5500/context-app-for-dss:latest
+	docker build -t k3d-registry.localhost:5500/http-sql-connector-app-dotnet:latest .
+    docker push k3d-registry.localhost:5500/http-sql-connector-app-dotnet:latest
 	```
-9. Deploy the Context App for State Store to Kubernetes by running the following command:
+9. Deploy the Http Sql Connector App for State Store to Kubernetes by running the following command:
 	```bash
 	kubectl apply -f console-app-deployment.yaml
 	```
@@ -284,13 +284,13 @@ ENTRYPOINT ["dotnet", "ContextAppForDSS.dll"]
 
 All examples are done with Docker with a version of 0.1.0 and the name being `contextualization-app`
 
-* Helm package it by being in folder `context-app-dotnet` by doing:
+* Helm package it by being in folder `http-sql-connector-app-dotnet` by doing:
 ```bash
 helm package .
 ```
 * This will create a tgz file which can be pushed to a registry. Output will look something like:
 ```
-Successfully packaged chart and saved it to: /context-app-dotnet/contextualization-app-0.1.0.tgz
+Successfully packaged chart and saved it to: /http-sql-connector-app-dotnet/contextualization-app-0.1.0.tgz
 ```
 * Store the above charts in OCI-compatible registries.
 ```bash

@@ -1,13 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Akri.Mq.StateStore;
-using Akri.Mqtt.Connection;
-using Akri.Mqtt.MqttNetAdapter.Session;
+
 using ContextualDataIngestor;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
-using Akri.Mqtt.Models;
+using Azure.Iot.Operations.Services.StateStore;
+using Azure.Iot.Operations.Protocol.Connection;
+using Azure.Iot.Operations.Mqtt.Session;
+using Azure.Iot.Operations.Protocol.Models;
 
 namespace ContextAppForDSS
 {
