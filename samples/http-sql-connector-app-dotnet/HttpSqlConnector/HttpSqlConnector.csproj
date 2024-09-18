@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akri.Mq" Version="0.4.222-alpha" />
-    <PackageReference Include="Akri.Mqtt.MqttNetAdapter" Version="0.4.222-alpha" />
+    <PackageReference Include="Azure.Iot.Operations.Services" Version="0.5.0" />
+    <PackageReference Include="Azure.Iot.Operations.Mqtt" Version="0.5.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.401" />
