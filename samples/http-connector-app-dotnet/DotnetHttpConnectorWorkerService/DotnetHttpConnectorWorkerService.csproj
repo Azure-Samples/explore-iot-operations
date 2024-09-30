@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-DotnetHttpConnectorWorkerService-f92de3d0-6bc7-4088-95ad-c0922aa17d90</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Iot.Operations.Mqtt" Version="0.5.0" />
+    <PackageReference Include="Azure.Iot.Operations.Protocol" Version="0.5.0" />
+    <PackageReference Include="Azure.Iot.Operations.Services" Version="0.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+  </ItemGroup>
+</Project>
