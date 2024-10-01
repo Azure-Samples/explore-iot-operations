@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-backend-api-secrets
+type: Opaque
+data:
+  SERVICE_USERNAME: c29tZS11c2VybmFtZQ== # "some-username"
+  SERVICE_PASSWORD: c29tZS1wYXNzd29yZA== # "some-password"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-server-deployment
+  labels:
+    app: http-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-server-deployment
+  template:
+    metadata:
+      labels:
+        app: http-server-deployment
+    spec:
+      containers:
+      - name: http-server-deployment
+        image: k3d-registry.localhost:5500/http-server:latest
+        env:
+        - name: SERVICE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: my-backend-api-secrets
+              key: SERVICE_USERNAME
+        - name: SERVICE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-backend-api-secrets
+              key: SERVICE_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-server-service
+  labels:
+    app: http-server-deployment 
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: http-server-deployment
