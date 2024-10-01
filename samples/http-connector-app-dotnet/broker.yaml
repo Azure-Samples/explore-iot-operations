@@ -26,7 +26,5 @@ metadata:
 spec:
   brokerRef: broker
   serviceType: LoadBalancer
-  ## This port will only be accessible within the cluster. If you want to access it from outside the cluster, you will need to expose it.
-  ## Either use `kubectl port-forward aio-broker-frontend-0 1883` for low traffic testing or use a nodeport as shown in `deployment.complex.yaml`.
   ports:
   - port: 1883
