@@ -10,6 +10,10 @@ kubectl apply -f ./broker.yaml
 
 # Deploy Operator helm chart
 
+# Deploy ADR
+helm install adrcommonprp --version 0.3.0 oci://azureadr.azurecr.io/helm/adr/common/adr-crds-prp
+
+
 # Build HTTP server docker image
 docker build -t http-server:latest ./SampleHttpServer
 docker tag http-server:latest http-server:latest
