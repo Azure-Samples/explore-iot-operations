@@ -4,15 +4,15 @@ k3d cluster delete
 k3d registry create registry.localhost --port 5500
 k3d cluster create -p '1883:1883@loadbalancer' -p '8883:8883@loadbalancer' --registry-use k3d-registry.localhost:5500
 
-# Deploy
+# Deploy Broker
 helm install broker --atomic oci://mqbuilds.azurecr.io/helm/aio-broker --version 0.7.0-nightly
+kubectl apply -f ./broker.yaml 
 
 # Deploy Operator helm chart
 
 # Build HTTP server docker image
 docker build -t http-server:latest ./SampleHttpServer
 docker tag http-server:latest http-server:latest
-#docker push k3d-registry.localhost:5500/http-server:latest
 k3d image import http-server:latest -c k3s-default
 
 # Deploy HTTP server (as an asset)
