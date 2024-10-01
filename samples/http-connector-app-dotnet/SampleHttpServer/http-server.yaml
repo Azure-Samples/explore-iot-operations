@@ -25,7 +25,8 @@ spec:
     spec:
       containers:
       - name: http-server-deployment
-        image: k3d-registry.localhost:5500/http-server:latest
+        image: http-server:latest
+        imagePullPolicy: Never # This forces docker to use the locally built image
         env:
         - name: SERVICE_USERNAME
           valueFrom:
