@@ -7,10 +7,10 @@ helm install broker --atomic oci://mqbuilds.azurecr.io/helm/aio-broker --version
 kubectl apply -f ./broker.yaml 
 
 # Deploy Operator helm chart
+# TODO the helm chart for this isn't available yet
 
 # Deploy ADR
 helm install adrcommonprp --version 0.3.0 oci://azureadr.azurecr.io/helm/adr/common/adr-crds-prp
-
 
 # Build HTTP server docker image
 docker build -t http-server:latest ./SampleHttpServer
