@@ -1,8 +1,6 @@
 # Create k3d cluster with local image registry
-k3d registry delete registry.localhost
 k3d cluster delete
-k3d registry create registry.localhost --port 5500
-k3d cluster create -p '1883:1883@loadbalancer' -p '8883:8883@loadbalancer' --registry-use k3d-registry.localhost:5500
+k3d cluster create -p '1883:1883@loadbalancer' -p '8883:8883@loadbalancer'
 
 # Deploy Broker
 helm install broker --atomic oci://mqbuilds.azurecr.io/helm/aio-broker --version 0.7.0-nightly
