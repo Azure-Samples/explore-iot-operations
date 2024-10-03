@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opc-plc-deployment
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: opcplc-000000
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: opcplc-000000
+    spec:
+      containers:
+      - name: opc-plc
+        image: mcr.microsoft.com/iotedge/opc-plc:latest
+        args:
+          - "--ph=opcplc-000000"
+          - "--cdn=opcplc-000000"
+          - "--ut"
+          - "--trustowncert" # Can we remove?
+          - "--sn=25"
+          - "--sr=10"
+          - "--fn=2000"
+          - "--veryfastrate=1000"          
+          - "--gn=5"
+          - "--pn=50000"
+          - "--maxsessioncount=100"
+          - "--maxsubscriptioncount=100"
+          - "--maxqueuedrequestcount=2000"          
+          - "--ses"
+          - "--alm"
+          - "--at=FlatDirectory"
+          - "--drurs"        
+          - "--ll-debug"
+        ports:
+        - containerPort: 50000
+        volumeMounts:
+          - name: opc-plc-tls
+            mountPath: /app/pki/own
+          - name: opc-plc-tls
+            mountPath: /app/pki/trusted # Trust own cert
+      volumes:
+        - name: opc-plc-tls
+          secret:
+            secretName: opc-plc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opcplc-000000
+  namespace: azure-iot-operations
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: opcplc-000000
+  ports:
+    - port: 50000
+      protocol: TCP
+      targetPort: 50000
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: opc-plc-certificate
+  namespace: azure-iot-operations
+spec:
+  secretName: opc-plc-tls
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: aio-opc-opcuabroker-default-root-ca-issuer
+    kind: Issuer
+  commonName: OpcPlc
+  dnsNames:
+    - opcplc-000000
+    - opcplc-000000.azure-iot-operations.svc.cluster.local
+    - opcplc-000000.azure-iot-operations
+  uris:
+    - urn:OpcPlc:opcplc-000000
+  usages:
+    - digital signature
+    - key encipherment
+    - data encipherment
+    - server auth
+    - client auth
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  encodeUsagesInRequest: true
+  isCA: false
