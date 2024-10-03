@@ -5,7 +5,7 @@ kind: Pod
 metadata:
   name: mqtt-client
   # The namespace must match the IoT MQ BrokerListener's namespace
-  # Otherwise use the long hostname: aio-mq-dmqtt-frontend.azure-iot-operations.svc.cluster.local
+  # Otherwise use the long hostname: aio-broker.azure-iot-operations.svc.cluster.local
   namespace: azure-iot-operations
 spec:
   # Use the "mqtt-client" service account which comes with default deployment
@@ -25,18 +25,18 @@ spec:
         cpu: 100m
         memory: 100Mi
     volumeMounts:
-    - name: mq-sat
+    - name: broker-sat
       mountPath: /var/run/secrets/tokens
     - name: trust-bundle
       mountPath: /var/run/certs
   volumes:
-  - name: mq-sat
+  - name: broker-sat
     projected:
       sources:
       - serviceAccountToken:
-          path: mq-sat
-          audience: aio-mq # Must match audience in BrokerAuthentication
+          path: broker-sat
+          audience: aio-internal # Must match audience in BrokerAuthentication
           expirationSeconds: 86400
   - name: trust-bundle
     configMap:
-      name: aio-ca-trust-bundle-test-only # Default root CA cert
+      name: azure-iot-operations-aio-ca-trust-bundle # Default root CA cert

@@ -18,30 +18,27 @@ spec:
 apiVersion: connectivity.iotoperations.azure.com/v1beta1
 kind: DataflowEndpoint
 metadata:
-  name: kafka-target
+  name: mqtt-destination
   namespace: azure-iot-operations
 spec:
-  endpointType: Kafka
-  kafkaSettings:
-    host: '<NAMESPACE>.servicebus.windows.net:9093'
-    batching:
-      latencyMs: 0
-      maxMessages: 100
+  endpointType: Mqtt
+  mqttSettings:
+    host: "aio-broker:18883"
     tls:
       mode: Enabled
+      trustedCaCertificateConfigMapRef: azure-iot-operations-aio-ca-trust-bundle
     authentication:
-      method: SystemAssignedManagedIdentity
-      systemAssignedManagedIdentitySettings:
-        # Don't forget the https://
-        audience: https://<NAMESPACE>.servicebus.windows.net
+      method: ServiceAccountToken
+      serviceAccountTokenSettings:
+        audience: aio-internal
 ---
 apiVersion: connectivity.iotoperations.azure.com/v1beta1
 kind: Dataflow
 metadata:
-  name: mqtt-to-eh
+  name: mqtt-to-mqtt
   namespace: azure-iot-operations
 spec:
-  profileRef: example-dataflow
+  profileRef: example-dataflow-loopback
   operations:
     - operationType: source
       sourceSettings:
@@ -62,13 +59,13 @@ spec:
             output: AssetId
     - operationType: destination
       destinationSettings:
-        endpointRef: kafka-target
-        dataDestination: destinationeh
+        endpointRef: mqtt-destination
+        dataDestination: mydestination
 ---
 apiVersion: connectivity.iotoperations.azure.com/v1beta1
 kind: DataflowProfile
 metadata:
-  name: example-dataflow
+  name: example-dataflow-loopback
   namespace: azure-iot-operations
 spec:
   instanceCount: 1
