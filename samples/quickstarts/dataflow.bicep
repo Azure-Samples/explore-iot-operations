@@ -151,3 +151,281 @@ resource opcuaSchemaInstance 'Microsoft.DeviceRegistry/schemaRegistries/schemas/
     schemaContent: opcuaSchemaContent
   }
 }
+
+// ADX Endpoint
+resource adxEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'adx-ep'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'DataExplorer'
+    dataExplorerSettings: {
+      authentication: {
+        method: 'SystemAssignedManagedIdentity'
+        systemAssignedManagedIdentitySettings: {}
+      }
+      host: 'https://adx-aio.westus2.kusto.windows.net'
+      database: 'aio'
+      batching: {
+        latencySeconds: 5
+        maxMessages: 10000
+      }
+    }
+  }
+}
+
+// ADX dataflow
+resource dataflow_adx 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'dataflow-adx'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: defaultDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'BuiltInTransformation'
+        builtInTransformationSettings: {
+          map: [
+            {
+              inputs: array('*')
+              output: '*'
+            }
+          ]
+          schemaRef: 'aio-sr://${opcuaSchemaName}:${opcuaSchemaVer}'
+          serializationFormat: 'Parquet'
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: adxEndpoint.name
+          dataDestination: 'SensorData'
+        }
+      }
+    ]
+  }
+}
+
+// OneLake Endpoint
+resource oneLakeEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'onelake-ep'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'FabricOneLake'
+    fabricOneLakeSettings: {
+      authentication: {
+        method: 'SystemAssignedManagedIdentity'
+        systemAssignedManagedIdentitySettings: {}
+      }
+      oneLakePathType: 'Tables'
+      host: 'https://msit-onelake.dfs.fabric.microsoft.com'
+      names: {
+        lakehouseName: 'aio'
+        workspaceName: 'mqtt-test-mar222024'
+      }
+      batching: {
+        latencySeconds: 5
+        maxMessages: 10000
+      }
+    }
+  }
+}
+
+// OneLake dataflow
+resource dataflow_onelake 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'dataflow-onelake3'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: defaultDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'BuiltInTransformation'
+        builtInTransformationSettings: {
+          map: [
+            {
+              inputs: array('*')
+              output: '*'
+            }
+          ]
+          schemaRef: 'aio-sr://${opcuaSchemaName}:${opcuaSchemaVer}'
+          serializationFormat: 'Delta' // Can also be 'Parquet'
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: oneLakeEndpoint.name
+          dataDestination: 'opc'
+        }
+      }
+    ]
+  }
+}
+
+// ADLS Gen2 Endpoint
+resource adlsGen2Endpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'adls-gen2-ep'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'DataLakeStorage'
+    dataLakeStorageSettings: {
+      authentication: {
+        method: 'SystemAssignedManagedIdentity'
+        systemAssignedManagedIdentitySettings: {}
+      }
+      batching: {
+        latencySeconds: 5
+        maxMessages: 1000
+      }
+      host: 'https://schemastor.blob.core.windows.net'
+    }
+  }
+}
+
+// ADLS dataflow
+resource dataflow_adls 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'dataflow-adls'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: defaultDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'BuiltInTransformation'
+        builtInTransformationSettings: {
+          map: [
+            {
+              inputs: array('*')
+              output: '*'
+            }
+          ]
+          schemaRef: 'aio-sr://${opcuaSchemaName}:${opcuaSchemaVer}'
+          serializationFormat: 'Delta' // can also be 'Parquet' 
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: adlsGen2Endpoint.name
+          dataDestination: 'aio'
+        }
+      }
+    ]
+  }
+}
+
+// Local storage
+
+/* First, create a ESA PVC out of band...
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: localvol
+  namespace: azure-iot-operations
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: unbacked-sc
+*/
+
+resource localStorageDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'local-storage-ep'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'LocalStorage'
+    localStorageSettings: {
+      persistentVolumeClaimRef: persistentVCName
+    }
+  }
+}
+
+// Local storage dataflow
+resource dataflow_localstor 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'dataflow-localstor'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: defaultDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'BuiltInTransformation'
+        builtInTransformationSettings: {
+          map: [
+            {
+              inputs: array('*')
+              output: '*'
+            }
+          ]
+          schemaRef: 'aio-sr://${opcuaSchemaName}:${opcuaSchemaVer}'
+          serializationFormat: 'Parquet' // can also be 'Delta' 
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: localStorageDataflowEndpoint.name
+          dataDestination: 'sensorData'
+        }
+      }
+    ]
+  }
+}
