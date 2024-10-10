@@ -104,6 +104,7 @@ param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
 param schemaRegistryName string = 'dfadfggg'
 param aioInstanceName string = 'iotops-quickstart-cluster-ops-instance'
+param eventGridHostName string = 'quicktest-de.westus2-1.ts.eventgrid.azure.net'
 
 param opcuaSchemaName string = 'opcua-output-delta'
 param opcuaSchemaVer string = '1'
@@ -429,3 +430,110 @@ resource dataflow_localstor 'Microsoft.IoTOperations/instances/dataflowProfiles/
     ]
   }
 }
+
+// MQ Endpoint
+resource MqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'aiomq'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'Mqtt'
+    mqttSettings: {
+      authentication: {
+        method: 'ServiceAccountToken'
+        serviceAccountTokenSettings: {
+          audience: 'aio-internal'
+        }
+      }
+      host: 'aio-broker:18883'
+      tls: {
+        mode: 'Enabled'
+        trustedCaCertificateConfigMapRef: 'azure-iot-operations-aio-ca-trust-bundle  '
+      }
+    }
+  }
+}
+
+// EventGrid Endpoint
+resource remoteMqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'eventgrid'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'Mqtt'
+    mqttSettings: {
+      authentication: {
+        method: 'SystemAssignedManagedIdentity'
+        systemAssignedManagedIdentitySettings: {}
+      }
+      host: eventGridHostName
+      tls: {
+        mode: 'Enabled'
+      }
+    }
+  }
+}
+
+// Dataflow for local to remote
+resource dataflow_1 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'local-to-remote'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: MqttBrokerDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: remoteMqttBrokerDataflowEndpoint.name
+          dataDestination: 'telemetry/iot-mq'
+        }
+      }
+    ]
+  }
+} 
+
+// Dataflow for remote to local
+resource dataflow_2 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'remote-to-local'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: remoteMqttBrokerDataflowEndpoint.name
+          dataSources: array('telemetry/#')
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: MqttBrokerDataflowEndpoint.name
+          dataDestination: 'tutorial/cloud'
+        }
+      }
+    ]
+  }
+} 
