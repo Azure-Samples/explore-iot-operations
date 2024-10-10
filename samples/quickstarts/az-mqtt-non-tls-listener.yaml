@@ -6,7 +6,7 @@ metadata:
   name: az-mqtt-non-tls-listener
   namespace: azure-iot-operations
 spec:
-  brokerRef: broker
+  brokerRef: default
   ports:
   - port: 1883
   serviceName: aio-mq-dmqtt-frontend-nontls
