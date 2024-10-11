@@ -536,4 +536,66 @@ resource dataflow_2 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflow
       }
     ]
   }
+}
+
+// EventHub Endpoint
+resource kafkaEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+  parent: aioInstance
+  name: 'eventhubs'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    endpointType: 'Kafka'
+    kafkaSettings: {
+      host: '<HOST>.servicebus.windows.net:9093'
+      authentication: {
+        method: 'SystemAssignedManagedIdentity'
+        systemAssignedManagedIdentitySettings: {}
+      }
+      tls: {
+        mode: 'Enabled'
+      }
+      batching: {
+        enabled: true
+        latencyMs: 1000
+        maxMessages: 100
+        maxBytes: 1024
+      }
+      kafkaAcks: 'All'
+      copyMqttProperties: 'Enabled'
+      consumerGroupId: 'mqConnector'
+    }
+  }
+}
+
+// Kafka Dataflow
+resource kafka_dataflow 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+  parent: defaultDataflowProfile
+  name: 'local-to-eventhub'
+  extendedLocation: {
+    name: customLocation.id
+    type: 'CustomLocation'
+  }
+  properties: {
+    mode: 'Enabled'
+    operations: [
+      {
+        operationType: 'Source'
+        sourceSettings: {
+          endpointRef: defaultDataflowEndpoint.name
+          dataSources: array('azure-iot-operations/data/thermostat')
+        }
+      }
+      {
+        operationType: 'Destination'
+        destinationSettings: {
+          endpointRef: kafkaEndpoint.name
+          dataDestination: 'temperature'
+        }
+      }
+    ]
+  }
 } 
+
