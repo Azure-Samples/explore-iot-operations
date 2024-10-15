@@ -17,12 +17,12 @@ var assetDeltaSchema = '''
 }
 '''
 
-param customLocationName string = 'location-3bsrw'
+param customLocationName string = ''
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = 'davideschema'
-param aioInstanceName string = 'vigilant-trout-5jw4g4v6x47cj45-instance'
-param eventGridHostName string = 'quicktest-de.westus2-1.ts.eventgrid.azure.net'
+param schemaRegistryName string = ''
+param aioInstanceName string = ''
+param eventGridHostName string = ''
 param testSchemaName string = 'asset-delta3'
 
 ////////////////////////////////////////////////////////////////////////////////
