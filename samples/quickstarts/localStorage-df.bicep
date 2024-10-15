@@ -99,15 +99,15 @@ var opcuaSchemaContent = '''
 '''
 
 
-param customLocationName string = 'iotops-quickstart-cluster-cl-7928'
+param customLocationName string = ''
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = 'dfadfggg'
-param aioInstanceName string = 'iotops-quickstart-cluster-ops-instance'
+param schemaRegistryName string = ''
+param aioInstanceName string = ''
 
 param opcuaSchemaName string = 'opcua-output-delta'
 param opcuaSchemaVer string = '1'
-param persistentVCName string = 'localvol'
+param persistentVCName string = ''
 
 
 resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
@@ -151,8 +151,6 @@ resource opcuaSchemaInstance 'Microsoft.DeviceRegistry/schemaRegistries/schemas/
     schemaContent: opcuaSchemaContent
   }
 }
-
-
 
 // Local storage
 
