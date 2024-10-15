@@ -17,12 +17,12 @@ var assetDeltaSchema = '''
 }
 '''
 
-param customLocationName string = ''
+param customLocationName string = '<CUSTOM_LOCATION_NAME>'
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = ''
-param aioInstanceName string = ''
-param eventGridHostName string = ''
+param schemaRegistryName string = '<SCHEMA_REGISTRY_NAME>'
+param aioInstanceName string = '<AIO_INSTANCE_NAME>'
+param eventGridHostName string = '<EVENTGRID_HOSTNAME>'
 param testSchemaName string = 'asset-delta3'
 
 ////////////////////////////////////////////////////////////////////////////////
