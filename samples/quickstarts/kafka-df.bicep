@@ -99,16 +99,15 @@ var opcuaSchemaContent = '''
 '''
 
 
-param customLocationName string = ''
+param customLocationName string = '<CUSTOM_LOCATION_NAME>'
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = ''
-param aioInstanceName string = ''
+param schemaRegistryName string = '<SCHEMA_REGISTRY_NAME>'
+param aioInstanceName string = '<AIO_INSTANCE_NAME>'
+param hostName string = '<HOST>.servicebus.windows.net:9093'
 
 param opcuaSchemaName string = 'opcua-output-delta'
 param opcuaSchemaVer string = '1'
-param persistentVCName string = ''
-
 
 resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
   name: customLocationName
@@ -163,7 +162,7 @@ resource kafkaEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024
   properties: {
     endpointType: 'Kafka'
     kafkaSettings: {
-      host: '<HOST>.servicebus.windows.net:9093'
+      host: hostName
       authentication: {
         method: 'SystemAssignedManagedIdentity'
         systemAssignedManagedIdentitySettings: {}
