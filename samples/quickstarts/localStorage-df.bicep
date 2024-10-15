@@ -99,15 +99,15 @@ var opcuaSchemaContent = '''
 '''
 
 
-param customLocationName string = ''
+param customLocationName string = '<CUSTOM_LOCATION_NAME>'
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = ''
-param aioInstanceName string = ''
+param schemaRegistryName string = '<SCHEMA_REGISTRY_NAME>'
+param aioInstanceName string = '<AIO_INSTANCE_NAME'
 
 param opcuaSchemaName string = 'opcua-output-delta'
 param opcuaSchemaVer string = '1'
-param persistentVCName string = ''
+param persistentVCName string = '<PERSISTENT_VC_NAME>'
 
 
 resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
