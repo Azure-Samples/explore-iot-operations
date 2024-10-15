@@ -99,16 +99,16 @@ var opcuaSchemaContent = '''
 '''
 
 
-param customLocationName string = ''
+param customLocationName string = '<CUSTOM_LOCATION_NAME>'
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
-param schemaRegistryName string = ''
-param aioInstanceName string = ''
+param schemaRegistryName string = '<SCHEMA_REGISTRY_NAME>'
+param aioInstanceName string = '<AIO_INSTANCE_NAME>'
+param lakehouseName string = '<LAKEHOUSE_NAME>'
+param workspaceName string = '<WORKSPACE_NAME>'
 
 param opcuaSchemaName string = 'opcua-output-delta'
 param opcuaSchemaVer string = '1'
-param persistentVCName string = ''
-
 
 resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
   name: customLocationName
@@ -172,8 +172,8 @@ resource oneLakeEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@20
       oneLakePathType: 'Tables'
       host: 'https://msit-onelake.dfs.fabric.microsoft.com'
       names: {
-        lakehouseName: 'aio'
-        workspaceName: 'mqtt-test-mar222024'
+        lakehouseName: lakehouseName
+        workspaceName: workspaceName
       }
       batching: {
         latencySeconds: 5
