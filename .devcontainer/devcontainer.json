@@ -38,7 +38,7 @@
     "CLUSTER_NAME": "${localEnv:CODESPACE_NAME}"
   },
   "onCreateCommand": "bash .devcontainer/onCreateCommand.sh",
-  "postStartCommand": ["echo", "-e", "Environment: \nSUBSCRIPTION_ID: $SUBSCRIPTION_ID \nRESOURCE_GROUP: $RESOURCE_GROUP \nLOCATION: $LOCATION \nCLUSTER_NAME: $CLUSTER_NAME"]
+  "postStartCommand": "bash .devcontainer/postStartCommand.sh"
   // Configure tool-specific properties.
   // "customizations": {},
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
