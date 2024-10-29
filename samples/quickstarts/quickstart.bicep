@@ -90,30 +90,20 @@ resource asset 'Microsoft.DeviceRegistry/assets@2024-09-01-preview' = {
           {
             name: 'FillWeight'
             dataSource: 'ns=3;s=FastUInt1004'
-            dataPointConfiguration: '{"samplingInterval":1000,"queueSize":5}'
+            dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
             observabilityMode: 'None'
           }
           {
             name: 'EnergyUse'
             dataSource: 'ns=3;s=FastUInt1005'
-            dataPointConfiguration: '{"samplingInterval":5000,"queueSize":10}'
+            dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
             observabilityMode: 'None'
           }
         ]
       }
     ]
 
-    defaultEventsConfiguration: '{"publishingInterval":1000,"queueSize":1}'
     defaultDatasetsConfiguration: '{"publishingInterval":1000,"samplingInterval":500,"queueSize":1}'
-
-    events: [
-      {
-        name: 'System Error'
-        eventNotifier: 'i=2253'
-        eventConfiguration: '{"queueSize":1}'
-        observabilityMode: 'None'
-      }
-    ]
   }
 }
 
@@ -125,7 +115,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
   name: eventHubName
   location: resourceGroup().location
   properties: {
-    disableLocalAuth: true
+    disableLocalAuth: false
   }
 }
 
@@ -156,7 +146,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 
 resource dataflowEndpointMqttSource 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' = {
   parent: aioInstance
-  name: 'quickstart-mqtt-source'
+  name: 'quickstart-mqtt-endpoint'
   extendedLocation: {
     name: customLocation.id
     type: 'CustomLocation'
@@ -181,7 +171,7 @@ resource dataflowEndpointMqttSource 'Microsoft.IoTOperations/instances/dataflowE
 
 resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' = {
   parent: aioInstance
-  name: 'quickstart-mqtt-dest'
+  name: 'quickstart-eh-endpoint'
   extendedLocation: {
     name: customLocation.id
     type: 'CustomLocation'
@@ -232,7 +222,7 @@ resource dataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@202
 
 resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-09-15-preview' = {
   parent: dataflowProfile
-  name: 'quickstart-c-to-f'
+  name: 'quickstart-oven-dataflow'
   extendedLocation: {
     name: customLocation.id
     type: 'CustomLocation'
@@ -255,77 +245,41 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
           serializationFormat: 'Json'
           map: [
             {
+              type: 'PassThrough'
+              inputs: [
+                '*'
+              ]
+              output: '*'
+            }
+            {
               type: 'Compute'
               description: 'Temperature in F'
-              inputs: ['Temperature.Value ? $last']
+              inputs: [
+                'Temperature.Value ? $last'
+              ]
               expression: '$1 * 9/5 + 32'
               output: 'TemperatureF'
             }
             {
-              inputs: ['$metadata.user_property.externalAssetId']
-              output: 'AssetId'
-            }
-            {
-              type: 'PassThrough'
-              inputs: ['*']
-              output: '*'
-            }
-          ]
-        }
-      }
-      {
-        operationType: 'Destination'
-        destinationSettings: {
-          endpointRef: dataflowEndpointEventHub.name
-          dataDestination: 'destinationeh'
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    eventHub
-  ]
-}
-
-resource dataflowAnomalyDetection 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-09-15-preview' = {
-  parent: dataflowProfile
-  name: 'quickstart-anomaly-detect'
-  extendedLocation: {
-    name: customLocation.id
-    type: 'CustomLocation'
-  }
-  properties: {
-    mode: 'Enabled'
-    operations: [
-      {
-        operationType: 'Source'
-        sourceSettings: {
-          endpointRef: dataflowEndpointMqttSource.name
-          assetRef: asset.name
-          serializationFormat: 'Json'
-          dataSources: ['azure-iot-operations/data/${assetName}']
-        }
-      }
-      {
-        operationType: 'BuiltInTransformation'
-        builtInTransformationSettings: {
-          serializationFormat: 'Json'
-          map: [
-            {
               type: 'Compute'
-              description: 'Identifies if there is a temperature spike'
-              inputs: ['Temperature.Value ? $last']
+              inputs: [
+                'Temperature.Value ? $last'
+              ]
               expression: '$1 > 225'
               output: 'Spike'
             }
             {
-              inputs: ['$metadata.user_property.externalAssetId']
-              output: 'AssetId'
+              type: 'Rename'
+              inputs: [
+                'FillWeight.Value'
+              ]
+              output: 'FillWeight'
             }
             {
-              type: 'PassThrough'
-              inputs: ['*']
-              output: '*'
+              inputs: [
+                '$metadata.user_property.externalAssetId'
+              ]
+              output: 'AssetId'
             }
           ]
         }
