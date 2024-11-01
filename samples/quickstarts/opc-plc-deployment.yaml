@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: opc-plc-deployment
+  name: opc-plc-000000
   namespace: azure-iot-operations
   labels:
     app.kubernetes.io/component: opcplc-000000
@@ -22,38 +22,76 @@ spec:
           - "--ph=opcplc-000000"
           - "--cdn=opcplc-000000"
           - "--ut"
-          - "--trustowncert" # Can we remove?
           - "--sn=25"
           - "--sr=10"
           - "--fn=2000"
-          - "--veryfastrate=1000"          
+          - "--veryfastrate=1000"
           - "--gn=5"
           - "--pn=50000"
           - "--maxsessioncount=100"
           - "--maxsubscriptioncount=100"
-          - "--maxqueuedrequestcount=2000"          
+          - "--maxqueuedrequestcount=2000"
           - "--ses"
           - "--alm"
           - "--at=FlatDirectory"
-          - "--drurs"        
+          - "--drurs"
           - "--ll-debug"
+          - "--nodesfile"
+          - "/app/config/nodesfile.json"
         ports:
         - containerPort: 50000
         volumeMounts:
-          - name: opc-plc-tls
+          - name: opc-plc-default-application-cert
             mountPath: /app/pki/own
-          - name: opc-plc-tls
-            mountPath: /app/pki/trusted # Trust own cert
+          - name: opc-plc-trust-list
+            mountPath: /app/pki/trusted
+          - name: config-volume
+            mountPath: /app/config
       volumes:
-        - name: opc-plc-tls
+        - name: opc-plc-default-application-cert
           secret:
-            secretName: opc-plc-tls
+            secretName: opc-plc-default-application-cert
+        - name: opc-plc-trust-list
+          secret:
+            secretName: opc-plc-trust-list
+        - name: config-volume
+          configMap:
+            name: opc-plc-config
+      serviceAccountName: opcplc-000000-service-account
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opc-plc-config
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+data:
+  nodesfile.json: |
+    {
+      "Folder": "MyTelemetry",
+      "NodeList": [
+        {
+          "NodeId": "ns=3;s=FastUInt100",
+          "Name": "Fryer Temperature",
+          "DataType": "Double",
+          "ValueRank": -1,
+          "AccessLevel": "CurrentReadOrWrite",
+          "Description": "Fryer Temperature with spikes",
+          "Anomaly": "Spike",
+          "MinValue": 150.0,
+          "MaxValue": 200.0          
+        }
+      ]
+    }
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: opcplc-000000
   namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
 spec:
   type: ClusterIP
   selector:
@@ -64,16 +102,28 @@ spec:
       targetPort: 50000
 ---
 apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: opc-plc-self-signed-issuer
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: opc-plc-certificate
+  name: opc-plc-default-application-cert
   namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
 spec:
-  secretName: opc-plc-tls
+  secretName: opc-plc-default-application-cert
   duration: 2160h # 90d
   renewBefore: 360h # 15d
   issuerRef:
-    name: aio-opc-opcuabroker-default-root-ca-issuer
+    name: opc-plc-self-signed-issuer
     kind: Issuer
   commonName: OpcPlc
   dnsNames:
@@ -93,3 +143,96 @@ spec:
     size: 2048
   encodeUsagesInRequest: true
   isCA: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opc-plc-trust-list
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+data: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opcplc-000000-execute-mutual-trust
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+      - name: kubectl
+        image: mcr.microsoft.com/oss/kubernetes/kubectl:v1.27.1
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        args: ["/scripts/execute-commands.sh"]
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+          readOnly: true
+      restartPolicy: Never
+      serviceAccountName: opcplc-000000-service-account
+      volumes:
+      - name: scripts
+        configMap:
+          name: opcplc-000000-execute-commands-script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opcplc-000000-execute-commands-script
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+data:
+  execute-commands.sh: |
+    #!/bin/sh
+
+    # wait 20 seconds for the resources to be created
+    sleep 20
+
+    # Extract the OPC UA connector application instance certificate and add it to the OPC PLC trust list
+    cert=$(kubectl -n azure-iot-operations get secret aio-opc-opcuabroker-default-application-cert -o jsonpath='{.data.tls\.crt}' | base64 -d)
+    data=$(kubectl create secret generic temp --from-literal=opcuabroker.crt="$cert" --dry-run=client -o jsonpath='{.data}')
+    kubectl patch secret opc-plc-trust-list -n azure-iot-operations -p "{\"data\": $data}"
+
+    # Extract the OPC PLC application instance certificate and add it to the OPC UA connector trust list
+    cert=$(kubectl -n azure-iot-operations get secret opc-plc-default-application-cert -o jsonpath='{.data.tls\.crt}' | base64 -d)
+    data=$(kubectl create secret generic temp --from-literal=opcplc-000000.crt="$cert" --dry-run=client -o jsonpath='{.data}')
+    kubectl patch secret aio-opc-ua-broker-trust-list -n azure-iot-operations -p "{\"data\": $data}"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opcplc-000000-service-account
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/component: opcplc-000000
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: opc-plc-000000-secret-access-role
+  namespace: azure-iot-operations
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: opc-plc-000000-secret-access-rolebinding
+  namespace: azure-iot-operations
+subjects:
+- kind: ServiceAccount
+  name: opcplc-000000-service-account
+  namespace: azure-iot-operations
+roleRef:
+  kind: Role
+  name: opc-plc-000000-secret-access-role
+  apiGroup: rbac.authorization.k8s.io
