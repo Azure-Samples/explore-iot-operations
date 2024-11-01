@@ -10,6 +10,8 @@ param aioExtensionName string
 param aioInstanceName string
 param resourceSuffix string = substring(uniqueString(subscription().id, resourceGroup().id, clusterName), 0, 10)
 param eventHubName string = 'aio-eh-${resourceSuffix}'
+param defaultDataflowEndpointName string = 'default'
+param defaultDataflowProfileName string = 'default'
 
 /*****************************************************************************/
 /*                          Existing AIO cluster                             */
@@ -30,6 +32,15 @@ resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' 
 
 resource aioInstance 'Microsoft.IoTOperations/instances@2024-09-15-preview' existing = {
   name: aioInstanceName
+}
+
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' existing = {
+  name: defaultDataflowEndpointName
+}
+
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-09-15-preview' existing = {
+  name: defaultDataflowProfileName
+  parent: aioInstance
 }
 
 /*****************************************************************************/
@@ -116,6 +127,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
   location: resourceGroup().location
   properties: {
     disableLocalAuth: false
+    minimumTlsVersion: '1.2'
   }
 }
 
@@ -143,31 +155,6 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 /*****************************************************************************/
 /*                                    Dataflow                               */
 /*****************************************************************************/
-
-resource dataflowEndpointMqttSource 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' = {
-  parent: aioInstance
-  name: 'quickstart-mqtt-endpoint'
-  extendedLocation: {
-    name: customLocation.id
-    type: 'CustomLocation'
-  }
-  properties: {
-    endpointType: 'Mqtt'
-    mqttSettings: {
-      host: 'aio-broker:18883'
-      tls: {
-        mode: 'Enabled'
-        trustedCaCertificateConfigMapRef: 'azure-iot-operations-aio-ca-trust-bundle'
-      }
-      authentication: {
-        method: 'ServiceAccountToken'
-        serviceAccountTokenSettings: {
-          audience: 'aio-internal'
-        }
-      }
-    }
-  }
-}
 
 resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' = {
   parent: aioInstance
@@ -200,28 +187,9 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   ]
 }
 
-resource dataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-09-15-preview' = {
-  parent: aioInstance
-  name: 'quickstart-profile'
-  extendedLocation: {
-    name: customLocation.id
-    type: 'CustomLocation'
-  }
-  properties: {
-    diagnostics: {
-      logs: {
-        level: 'debug'
-      }
-    }
-    instanceCount: 1
-  }
-  dependsOn: [
-    eventHub
-  ]
-}
 
 resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-09-15-preview' = {
-  parent: dataflowProfile
+  parent: defaultDataflowProfile
   name: 'quickstart-oven-dataflow'
   extendedLocation: {
     name: customLocation.id
@@ -233,7 +201,7 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
       {
         operationType: 'Source'
         sourceSettings: {
-          endpointRef: dataflowEndpointMqttSource.name
+          endpointRef: defaultDataflowEndpoint.name
           assetRef: asset.name
           serializationFormat: 'Json'
           dataSources: ['azure-iot-operations/data/${assetName}']
