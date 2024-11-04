@@ -33,9 +33,7 @@
   "containerEnv": {
     // This env var is important to allow k3s to support shared mounts, required for CSI driver
     // Temporary fix until made default https://github.com/k3d-io/k3d/pull/1268#issuecomment-1745466499
-    "K3D_FIX_MOUNTS": "1",
-    // Set the cluster name to the name of the cluster created by the GitHub Codespace
-    "CLUSTER_NAME": "${localEnv:CODESPACE_NAME}"
+    "K3D_FIX_MOUNTS": "1"
   },
   "onCreateCommand": "bash .devcontainer/onCreateCommand.sh",
   "postStartCommand": "bash .devcontainer/postStartCommand.sh"
