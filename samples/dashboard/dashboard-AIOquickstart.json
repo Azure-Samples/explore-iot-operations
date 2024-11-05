@@ -1,0 +1,383 @@
+{
+    "$schema": "https://pbiadx.powerbi.com/static/d/schema/54/dashboard.json",
+    "id": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+    "eTag": "\"A1bC2dE3fH4iJ5kL6mN7oP8qR9sT0u\"",
+    "schema_version": "54",
+    "title": "AIOquickstart",
+    "tiles": [
+      {
+        "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2",
+        "title": "Temperature with spikes over time",
+        "description": "Shows the temperature over time, with spike markers.",
+        "visualType": "line",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "width": 12,
+          "height": 8
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "f1f1f1f1-aaaa-bbbb-cccc-d2d2d2d2d2d2"
+        },
+        "visualOptions": {
+          "multipleYAxes": {
+            "base": {
+              "id": "-1",
+              "label": "Temperature (°F)",
+              "columns": [],
+              "yAxisMaximumValue": null,
+              "yAxisMinimumValue": null,
+              "yAxisScale": "linear",
+              "horizontalLines": []
+            },
+            "additional": [],
+            "showMultiplePanels": false
+          },
+          "hideLegend": false,
+          "legendLocation": "bottom",
+          "xColumnTitle": "Timestamp",
+          "xColumn": null,
+          "yColumns": null,
+          "seriesColumns": null,
+          "xAxisScale": "linear",
+          "verticalLine": "",
+          "crossFilterDisabled": false,
+          "drillthroughDisabled": false,
+          "crossFilter": [],
+          "drillthrough": []
+        }
+      },
+      {
+        "id": "c2c2c2c2-dddd-eeee-ffff-a3a3a3a3a3a3",
+        "title": "Spike indicator",
+        "description": "Shows the latest temperature, with alert formatting if it is a spike.",
+        "visualType": "card",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 0,
+          "y": 8,
+          "width": 12,
+          "height": 3
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "b3b3b3b3-cccc-dddd-eeee-f4f4f4f4f4f4"
+        },
+        "visualOptions": {
+          "multiStat__textSize": "auto",
+          "multiStat__valueColumn": null,
+          "colorRulesDisabled": false,
+          "colorStyle": "light",
+          "colorRules": [
+            {
+              "id": "d3d3d3d3-eeee-ffff-aaaa-b4b4b4b4b4b4",
+              "ruleType": "colorByCondition",
+              "applyToColumn": null,
+              "hideText": false,
+              "applyTo": "cells",
+              "conditions": [
+                {
+                  "operator": "==",
+                  "column": "Spike",
+                  "values": [
+                    "true"
+                  ]
+                }
+              ],
+              "chainingOperator": "and",
+              "colorStyle": "bold",
+              "color": "red",
+              "tag": "",
+              "icon": "warning",
+              "ruleName": "",
+              "visualType": "card"
+            }
+          ]
+        }
+      },
+      {
+        "id": "e4e4e4e4-ffff-aaaa-bbbb-c5c5c5c5c5c5",
+        "title": "Temperature (°F) vs. Fill Weight",
+        "visualType": "line",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 12,
+          "y": 0,
+          "width": 11,
+          "height": 7
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "c4c4c4c4-dddd-eeee-ffff-a5a5a5a5a5a5"
+        },
+        "visualOptions": {
+          "multipleYAxes": {
+            "base": {
+              "id": "-1",
+              "label": "Units",
+              "columns": [],
+              "yAxisMaximumValue": null,
+              "yAxisMinimumValue": null,
+              "yAxisScale": "linear",
+              "horizontalLines": []
+            },
+            "additional": [],
+            "showMultiplePanels": false
+          },
+          "hideLegend": false,
+          "legendLocation": "bottom",
+          "xColumnTitle": "Timestamp",
+          "xColumn": null,
+          "yColumns": null,
+          "seriesColumns": null,
+          "xAxisScale": "linear",
+          "verticalLine": "",
+          "crossFilterDisabled": false,
+          "drillthroughDisabled": false,
+          "crossFilter": [],
+          "drillthrough": []
+        }
+      },
+      {
+        "id": "f5f5f5f5-aaaa-bbbb-cccc-d6d6d6d6d6d6",
+        "title": "Temperature (°F) vs. Energy Use",
+        "visualType": "line",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 12,
+          "y": 7,
+          "width": 11,
+          "height": 7
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "d5d5d5d5-eeee-ffff-aaaa-b6b6b6b6b6b6"
+        },
+        "visualOptions": {
+          "multipleYAxes": {
+            "base": {
+              "id": "-1",
+              "label": "Units",
+              "columns": [],
+              "yAxisMaximumValue": null,
+              "yAxisMinimumValue": null,
+              "yAxisScale": "linear",
+              "horizontalLines": []
+            },
+            "additional": [],
+            "showMultiplePanels": false
+          },
+          "hideLegend": false,
+          "legendLocation": "bottom",
+          "xColumnTitle": "Timestamp",
+          "xColumn": null,
+          "yColumns": null,
+          "seriesColumns": null,
+          "xAxisScale": "linear",
+          "verticalLine": "",
+          "crossFilterDisabled": false,
+          "drillthroughDisabled": false,
+          "crossFilter": [],
+          "drillthrough": []
+        }
+      },
+      {
+        "id": "a6a6a6a6-bbbb-cccc-dddd-e7e7e7e7e7e7",
+        "title": "Max temperature",
+        "visualType": "card",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 0,
+          "y": 11,
+          "width": 6,
+          "height": 3
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "e6e6e6e6-ffff-aaaa-bbbb-c7c7c7c7c7c7"
+        },
+        "visualOptions": {
+          "multiStat__textSize": "auto",
+          "multiStat__valueColumn": null,
+          "colorRulesDisabled": false,
+          "colorStyle": "light",
+          "colorRules": []
+        }
+      },
+      {
+        "id": "b7b7b7b7-cccc-dddd-eeee-f8f8f8f8f8f8",
+        "title": "Number of spikes in time frame",
+        "visualType": "card",
+        "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+        "layout": {
+          "x": 6,
+          "y": 11,
+          "width": 6,
+          "height": 3
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "f7f7f7f7-aaaa-bbbb-cccc-d8d8d8d8d8d8"
+        },
+        "visualOptions": {
+          "multiStat__textSize": "auto",
+          "multiStat__valueColumn": null,
+          "colorRulesDisabled": false,
+          "colorStyle": "light",
+          "colorRules": []
+        }
+      }
+    ],
+    "baseQueries": [],
+    "parameters": [
+      {
+        "kind": "duration",
+        "id": "c8c8c8c8-dddd-eeee-ffff-a9a9a9a9a9a9",
+        "displayName": "Time range",
+        "description": "",
+        "beginVariableName": "_startTime",
+        "endVariableName": "_endTime",
+        "defaultValue": {
+          "kind": "dynamic",
+          "count": 1,
+          "unit": "hours"
+        },
+        "showOnPages": {
+          "kind": "all"
+        }
+      },
+      {
+        "kind": "string",
+        "id": "d9d9d9d9-eeee-ffff-aaaa-b0b0b0b0b0b0",
+        "displayName": "Asset",
+        "description": "",
+        "variableName": "_asset",
+        "selectionType": "scalar",
+        "includeAllOption": false,
+        "defaultValue": {
+          "kind": "query-result"
+        },
+        "dataSource": {
+          "kind": "query",
+          "columns": {
+            "value": "AssetId"
+          },
+          "queryRef": {
+            "kind": "query",
+            "queryId": "a8a8a8a8-bbbb-cccc-dddd-e9e9e9e9e9e9"
+          }
+        },
+        "showOnPages": {
+          "kind": "all"
+        }
+      }
+    ],
+    "dataSources": [
+      {
+        "kind": "kusto-trident",
+        "scopeId": "kusto-trident",
+        "clusterUri": "https://xxxx.z1.kusto.fabric.microsoft.com",
+        "database": "Choose your database",
+        "name": "AIOdata",
+        "id": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3",
+        "workspace": "b9b9b9b9-cccc-dddd-eeee-f0f0f0f0f0f0"
+      }
+    ],
+    "pages": [
+      {
+        "name": "Page 1",
+        "id": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7"
+      }
+    ],
+    "queries": [
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA \n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike\n| extend SpikeMarker = iff(Spike == true, Temperature, decimal(null))",
+        "id": "f1f1f1f1-aaaa-bbbb-cccc-d2d2d2d2d2d2",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike",
+        "id": "b3b3b3b3-cccc-dddd-eeee-f4f4f4f4f4f4",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA \n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, FillWeight",
+        "id": "c4c4c4c4-dddd-eeee-ffff-a5a5a5a5a5a5",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA \n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, EnergyUse",
+        "id": "d5d5d5d5-eeee-ffff-aaaa-b6b6b6b6b6b6",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA\n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| top 1 by Temperature desc\n| summarize by Temperature",
+        "id": "e6e6e6e6-ffff-aaaa-bbbb-c7c7c7c7c7c7",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| where Spike == true\n| summarize SpikeCount = count()",
+        "id": "f7f7f7f7-aaaa-bbbb-cccc-d8d8d8d8d8d8",
+        "usedVariables": [
+          "_asset",
+          "_endTime",
+          "_startTime"
+        ]
+      },
+      {
+        "dataSource": {
+          "kind": "inline",
+          "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+        },
+        "text": "OPCUA\n| summarize by AssetId",
+        "id": "a8a8a8a8-bbbb-cccc-dddd-e9e9e9e9e9e9",
+        "usedVariables": []
+      }
+    ]
+  }
