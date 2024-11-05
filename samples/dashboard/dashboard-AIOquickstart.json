@@ -310,7 +310,7 @@
           "kind": "inline",
           "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
         },
-        "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike",
+        "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike\n| top 1 by Timestamp desc",
         "id": "b3b3b3b3-cccc-dddd-eeee-f4f4f4f4f4f4",
         "usedVariables": [
           "_asset",
