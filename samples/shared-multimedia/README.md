@@ -21,6 +21,6 @@ Azure IoT Operations is composed of modular services that help organizations dis
 4. Democratize operational data
 5. Consistently build applications for scale
 
-> [!TIP] 
-> Learn More: https://aka.ms/AzureIoTOperations 
-> Product Documentation: https://aka.ms/LearnAzureIoTOperations
+Learn More: https://aka.ms/AzureIoTOperations
+
+Product Documentation: https://aka.ms/LearnAzureIoTOperations
