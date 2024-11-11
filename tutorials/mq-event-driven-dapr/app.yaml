@@ -13,7 +13,12 @@ metadata:
         "image": "ghcr.io/azure/iot-operations-dapr-components:latest",
         "volumeMounts": [
           { "name": "mqtt-client-token", "mountPath": "/var/run/secrets/tokens" },
-          { "name": "aio-ca-trust-bundle", "mountPath": "/var/run/certs/aio-mq-ca-cert" }
+          { "name": "aio-ca-trust-bundle", "mountPath": "/var/run/certs/aio-internal-ca-cert" }
+        ],
+        "env": [
+            { "name": "pubSubLogLevel", "value": "Information" },
+            { "name": "stateStoreLogLevel", "value": "Information" },
+            { "name": "defaultLogLevel", "value": "Warning" }
         ]
       }
 spec:
@@ -21,13 +26,13 @@ spec:
   version: v1
   metadata:
   - name: hostname
-    value: aio-mq-dmqtt-frontend
+    value: aio-broker
   - name: tcpPort
-    value: 8883
+    value: 18883
   - name: useTls
     value: true
   - name: caFile
-    value: /var/run/certs/aio-mq-ca-cert/ca.crt
+    value: /var/run/certs/aio-internal-ca-cert/ca.crt
   - name: satAuthFile
     value: /var/run/secrets/tokens/mqtt-client-token
 ---
@@ -41,15 +46,15 @@ spec:
   version: v1
   metadata:
   - name: hostname
-    value: aio-mq-dmqtt-frontend
+    value: aio-broker
   - name: tcpPort
-    value: 8883
+    value: 18883
   - name: useTls
     value: true
   - name: caFile
-    value: /var/run/certs/aio-mq-ca-cert/ca.crt
+    value: /var/run/certs/aio-internal-ca-cert/ca.crt
   - name: satAuthFile
-    value: /var/run/secrets/tokens/mqtt-client-token
+    value: /var/run/secrets/tokens/mqtt-client-token 
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -57,7 +62,7 @@ metadata:
   name: dapr-client
   namespace: azure-iot-operations
   annotations:
-    aio-mq-broker-auth/group: dapr-workload
+    aio-broker-auth/group: dapr-workload
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -86,15 +91,15 @@ spec:
       - name: mqtt-client-token
         projected:
           sources:
-          - serviceAccountToken:
-              path: mqtt-client-token
-              audience: aio-mq
-              expirationSeconds: 86400
+            - serviceAccountToken:
+                path: mqtt-client-token
+                audience: aio-internal
+                expirationSeconds: 86400
 
       # Certificate chain for Dapr to validate the MQTT broker
       - name: aio-ca-trust-bundle
         configMap:
-          name: aio-ca-trust-bundle-test-only
+          name: azure-iot-operations-aio-ca-trust-bundle
 
       containers:
       - name: mq-event-driven-dapr
