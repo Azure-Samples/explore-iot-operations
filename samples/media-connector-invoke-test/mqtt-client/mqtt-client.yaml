@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-client
+  # Namespace must match MQTT broker BrokerListener's namespace
+  # Otherwise use the long hostname: aio-mq-dmqtt-frontend.azure-iot-operations.svc.cluster.local
+  namespace: azure-iot-operations
+spec:
+  # Use the "mqtt-client" service account which comes with default deployment
+  # Otherwise create it with `kubectl create serviceaccount mqtt-client -n azure-iot-operations`
+  serviceAccountName: mqtt-client
+  containers:
+    # Mosquitto and mqttui on Alpine
+  - image: alpine
+    name: mqtt-client
+    command: ["sh", "-c"]
+    args: ["apk add mosquitto-clients mqttui && sleep infinity"]
+    volumeMounts:
+    - name: mq-sat
+      mountPath: /var/run/secrets/tokens
+    - name: trust-bundle
+      mountPath: /var/run/certs
+  volumes:
+  - name: mq-sat
+    projected:
+      sources:
+      - serviceAccountToken:
+          path: mq-sat
+          audience: aio-mq # Must match audience in BrokerAuthentication
+          expirationSeconds: 86400
+  - name: trust-bundle
+    configMap:
+      name: aio-ca-trust-bundle-test-only # Default root CA cert
