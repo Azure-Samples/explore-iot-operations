@@ -61,17 +61,6 @@ Run this command from the terminal:
 
 Follow the official documentation to install helm, kubectl and Azure CLI.
 
-### Windows Subsystem for Linux (WSL)
-
-On WSL this additional package is recommended:
-
-`sudo apt install wslu`
-
-## Changes since AIO M2/M3
-
-- Additional test scripts have been added to demonstrate the capabilities of the AIO Media Connector.
-- Using PowerShell scripts instead of Polyglot notebooks.
-
 ## Limitations
 
 The AIO Media Connector has the following limitations:
