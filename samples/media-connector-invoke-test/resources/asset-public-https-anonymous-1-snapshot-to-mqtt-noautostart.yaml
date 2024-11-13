@@ -1,0 +1,20 @@
+apiVersion: deviceregistry.microsoft.com/v1
+kind: Asset
+metadata:
+  name: asset-public-https-anonymous-1-snapshot-to-mqtt-noautostart
+spec:
+  assetEndpointProfileRef: aep-public-https-anonymous-1
+  datasets:
+    - name: dataset1
+      dataPoints:
+        - name: snapshot-to-mqtt
+          dataSource: snapshot-to-mqtt
+          dataPointConfiguration: |-
+            {
+              "taskType": "snapshot-to-mqtt",
+              "autostart": false,
+              "realtime": true,
+              "loop": true,
+              "format": "jpeg",
+              "fps": 1
+            }
