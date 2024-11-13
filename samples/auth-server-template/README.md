@@ -21,14 +21,16 @@ IMAGE_TAG=example.example.io/auth-server-template:latest ./deploy/build_image.sh
 1. If you are using your own container register, edit [auth-server-template.yaml](deploy/auth-server-template.yaml#L10) and set the image that you created in the previous section.
 
 2. Deploy the pod and service for the template. This template uses both server and client certificates issued by Cert-Manager, and Azure IoT Operations’ trust bundle.
-  ```sh
-  kubectl apply -f ./deploy/auth-server-template.yaml
-  ```
+   
+    ```sh
+      kubectl apply -f ./deploy/auth-server-template.yaml
+    ```
 
 3. When finished, run this command to delete resources.
-   ```sh
-   kubectl delete -f ./deploy/auth-server-template.yaml
-   ```
+   
+    ```sh
+     kubectl delete -f ./deploy/auth-server-template.yaml
+    ```
 
 ## Using the template
 
