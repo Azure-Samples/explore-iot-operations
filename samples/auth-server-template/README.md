@@ -18,21 +18,17 @@ IMAGE_TAG=example.example.io/auth-server-template:latest ./deploy/build_image.sh
 
 ## Running the template
 
-1. Run the [make_credentials.sh](deploy/make_credentials.sh) script to generate server credentials for the template. This script generates test certificates and saves them as Kubernetes secrets.
+1. If you are using your own container register, edit [auth-server-template.yaml](deploy/auth-server-template.yaml#L10) and set the image that you created in the previous section.
 
-```sh
-./deploy/make_credentials.sh
-```
+2. Deploy the pod and service for the template. This template uses both server and client certificates issued by Cert-Manager, and Azure IoT Operations’ trust bundle.
+  ```sh
+  kubectl apply -f ./deploy/auth-server-template.yaml
+  ```
 
-2. If you are using your own container register, edit [auth-server-template.yaml](deploy/auth-server-template.yaml#L10) and set the image that you created in the previous section.
-
-3. Deploy the pod and service for the template.
-
-```sh
-kubectl apply -f ./deploy/auth-server-template.yaml
-```
-
-5. When finished, run [cleanup.sh](deploy/cleanup.sh) to delete resources.
+3. When finished, run this command to delete resources.
+   ```sh
+   kubectl delete -f ./deploy/auth-server-template.yaml
+   ```
 
 ## Using the template
 
