@@ -12,6 +12,7 @@ param resourceSuffix string = substring(uniqueString(subscription().id, resource
 param eventHubName string = 'aio-eh-${resourceSuffix}'
 param defaultDataflowEndpointName string = 'default'
 param defaultDataflowProfileName string = 'default'
+param createRoleAssignment bool = true
 
 /*****************************************************************************/
 /*                          Existing AIO cluster                             */
@@ -30,15 +31,15 @@ resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' 
   scope: connectedCluster
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2024-09-15-preview' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2024-11-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-11-01' existing = {
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-09-15-preview' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-11-01' existing = {
   name: defaultDataflowProfileName
   parent: aioInstance
 }
@@ -49,7 +50,7 @@ resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfi
 
 var assetName = 'oven'
 
-resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-09-01-preview' = {
+resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-11-01' = {
   name: 'opc-ua-connector-0'
   location: resourceGroup().location
   extendedLocation: {
@@ -65,7 +66,7 @@ resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-09-0
   }
 }
 
-resource asset 'Microsoft.DeviceRegistry/assets@2024-09-01-preview' = {
+resource asset 'Microsoft.DeviceRegistry/assets@2024-11-01' = {
   name: assetName
   location: resourceGroup().location
   extendedLocation: {
@@ -127,17 +128,16 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
   location: resourceGroup().location
   properties: {
     disableLocalAuth: false
-    minimumTlsVersion: '1.2'
   }
 }
 
 // Role assignment for Event Hubs Data Sender role
-resource roleAssignmentDataSender 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignmentDataSender 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (createRoleAssignment) {
   name: guid(eventHubNamespace.id, aioExtension.id, '69b88ce2-a752-421f-bd8b-e230189e1d63')
   scope: eventHubNamespace
   properties: {
     // ID for Event Hubs Data Sender role is 2b629674-e913-4c01-ae53-ef4638d8f975
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975') 
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
     principalId: aioExtension.identity.principalId
     principalType: 'ServicePrincipal'
   }
@@ -156,7 +156,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 /*                                    Dataflow                               */
 /*****************************************************************************/
 
-resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-09-15-preview' = {
+resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-11-01' = {
   parent: aioInstance
   name: 'quickstart-eh-endpoint'
   extendedLocation: {
@@ -187,8 +187,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   ]
 }
 
-
-resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-09-15-preview' = {
+resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-11-01' = {
   parent: defaultDataflowProfile
   name: 'quickstart-oven-dataflow'
   extendedLocation: {
@@ -239,9 +238,9 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
             {
               type: 'Rename'
               inputs: [
-                'FillWeight.Value'
+                'Temperature.Value'
               ]
-              output: 'FillWeight'
+              output: 'Temperature.Value'
             }
             {
               inputs: [
@@ -266,4 +265,8 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
   ]
 }
 
-output eventHubName string = eventHubNamespace.name
+output eventHub object = {
+  name: eventHub.name
+  namespace: eventHubNamespace.name
+}
+
