@@ -1,3 +1,39 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: server-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: custom-auth-server-cert
+  commonName: "TestServer"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - auth-server-template # Replace with your actual pod DNS name
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: client-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: custom-auth-client-cert
+  commonName: "TestClientCert"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
 apiVersion: v1
 kind: Pod
 metadata:
@@ -6,8 +42,8 @@ metadata:
     app.kubernetes.io/name: AuthServerTemplate
 spec:
   containers:
+  # Main container for the auth server
   - name: auth-server-template
-    # Change this if you are using your own container registry.
     image: ghcr.io/azure-samples/explore-iot-operations/auth-server-template:0.5.0
     imagePullPolicy: Always
     ports:
@@ -36,3 +72,4 @@ spec:
   ports:
     - protocol: TCP
       port: 443
+      targetPort: 443
