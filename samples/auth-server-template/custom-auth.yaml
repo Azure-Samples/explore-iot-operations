@@ -1,0 +1,111 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: server-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: custom-auth-server-cert
+  commonName: "TestServer"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - auth-server-template # Replace with your actual pod DNS name
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: client-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: custom-auth-client-cert
+  commonName: "TestClientCert"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auth-server-template
+  labels:
+    app.kubernetes.io/name: AuthServerTemplate
+spec:
+  containers:
+  # Main container for the auth server
+  - name: auth-server-template
+    image: ghcr.io/azure-samples/explore-iot-operations/auth-server-template:0.5.0
+    imagePullPolicy: Always
+    ports:
+      - name: https
+        containerPort: 443
+    volumeMounts:
+      - name: custom-auth-server-cert
+        mountPath: /tls
+    env:
+    - name: SERVER_CERT_CHAIN
+      value: /tls/tls.crt
+    - name: SERVER_CERT_KEY
+      value: /tls/tls.key
+  volumes:
+  - name: custom-auth-server-cert
+    secret:
+      secretName: custom-auth-server-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-server-template
+spec:
+  selector:
+    app.kubernetes.io/name: AuthServerTemplate
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+---
+apiVersion: mqttbroker.iotoperations.azure.com/v1beta1
+kind: BrokerAuthentication
+metadata:
+  name: custom-authn
+  namespace: azure-iot-operations
+spec:
+  authenticationMethods:
+  - method: Custom
+    customSettings:
+      endpoint: https://auth-server-template
+      caCertConfigMap: azure-iot-operations-aio-ca-trust-bundle
+      auth:
+        x509:
+          secretRef: custom-auth-client-cert
+---
+apiVersion: mqttbroker.iotoperations.azure.com/v1beta1
+kind: BrokerListener
+metadata:
+  name: loadbalancer-listener
+  namespace: azure-iot-operations
+spec:
+  brokerRef: default
+  serviceType: LoadBalancer
+  serviceName: aio-broker-loadbalancer
+  ports:
+  - port: 1883
+    authenticationRef: custom-authn
+    protocol: Mqtt
+    tls:
+      mode: Automatic
+      certManagerCertificateSpec:
+        issuerRef:
+            name: e2e-cert-issuer
+            kind: Issuer
+            group: cert-manager.io
