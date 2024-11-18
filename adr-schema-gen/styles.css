@@ -1,0 +1,60 @@
+body {
+  background-color: #f8f9fa;
+}
+
+pre {
+  background-color: #2d2d2d;
+  color: #ccc;
+  padding: 15px;
+  overflow-x: auto;
+  border-radius: 5px;
+}
+
+#json-input[contenteditable="true"] {
+  min-height: 200px;
+}
+
+#generate-button, #download-button {
+  font-size: 16px;
+}
+
+#copy-button {
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  font-size: 1.5rem; /* Increased font size */
+}
+
+#copy-button:hover {
+  color: #495057;
+}
+
+/* Success Message Styling */
+.copy-success {
+  display: none; /* Hidden by default */
+  color: #28a745; /* Green color for success */
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-right: 2.5rem; /* Adjust position */
+  margin-top: 2.5rem; /* Adjust position */
+}
+
+.copy-success.show {
+  display: block;
+}
+
+.position-relative {
+  position: relative;
+}
+
+#schema-output {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+@media (max-width: 576px) {
+  #generate-button, #download-button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}

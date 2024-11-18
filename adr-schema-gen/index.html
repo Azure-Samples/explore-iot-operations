@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADR Schema Generator</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Prism.js for syntax highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <div class="container my-5">
+    <h1 class="text-center mb-4">ADR Schema Generator</h1>
+    <p class="text-center">
+      Paste your JSON payload below. The generator supports all valid data types,
+      including complex types like arrays, maps, structs, dates, timestamps, decimals, and binary data.
+    </p>
+    <!-- Schema Type Selection -->
+    <div class="mb-4">
+      <h2>Select Schema Type</h2>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="schemaType" id="deltaSchema" value="delta" checked>
+        <label class="form-check-label" for="deltaSchema">Delta Schema</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="schemaType" id="jsonSchema" value="json">
+        <label class="form-check-label" for="jsonSchema">JSON Schema (Draft-07)</label>
+      </div>
+    </div>
+    <div class="mb-4">
+      <h2>Input JSON Payload</h2>
+      <pre class="border rounded"><code id="json-input" class="language-json" contenteditable="true" spellcheck="false">{}</code></pre>
+      <div id="error-message" class="text-danger fw-bold mt-2"></div>
+    </div>
+    <!-- Schema Details (JSON Schema only) -->
+    <div class="mb-4" id="schema-details" style="display: none;">
+      <h2>Schema Details (JSON Schema only)</h2>
+      <div class="mb-3">
+        <label for="schema-name" class="form-label">Schema Name</label>
+        <input type="text" class="form-control" id="schema-name" placeholder="Enter schema name">
+      </div>
+      <div class="mb-3">
+        <label for="schema-description" class="form-label">Schema Description</label>
+        <input type="text" class="form-control" id="schema-description" placeholder="Enter schema description">
+      </div>
+    </div>
+    <div class="mb-4">
+      <h2>Options</h2>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="force-nullable">
+        <label class="form-check-label" for="force-nullable">
+          Force all fields to be nullable
+        </label>
+      </div>
+      <div class="form-check" id="include-statuscode-option">
+        <input class="form-check-input" type="checkbox" id="include-statuscode">
+        <label class="form-check-label" for="include-statuscode">
+          Include "StatusCode" field in nested structs (Delta Schema only)
+        </label>
+      </div>
+    </div>
+    <div class="mb-4">
+      <button id="generate-button" class="btn btn-success w-100 mb-2">Generate Schema</button>
+      <button id="download-button" class="btn btn-primary w-100">Download Schema</button>
+    </div>
+    <div class="mb-4">
+      <h2>Generated Schema</h2>
+      <div class="position-relative">
+        <button id="copy-button" class="btn btn-outline-secondary btn-sm position-absolute top-0 end-0 m-2" title="Copy to clipboard">
+          <i class="bi bi-clipboard" style="font-size: 1.5rem;"></i>
+        </button>
+        <div id="copy-success" class="copy-success position-absolute top-0 end-0 m-2"></div>
+        <pre class="border rounded"><code id="schema-output" class="language-json"></code></pre>
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Prism.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-json.min.js"></script>
+  <!-- jsonlint for error handling -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonlint/1.6.0/jsonlint.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
