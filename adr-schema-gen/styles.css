@@ -2,6 +2,15 @@ body {
   background-color: #f8f9fa;
 }
 
+textarea#json-input {
+  font-family: monospace;
+  background-color: #2d2d2d;
+  color: #ccc;
+  padding: 15px;
+  border-radius: 5px;
+  min-height: 200px;
+}
+
 pre {
   background-color: #2d2d2d;
   color: #ccc;
@@ -10,11 +19,8 @@ pre {
   border-radius: 5px;
 }
 
-#json-input[contenteditable="true"] {
-  min-height: 200px;
-}
-
-#generate-button, #download-button {
+#generate-button,
+#download-button {
   font-size: 16px;
 }
 
@@ -53,7 +59,8 @@ pre {
 }
 
 @media (max-width: 576px) {
-  #generate-button, #download-button {
+  #generate-button,
+  #download-button {
     width: 100%;
     margin-bottom: 10px;
   }
