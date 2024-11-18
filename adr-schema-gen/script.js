@@ -1,15 +1,12 @@
-// Syntax highlighting for contenteditable
+// Reference to the JSON input textarea
 const jsonInputElement = document.getElementById('json-input');
-jsonInputElement.addEventListener('input', () => {
-  Prism.highlightElement(jsonInputElement);
-});
 
 // Set "Include 'StatusCode' field" to unchecked by default
 document.getElementById('include-statuscode').checked = false;
 
 // Event listener for Generate Schema button
 document.getElementById('generate-button').addEventListener('click', () => {
-  const jsonInput = jsonInputElement.textContent;
+  const jsonInput = document.getElementById('json-input').value;
   const outputElement = document.getElementById('schema-output');
   const errorMessage = document.getElementById('error-message');
   const forceNullable = document.getElementById('force-nullable').checked;
@@ -115,7 +112,6 @@ schemaTypeRadios.forEach(radio => {
 // Initial visibility update
 updateOptionsVisibility();
 
-// Complete generateDeltaSchema function
 function generateDeltaSchema(jsonObj, forceNullable, includeStatusCode) {
   function getType(value) {
     if (value === null) {
@@ -134,8 +130,12 @@ function generateDeltaSchema(jsonObj, forceNullable, includeStatusCode) {
       return 'struct';
     } else if (typeof value === 'number') {
       if (Number.isInteger(value)) {
-        // Use 'integer' for all integer values
-        return 'integer';
+        // Check the range of the integer
+        if (value >= -2147483648 && value <= 2147483647) {
+          return 'integer';
+        } else {
+          return 'long';
+        }
       } else {
         // Use 'double' for all floating point numbers
         return 'double';
