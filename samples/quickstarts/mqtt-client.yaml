@@ -1,4 +1,11 @@
 # Important: do not use in production environments
+# Create a service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mqtt-client
+  namespace: azure-iot-operations
+---
 # Creates a pod with mosquitto-clients and mqttui utilities in your cluster
 apiVersion: v1
 kind: Pod
