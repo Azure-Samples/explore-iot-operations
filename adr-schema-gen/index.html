@@ -21,6 +21,11 @@
       Paste your JSON payload below. The generator supports all valid data types,
       including complex types like arrays, maps, structs, dates, timestamps, decimals, and binary data.
     </p>
+    <!-- Disclaimer -->
+    <div class="alert alert-warning text-center" role="alert">
+      <strong>Disclaimer:</strong> This is a helper tool only and not an official product with support.
+      Please check the output carefully as it may contain mistakes.
+    </div>
     <!-- Schema Type Selection -->
     <div class="mb-4">
       <h2>Select Schema Type</h2>
@@ -35,7 +40,8 @@
     </div>
     <div class="mb-4">
       <h2>Input JSON Payload</h2>
-      <pre class="border rounded"><code id="json-input" class="language-json" contenteditable="true" spellcheck="false">{}</code></pre>
+      <!-- Input Field -->
+      <textarea id="json-input" class="form-control" rows="10" spellcheck="false">{}</textarea>
       <div id="error-message" class="text-danger fw-bold mt-2"></div>
     </div>
     <!-- Schema Details (JSON Schema only) -->
