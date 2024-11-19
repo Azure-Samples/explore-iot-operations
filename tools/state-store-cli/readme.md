@@ -49,29 +49,32 @@ If security is a requirement, then you will need to expose the MQTT broker using
     ./generate-credentials.sh
     ```
 
-1. Inspect the output for errors
+1. Inspect the output for errors and make corrections if necessary
 
-1. Create a new `BrokerListener` by applying the following:
+1. Edit the following section of `yaml/listener-x509.yaml` and add the correct public DNS or IP address for your kubernetes cluster:
+
+    ```yaml
+    san:
+      dns:
+        - localhost
+      ip:
+        - 127.0.0.1
+    ```
+
+1. Create a new `BrokerListener`::
 
     ```shell
     kubectl apply -f yaml/listener-x509.yaml
     ```
 
-> The `certs` directory will contain the following files:
+> [!NOTE] 
+> The `certs` directory will contain the following files which will be used the state store cli tool for authenticating with the MQTT broker:
 > 
 >    * `broker-ca.crt` : The MQTT broker server certificate
 >    * `client.crt` : The device certificate for authentication with MQTT broker
 >    * `client.key` : The device private key for authentication with MQTT broker
 
 ## Usage
-
-For the examples below, assume:
-
-- Azure IoT Operations MQTT broker is located at `mybroker.net`, with ports `8883` or `1883` open.
-- The MQTT broker trusted CA certificate bundle is saved locally at `~/aio_certs/root_ca.crt`
-- Client certificates are set in the AIO MQ Broker, and saved locally at `~/aio_certs/client.crt` and `~/aio_certs/client.key`.
-
-### Built-in help documentation
 
 For accessing help directly from the console just type `statestore --help`.
 
@@ -121,7 +124,6 @@ Options:
 
   -V, --version
           Print version
-user@ubuntu2404:~$
 ```
 
 Help specific to each command can be printed through calling `statestore <command> --help`.
@@ -157,12 +159,20 @@ Options:
           Print help
 ```
 
-### Certificate-Authenticated Client with TLS Connection
+## Examples
+
+For the examples below, assume:
+
+- The MQTT broker is named `mybroker.net`, on port `8883` or `1883`
+- The MQTT brokers trusted CA certificate bundle is available locally as saved locally at `./certs/broker-ca.crt`
+- Client certificates are set in the AIO MQ Broker, and saved locally at `./certs/client.crt` and `./certs/client.key`.
+
+### X.509 authentication with TLS
 
 To retrieve an existing key:
 
 ```shell
-./statestore get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" -T "~/certs/broker-ca.crt" -C "~/certs/client.crt" -K "~/certs/client.key"
+./statestore get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -174,7 +184,7 @@ To retrieve an existing key:
 To set the value of a key:
 
 ```shell
-./statestore set -n "mybroker.net" -k "keyName1" --value "keyValue1" -T "~/certs/broker-ca.crt" -C "~/certs/client.crt" -K "~/certs/client.key"
+./statestore set -n "mybroker.net" -k "keyName1" --value "keyValue1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -186,7 +196,7 @@ To set the value of a key:
 To delete an existing key:
 
 ```shell
-./statestore delete -n "mybroker.net" -k "keyName1" -T "~/certs/broker-ca.crt" -C "~/certs/client.crt" -K "~/certs/client.key"
+./statestore delete -n "mybroker.net" -k "keyName1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -195,13 +205,10 @@ To delete an existing key:
 |Return|Zero (0) on success, non-zero on error.|
 |Possible errors|- Not able to connect (no internet, bad hostname and/or port, bad CA certificate).</br>- Authentication failures (bad certificates)</br>- Key does not exist.|
 
+### No authentication, no TLS
 
-### Anonymous Client with Plain TCP Connection (no TLS)
-
-> **Disclaimer:**</br>
-> The use non-secure connections with the AIO MQ Broker is highly discouraged.</br>
-> That option is provided in `statestore` for testing purposes only.</br>
-> Our recommendation is to not use unsecure (non-TLS) connections in production environments. 
+> [!CAUTION]
+> The use of non-secure connections with the MQTT broker is highly discouraged. The option is provided for testing purposes only and it is recommended to use secure connections in production environments.
 
 To retrieve an existing key:
 

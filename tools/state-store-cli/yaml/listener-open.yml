@@ -9,4 +9,3 @@ spec:
   serviceName: aio-open-listener
   ports:
   - port: 1883
-    protocol: Mqtt

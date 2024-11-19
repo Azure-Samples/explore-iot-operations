@@ -8,15 +8,19 @@ spec:
   serviceType: LoadBalancer
   ports:
   - port: 8883
-    authenticationRef: default
-    protocol: Mqtt
+    authenticationRef: default-x509
     tls:
-      mode: Automatic
+      mode: automatic
       certManagerCertificateSpec:
         issuerRef:
-            name: azure-iot-operations-aio-certificate-issuer
-            kind: ClusterIssuer
-            group: cert-manager.io
+          name: azure-iot-operations-aio-certificate-issuer
+          kind: ClusterIssuer
+          group: cert-manager.io
+        san:
+          dns:
+            - localhost
+          ip:
+            - 127.0.0.1
 ---
 apiVersion: mqttbroker.iotoperations.azure.com/v1
 kind: BrokerAuthentication
