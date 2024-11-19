@@ -14,16 +14,16 @@ Supported platforms:
 
 On the machine where the tool will be run, the following are required:
 
-1. [Install kubectl](https://kubernetes.io/docs/tasks/tools/) which will be used to configure the MQTT Broker
+1. [Install kubectl](https://kubernetes.io/docs/tasks/tools/) which is used to configure the MQTT broker
 
 1. Clone the `explore-iot-operations` repository, and enter the state store cli directory:
 
     ```shell
     git clone https://github.com/Azure-Samples/explore-iot-operations
-    cd explore-iot-operations/tools/state-store-cli
+    cd explore-iot-operations/tools/statestore-cli
     ```
 
-1. Download the state store CLI from the [latest GitHub release](https://github.com/Azure-Samples/explore-iot-operations/releases?q=state-store-cli) and save it in the `state-store-cli` directory
+1. Download the state store CLI from the [latest GitHub release](https://github.com/Azure-Samples/explore-iot-operations/releases?q=statestore-cli) and save it in the `statestore-cli` directory
 
 1. **OPTIONAL**: If MQTT broker authentication is required, [install step](https://smallstep.com/docs/step-cli/installation/) to generate the required certificates
 
@@ -68,21 +68,21 @@ If security is a requirement, then you will need to expose the MQTT broker using
     ```
 
 > [!NOTE] 
-> The `certs` directory will contain the following files which will be used by the state store cli tool for authenticating with the MQTT broker:
+> The `certs` directory will contain the following files which will be used by the state store CLI tool for authenticating with the MQTT broker:
 > 
->    * `broker-ca.crt` : The MQTT broker server certificate
->    * `client.crt` : The device certificate for authentication with MQTT broker
->    * `client.key` : The device private key for authentication with MQTT broker
+> * `broker-ca.crt` : The MQTT broker server certificate
+> * `client.crt` : The device certificate for authentication with MQTT broker
+> * `client.key` : The device private key for authentication with MQTT broker
 
 ## Usage
 
-For accessing help directly from the console just type `statestore --help`.
+For accessing help directly from the console just type `statestore-cli --help`.
 
 ```shell
-$ ./statestore --help
-Allows managing key/value pairs in the MQ State Store.
+$ ./statestore-cli --help
+Allows managing key/value pairs in the state store.
 
-Usage: statestore [OPTIONS] <COMMAND>
+Usage: statestore-cli [OPTIONS] <COMMAND>
 
 Commands:
   get     Gets the value of an existing key
@@ -92,17 +92,17 @@ Commands:
 
 Options:
   -n, --hostname <HOSTNAME>
-          MQ broker hostname
+          MQTT broker hostname
 
           [default: localhost]
 
   -p, --port <PORT>
-          MQ broker port number
+          MQTT broker port number
 
           [default: 8883]
 
       --notls
-          Do not use TLS for connection with MQ broker
+          Do not use TLS for connection with MQTT broker
 
   -T, --cafile <CAFILE>
           Trusted certificate bundle for TLS connection
@@ -126,13 +126,13 @@ Options:
           Print version
 ```
 
-Help specific to each command can be printed through calling `statestore <command> --help`.
+Help specific to each command can be printed through calling `statestore-cli <command> --help`.
 
 ```shell
-$ ./statestore get --help
+$ ./statestore-cli get --help
 Gets the value of an existing key
 
-Usage: statestore get [OPTIONS] --key <KEY>
+Usage: statestore-cli get [OPTIONS] --key <KEY>
 
 Options:
   -k, --key <KEY>
@@ -140,11 +140,11 @@ Options:
   -f, --valuefile <VALUEFILE>
           File where to write the key value. If not provided, the value is written to stdout
   -n, --hostname <HOSTNAME>
-          MQ broker hostname [default: localhost]
+          MQTT broker hostname [default: localhost]
   -p, --port <PORT>
-          MQ broker port number [default: 8883]
+          MQTT broker port number [default: 8883]
       --notls
-          Do not use TLS for connection with MQ broker
+          Do not use TLS for connection with MQTT broker
   -T, --cafile <CAFILE>
           Trusted certificate bundle for TLS connection
   -C, --certfile <CERTFILE>
@@ -164,15 +164,15 @@ Options:
 For the examples below, assume:
 
 - The MQTT broker is named `mybroker.net`, on port `8883` or `1883`
-- The MQTT brokers trusted CA certificate bundle is available locally as saved locally at `./certs/broker-ca.crt`
-- Client certificates are set in the AIO MQ Broker, and saved locally at `./certs/client.crt` and `./certs/client.key`.
+- The MQTT broker trust bundle is available locally at `./certs/broker-ca.crt`
+- Client certificates are saved locally at `./certs/client.crt` and `./certs/client.key`
 
 ### X.509 authentication with TLS
 
 To retrieve an existing key:
 
 ```shell
-./statestore get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
+./statestore-cli get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -184,7 +184,7 @@ To retrieve an existing key:
 To set the value of a key:
 
 ```shell
-./statestore set -n "mybroker.net" -k "keyName1" --value "keyValue1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
+./statestore-cli set -n "mybroker.net" -k "keyName1" --value "keyValue1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -196,7 +196,7 @@ To set the value of a key:
 To delete an existing key:
 
 ```shell
-./statestore delete -n "mybroker.net" -k "keyName1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
+./statestore-cli delete -n "mybroker.net" -k "keyName1" -T "./certs/broker-ca.crt" -C "./certs/client.crt" -K "./certs/client.key"
 ```
 
 |||
@@ -213,7 +213,7 @@ To delete an existing key:
 To retrieve an existing key:
 
 ```shell
-./statestore get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" --notls
+./statestore-cli get -n "mybroker.net" -k "keyName1" -f "./keyValue1.txt" --notls
 ```
 
 |||
@@ -225,7 +225,7 @@ To retrieve an existing key:
 To set the value of a key:
 
 ```shell
-./statestore set -n "mybroker.net" -k "keyName1" --value "keyValue1" --notls
+./statestore-cli set -n "mybroker.net" -k "keyName1" --value "keyValue1" --notls
 ```
 
 |||
@@ -237,7 +237,7 @@ To set the value of a key:
 To delete an existing key:
 
 ```shell
-./statestore delete -n "mybroker.net" -k "keyName1" --notls
+./-cli delete -n "mybroker.net" -k "keyName1" --notls
 ```
 
 |||
