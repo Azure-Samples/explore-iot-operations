@@ -70,9 +70,9 @@ If security is a requirement, then you will need to expose the MQTT broker using
 > [!NOTE] 
 > The `certs` directory will contain the following files which will be used by the state store CLI tool for authenticating with the MQTT broker:
 > 
->    * `broker-ca.crt` : The MQTT broker server certificate
->    * `client.crt` : The device certificate for authentication with MQTT broker
->    * `client.key` : The device private key for authentication with MQTT broker
+> * `broker-ca.crt` : The MQTT broker server certificate
+> * `client.crt` : The device certificate for authentication with MQTT broker
+> * `client.key` : The device private key for authentication with MQTT broker
 
 ## Usage
 
