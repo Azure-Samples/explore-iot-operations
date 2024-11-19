@@ -61,14 +61,14 @@ If security is a requirement, then you will need to expose the MQTT broker using
         - 127.0.0.1
     ```
 
-1. Create a new `BrokerListener`::
+1. Create a new `BrokerListener`:
 
     ```shell
     kubectl apply -f yaml/listener-x509.yaml
     ```
 
 > [!NOTE] 
-> The `certs` directory will contain the following files which will be used the state store cli tool for authenticating with the MQTT broker:
+> The `certs` directory will contain the following files which will be used by the state store cli tool for authenticating with the MQTT broker:
 > 
 >    * `broker-ca.crt` : The MQTT broker server certificate
 >    * `client.crt` : The device certificate for authentication with MQTT broker
