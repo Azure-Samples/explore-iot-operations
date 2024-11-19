@@ -1,0 +1,30 @@
+apiVersion: mqttbroker.iotoperations.azure.com/v1
+kind: BrokerListener
+metadata:
+  name: listener-x509
+  namespace: azure-iot-operations
+spec:
+  brokerRef: default
+  serviceType: LoadBalancer
+  ports:
+  - port: 8883
+    authenticationRef: default
+    protocol: Mqtt
+    tls:
+      mode: Automatic
+      certManagerCertificateSpec:
+        issuerRef:
+            name: azure-iot-operations-aio-certificate-issuer
+            kind: ClusterIssuer
+            group: cert-manager.io
+---
+apiVersion: mqttbroker.iotoperations.azure.com/v1
+kind: BrokerAuthentication
+metadata:
+  name: default-x509
+  namespace: azure-iot-operations
+spec:
+  authenticationMethods:
+    - method: X509
+      x509Settings:
+        trustedClientCaCert: client-ca-trust-bundle
