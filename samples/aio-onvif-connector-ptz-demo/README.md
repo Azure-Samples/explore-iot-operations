@@ -16,7 +16,7 @@ After it's installed, open this folder in your terminal and run `dotnet build`.
 
 - An ONVIF compliant camera that supports PTZ operations. This sample was tested using a Tapo C210 camera.
 
-- Azure IoT Operations deployed to your Kubernetes cluster. If you haven't deployed Azure IoT Operations yet, see [Quickstart: Run Azure IoT Operations Preview in GitHub Codespaces](https://learn.microsoft.com/azure/iot-operations/get-started-end-to-end-sample/quickstart-deploy) or [Azure IoT Operations deployment details](https://learn.microsoft.com/azure/iot-operations/deploy-iot-ops/overview-deploy).
+- Azure IoT Operations deployed to your Kubernetes cluster. If you haven't deployed Azure IoT Operations yet, see [Quickstart: Run Azure IoT Operations in GitHub Codespaces](https://learn.microsoft.com/azure/iot-operations/get-started-end-to-end-sample/quickstart-deploy) or [Azure IoT Operations deployment details](https://learn.microsoft.com/azure/iot-operations/deploy-iot-ops/overview-deploy).
 
 ## Create custom resources
 
