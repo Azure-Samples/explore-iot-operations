@@ -72,7 +72,7 @@ kubectl apply -f aep.yaml
 
 To create a PTZ asset assigned to the asset endpoint you created in the previous step, create a file called *asset.yaml* with the following content:
 
-```yaml	
+```yaml
 apiVersion: deviceregistry.microsoft.com/v1
 kind: Asset
 metadata:
@@ -171,11 +171,12 @@ Create a file called *broker-listener.yaml* with the following content:
 apiVersion: mqttbroker.iotoperations.azure.com/v1
 kind: BrokerListener
 metadata:
-  name: test-listener
+  name: aio-broker-listener-non-tls
   namespace: azure-iot-operations
 spec:
   brokerRef: default
   serviceType: LoadBalancer
+  serviceName: aio-broker-listener-non-tls
   ports:
   - port: 1883
     protocol: Mqtt
@@ -194,7 +195,7 @@ kubectl apply -f broker-listener.yaml -n azure-iot-operations
 Update the Azure IoT Operations configuration to use the broker listener you created in the previous step:
 
 ```bash
-kubectl set env deployment/aio-opc-supervisor opcuabroker_MqttOptions__MqttBroker=mqtt://test-listener.azure-iot-operations:1883 opcuabroker_MqttOptions__AuthenticationMethod=None -n azure-iot-operations
+kubectl set env deployment/aio-opc-supervisor opcuabroker_MqttOptions__MqttBroker=mqtt://aio-broker-listener-non-tls.azure-iot-operations:1883 opcuabroker_MqttOptions__AuthenticationMethod=None -n azure-iot-operations
 ```
 
 ### Port forward the broker listener
@@ -202,7 +203,7 @@ kubectl set env deployment/aio-opc-supervisor opcuabroker_MqttOptions__MqttBroke
 Port forward the broker listener to your local machine in a second terminal:
 
 ```bash
-kubectl port-forward svc/test-listener -n azure-iot-operations 1883:1883
+kubectl port-forward svc/aio-broker-listener-non-tls -n azure-iot-operations 1883:1883
 ```
 
 Leave this shell open to keep the port forward active.
@@ -230,6 +231,6 @@ To remove the resources created in the previous steps and restore the configurat
 kubectl delete secret c210-1-credentials
 kubectl delete assetendpointprofile c210-4a826d41
 kubectl delete asset c210-4a826d41-ptz
-kubectl delete brokerlistener test-listener -n azure-iot-operations
+kubectl delete brokerlistener aio-broker-listener-non-tls -n azure-iot-operations
 kubectl set env deployment/aio-opc-supervisor opcuabroker_MqttOptions__MqttBroker=mqtts://aio-broker.azure-iot-operations:18883 opcuabroker_MqttOptions__AuthenticationMethod=ServiceAccountToken -n azure-iot-operations
 ```
