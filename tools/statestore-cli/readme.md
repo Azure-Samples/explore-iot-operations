@@ -122,7 +122,7 @@ Options:
   -h, --help
           Print help (see a summary with '-h')
 
-  -V, --version
+      --version
           Print version
 ```
 
@@ -237,7 +237,7 @@ To set the value of a key:
 To delete an existing key:
 
 ```shell
-./-cli delete -n "mybroker.net" -k "keyName1" --notls
+./statestore-cli delete -n "mybroker.net" -k "keyName1" --notls
 ```
 
 |||
