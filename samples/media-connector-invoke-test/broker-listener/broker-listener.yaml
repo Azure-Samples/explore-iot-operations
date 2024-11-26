@@ -1,0 +1,12 @@
+apiVersion: mqttbroker.iotoperations.azure.com/v1
+kind: BrokerListener
+metadata:
+  name: aio-broker-listener-non-tls
+  namespace: azure-iot-operations
+spec:
+  brokerRef: default
+  serviceType: LoadBalancer
+  serviceName: aio-broker-listener-non-tls
+  ports:
+  - port: 1883
+    protocol: Mqtt
