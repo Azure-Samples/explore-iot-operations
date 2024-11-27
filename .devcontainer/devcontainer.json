@@ -36,7 +36,9 @@
     "K3D_FIX_MOUNTS": "1"
   },
   "onCreateCommand": "bash .devcontainer/onCreateCommand.sh",
-  "postStartCommand": "bash .devcontainer/postStartCommand.sh"
+  // Delete the JetBrains editor to save 12GB of space
+  "postStartCommand": "rm -rf /workspaces/.codespaces/shared/editors/jetbrains",
+  "postAttachCommand": "printenv | grep -E 'SUBSCRIPTION_ID|RESOURCE_GROUP|LOCATION|CLUSTER_NAME'"
   // Configure tool-specific properties.
   // "customizations": {},
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
