@@ -4,6 +4,7 @@ metadata:
   name: asset-public-http-anonymous-1-snapshot-to-mqtt-noautostart
 spec:
   assetEndpointProfileRef: aep-public-http-anonymous-1
+  enabled: true
   datasets:
     - name: dataset1
       dataPoints:

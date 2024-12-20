@@ -7,7 +7,7 @@ spec:
     {
       "$schema": "https://aiobrokers.blob.core.windows.net/aio-media-connector/1.0.0.json"
     }
-  endpointProfileType: Media
+  endpointProfileType: Microsoft.Media
   targetAddress: https://s7d2.scene7.com/is/content/microsoftcorp/CLO24-Azure-Retail-16x9
   authentication:
     method: Anonymous
