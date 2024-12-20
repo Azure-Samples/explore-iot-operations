@@ -1,5 +1,7 @@
 The scripts in this directory help in installing, uninstalling, and managing a media server.
+
 The scripts are written in PowerShell and use the kubectl to interact with the cluster.
+
 The scripts are designed to be run on Windows and Linux.
 
 ## Prerequisites

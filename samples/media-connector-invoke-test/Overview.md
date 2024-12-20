@@ -27,5 +27,3 @@ The media connector component is part of Azure IoT Operations. The connector dep
 - _Assets_, which in Azure IoT Operations Preview are logical entities that you create to represent a real assets such as cameras. An Azure IoT Operations camera asset can have properties, tags, and video streams.
 
 - The Azure IoT Operations portal, which is a web UI that provides a unified experience for you to manage assets such as cameras. You can use the portal to configure the assets and asset endpoints that the media connector uses to access media sources.
-
-To control the media connector at runtime, you use an mRPC API. For usage examples, see [media-connector-mrpc-api.dib](media-connector-mrpc-api.txt).
