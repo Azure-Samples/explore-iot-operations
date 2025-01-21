@@ -11,7 +11,7 @@ run:
 .PHONY: build
 build:
 	# TODO: Remove personalisations
-	IMAGE_TAG=suneetnangia/auth-server-user-pass-mqtt:v0.1 ./deploy/build_image.sh
+	IMAGE_TAG=<registry>/auth-server-user-pass-mqtt:v0.1 ./deploy/build_image.sh
 
 .PHONY: clean
 clean:

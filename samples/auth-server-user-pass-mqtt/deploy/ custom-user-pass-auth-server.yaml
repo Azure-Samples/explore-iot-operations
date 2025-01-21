@@ -43,27 +43,27 @@ metadata:
     app.kubernetes.io/name: CustomUPAuthServer
 spec:
   containers:
-  # Main container for the auth server
-  - name: auth-server-user-pass-mqtt
-    image: suneetnangia/auth-server-user-pass-mqtt:v0.1
-    imagePullPolicy: Always
-    ports:
-      - name: https
-        containerPort: 443
-    volumeMounts:
-      - name: auth-server-user-pass-mqtt-server-cert
-        mountPath: /tls
-    env:
-    - name: SERVER_CERT_CHAIN
-      value: /tls/tls.crt
-    - name: SERVER_CERT_KEY
-      value: /tls/tls.key
-    - name: RUST_LOG
-      value: info
+    # Main container for the auth server
+    - name: auth-server-user-pass-mqtt
+      image: suneetnangia/auth-server-user-pass-mqtt:v0.1
+      imagePullPolicy: Always
+      ports:
+        - name: https
+          containerPort: 443
+      volumeMounts:
+        - name: auth-server-user-pass-mqtt-server-cert
+          mountPath: /tls
+      env:
+        - name: SERVER_CERT_CHAIN
+          value: /tls/tls.crt
+        - name: SERVER_CERT_KEY
+          value: /tls/tls.key
+        - name: RUST_LOG
+          value: trace
   volumes:
-  - name: auth-server-user-pass-mqtt-server-cert
-    secret:
-      secretName: auth-server-user-pass-mqtt-server-cert
+    - name: auth-server-user-pass-mqtt-server-cert
+      secret:
+        secretName: auth-server-user-pass-mqtt-server-cert
 ---
 apiVersion: v1
 kind: Service

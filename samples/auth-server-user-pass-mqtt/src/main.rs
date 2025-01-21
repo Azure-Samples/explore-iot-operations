@@ -21,7 +21,14 @@ async fn main() -> io::Result<()> {
 
     builder.set_private_key_file(&options.server_key, openssl::ssl::SslFiletype::PEM)?;
     builder.set_certificate_chain_file(&options.server_cert_chain)?;
-    // builder.set_verify(SslVerifyMode::PEER | SslVerifyMode::FAIL_IF_NO_PEER_CERT);
+    
+    // TODO: validate add support for client certificate validation.
+    if let Some(client_cert_issuer) = &options.client_cert_issuer {
+        builder.set_ca_file(client_cert_issuer)?;
+        builder.set_verify(openssl::ssl::SslVerifyMode::PEER | openssl::ssl::SslVerifyMode::FAIL_IF_NO_PEER_CERT);
+    } else {
+        builder.set_verify(openssl::ssl::SslVerifyMode::NONE);
+    }    
 
     log::info!("Starting HTTPS server at https://{BIND_ADDRESS}:{}", options.port);
 

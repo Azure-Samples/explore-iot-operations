@@ -1,4 +1,3 @@
-use openssl::x509::X509;
 use serde::Deserialize;
 
 use crate::api::API_SUPPORTED_VERSION;
@@ -41,15 +40,4 @@ pub enum ClientAuthRequest {
         /// Password, if provided.
         password: Option<String>,
     },
-}
-
-/// Fields from MQTT v5 enhanced authentication.
-#[derive(Debug, serde::Deserialize)]
-struct EnhancedAuthentication {
-    /// Enhanced authentication method.
-    method: String,
-
-    /// Enhanced authentication data.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<String>,
 }

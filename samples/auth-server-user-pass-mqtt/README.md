@@ -19,7 +19,11 @@ This authentication module provides the following features:
 
 1. git clone [repository clone url]
 2. cd [repository name]
-3. ...
+3. run ```make build```
+
+### Debug
+
+Please refer to [debugging document](docs/debug.md) for details.
 
 #### credentials.toml
 
