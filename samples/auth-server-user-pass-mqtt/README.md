@@ -65,6 +65,9 @@ To encode the password using PBKDF2, download and install [az iot ops](https://l
 
 * Container registry and sample authentication server image
 
-TODOs:
+## TODOs
 
-* ```az iot ops``` feature to create PBKDF2 encoded password
+1. ```az iot ops``` feature to create PBKDF2 encoded password.
+2. Add unit tests in Rust.
+3. Enable client cert authentication.
+4. ...
