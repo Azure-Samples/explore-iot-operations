@@ -1,0 +1,79 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-server-user-pass-mqtt-server-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: auth-server-user-pass-mqtt-server-cert
+  commonName: "Auth-Server-User-Pass-Mqtt"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - auth-server-user-pass-mqtt # Replace with your actual pod DNS name
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-server-user-pass-mqtt-client-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: auth-server-user-pass-mqtt-client-cert
+  commonName: "Auth-Client-User-Pass-Mqtt"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auth-server-user-pass-mqtt
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/name: CustomUPAuthServer
+spec:
+  containers:
+  # Main container for the auth server
+  - name: auth-server-user-pass-mqtt
+    image: suneetnangia/auth-server-user-pass-mqtt:v0.1
+    imagePullPolicy: Always
+    ports:
+      - name: https
+        containerPort: 443
+    volumeMounts:
+      - name: auth-server-user-pass-mqtt-server-cert
+        mountPath: /tls
+    env:
+    - name: SERVER_CERT_CHAIN
+      value: /tls/tls.crt
+    - name: SERVER_CERT_KEY
+      value: /tls/tls.key
+    - name: RUST_LOG
+      value: info
+  volumes:
+  - name: auth-server-user-pass-mqtt-server-cert
+    secret:
+      secretName: auth-server-user-pass-mqtt-server-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-server-user-pass-mqtt
+  namespace: azure-iot-operations
+spec:
+  selector:
+    app.kubernetes.io/name: CustomUPAuthServer
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 443
