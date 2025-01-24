@@ -45,7 +45,7 @@ spec:
   containers:
     # Main container for the auth server
     - name: auth-server-user-pass-mqtt
-      image: suneetnangia/auth-server-user-pass-mqtt:v0.1
+      image: <replace with your container image>
       imagePullPolicy: Always
       ports:
         - name: https
@@ -53,17 +53,31 @@ spec:
       volumeMounts:
         - name: auth-server-user-pass-mqtt-server-cert
           mountPath: /tls
+        - name: auth-server-user-pass-mqtt-server-credentials
+          mountPath: /auth
       env:
         - name: SERVER_CERT_CHAIN
           value: /tls/tls.crt
         - name: SERVER_CERT_KEY
           value: /tls/tls.key
+        - name: STORED_CREDENTIALS_FILE
+          value: /auth/passwords.toml
         - name: RUST_LOG
           value: trace
+      resources:
+        limits:
+          memory: "64Mi"
+          cpu: "100m"
+        requests:
+          memory: "16Mi"
+          cpu: "50m"
   volumes:
     - name: auth-server-user-pass-mqtt-server-cert
       secret:
         secretName: auth-server-user-pass-mqtt-server-cert
+    - name: auth-server-user-pass-mqtt-server-credentials
+      secret:
+        secretName: auth-server-user-pass-mqtt-server-credentials
 ---
 apiVersion: v1
 kind: Service

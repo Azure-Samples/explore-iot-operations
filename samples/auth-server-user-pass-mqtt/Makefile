@@ -9,9 +9,8 @@ run:
 	 RUST_LOG="info" cargo run -- --port 5200 --server-cert-chain " " --server-key " "
 
 .PHONY: build
-build:
-	# TODO: Remove personalisations
-	IMAGE_TAG=<registry>/auth-server-user-pass-mqtt:v0.1 ./deploy/build_image.sh
+build:	
+	./deploy/build_image.sh
 
 .PHONY: clean
 clean:

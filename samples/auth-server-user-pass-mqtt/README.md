@@ -1,13 +1,14 @@
 # Azure IoT Operations (AIO) MQTT Username/Password Auth
 
-A custom username password based authentication module for the MQTT service in AIO.
+This repo provides a secure custom username password based authentication module for MQTT service in AIO.
 
 ## Features
 
-This authentication module provides the following features:
+The authentication module provides the following top level features:
 
-* Multiple usernames for AIO MQTT service
-* Enforced end to end TLS encryption
+* Multiple usernames for AIO MQTT service and associated properties.
+* Enforced TLS encryption between MQTT broker and the authentication module.
+* PBKDF2 based password hashing and K8s secrets for secure storage.
 
 ## Getting Started
 
@@ -15,59 +16,47 @@ This authentication module provides the following features:
 
 * AIO Installation
 
-### Quickstart
+### Dev Loop
 
-1. git clone [repository clone url]
-2. cd [repository name]
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/suneetnangia/explore-iot-operations)
+
+#### Steps
+
+1. cd `samples/auth-server-user-pass-mqtt`
+
+    [This will move you to the authentication module directory.]
+2. run `export IMAGE_TAG=<your_docker_registry_prefix>/auth-server-user-pass-mqtt:v0.1`
+
+    [This will configure your docker image name with registry details]
+
 3. run ```make build```
 
-### Debug
+    [This will build your codebase along with unit tests and publish your docker image.]
 
-Please refer to [debugging document](docs/debug.md) for details.
+4. run ```cargo test```
 
-#### credentials.toml
+    [This will run the unit tests for the module.]
 
-``` TOML
-# Credential #1
-# username: client1
-# password: password
-# salt: "HqJwOCHweNk1pLryiu3RsA"
-[client1]
-password = "$pbkdf2-sha512$i=100000,l=64$HqJwOCHweNk1pLryiu3RsA$KVSvxKYcibIG5S5n55RvxKRTdAAfCUtBJoy5IuFzdSZyzkwvUcU+FPawEWFPn+06JyZsndfRTfpiEh+2eSJLkg"
+#### Deploy in K8s
 
-[client1.attributes]
-floor = "floor1"
-site = "site1"
+1. Update `deploy/custom-user-pass-auth-server.yaml` to replace image to the container image for the module.
 
-# Credential #2
-# username: client2
-# password: password2
-# salt: "+H7jXzcEbq2kkyvpxtxePQ"
-[client2]
-password = "$pbkdf2-sha512$i=100000,l=64$+H7jXzcEbq2kkyvpxtxePQ$jTzW6fSesiuNRLMIkDDAzBEILk7iyyDZ3rjlEwQap4UJP4TaCR+EXQXNukO7qNJWlPPP8leNnJDCBgX/255Ezw"
+2. Run  `kubectl apply -f deploy/custom-user-pass-auth-server.yaml`.
 
-[client2.attributes]
-floor = "floor2"
-site = "site1"
-```
+    [This will deploy the authentication module and its related resources]
 
-To encode the password using PBKDF2, download and install [az iot ops](https://learn.microsoft.com/en-us/cli/azure/iot/ops?view=azure-cli-latest) and run the following cmd
+3. Create credentials database, use instructions in [credentials.md](docs/credentials.md).
 
-```<add feature in az iot ops to create PBKDF2 encoded password for ease, if this feature is not already available>```
+4. Configure custom authentication in AIO, use the instructions from [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication).
+
+5. Optionally, test authentication module using instructions in [k8s_debug.md](docs/k8s_debug.md).
 
 ## Resources
 
 * [Custom Authentication in AIO](https://github.com/Azure-Samples/explore-iot-operations/tree/main/samples/auth-server-template)
 * [AIO MQTT Broker Authentication](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal)
-* ...
 
-## Dependencies
+## Next
 
-* Container registry and sample authentication server image
-
-## TODOs
-
-1. ```az iot ops``` feature to create PBKDF2 encoded password.
-2. Add unit tests in Rust.
-3. Enable client cert authentication.
-4. ...
+1. Enable "ReAuth" MQTTv5 workflow.
+2. Enable optional "MQTT broker to custom authentication module" client cert authentication.

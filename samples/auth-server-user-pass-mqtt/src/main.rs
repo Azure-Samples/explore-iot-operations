@@ -1,11 +1,20 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 mod api;
 mod model;
+mod username_password_authenticator;
 
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use log::info;
+use model::StoredCredentials;
 use openssl::ssl::{SslAcceptor, SslMethod};
-use std::{io, path::PathBuf};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
+use username_password_authenticator::UsernamePasswordAuthenticator;
 
 const BIND_ADDRESS: &str = "0.0.0.0";
 
@@ -13,33 +22,46 @@ const BIND_ADDRESS: &str = "0.0.0.0";
 async fn main() -> io::Result<()> {
     // Initialize logging.
     env_logger::init();
-    info!("Initiating authentication server for username password...");
+    info!("Initializing the authentication server with username and password support...");
+
     let options = Options::parse();
 
-    info!("Configuring TLS for secure communication...");
+    info!("Configuring TLS for secure communication with provided server certificate and private key...");
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
 
+    // Disable TLSv1, TLSv1.1 for security reasons.
+    // TODO: do not disable TLSv1.2 until it's verified that TLSv.1.3 is supported by all clients (e.g. AIO MQTT broker).
+    builder.set_options(openssl::ssl::SslOptions::NO_TLSV1 | openssl::ssl::SslOptions::NO_TLSV1_1);
     builder.set_private_key_file(&options.server_key, openssl::ssl::SslFiletype::PEM)?;
     builder.set_certificate_chain_file(&options.server_cert_chain)?;
-    
-    // TODO: validate add support for client certificate validation.
-    if let Some(client_cert_issuer) = &options.client_cert_issuer {
-        builder.set_ca_file(client_cert_issuer)?;
-        builder.set_verify(openssl::ssl::SslVerifyMode::PEER | openssl::ssl::SslVerifyMode::FAIL_IF_NO_PEER_CERT);
-    } else {
-        builder.set_verify(openssl::ssl::SslVerifyMode::NONE);
-    }    
 
-    log::info!("Starting HTTPS server at https://{BIND_ADDRESS}:{}", options.port);
+    log::info!(
+        "Starting HTTPS server at https://{BIND_ADDRESS}:{}",
+        options.port
+    );
 
-    HttpServer::new(|| {
+    // Inject dependencies into the actix-web server to be used by the request handlers.
+    // This enables unit testing and decoupling of the request handlers from the actual implementation.
+    let stored_credentials = StoredCredentials {
+        credential_file: PathBuf::from(&options.stored_credentials_file),
+    };
+
+    let authenticator = std::sync::Arc::new(
+        UsernamePasswordAuthenticator::new(&Path::new(&stored_credentials.credential_file))
+            .unwrap(),
+    );
+
+    info!("Core authenticator module initialized successfully.");
+
+    HttpServer::new(move || {
         App::new()
-            // enable logger
-            .wrap(middleware::Logger::default())
-            // simple root handler
-            .service(web::resource("/").route(web::post().to(api::authenticate)))
+            .app_data(web::Data::new(authenticator.clone()))
+            .route(
+                "/",
+                web::post().to(api::authenticate::<UsernamePasswordAuthenticator>),
+            )
     })
-    .bind_openssl(format!("{BIND_ADDRESS}:{}", options.port), builder)?
+    .bind_openssl((BIND_ADDRESS, options.port), builder)?
     .run()
     .await
 }
@@ -59,8 +81,7 @@ struct Options {
     #[arg(long, short = 'k', value_name = "SERVER_KEY")]
     server_key: PathBuf,
 
-    /// Optional CA certs for validating client certificates. Omit to disable
-    /// client certificate validation.
-    #[arg(long, short = 'i', value_name = "CLIENT_CERT_ISSUER")]
-    client_cert_issuer: Option<PathBuf>,
+    /// PBKDF2 encoded credentials file for authentication.
+    #[arg(long, short = 's', value_name = "STORED_CREDENTIALS_FILE")]
+    stored_credentials_file: PathBuf,
 }

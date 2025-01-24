@@ -14,7 +14,7 @@ docker run --rm -it \
     -v "$src:/src" \
     -w /src \
     rust:alpine \
-    sh -c "apk update; apk add musl-dev openssl-dev pkgconfig; cargo build --target x86_64-unknown-linux-musl --release"
+    sh -c "apk update; apk add musl-dev openssl-dev pkgconfig; cargo test -- --nocapture || exit 1; cargo build --target x86_64-unknown-linux-musl --release"
 
 mkdir -p "$src/image"
 rm -rf "$src/image/*"
