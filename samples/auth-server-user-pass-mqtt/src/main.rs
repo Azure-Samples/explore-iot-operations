@@ -36,7 +36,7 @@ async fn main() -> io::Result<()> {
     builder.set_certificate_chain_file(&options.server_cert_chain)?;
 
     log::info!(
-        "Starting HTTPS server at https://{BIND_ADDRESS}:{}",
+        "Starting HTTPS server at https://{BIND_ADDRESS}:{}.",
         options.port
     );
 
@@ -47,6 +47,7 @@ async fn main() -> io::Result<()> {
     };
 
     let authenticator = std::sync::Arc::new(
+        // Panic if the authenticator cannot be initialized.
         UsernamePasswordAuthenticator::new(&Path::new(&stored_credentials.credential_file))
             .unwrap(),
     );

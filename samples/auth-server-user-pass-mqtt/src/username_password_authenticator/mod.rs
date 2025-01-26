@@ -66,12 +66,17 @@ impl Authenticator for UsernamePasswordAuthenticator {
             if let Err(err) =
                 Pbkdf2.verify_password(&password, &stored_credential.hash.password_hash())
             {
-                warn!("Authentication for user '{}' failed, {}", username, err);
-                return Ok(AuthenticationResult::Fail {
-                    // MQTT reason code 5, client connection is not authorized, this can be passed to the MQTT client.
-                    reason: AuthenticationFailReason::IncorrectPassword,
-                    message: "Authentication failed.".to_string(),
-                });
+                match err {
+                    password_hash::Error::Password => {
+                        return Ok(AuthenticationResult::Fail {
+                            reason: AuthenticationFailReason::IncorrectPassword,
+                            message: "Authentication failed.".to_string(),
+                        });
+                    }
+                    _ => {
+                        return Err(anyhow::anyhow!("Password verification error: {:?}", err));
+                    }
+                }
             }
 
             Ok(AuthenticationResult::Pass {
@@ -83,7 +88,7 @@ impl Authenticator for UsernamePasswordAuthenticator {
             // still be acceptable for one of the other auth methods.
             return Ok(AuthenticationResult::Fail {
                 reason: AuthenticationFailReason::UnknownUser,
-                message: "Username not found in database".to_string(),
+                message: "Username not found in database.".to_string(),
             });
         }
     }

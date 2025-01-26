@@ -41,37 +41,46 @@ pub async fn authenticate<T: Authenticator>(
         // Deserialize the request and match the request type (Connect method only for now, Auth method support will added later).
         match auth_data.into_inner() {
             ClientAuthRequest::Connect { username, password } => {
-                let result = authenticator.authenticate(AuthenticationContext {
+                // Abstract internal authentication result from external authentication result for security reasons.
+                match authenticator.authenticate(AuthenticationContext {
                     address: request.peer_addr(),
                     username: username,
                     password: password.as_bytes().to_vec(),
-                })?;
-
-                // Abstract internal authentication result from external authentication result for security reasons.
-                external_authentication_result = match result {
-                    AuthenticationResult::Pass { expiry, attributes } => {
-                        ExternalAuthenticationResult::Pass {
-                            expiry,
-                            attributes: attributes,
-                        }
+                }) {
+                    Ok(result) => {
+                        trace!("Internal Authentication Result: {result:#?}");
+                        external_authentication_result = match result {
+                            AuthenticationResult::Pass { expiry, attributes } => {
+                                ExternalAuthenticationResult::Pass {
+                                    expiry,
+                                    attributes: attributes,
+                                }
+                            }
+                            AuthenticationResult::Fail { reason, message } => match reason {
+                                AuthenticationFailReason::IncorrectPassword => {
+                                    ExternalAuthenticationResult::Fail {
+                                        reason: ExternalFailReason::IncorrectPassword,
+                                        message: message,
+                                    }
+                                }
+                                AuthenticationFailReason::UnknownUser => {
+                                    ExternalAuthenticationResult::Fail {
+                                        reason: ExternalFailReason::UnknownUser,
+                                        message: message,
+                                    }
+                                }
+                            },
+                        };
                     }
-                    AuthenticationResult::Fail { reason, message } => match reason {
-                        AuthenticationFailReason::IncorrectPassword => {
-                            ExternalAuthenticationResult::Fail {
-                                reason: ExternalFailReason::IncorrectPassword,
-                                message: message,
-                            }
-                        }
-                        AuthenticationFailReason::UnknownUser => {
-                            ExternalAuthenticationResult::Fail {
-                                reason: ExternalFailReason::UnknownUser,
-                                message: message,
-                            }
-                        }
-                    },
-                };
-
-                trace!("Authentication Result: {external_authentication_result:#?}");
+                    Err(err) => {
+                        // Log the internal error raised by authenticator details and return generic error message for security reasons.
+                        error!("Error occurred during authentication: {}", err);
+                        external_authentication_result = ExternalAuthenticationResult::Error {
+                            error: "Error occurred during authentication.".to_string(),
+                        };
+                    }
+                }                
+                trace!("External Authentication Result: {external_authentication_result:#?}");
             }
             ClientAuthRequest::Auth => {
                 external_authentication_result = ExternalAuthenticationResult::Error {
@@ -112,9 +121,9 @@ pub async fn authenticate<T: Authenticator>(
         ExternalAuthenticationResult::Error { error } => {
             error!("Error occurred during authentication: {}", error);
             Ok(
-                HttpResponse::BadRequest().json(ExternalAuthenticationResult::Error {
-                    error: "Error occurred during authentication.".to_string(),
-                }),
+                HttpResponse::BadRequest().json(
+                    serde_json::json!({"error": "Error occurred during authentication.".to_string()}),
+                ),
             )
         }
     }
@@ -242,7 +251,7 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_authenticate_fail() {
+    async fn test_authenticate_incorrect_password_fail() {
         mock! {
             pub UsernamePasswordAuthenticator {}
 
@@ -298,6 +307,62 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn test_authenticate_unknown_username_fail() {
+        mock! {
+            pub UsernamePasswordAuthenticator {}
+
+            impl Authenticator for UsernamePasswordAuthenticator {
+                fn authenticate(
+                    &self,
+                    context: AuthenticationContext,
+                ) ->  Result<AuthenticationResult>;
+            }
+        }
+
+        let mut mock_authenticator = MockUsernamePasswordAuthenticator::new();
+        mock_authenticator
+            .expect_authenticate()
+            .withf(|context| {
+                context.username == "test_user" && context.password == b"test_password"
+            })
+            .returning(|_| {
+                Ok(AuthenticationResult::Fail {
+                    reason: AuthenticationFailReason::UnknownUser,
+                    message: "Authentication failed.".to_string(),
+                })
+            });
+
+        let mock_authenticator_web_data = web::Data::new(Arc::new(mock_authenticator));
+
+        let auth_query = web::Query(ApiVersion {
+            api_version: API_SUPPORTED_VERSION.to_string(),
+        });
+
+        let auth_data = web::Json(ClientAuthRequest::Connect {
+            username: "test_user".to_string(),
+            password: "test_password".to_string(),
+        });
+
+        let req = actix_web::test::TestRequest::default().to_http_request();
+
+        let resp = authenticate(mock_authenticator_web_data, auth_query, auth_data, req)
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+
+        let body = resp.into_body();
+        let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
+        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();        
+
+        assert_eq!(body_json["reason"], serde_json::json!(0));
+        assert_eq!(
+            body_json["message"],
+            serde_json::json!("Authentication failed.")
+        );
+    }
+    
+    #[actix_web::test]
     async fn test_authenticate_unsupported_version() {
         mock! {
             pub UsernamePasswordAuthenticator {}
@@ -333,4 +398,57 @@ mod tests {
         let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
         assert_eq!(body_json["supportedVersions"], serde_json::json!(["0.5.0"]));
     }
+
+    #[actix_web::test]
+    async fn test_authenticate_error_shielding() {
+        mock! {
+            pub UsernamePasswordAuthenticator {}
+
+            impl Authenticator for UsernamePasswordAuthenticator {
+                fn authenticate(
+                    &self,
+                    context: AuthenticationContext,
+                ) ->  Result<AuthenticationResult>;
+            }
+        }
+
+        let mut mock_authenticator = MockUsernamePasswordAuthenticator::new();
+        mock_authenticator
+            .expect_authenticate()
+            .withf(|context| {
+                context.username == "test_user" && context.password == b"test_password"
+            })
+            .returning(|_| {
+                Err(anyhow::anyhow!("Error occurred during authentication."))
+            });
+
+        let mock_authenticator_web_data = web::Data::new(Arc::new(mock_authenticator));
+
+        let auth_query = web::Query(ApiVersion {
+            api_version: API_SUPPORTED_VERSION.to_string(),
+        });
+
+        let auth_data = web::Json(ClientAuthRequest::Connect {
+            username: "test_user".to_string(),
+            password: "test_password".to_string(),
+        });
+
+        let req = actix_web::test::TestRequest::default().to_http_request();
+
+        let resp = authenticate(mock_authenticator_web_data, auth_query, auth_data, req)
+            .await
+            .unwrap();
+        
+        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+
+        let body = resp.into_body();
+        let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
+        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();        
+        println!("BODY {:?}", body_json);
+        assert_eq!(
+            body_json["error"],
+            serde_json::json!("Error occurred during authentication.")
+        );
+    }
 }
+

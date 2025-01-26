@@ -24,18 +24,18 @@ The authentication module provides the following top level features:
 
 1. cd `samples/auth-server-user-pass-mqtt`
 
-    [This will move you to the authentication module directory.]
+    This will move you to the authentication module directory.
 2. run `export IMAGE_TAG=<your_docker_registry_prefix>/auth-server-user-pass-mqtt:v0.1`
 
-    [This will configure your docker image name with registry details]
+    This will configure your docker image name with registry details
 
 3. run ```make build```
 
-    [This will build your codebase along with unit tests and publish your docker image.]
+    This will build your codebase, run unit tests and publish your docker image.
 
 4. run ```cargo test```
 
-    [This will run the unit tests for the module.]
+    This will run the unit tests for the module, optionally.
 
 #### Deploy in K8s
 
@@ -43,9 +43,51 @@ The authentication module provides the following top level features:
 
 2. Run  `kubectl apply -f deploy/custom-user-pass-auth-server.yaml`.
 
-    [This will deploy the authentication module and its related resources]
+    This will deploy the authentication module and its related resources
 
-3. Create credentials database, use instructions in [credentials.md](docs/credentials.md).
+3. This step describes the credential management for this authentication module.
+
+    1. Create Secrets Database
+
+        The module requires secrets to be stored in [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) hash format and stored as a K8s secret.
+
+        An example of such TOML file is provided below (clients.toml):
+
+        ``` TOML
+        # Credential #1
+        # username: client1
+        # password: password
+        # salt: "HqJwOCHweNk1pLryiu3RsA"
+        [client1]
+        password = "$pbkdf2-sha512$i=100000,l=64$HqJwOCHweNk1pLryiu3RsA$KVSvxKYcibIG5S5n55RvxKRTdAAfCUtBJoy5IuFzdSZyzkwvUcU+FPawEWFPn+06JyZsndfRTfpiEh+2eSJLkg"
+
+        [client1.attributes]
+        floor = "floor1"
+        site = "site1"
+
+        # Credential #2
+        # username: client2
+        # password: password2
+        # salt: "+H7jXzcEbq2kkyvpxtxePQ"
+        [client2]
+        password = "$pbkdf2-sha512$i=100000,l=64$+H7jXzcEbq2kkyvpxtxePQ$jTzW6fSesiuNRLMIkDDAzBEILk7iyyDZ3rjlEwQap4UJP4TaCR+EXQXNukO7qNJWlPPP8leNnJDCBgX/255Ezw"
+
+        [client2.attributes]
+        floor = "floor2"
+        site = "site1"
+        ```
+
+        > **Note:** We currently do not support PBKDF2 encoding of password using built-in az commands; use `openssl` command to create the hash.
+
+    2. Attach Secrets Database
+
+        This step creates K8s secret with a specific name `auth-server-user-pass-mqtt-server-credentials` which authentication module looks for when deployed.
+
+        Run the following command to create the secret where `clients.tom` is the example file from step 1:
+
+        ``` bash
+        kubectl create secret generic auth-server-user-pass-mqtt-server-credentials -n azure-iot-operations --from-file=passwords.toml=./clients.toml
+        ```
 
 4. Configure custom authentication in AIO, use the instructions from [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication).
 
