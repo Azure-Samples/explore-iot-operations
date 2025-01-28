@@ -45,7 +45,7 @@ spec:
   containers:
     # Main container for the auth server
     - name: auth-server-user-pass-mqtt
-      image: <replace with your container image>
+      image: ghcr.io/azure-samples/explore-iot-operations/auth-server-user-pass-mqtt:v0.1
       imagePullPolicy: Always
       ports:
         - name: https

@@ -17,6 +17,7 @@ use actix_web::{
 };
 use anyhow::Result;
 use log::{error, trace};
+use openssl::base64;
 use serde::Deserialize;
 use std::{
     fmt::{Display, Formatter},
@@ -42,44 +43,60 @@ pub async fn authenticate<T: Authenticator>(
         match auth_data.into_inner() {
             ClientAuthRequest::Connect { username, password } => {
                 // Abstract internal authentication result from external authentication result for security reasons.
-                match authenticator.authenticate(AuthenticationContext {
-                    address: request.peer_addr(),
-                    username: username,
-                    password: password.as_bytes().to_vec(),
-                }) {
-                    Ok(result) => {
-                        trace!("Internal Authentication Result: {result:#?}");
-                        external_authentication_result = match result {
-                            AuthenticationResult::Pass { expiry, attributes } => {
-                                ExternalAuthenticationResult::Pass {
-                                    expiry,
-                                    attributes: attributes,
-                                }
+                // Decode Base64 encoded password
+                match base64::decode_block(&password) {
+                    Ok(decoded_password) => {
+                        match authenticator.authenticate(AuthenticationContext {
+                            address: request.peer_addr(),
+                            username: username,
+                            password: decoded_password,
+                        }) {
+                            Ok(result) => {
+                                trace!("Internal Authentication Result: {result:#?}");
+                                external_authentication_result = match result {
+                                    AuthenticationResult::Pass { expiry, attributes } => {
+                                        ExternalAuthenticationResult::Pass {
+                                            expiry,
+                                            attributes: attributes,
+                                        }
+                                    }
+                                    AuthenticationResult::Fail { reason, message } => {
+                                        match reason {
+                                            AuthenticationFailReason::IncorrectPassword => {
+                                                ExternalAuthenticationResult::Fail {
+                                                    reason: ExternalFailReason::IncorrectPassword,
+                                                    message: message,
+                                                }
+                                            }
+                                            AuthenticationFailReason::UnknownUser => {
+                                                ExternalAuthenticationResult::Fail {
+                                                    reason: ExternalFailReason::UnknownUser,
+                                                    message: message,
+                                                }
+                                            }
+                                        }
+                                    }
+                                };
                             }
-                            AuthenticationResult::Fail { reason, message } => match reason {
-                                AuthenticationFailReason::IncorrectPassword => {
-                                    ExternalAuthenticationResult::Fail {
-                                        reason: ExternalFailReason::IncorrectPassword,
-                                        message: message,
-                                    }
-                                }
-                                AuthenticationFailReason::UnknownUser => {
-                                    ExternalAuthenticationResult::Fail {
-                                        reason: ExternalFailReason::UnknownUser,
-                                        message: message,
-                                    }
-                                }
-                            },
-                        };
+                            Err(err) => {
+                                // Log the internal error raised by authenticator details and return generic error message for security reasons.
+                                error!("Error occurred during authentication: {}", err);
+                                external_authentication_result =
+                                    ExternalAuthenticationResult::Error {
+                                        error: "Error occurred during authentication.".to_string(),
+                                    };
+                            }
+                        }
                     }
                     Err(err) => {
-                        // Log the internal error raised by authenticator details and return generic error message for security reasons.
+                        // Log the base64 decode error details and return generic error message for security reasons.
                         error!("Error occurred during authentication: {}", err);
                         external_authentication_result = ExternalAuthenticationResult::Error {
                             error: "Error occurred during authentication.".to_string(),
                         };
                     }
-                }                
+                };
+
                 trace!("External Authentication Result: {external_authentication_result:#?}");
             }
             ClientAuthRequest::Auth => {
@@ -96,10 +113,16 @@ pub async fn authenticate<T: Authenticator>(
     match external_authentication_result {
         // The provided credentials passed authentication.
         ExternalAuthenticationResult::Pass { expiry, attributes } => {
-            Ok(HttpResponse::Ok().json(serde_json::json!({
-                "expiry": expiry,
-                "attributes": attributes.clone(),
-            })))
+            if expiry.is_never() {
+                return Ok(HttpResponse::Ok().json(serde_json::json!({
+                    "attributes": attributes.clone(),
+                })));
+            } else {
+                Ok(HttpResponse::Ok().json(serde_json::json!({
+                    "expiry": format!("{}", expiry),
+                    "attributes": attributes.clone(),
+                })))
+            }
         }
         // The client requested an unsupported API version.
         ExternalAuthenticationResult::UnsupportedVersion { supported_versions } => {
@@ -120,11 +143,9 @@ pub async fn authenticate<T: Authenticator>(
         // The provided credentials caused an error during authentication.
         ExternalAuthenticationResult::Error { error } => {
             error!("Error occurred during authentication: {}", error);
-            Ok(
-                HttpResponse::BadRequest().json(
-                    serde_json::json!({"error": "Error occurred during authentication.".to_string()}),
-                ),
-            )
+            Ok(HttpResponse::BadRequest().json(
+                serde_json::json!({"error": "Error occurred during authentication.".to_string()}),
+            ))
         }
     }
 }
@@ -210,7 +231,7 @@ mod tests {
             })
             .returning(|_| {
                 Ok(AuthenticationResult::Pass {
-                    expiry: ExpiryTime::from_unix(3600),
+                    expiry: ExpiryTime::never(),
                     attributes: {
                         let mut attributes = std::collections::BTreeMap::new();
                         attributes.insert("role".to_string(), "admin".to_string());
@@ -228,7 +249,7 @@ mod tests {
 
         let auth_data = web::Json(ClientAuthRequest::Connect {
             username: "test_user".to_string(),
-            password: "test_password".to_string(),
+            password: base64::encode_block("test_password".as_bytes()),
         });
 
         let req = actix_web::test::TestRequest::default().to_http_request();
@@ -242,7 +263,8 @@ mod tests {
         let body = resp.into_body();
         let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
         let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
-        assert_eq!(body_json["expiry"], serde_json::json!(3600));
+
+        assert!(!body_json.get("expiry").is_some());
         assert_eq!(body_json["attributes"]["role"], serde_json::json!("admin"));
         assert_eq!(
             body_json["attributes"]["department"],
@@ -284,7 +306,7 @@ mod tests {
 
         let auth_data = web::Json(ClientAuthRequest::Connect {
             username: "test_user".to_string(),
-            password: "test_password".to_string(),
+            password: base64::encode_block("test_password".as_bytes()),
         });
 
         let req = actix_web::test::TestRequest::default().to_http_request();
@@ -340,7 +362,7 @@ mod tests {
 
         let auth_data = web::Json(ClientAuthRequest::Connect {
             username: "test_user".to_string(),
-            password: "test_password".to_string(),
+            password: base64::encode_block("test_password".as_bytes()),
         });
 
         let req = actix_web::test::TestRequest::default().to_http_request();
@@ -353,7 +375,7 @@ mod tests {
 
         let body = resp.into_body();
         let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
-        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();        
+        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
 
         assert_eq!(body_json["reason"], serde_json::json!(0));
         assert_eq!(
@@ -361,7 +383,7 @@ mod tests {
             serde_json::json!("Authentication failed.")
         );
     }
-    
+
     #[actix_web::test]
     async fn test_authenticate_unsupported_version() {
         mock! {
@@ -383,7 +405,7 @@ mod tests {
 
         let auth_data = web::Json(ClientAuthRequest::Connect {
             username: "test_user".to_string(),
-            password: "test_password".to_string(),
+            password: base64::encode_block("test_password".as_bytes()),
         });
 
         let req = actix_web::test::TestRequest::default().to_http_request();
@@ -418,9 +440,7 @@ mod tests {
             .withf(|context| {
                 context.username == "test_user" && context.password == b"test_password"
             })
-            .returning(|_| {
-                Err(anyhow::anyhow!("Error occurred during authentication."))
-            });
+            .returning(|_| Err(anyhow::anyhow!("Error occurred during authentication.")));
 
         let mock_authenticator_web_data = web::Data::new(Arc::new(mock_authenticator));
 
@@ -430,7 +450,7 @@ mod tests {
 
         let auth_data = web::Json(ClientAuthRequest::Connect {
             username: "test_user".to_string(),
-            password: "test_password".to_string(),
+            password: base64::encode_block("test_password".as_bytes()),
         });
 
         let req = actix_web::test::TestRequest::default().to_http_request();
@@ -438,17 +458,15 @@ mod tests {
         let resp = authenticate(mock_authenticator_web_data, auth_query, auth_data, req)
             .await
             .unwrap();
-        
+
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 
         let body = resp.into_body();
         let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
         let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();        
-        println!("BODY {:?}", body_json);
         assert_eq!(
             body_json["error"],
             serde_json::json!("Error occurred during authentication.")
         );
     }
 }
-

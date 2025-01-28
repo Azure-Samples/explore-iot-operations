@@ -55,6 +55,8 @@ impl UsernamePasswordAuthenticator {
 impl Authenticator for UsernamePasswordAuthenticator {
     fn authenticate(&self, context: AuthenticationContext) -> Result<AuthenticationResult> {
         let (username, password) = (context.username, context.password);
+
+        // TODO: potentially optimize this by only reading the password database once on startup.
         let password_database = self.password_database.contents.read();
 
         trace!(
@@ -228,7 +230,6 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
         }
     }
 
-    
     #[tokio::test]
     async fn auth_fail_unknown_user() {
         let authenticator = test_authenticator();

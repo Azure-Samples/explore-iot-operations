@@ -4,9 +4,9 @@ Once the service is running in the cluster, use the following steps to test it m
 
 ## Sending Http Request
 
-Follow [this article](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-test-connection?tabs=portal#connect-to-the-default-listener-inside-the-cluster) to create the MQTT testing pod and connect to it.
+Follow [this article](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-test-connection?tabs=portal#connect-to-the-default-listener-inside-the-cluster) to create the MQTT testing pod and open a shell inside.
 
-Once connected, follow these steps:
+Once in the shell, follow these steps:
 
 1. Create Http Request
 
@@ -14,11 +14,13 @@ Once connected, follow these steps:
     cat <<EOF > authrequest.txt
     {
     "type": "connect",
-    "username": "username1",
-    "password": "password1"
+    "username": "client1",
+    "password": "cGFzc3dvcmQx"
     }
     EOF
     ```
+
+    > **Note:** where `cGFzc3dvcmQy` is a base64 encoded version of password `password1`.
 
 2. Install Curl
 
