@@ -71,7 +71,7 @@ You can deploy this module by running the following cmds in your AIO/K8s environ
 
 ## Dev Loop
 
-Please refer to [this](/docs/develoop.md) document for details.
+Please refer to [this](./docs/develoop.md) document for details.
 
 ## Upcoming Features
 
