@@ -53,14 +53,14 @@ You can deploy this module by running the following cmds in your AIO/K8s environ
 
 2. Deploy authentication module and its related resources:
 
-    ```kubectl apply -f custom-user-pass-auth-server.yaml```
+    ```kubectl apply -f ./deploy/custom-user-pass-auth-server.yaml```
 
 3. Configure AIO MQTT Authentication
 
     Use the instructions [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication) for custom authentication method and configure the settings as below:
 
-    1. Endpoint: https://auth-server-user-pass-mqtt
-    2. CA certificate config map: azure-iot-operations-aio-ca-trust-bundle
+    1. Endpoint: `https://auth-server-user-pass-mqtt`
+    2. CA certificate config map: `azure-iot-operations-aio-ca-trust-bundle`
     3. Authentication X.509 secret reference: [leave blank]
 
 4. Verify Username/password Authentication
