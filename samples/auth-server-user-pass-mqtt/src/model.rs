@@ -23,7 +23,7 @@ pub(crate) enum ClientAuthRequest {
 
 #[derive(Clone, Debug)]
 pub(crate) struct AuthenticationContext {
-    pub _address: Option<std::net::SocketAddr>,
+    pub address: Option<std::net::SocketAddr>,
     pub username: String,
     pub password: Vec<u8>,
 }
@@ -97,9 +97,9 @@ impl ExpiryTime {
         // This function will not be called for credentials that do not expire.
         assert!(!self.is_never());
 
-        let datetime = chrono::NaiveDateTime::from_timestamp_opt(self.into(), 0)
+        let datetime = chrono::DateTime::from_timestamp(self.into(), 0)
             .expect("timestamp should be valid")
-            .and_utc();
+            .with_timezone(&chrono::Utc);
 
         datetime.to_rfc3339()
     }

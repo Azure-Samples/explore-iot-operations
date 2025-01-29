@@ -47,7 +47,7 @@ pub(crate) async fn authenticate<T: Authenticator>(
                 match base64::decode_block(&password) {
                     Ok(decoded_password) => {
                         match authenticator.authenticate(AuthenticationContext {
-                            _address: request.peer_addr(),
+                            address: request.peer_addr(),
                             username: username,
                             password: decoded_password,
                         }) {

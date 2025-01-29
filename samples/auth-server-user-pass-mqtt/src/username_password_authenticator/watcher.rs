@@ -1,18 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#![deny(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(
-    clippy::default_trait_access,
-    clippy::let_unit_value,
-    clippy::missing_errors_doc,
-    clippy::must_use_candidate,
-    clippy::module_name_repetitions,
-    clippy::let_underscore_untyped,
-    let_underscore_drop
-)]
-
 use std::{
     fmt::Debug,
     path::{Path, PathBuf},

@@ -28,7 +28,9 @@ pub(crate) struct Password {
     attributes: BTreeMap<String, String>,
 }
 
-pub(crate) fn deserialize_password_hash<'de, D>(deserializer: D) -> Result<PasswordHashString, D::Error>
+pub(crate) fn deserialize_password_hash<'de, D>(
+    deserializer: D,
+) -> Result<PasswordHashString, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
@@ -60,8 +62,9 @@ impl Authenticator for UsernamePasswordAuthenticator {
         let password_database = self.password_database.contents.read();
 
         trace!(
-            "Password database loaded, authenticating user: {}",
-            username
+            "Password database loaded, authenticating user: {}, peer address: {:?}",
+            username,
+            context.address
         );
 
         if let Some(stored_credential) = password_database.get(&username) {
@@ -189,7 +192,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
         let authenticator = test_authenticator();
 
         let context = AuthenticationContext {
-            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "user1".to_string(),
             password: b"password1".to_vec(),
         };
@@ -214,7 +217,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
 
         // Test Fail with incorrect password
         let context = AuthenticationContext {
-            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "user1".to_string(),
             password: b"incorrect".to_vec(),
         };
@@ -236,7 +239,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
 
         // Test Fail with incorrect password
         let context = AuthenticationContext {
-            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "incorrect".to_string(),
             password: b"password1".to_vec(),
         };
