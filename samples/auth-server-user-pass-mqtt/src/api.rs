@@ -25,7 +25,7 @@ use std::{
 };
 pub(crate) const API_SUPPORTED_VERSION: &str = "0.5.0";
 
-pub async fn authenticate<T: Authenticator>(
+pub(crate) async fn authenticate<T: Authenticator>(
     authenticator: web::Data<Arc<T>>,
     auth_query: web::Query<ApiVersion>,
     auth_data: web::Json<ClientAuthRequest>,
@@ -47,7 +47,7 @@ pub async fn authenticate<T: Authenticator>(
                 match base64::decode_block(&password) {
                     Ok(decoded_password) => {
                         match authenticator.authenticate(AuthenticationContext {
-                            address: request.peer_addr(),
+                            _address: request.peer_addr(),
                             username: username,
                             password: decoded_password,
                         }) {
@@ -152,7 +152,7 @@ pub async fn authenticate<T: Authenticator>(
 
 // UnhandledError is a custom error type that wraps an anyhow::Error and implements the ResponseError trait.
 #[derive(Debug)]
-pub struct UnhandledError {
+pub(crate) struct UnhandledError {
     err: anyhow::Error,
 }
 

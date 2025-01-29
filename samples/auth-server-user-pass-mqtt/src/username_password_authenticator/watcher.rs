@@ -29,10 +29,10 @@ use parking_lot::RwLock;
 use tokio::sync::mpsc::Sender;
 use anyhow::Result;
 
-pub type Parser<T> = Box<dyn Fn(&Path) -> Result<T> + Send + Sync>;
-pub type FileWatcherInstance<T> = Arc<FileWatcher<T>>;
+pub(crate) type Parser<T> = Box<dyn Fn(&Path) -> Result<T> + Send + Sync>;
+pub(crate) type FileWatcherInstance<T> = Arc<FileWatcher<T>>;
 
-pub struct FileWatcher<T> {
+pub(crate) struct FileWatcher<T> {
     pub contents: RwLock<T>,
     path: PathBuf,
     file_reader: Parser<T>,
@@ -44,7 +44,7 @@ impl<T> FileWatcher<T>
 where
     T: Send + Sync + 'static,
 {
-    pub fn new<P: AsRef<Path>>(
+    pub(crate) fn new<P: AsRef<Path>>(
         path: P,
         parser: Parser<T>,
         sender: Option<Sender<()>>,

@@ -22,8 +22,8 @@ pub(crate) enum ClientAuthRequest {
 }
 
 #[derive(Clone, Debug)]
-pub struct AuthenticationContext {
-    pub address: Option<std::net::SocketAddr>,
+pub(crate) struct AuthenticationContext {
+    pub _address: Option<std::net::SocketAddr>,
     pub username: String,
     pub password: Vec<u8>,
 }
@@ -35,7 +35,7 @@ pub(crate) struct StoredCredentials {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum ExternalAuthenticationResult {
+pub(crate) enum ExternalAuthenticationResult {
     /// The provided credentials passed authentication.    
     Pass {
         expiry: ExpiryTime,
@@ -58,7 +58,7 @@ pub enum ExternalAuthenticationResult {
 
 #[derive(Debug, Copy, Clone, Serialize)]
 #[serde(rename_all = "camelCase", into = "i32")]
-pub enum ExternalFailReason {
+pub(crate) enum ExternalFailReason {
     IncorrectPassword,
     UnknownUser,
 }
@@ -78,22 +78,22 @@ impl Into<i32> for ExternalFailReason {
 pub(crate) struct ExpiryTime(u64);
 
 impl ExpiryTime {
-    pub fn never() -> Self {
+    pub(crate) fn never() -> Self {
         ExpiryTime(u64::MAX)
     }
 
-    pub fn is_never(&self) -> bool {
+    pub(crate) fn is_never(&self) -> bool {
         self.0 == u64::MAX
     }
 
-    pub fn from_rfc3339(timestring: &str) -> Result<Self, String> {
+    pub(crate) fn from_rfc3339(timestring: &str) -> Result<Self, String> {
         let datetime =
             chrono::DateTime::parse_from_rfc3339(timestring).map_err(|err| err.to_string())?;
 
         Ok(ExpiryTime::from(datetime.timestamp()))
     }
 
-    pub fn to_rfc3339(self) -> String {
+    pub(crate) fn to_rfc3339(self) -> String {
         // This function will not be called for credentials that do not expire.
         assert!(!self.is_never());
 
@@ -104,11 +104,11 @@ impl ExpiryTime {
         datetime.to_rfc3339()
     }
 
-    pub fn from_unix(unix: u64) -> Self {
+    pub(crate) fn from_unix(unix: u64) -> Self {
         ExpiryTime(unix)
     }
 
-    pub fn to_unix(self) -> u64 {
+    pub(crate) fn to_unix(self) -> u64 {
         // This function will not be called for credentials that do not expire.
         assert!(!self.is_never());
 

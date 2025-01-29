@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-pub mod authenticator;
-pub mod watcher;
+pub(crate) mod authenticator;
+pub(crate) mod watcher;
 
 use anyhow::Result;
 use authenticator::{AuthenticationFailReason, AuthenticationResult, Authenticator};
@@ -15,12 +15,12 @@ use watcher::{FileWatcher, FileWatcherInstance};
 use crate::model::{AuthenticationContext, ExpiryTime};
 
 #[derive(Debug)]
-pub struct UsernamePasswordAuthenticator {
+pub(crate) struct UsernamePasswordAuthenticator {
     password_database: FileWatcherInstance<BTreeMap<String, Password>>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
-pub struct Password {
+pub(crate) struct Password {
     #[serde(alias = "password", deserialize_with = "deserialize_password_hash")]
     hash: PasswordHashString,
 
@@ -28,7 +28,7 @@ pub struct Password {
     attributes: BTreeMap<String, String>,
 }
 
-pub fn deserialize_password_hash<'de, D>(deserializer: D) -> Result<PasswordHashString, D::Error>
+pub(crate) fn deserialize_password_hash<'de, D>(deserializer: D) -> Result<PasswordHashString, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
@@ -38,7 +38,7 @@ where
 }
 
 impl UsernamePasswordAuthenticator {
-    pub fn new(config: &Path) -> Result<UsernamePasswordAuthenticator> {
+    pub(crate) fn new(config: &Path) -> Result<UsernamePasswordAuthenticator> {
         let parser = Box::new(|path: &std::path::Path| {
             let password_database = std::fs::read_to_string(path)?;
             let password_database: BTreeMap<String, Password> =
@@ -189,7 +189,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
         let authenticator = test_authenticator();
 
         let context = AuthenticationContext {
-            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "user1".to_string(),
             password: b"password1".to_vec(),
         };
@@ -214,7 +214,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
 
         // Test Fail with incorrect password
         let context = AuthenticationContext {
-            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "user1".to_string(),
             password: b"incorrect".to_vec(),
         };
@@ -236,7 +236,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
 
         // Test Fail with incorrect password
         let context = AuthenticationContext {
-            address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
+            _address: Some(SocketAddr::from(([0, 0, 0, 0], 8883))),
             username: "incorrect".to_string(),
             password: b"password1".to_vec(),
         };
