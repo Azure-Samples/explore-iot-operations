@@ -59,7 +59,7 @@ resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-11-0
   }
   properties: {
     targetAddress: 'opc.tcp://opcplc-000000:50000'
-    endpointProfileType: ''
+    endpointProfileType: 'Microsoft.OpcUa'
     authentication: {
       method: 'Anonymous'
     }
@@ -153,7 +153,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 }
 
 /*****************************************************************************/
-/*                                    Dataflow                               */
+/*                                    Data flow                              */
 /*****************************************************************************/
 
 resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-11-01' = {
@@ -189,7 +189,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
 
 resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-11-01' = {
   parent: defaultDataflowProfile
-  name: 'quickstart-oven-dataflow'
+  name: 'quickstart-oven-data-flow'
   extendedLocation: {
     name: customLocation.id
     type: 'CustomLocation'
