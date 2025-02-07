@@ -54,9 +54,8 @@ pub(crate) async fn authenticate<T: Authenticator>(
                             Ok(result) => {
                                 trace!("Internal Authentication Result: {result:#?}");
                                 external_authentication_result = match result {
-                                    AuthenticationResult::Pass { expiry, attributes } => {
+                                    AuthenticationResult::Pass { attributes } => {
                                         ExternalAuthenticationResult::Pass {
-                                            expiry,
                                             attributes: attributes,
                                         }
                                     }
@@ -80,7 +79,7 @@ pub(crate) async fn authenticate<T: Authenticator>(
                             }
                             Err(err) => {
                                 // Log the internal error raised by authenticator details and return generic error message for security reasons.
-                                error!("Error occurred during authentication: {}", err);
+                                error!("Error occurred during authentication: {:?}", err);
                                 external_authentication_result =
                                     ExternalAuthenticationResult::Error {
                                         error: "Error occurred during authentication.".to_string(),
@@ -90,7 +89,7 @@ pub(crate) async fn authenticate<T: Authenticator>(
                     }
                     Err(err) => {
                         // Log the base64 decode error details and return generic error message for security reasons.
-                        error!("Error occurred during authentication: {}", err);
+                        error!("Error occurred during authentication: {:?}", err);
                         external_authentication_result = ExternalAuthenticationResult::Error {
                             error: "Error occurred during authentication.".to_string(),
                         };
@@ -112,17 +111,10 @@ pub(crate) async fn authenticate<T: Authenticator>(
     // TODO: we can improve this mapping to reduce manual field assignments for ExternalAuthenticationResult
     match external_authentication_result {
         // The provided credentials passed authentication.
-        ExternalAuthenticationResult::Pass { expiry, attributes } => {
-            if expiry.is_never() {
-                return Ok(HttpResponse::Ok().json(serde_json::json!({
-                    "attributes": attributes.clone(),
-                })));
-            } else {
-                Ok(HttpResponse::Ok().json(serde_json::json!({
-                    "expiry": format!("{}", expiry),
-                    "attributes": attributes.clone(),
-                })))
-            }
+        ExternalAuthenticationResult::Pass { attributes } => {
+            return Ok(HttpResponse::Ok().json(serde_json::json!({
+                "attributes": attributes.clone(),
+            })))
         }
         // The client requested an unsupported API version.
         ExternalAuthenticationResult::UnsupportedVersion { supported_versions } => {
@@ -136,13 +128,13 @@ pub(crate) async fn authenticate<T: Authenticator>(
                 .json(serde_json::json!({ "reason": reason, "message": message }))),
             // Username not found in the password database
             ExternalFailReason::UnknownUser => Ok(HttpResponse::Forbidden().json(
-                // TODO: this should return HTTP status which should allow MQTT broker to move to next authentication method in the chain.
+                // Note: this should return HTTP status which should allow MQTT broker to move to next authentication method in the chain.
                 serde_json::json!({ "reason": reason, "message": message }),
             )),
         },
         // The provided credentials caused an error during authentication.
         ExternalAuthenticationResult::Error { error } => {
-            error!("Error occurred during authentication: {}", error);
+            error!("Error occurred during authentication: {:?}", error);
             Ok(HttpResponse::BadRequest().json(
                 serde_json::json!({"error": "Error occurred during authentication.".to_string()}),
             ))
@@ -204,8 +196,6 @@ impl Default for SupportedApiVersions {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::ExpiryTime;
-
     use super::*;
     use mockall::predicate::*;
     use mockall::*;
@@ -231,7 +221,6 @@ mod tests {
             })
             .returning(|_| {
                 Ok(AuthenticationResult::Pass {
-                    expiry: ExpiryTime::never(),
                     attributes: {
                         let mut attributes = std::collections::BTreeMap::new();
                         attributes.insert("role".to_string(), "admin".to_string());
@@ -463,7 +452,7 @@ mod tests {
 
         let body = resp.into_body();
         let body_bytes = actix_web::body::to_bytes(body).await.unwrap();
-        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();        
+        let body_json: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
         assert_eq!(
             body_json["error"],
             serde_json::json!("Error occurred during authentication.")

@@ -8,7 +8,6 @@ mod username_password_authenticator;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use log::info;
-use model::StoredCredentials;
 use openssl::ssl::{SslAcceptor, SslMethod};
 use std::{
     io,
@@ -30,7 +29,6 @@ async fn main() -> io::Result<()> {
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
 
     // Disable TLSv1, TLSv1.1 for security reasons.
-    // TODO: do not disable TLSv1.2 until it's verified that TLSv.1.3 is supported by all clients (e.g. AIO MQTT broker).
     builder.set_options(openssl::ssl::SslOptions::NO_TLSV1 | openssl::ssl::SslOptions::NO_TLSV1_1);
     builder.set_private_key_file(&options.server_key, openssl::ssl::SslFiletype::PEM)?;
     builder.set_certificate_chain_file(&options.server_cert_chain)?;
@@ -42,14 +40,9 @@ async fn main() -> io::Result<()> {
 
     // Inject dependencies into the actix-web server to be used by the request handlers.
     // This enables unit testing and decoupling of the request handlers from the actual implementation.
-    let stored_credentials = StoredCredentials {
-        credential_file: PathBuf::from(&options.stored_credentials_file),
-    };
-
     let authenticator = std::sync::Arc::new(
         // Panic if the authenticator cannot be initialized.
-        UsernamePasswordAuthenticator::new(&Path::new(&stored_credentials.credential_file))
-            .unwrap(),
+        UsernamePasswordAuthenticator::new(&Path::new(&options.stored_credentials_file)).unwrap(),
     );
 
     info!("Core authenticator module initialized successfully.");

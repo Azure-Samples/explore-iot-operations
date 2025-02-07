@@ -14,9 +14,8 @@
 			"version": "latest"
 		}
 	},
-	// More info: https://aka.ms/dev-containers-non-root.
-	// TODO: Use non-root user in container
-	"remoteUser": "root",
+	// More info: https://aka.ms/dev-containers-non-root.	
+	"remoteUser": "vscode",
 	// Add the IDs of extensions you want installed when the container is created.	
 	"customizations": {
 		"vscode": {

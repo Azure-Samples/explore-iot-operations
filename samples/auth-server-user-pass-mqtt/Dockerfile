@@ -5,9 +5,10 @@ RUN apk upgrade --no-cache && \
 
 COPY auth-server-user-pass-mqtt /bin/auth-server-user-pass-mqtt
 
-# TODO: env var validation should return all missing vars in one go
 ENTRYPOINT \
-    if [ -z "$SERVER_CERT_CHAIN" ]; then echo "SERVER_CERT_CHAIN must be set"; exit 1; fi; \
-    if [ -z "$SERVER_CERT_KEY" ]; then echo "SERVER_CERT_KEY must be set"; exit 1; fi; \
-    if [ -z "$STORED_CREDENTIALS_FILE" ]; then echo "STORED_CREDENTIALS_FILE must be set"; exit 1; fi;\
+    MISSING_VARS=""; \
+    if [ -z "$SERVER_CERT_CHAIN" ]; then MISSING_VARS="$MISSING_VARS SERVER_CERT_CHAIN"; fi; \
+    if [ -z "$SERVER_CERT_KEY" ]; then MISSING_VARS="$MISSING_VARS SERVER_CERT_KEY"; fi; \
+    if [ -z "$STORED_CREDENTIALS_FILE" ]; then MISSING_VARS="$MISSING_VARS STORED_CREDENTIALS_FILE"; fi; \
+    if [ -n "$MISSING_VARS" ]; then echo "Missing environment variables:$MISSING_VARS"; exit 1; fi; \
     /bin/auth-server-user-pass-mqtt -p 443 -c "$SERVER_CERT_CHAIN" -k "$SERVER_CERT_KEY" -s "$STORED_CREDENTIALS_FILE";

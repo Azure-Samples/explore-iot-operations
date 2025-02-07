@@ -12,7 +12,7 @@ use pbkdf2::Pbkdf2;
 use std::{collections::BTreeMap, path::Path};
 use watcher::{FileWatcher, FileWatcherInstance};
 
-use crate::model::{AuthenticationContext, ExpiryTime};
+use crate::model::AuthenticationContext;
 
 #[derive(Debug)]
 pub(crate) struct UsernamePasswordAuthenticator {
@@ -58,7 +58,7 @@ impl Authenticator for UsernamePasswordAuthenticator {
     fn authenticate(&self, context: AuthenticationContext) -> Result<AuthenticationResult> {
         let (username, password) = (context.username, context.password);
 
-        // TODO: potentially optimize this by only reading the password database once on startup.
+        // Note: potentially optimize this by only reading the password database once on startup.
         let password_database = self.password_database.contents.read();
 
         trace!(
@@ -86,7 +86,6 @@ impl Authenticator for UsernamePasswordAuthenticator {
 
             Ok(AuthenticationResult::Pass {
                 attributes: stored_credential.attributes.clone(),
-                expiry: ExpiryTime::never(),
             })
         } else {
             // The provided username is not present in the password database, but may
@@ -199,13 +198,11 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
 
         match authenticator.authenticate(context).unwrap() {
             AuthenticationResult::Pass {
-                mut attributes,
-                expiry,
+                mut attributes,                
             } => {
                 assert_eq!("user_group", attributes.remove("group").unwrap());
                 assert_eq!("org1", attributes.remove("organization").unwrap());
                 assert!(attributes.is_empty());
-                assert!(expiry.is_never());
             }
             _ => panic!("incorrect result"),
         }

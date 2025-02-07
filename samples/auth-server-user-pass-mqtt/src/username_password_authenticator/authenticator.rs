@@ -4,13 +4,11 @@
 use anyhow::Result;
 use std::collections::BTreeMap;
 use crate::model::AuthenticationContext;
-use super::ExpiryTime;
 
 #[derive(Debug)]
 pub(crate) enum AuthenticationResult {
     /// The provided credentials passed authentication.
-    Pass {
-        expiry: ExpiryTime,
+    Pass {        
         attributes: BTreeMap<String, String>,
     },
     // The provided credentials failed authentication.
