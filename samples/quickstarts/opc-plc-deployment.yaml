@@ -22,22 +22,18 @@ spec:
           - "--ph=opcplc-000000"
           - "--cdn=opcplc-000000"
           - "--ut"
-          - "--sn=25"
+          - "--sph"
+          - "--sn=5"
           - "--sr=10"
-          - "--fn=2000"
+          - "--fn=10"
+          - "--ftl=212"
+          - "--ftu=273"
+          - "--ftr=True"
           - "--veryfastrate=1000"
-          - "--gn=5"
+          - "--gn=1"
           - "--pn=50000"
-          - "--maxsessioncount=100"
-          - "--maxsubscriptioncount=100"
-          - "--maxqueuedrequestcount=2000"
-          - "--ses"
-          - "--alm"
           - "--at=FlatDirectory"
           - "--drurs"
-          - "--ll-debug"
-          - "--nodesfile"
-          - "/app/config/nodesfile.json"
         ports:
         - containerPort: 50000
         volumeMounts:
@@ -45,8 +41,6 @@ spec:
             mountPath: /app/pki/own
           - name: opc-plc-trust-list
             mountPath: /app/pki/trusted
-          - name: config-volume
-            mountPath: /app/config
       volumes:
         - name: opc-plc-default-application-cert
           secret:
@@ -54,36 +48,7 @@ spec:
         - name: opc-plc-trust-list
           secret:
             secretName: opc-plc-trust-list
-        - name: config-volume
-          configMap:
-            name: opc-plc-config
       serviceAccountName: opcplc-000000-service-account
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: opc-plc-config
-  namespace: azure-iot-operations
-  labels:
-    app.kubernetes.io/component: opcplc-000000
-data:
-  nodesfile.json: |
-    {
-      "Folder": "MyTelemetry",
-      "NodeList": [
-        {
-          "NodeId": "ns=3;s=FastUInt100",
-          "Name": "Fryer Temperature",
-          "DataType": "Double",
-          "ValueRank": -1,
-          "AccessLevel": "CurrentReadOrWrite",
-          "Description": "Fryer Temperature with spikes",
-          "Anomaly": "Spike",
-          "MinValue": 150.0,
-          "MaxValue": 200.0          
-        }
-      ]
-    }
 ---
 apiVersion: v1
 kind: Service
