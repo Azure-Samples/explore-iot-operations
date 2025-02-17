@@ -76,38 +76,37 @@ resource asset 'Microsoft.DeviceRegistry/assets@2024-11-01' = {
   properties: {
     displayName: assetName
     assetEndpointProfileRef: assetEndpoint.name
-    description: 'an oven is essential for baking a wide variety of products'
+    description: 'Multi-function large oven for baked goods.'
 
     enabled: true
-    externalAssetId: '32faab3f-88e8-4f38-b901-e175dde50c28'
-    manufacturer: 'http://asset.oven.contoso'
-    manufacturerUri: 'http://oven.asset.contoso'
-    model: 'Mymodel'
+    manufacturer: 'Contoso'
+    manufacturerUri: 'http://www.contoso.com/ovens'
+    model: 'Oven-003'
     productCode: '12345C'
-    hardwareRevision: 'http://docs.oven.asset.contoso'
-    softwareRevision: '1.1'
+    hardwareRevision: '2.3'
+    softwareRevision: '14.1'
     serialNumber: '12345'
-    documentationUri: 'http://docs.oven.asset.contoso'
+    documentationUri: 'http://docs.contoso.com/ovens'
 
     datasets: [
       {
-        name: 'some randome datasets name'
+        name: 'Oven telemetry'
         dataPoints: [
           {
             name: 'Temperature'
-            dataSource: 'ns=3;s=FastUInt100'
-            dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
-            observabilityMode: 'None'
-          }
-          {
-            name: 'FillWeight'
-            dataSource: 'ns=3;s=FastUInt1004'
+            dataSource: 'ns=3;s=SpikeData'
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
             observabilityMode: 'None'
           }
           {
             name: 'EnergyUse'
-            dataSource: 'ns=3;s=FastUInt1005'
+            dataSource: 'ns=3;s=FastUInt10'
+            dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
+            observabilityMode: 'None'
+          }
+          {
+            name: 'Weight'
+            dataSource: 'ns=3;s=FastUInt9'
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
             observabilityMode: 'None'
           }
@@ -229,18 +228,20 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
             }
             {
               type: 'Compute'
+              description: 'Weight Offset'
+              inputs: [
+                'Weight.Value ? $last'
+              ]
+              expression: '$1 - 150'
+              output: 'FillWeight'
+            }
+            {
+              type: 'Compute'
               inputs: [
                 'Temperature.Value ? $last'
               ]
               expression: '$1 > 225'
               output: 'Spike'
-            }
-            {
-              type: 'Rename'
-              inputs: [
-                'Temperature.Value'
-              ]
-              output: 'Temperature.Value'
             }
             {
               inputs: [
