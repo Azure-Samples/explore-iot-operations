@@ -61,7 +61,7 @@ You can deploy this module by running the following cmds in your AIO/K8s environ
 
     1. Endpoint: `https://auth-server-user-pass-mqtt`
     2. CA certificate config map: `azure-iot-operations-aio-ca-trust-bundle`
-    3. Authentication X.509 secret reference: [leave blank]
+    3. Authentication X.509 secret reference: `auth-server-user-pass-mqtt-client-cert`
 
 4. Verify Username/password Authentication
 
@@ -77,7 +77,6 @@ Please refer to [this](./docs/develoop.md) document for details.
 
 1. Enable "ReAuth" MQTTv5 workflow.
 2. Enable authentication expiry configuration and response.
-3. Enable optional "MQTT broker to custom authentication module" client cert authentication.
 
 ## Resources
 

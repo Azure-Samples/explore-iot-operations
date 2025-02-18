@@ -32,6 +32,8 @@ async fn main() -> io::Result<()> {
     builder.set_options(openssl::ssl::SslOptions::NO_TLSV1 | openssl::ssl::SslOptions::NO_TLSV1_1);
     builder.set_private_key_file(&options.server_key, openssl::ssl::SslFiletype::PEM)?;
     builder.set_certificate_chain_file(&options.server_cert_chain)?;
+    builder.set_ca_file(&options.client_cert_issuer)?;
+    builder.set_verify(openssl::ssl::SslVerifyMode::PEER | openssl::ssl::SslVerifyMode::FAIL_IF_NO_PEER_CERT);
 
     log::info!(
         "Starting HTTPS server at https://{BIND_ADDRESS}:{}.",
@@ -70,6 +72,10 @@ struct Options {
     /// TLS server cert chain to present to connecting clients.
     #[arg(long, short = 'c', value_name = "SERVER_CERT_CHAIN")]
     server_cert_chain: PathBuf,
+
+    /// CA certs for validating client certificates.
+    #[arg(long, short = 'i', value_name = "CLIENT_CERT_ISSUER")]
+    client_cert_issuer: PathBuf,
 
     /// Private key of TLS server cert.
     #[arg(long, short = 'k', value_name = "SERVER_KEY")]

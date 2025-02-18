@@ -60,6 +60,8 @@ spec:
           value: /tls/tls.crt
         - name: SERVER_CERT_KEY
           value: /tls/tls.key
+        - name: CLIENT_CERT_ISSUER
+          value: /tls/ca.crt
         - name: STORED_CREDENTIALS_FILE
           value: /auth/passwords.toml
         - name: RUST_LOG
