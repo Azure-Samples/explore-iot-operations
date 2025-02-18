@@ -1,0 +1,22 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "actix",
+        "authrequest",
+        "chrono",
+        "debouncer",
+        "libgcc",
+        "mockall",
+        "mqtt",
+        "serde",
+        "thiserror",
+        "timestring",
+        "TLSV",
+        "withf"
+    ],
+    "ignoreWords": [],
+    "import": []
+}
