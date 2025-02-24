@@ -58,7 +58,6 @@ impl Authenticator for UsernamePasswordAuthenticator {
     fn authenticate(&self, context: AuthenticationContext) -> Result<AuthenticationResult> {
         let (username, password) = (context.username, context.password);
 
-        // Note: potentially optimize this by only reading the password database once on startup.
         let password_database = self.password_database.contents.read();
 
         trace!(
@@ -88,8 +87,7 @@ impl Authenticator for UsernamePasswordAuthenticator {
                 attributes: stored_credential.attributes.clone(),
             })
         } else {
-            // The provided username is not present in the password database, but may
-            // still be acceptable for one of the other auth methods.
+            // The provided username is not present in the password database.
             return Ok(AuthenticationResult::Fail {
                 reason: AuthenticationFailReason::UnknownUser,
                 message: "Username not found in database.".to_string(),
@@ -197,9 +195,7 @@ password = "$pbkdf2-sha512$i=1000,l=64$lIR+Zxtj4e1RaOj3QvnNPg$ApSUlBbZ4NiVi35KT4
         };
 
         match authenticator.authenticate(context).unwrap() {
-            AuthenticationResult::Pass {
-                mut attributes,                
-            } => {
+            AuthenticationResult::Pass { mut attributes } => {
                 assert_eq!("user_group", attributes.remove("group").unwrap());
                 assert_eq!("org1", attributes.remove("organization").unwrap());
                 assert!(attributes.is_empty());

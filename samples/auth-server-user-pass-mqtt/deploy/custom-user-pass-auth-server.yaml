@@ -14,6 +14,7 @@ spec:
   dnsNames:
     - auth-server-user-pass-mqtt # Replace with your actual pod DNS name
   issuerRef:
+    # https://learn.microsoft.com/en-us/azure/iot-operations/secure-iot-ops/concept-default-root-ca
     name: azure-iot-operations-aio-certificate-issuer
     kind: ClusterIssuer
 ---

@@ -1,6 +1,8 @@
 # Azure IoT Operations (AIO) MQTT Username/Password Auth
 
-This module provides a secure custom username password based authentication for MQTT service in AIO.
+This module provides a custom username password based authentication for MQTT service in AIO.
+
+> **Caveat:** currently, credentials are stored in a K8s secret without any encryption, this must be addressed if this sample is used in production.
 
 ## Features
 

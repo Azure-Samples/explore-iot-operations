@@ -127,8 +127,7 @@ pub(crate) async fn authenticate<T: Authenticator>(
             ExternalFailReason::IncorrectPassword => Ok(HttpResponse::Forbidden()
                 .json(serde_json::json!({ "reason": reason, "message": message }))),
             // Username not found in the password database
-            ExternalFailReason::UnknownUser => Ok(HttpResponse::Forbidden().json(
-                // Note: this should return HTTP status which should allow MQTT broker to move to next authentication method in the chain.
+            ExternalFailReason::UnknownUser => Ok(HttpResponse::Forbidden().json(                
                 serde_json::json!({ "reason": reason, "message": message }),
             )),
         },
