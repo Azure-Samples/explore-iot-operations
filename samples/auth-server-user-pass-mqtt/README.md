@@ -65,6 +65,8 @@ You can deploy this module by running the following cmds in your AIO/K8s environ
     2. CA certificate config map: `azure-iot-operations-aio-ca-trust-bundle`
     3. Authentication X.509 secret reference: `auth-server-user-pass-mqtt-client-cert`
 
+    >**NOTE:** please ensure `Custom` auth type is placed at the end of the authentication methods list in the authentication policy. This is important as `Custom` auth type does not defer to other auth methods in the chain.
+
 4. Verify Username/password Authentication
 
     Use the instructions [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-test-connection?tabs=portal#connect-to-the-default-listener-inside-the-cluster) and to create the MQTT testing pod and open a shell inside. Once inside the shell, run the following cmd:
