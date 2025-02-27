@@ -1,7 +1,7 @@
-metadata description = 'Asset endpoint profile for media connector'
+metadata description = 'Asset endpoint profile for ONVIF connector'
 
-@description('The RTSP endpoint for the media stream.')
-param targetAddress string
+@description('The ONVIF discovery endpoint.')
+param onvifAddress string
 
 @description('The name of the custom location you are using.')
 param customLocationName string
@@ -23,16 +23,16 @@ resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-11-0
     name: customLocationName
   }
   properties: {
-    targetAddress: targetAddress
-    endpointProfileType: 'Microsoft.Media'
+    targetAddress: onvifAddress
+    endpointProfileType: 'Microsoft.Onvif'
     #disable-next-line no-hardcoded-env-urls //Schema required during public preview
-    additionalConfiguration: '{"@schema":"https://aiobrokers.blob.core.windows.net/aio-media-connector/1.0.0.json"}'
+    additionalConfiguration: '{"@schema":"https://aiobrokers.blob.core.windows.net/aio-onvif-connector/1.0.0.json"}'
     authentication: {
       method: 'UsernamePassword'
       usernamePasswordCredentials: {
         passwordSecretName: '${secretName}/password'
         usernameSecretName: '${secretName}/username'
-        }
+      }
     }
   }
 }
