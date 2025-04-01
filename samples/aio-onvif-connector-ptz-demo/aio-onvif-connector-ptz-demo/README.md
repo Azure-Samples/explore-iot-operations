@@ -1,7 +1,6 @@
 # AIO ONVIF Connector PTZ Demo
 
-
-# MRPC Sample Application
+## MRPC Sample Application
 
 This sample application demonstrates how to use the MRPC API provided by ONVIF Connector to interact with an ONVIF device. The sample consists of 3 dotnet assemblies:
 - PTZClient: This assembly contains code to interact with the PTZ service of an ONVIF device. It is generated from the PTZ service DTDL file.
@@ -9,107 +8,26 @@ This sample application demonstrates how to use the MRPC API provided by ONVIF C
 - Aio.Onvif.Connector.Ptz.Demo: A simple console application that demonstrates how to use the PTZ assembly to move the camera.
 
 ## Build instructions
+
 Make sure you have the .NET 8.0 SDK installed. You can download it from [here](https://dotnet.microsoft.com/download).
+
 Once installed open this directory in your terminal and run `dotnet build`
 
 ## Prerequisites
 
-### Deploy ADR resources
-#### Asset Endpoint Profile + Credentials
+### Create the asset endpoint and assets
 
-Deploy credentials secret for for device:
+To create the asset endpoint and assets that the sample application interacts with, follow the steps in [Configure the connector for ONVIF (preview)](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-use-onvif-connector).
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: camera-credentials
-data:
-  password: # base64 encoded password
-  username: # base64 encoded username
-type: Opaque
+The how-to guide  walks you through the steps to create:
 
-```
-
-Execute the following to apply it to the cluster:
-
-```bash
-kubectl apply -f camera-credentials.yaml -n azure-iot-operations
-```
-
-Deploy AEP:
-
-```yaml
-apiVersion: deviceregistry.microsoft.com/v1
-kind: AssetEndpointProfile
-metadata:
-  name: onvif-camera
-spec:
-  additionalConfiguration: |-
-    {
-      "$schema": "https://aiobrokers.blob.core.windows.net/aio-onvif-connector/1.0.0.json"
-    }
-  endpointProfileType: Microsoft.Onvif
-  targetAddress: # device ip address
-  authentication:
-    method: UsernamePassword
-    usernamePasswordCredentials:
-      usernameSecretName: camera-credentials/username # this refers to the secret and it's data created in the previous step
-      passwordSecretName: camera-credentials/password # this refers to the secret and it's data created in the previous step
-
-```
-
-Execute the following to apply it to the cluster:
-
-```bash
-kubectl apply -f broker-listener.yaml -n azure-iot-operations
-```
-
-#### PTZ Asset
-
-Deploy PTZ asset:
-
-```yaml	
-apiVersion: deviceregistry.microsoft.com/v1
-kind: Asset
-metadata:
-  name: onvif-camera-ptz # name must end with 'ptz'
-spec:
-  displayName: Onvif Camera (PTZ)
-  assetEndpointProfileRef: onvif-camera # this refers to the AEP created in the previous step
-  enabled: true
-```
-
-Execute the following to apply it to the cluster:
-
-```bash
-kubectl apply -f ptz-asset.yaml -n azure-iot-operations
-```
-
-#### Media Asset
-
-Deploy Media asset:
-
-```yaml
-apiVersion: deviceregistry.microsoft.com/v1
-kind: Asset
-metadata:
-  name: onvif-camera-media # name must end with 'media'
-spec:
-  displayName: Onvif Camera (Media)
-  assetEndpointProfileRef: onvif-camera # this refers to the AEP created in the previous step
-  enabled: true
-```
-
-Execute the following to apply it to the cluster:
-
-```bash
-kubectl apply -f media-asset.yaml -n azure-iot-operations
-```
+- The `contoso-onvif-aep` asset endpoint
+- The `camera-ptz` asset
+- The `camera-media` asset
 
 ### Create Broker Listener
 
-create a file called broker-listener.yaml with the following content:
+Create a file called broker-listener.yaml with the following content:
 
 ```yaml
 apiVersion: mqttbroker.iotoperations.azure.com/v1
@@ -150,12 +68,8 @@ This example uses RelativeMove by default. Depending on the camera, you may need
 
 ## Cleanup
 
-To remove the resources created in the previous steps and restore the configuration, run the following commands:
+To remove the resource created in the previous steps and restore the configuration, run the following command:
 
 ```bash
-kubectl delete secret camera-credentials
-kubectl delete assetendpointprofile onvif-camera
-kubectl delete asset onvif-camera-ptz
-kubectl delete asset onvif-camera-media
 kubectl delete brokerlistener test-listener -n azure-iot-operations
 ```
