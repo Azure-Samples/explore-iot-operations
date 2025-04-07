@@ -2,8 +2,6 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/kubernetes-helm-minikube
 {
   "name": "Kubernetes - k3d",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  // "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
   "build": {
     "dockerfile": "Dockerfile"
   },
@@ -16,7 +14,14 @@
     "ghcr.io/devcontainers/features/azure-cli:1": {
       "extensions": "connectedk8s,k8s-extension,azure-iot-ops"
     },
-    "ghcr.io/rio/features/k3d:1": {}
+    "ghcr.io/rio/features/k3d:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "azureDnsAutoDetection": true,
+      "installDockerBuildx": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "none"
+    }
   },
   "secrets": {
     "SUBSCRIPTION_ID": {
