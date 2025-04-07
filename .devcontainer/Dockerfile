@@ -1,4 +1,6 @@
-FROM mcr.microsoft.com/devcontainers/universal:2-linux
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install mosquitto client
 RUN apt-get update && apt-get install mosquitto-clients -y
