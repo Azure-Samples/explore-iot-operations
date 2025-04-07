@@ -6,8 +6,6 @@ set -o pipefail
 
 echo "Starting On Create Command"
 
-# Copy the custom first run notice over
-sudo cp .devcontainer/welcome.txt /usr/local/etc/vscode-dev-containers/first-run-notice.txt
 
 # Create k3d cluster and forwarded ports
 k3d cluster delete
