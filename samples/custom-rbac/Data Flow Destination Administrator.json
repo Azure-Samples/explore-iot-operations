@@ -1,7 +1,7 @@
 {
     "properties": { 
-        "roleName": "AIO Data Flow Destination Administrator", 
-        "description": "View, create, edit and delete AIO Dataflow Destinations", 
+        "roleName": "Azure IoT Operations Data Flow Destination Administrator", 
+        "description": "View, create, edit and delete Azure IoT Operations Dataflow Destinations", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 

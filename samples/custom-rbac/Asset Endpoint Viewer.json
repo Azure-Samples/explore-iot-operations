@@ -1,27 +1,29 @@
-{
+{ 
     "properties": { 
-        "roleName": "AIO Instance Viewer", 
-        "description": "View all the details related to instance", 
+        "roleName": "Azure IoT Operations Asset Endpoint Viewer", 
+        "description": "View Azure IoT Operations Asset Endpoint list and details", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
-        ],
+        ], 
         "permissions": [ 
             { 
-                "actions": [ 
+                "actions": [         
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
                     "Microsoft.ExtendedLocation/customLocations/read",
-                    "Microsoft.Iotoperations/*/read",
+                    "Microsoft.Iotoperations/instances/read",
                     "Microsoft.Kubernetes/connectedclusters/read",
                     "Microsoft.KubernetesConfiguration/extensions/read",
                     "Microsoft.Resources/subscriptions/read",
-                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"			 
                 ], 
                 "notActions": [], 
                 "dataActions": [], 
                 "notDataActions": [] 
-            } 
-        ] 
+            }
+        ]
     }
 }
