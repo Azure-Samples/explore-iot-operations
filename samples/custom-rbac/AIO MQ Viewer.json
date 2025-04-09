@@ -1,0 +1,31 @@
+{
+    "properties": {
+        "roleName": "AIO MQ Viewer",
+        "description": "User can view all MQ brokers and sub resources.",
+        "assignableScopes": [
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        ],
+        "permissions": [
+            {
+                "actions": [
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/instances/brokers/authentications/read",
+                    "Microsoft.IoTOperations/instances/brokers/authorizations/read",
+                    "Microsoft.IoTOperations/instances/brokers/listeners/read",
+                    "Microsoft.IoTOperations/instances/brokers/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ],
+                "notActions": [],
+                "dataActions": [],
+                "notDataActions": []
+            }
+        ]
+    }
+}

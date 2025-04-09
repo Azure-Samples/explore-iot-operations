@@ -1,0 +1,29 @@
+{ 
+    "properties": { 
+        "roleName": "AIO Asset Endpoint Viewer", 
+        "description": "View AIO Asset Endpoint list and details", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [         
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"			 
+                ], 
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            }
+        ]
+    }
+}

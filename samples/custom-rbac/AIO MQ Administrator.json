@@ -1,0 +1,39 @@
+{
+    "properties": {
+        "roleName": "AIO MQ Administrator",
+        "description": "User can view, edit, delete all MQ brokers and sub resources. ",
+        "assignableScopes": [
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        ],
+        "permissions": [
+            {
+                "actions": [
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/instances/brokers/authentications/delete",
+                    "Microsoft.IoTOperations/instances/brokers/authentications/read",
+                    "Microsoft.IoTOperations/instances/brokers/authentications/write",
+                    "Microsoft.IoTOperations/instances/brokers/authorizations/delete",
+                    "Microsoft.IoTOperations/instances/brokers/authorizations/read",
+                    "Microsoft.IoTOperations/instances/brokers/authorizations/write",
+                    "Microsoft.IoTOperations/instances/brokers/delete",
+                    "Microsoft.IoTOperations/instances/brokers/listeners/delete",
+                    "Microsoft.IoTOperations/instances/brokers/listeners/read",
+                    "Microsoft.IoTOperations/instances/brokers/listeners/write",
+                    "Microsoft.IoTOperations/instances/brokers/read",
+                    "Microsoft.IoTOperations/instances/brokers/write",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ],
+                "notActions": [],
+                "dataActions": [],
+                "notDataActions": []
+            }
+        ]
+    }
+}

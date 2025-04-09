@@ -1,0 +1,29 @@
+{
+    "properties": { 
+        "roleName": "AIO Data Flow Viewer", 
+        "description": "View AIO Data flow list and details", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/dataflows/read",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read" 
+                ], 
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            }
+        ]
+    }
+}
