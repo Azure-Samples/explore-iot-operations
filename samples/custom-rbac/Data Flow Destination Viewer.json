@@ -1,7 +1,7 @@
-{
+{ 
     "properties": { 
-        "roleName": "AIO Data Flow Viewer", 
-        "description": "View AIO Data flow list and details", 
+        "roleName": "Azure IoT Operations Data Flow Destination Viewer ", 
+        "description": "View Azure IoT Operations Data flow Destination list and details", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 
@@ -12,8 +12,7 @@
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
                     "Microsoft.ExtendedLocation/customLocations/read",
-                    "Microsoft.IoTOperations/instances/dataflowProfiles/dataflows/read",
-                    "Microsoft.IoTOperations/instances/dataflowProfiles/read",
+                    "Microsoft.IoTOperations/instances/dataflowEndpoints/read",
                     "Microsoft.Iotoperations/instances/read",
                     "Microsoft.Kubernetes/connectedclusters/read",
                     "Microsoft.KubernetesConfiguration/extensions/read",

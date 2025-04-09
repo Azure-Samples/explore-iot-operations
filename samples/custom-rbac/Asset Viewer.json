@@ -1,31 +1,29 @@
 {
-    "properties": {
-        "roleName": "AIO Viewer",
-        "description": "User can view all AIO resources.",
-        "assignableScopes": [
-            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        ],
-        "permissions": [
-            {
-                "actions": [
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+    "properties": { 
+        "roleName": "Azure IoT Operations Asset Viewer", 
+        "description": "View assets list and details", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
                     "Microsoft.DeviceRegistry/assets/read",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
                     "Microsoft.DeviceRegistry/discoveredAssets/read",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
                     "Microsoft.ExtendedLocation/customLocations/read",
-                    "Microsoft.IoTOperations/*/read",
+                    "Microsoft.Iotoperations/instances/read",
                     "Microsoft.Kubernetes/connectedclusters/read",
                     "Microsoft.KubernetesConfiguration/extensions/read",
                     "Microsoft.Resources/subscriptions/read",
                     "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
-                ],
-                "notActions": [],
-                "dataActions": [],
-                "notDataActions": []
-            }
+                ], 
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            } 
         ]
     }
 }

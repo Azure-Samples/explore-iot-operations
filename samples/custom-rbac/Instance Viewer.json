@@ -1,10 +1,10 @@
-{ 
+{
     "properties": { 
-        "roleName": "AIO Data Flow Destination Viewer ", 
-        "description": "View AIO Data flow Destination list and details", 
+        "roleName": "Azure IoT Operations Instance Viewer", 
+        "description": "View all the details related to instance", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
-        ], 
+        ],
         "permissions": [ 
             { 
                 "actions": [ 
@@ -12,17 +12,16 @@
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
                     "Microsoft.ExtendedLocation/customLocations/read",
-                    "Microsoft.IoTOperations/instances/dataflowEndpoints/read",
-                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Iotoperations/*/read",
                     "Microsoft.Kubernetes/connectedclusters/read",
                     "Microsoft.KubernetesConfiguration/extensions/read",
                     "Microsoft.Resources/subscriptions/read",
-                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read" 
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
                 ], 
                 "notActions": [], 
                 "dataActions": [], 
                 "notDataActions": [] 
-            }
-        ]
+            } 
+        ] 
     }
 }

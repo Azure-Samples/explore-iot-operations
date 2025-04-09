@@ -1,7 +1,7 @@
 {
     "properties": { 
-        "roleName": "AIO Asset Endpoint Administrator", 
-        "description": "View, create, edit and delete AIO Asset Endpoints", 
+        "roleName": "Azure IoT Operations Asset Endpoint Administrator", 
+        "description": "View, create, edit and delete Azure IoT Operations Asset Endpoints", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 

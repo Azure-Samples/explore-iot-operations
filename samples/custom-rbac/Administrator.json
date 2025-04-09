@@ -1,7 +1,7 @@
 {
     "properties": { 
-        "roleName": "AIO Administrator", 
-        "description": "View, create, edit and delete AIO resources. Manage all resources, including instance and its downstream resources, asset, discovered assets, asset endpoint profiles.", 
+        "roleName": "Azure IoT Operations Administrator", 
+        "description": "View, create, edit and delete Azure IoT Operations resources. Manage all resources, including instance and its downstream resources, asset, discovered assets, asset endpoint profiles.", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 
