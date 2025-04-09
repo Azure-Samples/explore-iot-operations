@@ -1,0 +1,39 @@
+{
+    "properties": { 
+        "roleName": "AIO Data Flow Destination Administrator", 
+        "description": "View, create, edit and delete AIO Dataflow Destinations", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/instances/dataflowEndpoints/delete",
+                    "Microsoft.IoTOperations/instances/dataflowEndpoints/read",
+                    "Microsoft.IoTOperations/instances/dataflowEndpoints/write",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/write",
+                    "Microsoft.SecretSyncController/secretSyncs/read",
+                    "Microsoft.SecretSyncController/secretSyncs/write"
+                ], 
+                "notActions": [], 
+                "dataActions": [ 
+                    "Microsoft.KeyVault/vaults/secrets/getSecret/action", 
+                    "Microsoft.KeyVault/vaults/secrets/readMetadata/action", 
+                    "Microsoft.KeyVault/vaults/secrets/setSecret/action" 
+                ], 
+                "notDataActions": [] 
+            }
+        ]
+    }
+}

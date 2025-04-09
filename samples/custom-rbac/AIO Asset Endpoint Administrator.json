@@ -1,0 +1,42 @@
+{
+    "properties": { 
+        "roleName": "AIO Asset Endpoint Administrator", 
+        "description": "View, create, edit and delete AIO Asset Endpoints", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/delete",
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/write",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/delete",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/write",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/write",
+                    "Microsoft.SecretSyncController/secretSyncs/read",
+                    "Microsoft.SecretSyncController/secretSyncs/write"
+                ], 
+                "notActions": [], 
+                "dataActions": [ 
+                    "Microsoft.KeyVault/vaults/secrets/getSecret/action", 
+                    "Microsoft.KeyVault/vaults/secrets/readMetadata/action", 
+                    "Microsoft.KeyVault/vaults/secrets/setSecret/action" 
+                ], 
+                "notDataActions": [] 
+            } 
+        ] 
+    }
+}
