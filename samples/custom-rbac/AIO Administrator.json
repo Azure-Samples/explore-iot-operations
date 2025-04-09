@@ -1,0 +1,82 @@
+{
+    "properties": { 
+        "roleName": "AIO Administrator", 
+        "description": "View, create, edit and delete AIO resources. Manage all resources, including instance and its downstream resources, asset, discovered assets, asset endpoint profiles.", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.Authorization/roleAssignments/write",
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/delete",
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/write",
+                    "Microsoft.DeviceRegistry/assets/delete",
+                    "Microsoft.DeviceRegistry/assets/read",
+                    "Microsoft.DeviceRegistry/assets/write",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/delete",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/write",
+                    "Microsoft.DeviceRegistry/discoveredAssets/delete",
+                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/discoveredAssets/write",
+                    "Microsoft.DeviceRegistry/register/action",
+                    "Microsoft.DeviceRegistry/schemaRegistries/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions/write",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/write",
+                    "Microsoft.DeviceRegistry/schemaRegistries/write",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.ExtendedLocation/customLocations/write",
+                    "Microsoft.ExtendedLocation/register/action",
+                    "Microsoft.IoTOperations/*",
+                    "Microsoft.KeyVault/vaults/read",
+                    "Microsoft.KeyVault/vaults/write",
+                    "Microsoft.Kubernetes/connectedClusters/listClusterUserCredential/action",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.Kubernetes/register/action",
+                    "Microsoft.KubernetesConfiguration/extensions/operations/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.KubernetesConfiguration/extensions/write",
+                    "Microsoft.KubernetesConfiguration/extensionTypes/read",
+                    "Microsoft.KubernetesConfiguration/register/action",
+                    "Microsoft.ManagedIdentity/userAssignedIdentities/assign/action",
+                    "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials/read",
+                    "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials/write",
+                    "Microsoft.ManagedIdentity/userAssignedIdentities/read",
+                    "Microsoft.ManagedIdentity/userAssignedIdentities/write",
+                    "Microsoft.Resources/deployments/operationStatuses/read",
+                    "Microsoft.Resources/deployments/read",
+                    "Microsoft.Resources/deployments/validate/action",
+                    "Microsoft.Resources/deployments/whatIf/action",
+                    "Microsoft.Resources/deployments/write",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourceGroups/read",
+                    "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/read",
+                    "Microsoft.SecretSyncController/azureKeyVaultSecretProviderClasses/write",
+                    "Microsoft.SecretSyncController/register/action",
+                    "Microsoft.SecretSyncController/secretSyncs/read",
+                    "Microsoft.SecretSyncController/secretSyncs/write",
+                    "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+                    "Microsoft.Storage/storageAccounts/listKeys/action",
+                    "Microsoft.Storage/storageAccounts/read",
+                    "Microsoft.Storage/storageAccounts/write"
+                ], 
+                "notActions": [], 
+                "dataActions": [ 
+                    "Microsoft.KeyVault/vaults/secrets/getSecret/action", 
+                    "Microsoft.KeyVault/vaults/secrets/readMetadata/action", 
+                    "Microsoft.KeyVault/vaults/secrets/setSecret/action" 
+                ], 
+                "notDataActions": [] 
+            }
+        ]
+    }
+}

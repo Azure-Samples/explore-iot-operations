@@ -1,0 +1,41 @@
+{
+    "properties": { 
+        "roleName": "AIO Data Flow Administrator", 
+        "description": "View, create, edit and delete AIO Dataflows", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.DeviceRegistry/assets/read",
+                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions/read",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions/write",
+                    "Microsoft.DeviceRegistry/schemaRegistries/schemas/write",
+                    "Microsoft.DeviceRegistry/schemaRegistries/write",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/instances/dataflowEndpoints/read",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/dataflows/delete",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/dataflows/read",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/dataflows/write",
+                    "Microsoft.IoTOperations/instances/dataflowProfiles/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ],
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            } 
+        ] 
+    }
+}

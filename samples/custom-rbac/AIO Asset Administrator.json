@@ -1,0 +1,36 @@
+{ 
+    "properties": { 
+        "roleName": "AIO Asset Administrator", 
+        "description": "View, create, edit and delete AIO Assets", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/assets/delete",
+                    "Microsoft.DeviceRegistry/assets/read",
+                    "Microsoft.DeviceRegistry/assets/write",
+                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/discoveredAssets/delete",
+                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/discoveredAssets/write",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ], 
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            } 
+        ] 
+    }
+}
