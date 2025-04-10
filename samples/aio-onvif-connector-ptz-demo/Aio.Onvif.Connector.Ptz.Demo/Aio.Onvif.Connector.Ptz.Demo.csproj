@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\PTZ\PTZ.csproj" />
+    <ItemGroup>
+    <PackageReference Include="Azure.Iot.Operations.Mqtt" Version="0.9.*-*" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
     <ItemGroup>
-    <PackageReference Include="Azure.Iot.Operations.Mqtt" Version="0.4.225" />
-  </ItemGroup>
+      <ProjectReference Include="..\MediaClient\MediaClient.csproj" />
+      <ProjectReference Include="..\PtzClient\PtzClient.csproj" />
+    </ItemGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
