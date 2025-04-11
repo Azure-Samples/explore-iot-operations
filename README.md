@@ -13,7 +13,7 @@ This project provides the following:
 > [!IMPORTANT]
 > Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use a validated environment from the official documentation.
 >
-> Azure IoT Operations is currently in preview and not recommended for production use no matter the environment.
+
 
 ## Getting Started
 
