@@ -1,113 +1,193 @@
-﻿using Aio.Onvif.Connector.Ptz.Demo;
+﻿using System.CommandLine;
+using Aio.Onvif.Connector.Ptz.Demo;
 using Azure.Iot.Operations.Mqtt.Session;
+using Azure.Iot.Operations.Protocol;
 using Azure.Iot.Operations.Protocol.Models;
-using PTZ.dtmi_onvif_ptz__1;
+using MediaClient.Media;
+using PtzClient.Ptz;
 
-Console.Write("Mqtt Broker Host: ");
-var host = Console.ReadLine();
-if (string.IsNullOrWhiteSpace(host))
+var hostOption = new Option<string>(["--mqtt-host", "-h"], description: "The Hostname or IP of the MQTT Listener the demo connects to", getDefaultValue: () => "localhost");
+var portOption = new Option<int>(["--mqtt-port", "-p"], description: "The port of the MQTT Listener the demo connects to", getDefaultValue: () => 1883);
+var namespaceOption = new Option<string>(["--namespace", "-n"], description: "The Kubernetes namespace AIO is deployed to", getDefaultValue: () => "azure-iot-operations");
+var ptzAssetOption = new Option<string>(["--ptz-asset", "-pa"], description: "The name of the PTZ asset") { IsRequired = true };
+var mediaAssetOption = new Option<string>(["--media-asset", "-ma"], description: "The name of the media asset") { IsRequired = true };
+var modeOption = new Option<string>(["--mode", "-m"], description: "The method that should be used to move the camera", getDefaultValue: () => "relative").FromAmong("relative", "continuous");
+
+var rootCommand = new RootCommand("AIO ONVIF Connector Demo");
+rootCommand.AddOption(hostOption);
+rootCommand.AddOption(portOption);
+rootCommand.AddOption(namespaceOption);
+rootCommand.AddOption(ptzAssetOption);
+rootCommand.AddOption(mediaAssetOption);
+rootCommand.AddOption(modeOption);
+
+rootCommand.SetHandler(async (host, port, @namespace, ptzAsset, mediaAsset, mode) =>
 {
-    Console.Error.WriteLine("Invalid host");
-    Environment.Exit(1);
-}
+    Console.WriteLine($"MQTT Host: {host}");
+    Console.WriteLine($"MQTT Port: {port}");
+    Console.WriteLine($"Namespace: {@namespace}");
+    Console.WriteLine($"PTZ Asset: {ptzAsset}");
+    Console.WriteLine($"Media Asset: {mediaAsset}");
+    Console.WriteLine($"Mode: {mode}");
 
-Console.Write("Mqtt Broker Port: ");
-if (!int.TryParse(Console.ReadLine(), out var port))
-{
-    Console.Error.WriteLine("Invalid port number");
-    Environment.Exit(1);
-}
+    var mqttClientTcpOptions = new MqttClientTcpOptions(host, port);
 
-Console.Write("AIO Namespace: ");
-var aioNamespace = Console.ReadLine();
-if (string.IsNullOrWhiteSpace(aioNamespace))
-{
-    Console.Error.WriteLine("Invalid AIO namespace");
-    Environment.Exit(1);
-}
+    var mqttClientOptions = new MqttClientOptions(mqttClientTcpOptions) { SessionExpiryInterval = 60 };
 
-Console.Write("Asset Name: ");
-var assetName = Console.ReadLine();
-if (string.IsNullOrWhiteSpace(assetName))
-{
-    Console.Error.WriteLine("Invalid asset name");
-    Environment.Exit(1);
-}
+    var mqttSessionClient = new MqttSessionClient(new MqttSessionClientOptions());
+    await mqttSessionClient.ConnectAsync(mqttClientOptions);
+    var applicationContext = new ApplicationContext();
+    var ptzClient = new OnvifPtzClient(applicationContext, mqttSessionClient);
+    var mediaClient = new OnvifMediaClient(applicationContext, mqttSessionClient);
 
-Console.Write("Profile Token: ");
-var profileToken = Console.ReadLine();
-if (string.IsNullOrWhiteSpace(profileToken))
-{
-    Console.Error.WriteLine("Invalid profile token");
-    Environment.Exit(1);
-}
-
-Console.Clear();
-
-var mqttClientTcpOptions = new MqttClientTcpOptions(host, port);
-
-var mqttClientOptions = new MqttClientOptions(mqttClientTcpOptions) { SessionExpiryInterval = 60 };
-
-var mqttSessionClient = new MqttSessionClient(new MqttSessionClientOptions());
-
-await mqttSessionClient.ConnectAsync(mqttClientOptions).ConfigureAwait(true);
-var client = new PtzClient(mqttSessionClient);
-client.CustomTopicTokenMap.Add("asset", assetName);
-client.CustomTopicTokenMap.Add("namespace", aioNamespace);
-
-Console.WriteLine("Use arrow keys or WASD to move camera, Q to quit");
-
-while (true)
-{
-    var key = Console.ReadKey(true).Key;
-    if (key == ConsoleKey.Q)
+    var profiles = await mediaClient.GetProfilesAsync(new Dictionary<string, string>
     {
-        break;
+        { "ex:namespace", @namespace },
+        { "ex:asset", mediaAsset }
+    });
+    var profile = profiles.GetProfilesCommandResponse.Profiles.First();
+
+    Console.WriteLine("Use arrow keys or WASD to move camera, Q to quit");
+
+    if (mode == "relative")
+    {
+        await StartRelativeMoveAsync(ptzClient, profile, @namespace, ptzAsset);
+    }
+    else if (mode == "continuous")
+    {
+        await StartContinuousMoveAsync(ptzClient, profile, @namespace, ptzAsset);
     }
 
-    (float x, float y)? delta = key switch
-    {
-        ConsoleKey.UpArrow => (0, 0.2f),
-        ConsoleKey.DownArrow => (0, -0.2f),
-        ConsoleKey.LeftArrow => (0.2f, 0),
-        ConsoleKey.RightArrow => (-0.2f, 0),
-        ConsoleKey.W => (0, 0.2f),
-        ConsoleKey.S => (0, -0.2f),
-        ConsoleKey.A => (0.2f, 0),
-        ConsoleKey.D => (-0.2f, 0),
-        _ => null
-    };
+    await StartRelativeMoveAsync(ptzClient, profile, @namespace, ptzAsset);
+}, hostOption, portOption, namespaceOption, ptzAssetOption, mediaAssetOption, modeOption);
 
-    if (delta == null)
-    {
-        continue;
-    }
+await rootCommand.InvokeAsync(args);
 
-    try
+async Task StartRelativeMoveAsync(OnvifPtzClient ptzClient, Profile profile, string @namespace, string ptzAssetName)
+{
+    while (true)
     {
-        var request = new RelativeMoveRequestPayload
+        var key = Console.ReadKey(true).Key;
+        if (key == ConsoleKey.Q)
         {
-            RelativeMove = new Object_Onvif_Ptz_RelativeMove__1
-            {
-                ProfileToken = profileToken,
-                Translation = new Object_Onvif_Ptz_PTZVector__1
-                {
-                    PanTilt = new Object_Onvif_Ptz_Vector2D__1
-                    {
-                        X = delta.Value.x,
-                        Y = delta.Value.y,
-                    }
-                }
-            }
+            return;
+        }
+
+        (float x, float y)? delta = key switch
+        {
+            ConsoleKey.UpArrow => (0, 0.2f),
+            ConsoleKey.DownArrow => (0, -0.2f),
+            ConsoleKey.LeftArrow => (0.2f, 0),
+            ConsoleKey.RightArrow => (-0.2f, 0),
+            ConsoleKey.W => (0, 0.2f),
+            ConsoleKey.S => (0, -0.2f),
+            ConsoleKey.A => (0.2f, 0),
+            ConsoleKey.D => (-0.2f, 0),
+            _ => null
         };
 
-        await client.RelativeMoveAsync(request);
-    }
-    catch (System.Exception)
-    {
-        // Bad request is expected if the camera reaches the limit
-    }
+        if (delta == null)
+        {
+            continue;
+        }
 
-    await Task.Delay(200).ConfigureAwait(true);
+        try
+        {
+            var request = new RelativeMoveRequestPayload
+            {
+                RelativeMove = new RelativeMove
+                {
+                    ProfileToken = profile.Token,
+                    Translation = new Ptzvector
+                    {
+                        PanTilt = new PtzClient.Ptz.Vector2d
+                        {
+                            X = delta.Value.x,
+                            Y = delta.Value.y,
+                        }
+                    }
+                }
+            };
+
+            await ptzClient.RelativeMoveAsync(request, new Dictionary<string, string>
+            {
+                { "ex:namespace", @namespace },
+                { "ex:asset", ptzAssetName }
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            // Bad request is expected if the camera reaches the limit
+        }
+
+        await Task.Delay(1000).ConfigureAwait(true);
+    }
+}
+
+async Task StartContinuousMoveAsync(OnvifPtzClient ptzClient, Profile profile, string @namespace, string ptzAssetName)
+{
+    while (true)
+    {
+        var key = Console.ReadKey(true).Key;
+        if (key == ConsoleKey.Q)
+        {
+            return;
+        }
+
+        (float x, float y)? delta = key switch
+        {
+            ConsoleKey.UpArrow => (0, 0.2f),
+            ConsoleKey.DownArrow => (0, -0.2f),
+            ConsoleKey.LeftArrow => (-0.2f, 0),
+            ConsoleKey.RightArrow => (0.2f, 0),
+            ConsoleKey.W => (0, 0.2f),
+            ConsoleKey.S => (0, -0.2f),
+            ConsoleKey.A => (-0.2f, 0),
+            ConsoleKey.D => (0.2f, 0),
+            _ => null
+        };
+
+        if (delta == null)
+        {
+            continue;
+        }
+
+        try
+        {
+            var request = new ContinuousMoveRequestPayload
+            {
+                ContinuousMove = new ContinuousMove
+                {
+                    ProfileToken = profile.Token,
+                    Velocity = new PtzClient.Ptz.Ptzspeed
+                    {
+                        PanTilt = new PtzClient.Ptz.Vector2d
+                        {
+                            X = delta.Value.x,
+                            Y = delta.Value.y,
+                        }
+                    }
+                }
+            };
+
+            await ptzClient.ContinuousMoveAsync(request, new Dictionary<string, string>
+            {
+                { "ex:namespace", @namespace },
+                { "ex:asset", ptzAssetName }
+            });
+            await Task.Delay(1000).ConfigureAwait(true);
+            await ptzClient.StopAsync(new StopRequestPayload { Stop = new Stop { ProfileToken = profile.Token, PanTilt = true } }, new Dictionary<string, string>
+            {
+                { "ex:namespace", @namespace },
+                { "ex:asset", ptzAssetName }
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            // Bad request is expected if the camera reaches the limit
+        }
+    }
 }
 
