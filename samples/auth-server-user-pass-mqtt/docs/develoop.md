@@ -39,7 +39,7 @@
         # Credential #1
         # username: client1
         # password: password1
-        # salt: "+H7jXzcEbq2kkyvpxtxePQ"
+        # salt: "EnyzbHpiNqeTeM9Gl3rjWQ"
         [client1]
         password = "$pbkdf2-sha512$i=100000,l=64$EnyzbHpiNqeTeM9Gl3rjWQ$Qc3MqYZ3Q49kz3Uh1Ia4A5UMDMlhxujgNjNYgpgVDDaiq13DP5IEM7gA7MbsU70RTGn5qHU9uis79LkLV5wkAg"
 
