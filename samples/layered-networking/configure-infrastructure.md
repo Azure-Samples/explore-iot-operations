@@ -1,6 +1,6 @@
 # Configure the infrastructure (Core DNS and Envoy Proxy)
 
-In this article, you set up the Envoy Proxy on Level 4 and Level 3, and Core DNS on Level 3 and Level 2. This setup lets you enable Arc for K3s clusters on Level 2 and Level 3 that don't have direct internet access.
+This article explains how to set up Envoy Proxy on Level 4 and Level 3, and Core DNS on Level 3 and Level 2. This setup lets you use Arc for K3s clusters on Level 2 and Level 3 that don't have direct internet access.
 
 - Level 4 has an Envoy Proxy deployed and uses Enterprise DNS servers to resolve internet addresses
 - Level 3 has an Envoy Proxy deployed and uses locally hosted Core DNS servers to resolve internet addresses to the Level 4 IP
@@ -50,7 +50,7 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
     - Virtual network: Level 3
     - Static IP address: 192.168.103.10
     - Host name: level3
-    - Installed software: nano, wget, curl, k3s (air gapped install with bootstrapping images added), k9s (recommended), helm (recommended), mqttui
+    - Installed software: nano, wget, curl, k3s (air-gapped install with bootstrapping images added), k9s (recommended), helm (recommended), mqttui
     - SSH server is enabled
     - Noted configuration:
       - For demonstration simplicity, ufw is disabled
@@ -68,12 +68,12 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
 
 ## Preparing the jump box
 
-To reduce the number of URIs that need to be allowlisted in this configuration, download the images to the jump box, then move them to the different machines to import into the K3s local image cache. Ideally, the environment has a private image registry that you can load these into instead, but this requires registry credentials for pulling to be set up.
+To reduce the number of URIs that you need to allowlist in this configuration, download the images to the jump box, then move them to the different machines to import into the K3s local image cache. Ideally, use a private image registry for your environment and load the images there instead, but this setup requires registry credentials for pulling.
 
 1. Download the Envoy v1.33.0 image to the jump box.
 
     ```bash
-    # Assume the directory to store files is ~/installfiles
+    # The directory to store files is ~/installfiles
     
     docker pull envoyproxy/envoy:v1.33.0
     docker save -o ./envoy_v1.33.0.tar envoyproxy/envoy:v1.33.0
@@ -121,13 +121,13 @@ To reduce the number of URIs that need to be allowlisted in this configuration, 
 
 At this level, enterprise or public name servers provide DNS resolution, so you don't need to configure name servers. Only the Envoy Proxy is configured at this level. 
 
-This proxy configuration enables control plane traffic. Data plane traffic usually targets local endpoints or upstream clusters, so it isn't proxied. Setting up the Envoy Proxy at this level lets the level 3 server use required internet services (URI) and leverages the proxy's RBAC capabilities to restrict access to Kubernetes networks and level3 or level4 network hosts. You can adjust these restrictions based on your implementation needs.
+This proxy configuration lets control plane traffic through. Data plane traffic usually targets local endpoints or upstream clusters, so it isn't proxied. Setting up the Envoy Proxy at this level lets the level 3 server use required internet services (URI) and uses the proxy's RBAC capabilities to restrict access to Kubernetes networks and level3 or level4 network hosts. Adjust these restrictions based on your implementation needs.
 
 Only port 443 and 8084 listeners are set up because AIO control plane traffic uses these ports. Not starting the port 80 HTTP listener improves security.
 
 Levels without internet access use the previously downloaded envoy/envoy:v1.33.0 image on the jump box. This level pulls the image from the source because it has internet access.
 
-### Understanding the Envoy Configuration
+### Understanding the Envoy configuration
 
 ```bash
 # Review the envoy configuration file 
@@ -150,7 +150,7 @@ Only certain network ranges or machines can use the Envoy Proxy: the Kubernetes 
 
 ![Screenshot of Envoy RBAC network ranges for Level 4](./images/envoy-rbac-networks-level4.png)
 
-A service fronts this setup as a load-balanced endpoint.
+A service fronts this setup as a load balanced endpoint.
 
 ![Screenshot of Envoy load balancer service for Level 4](./images/envoy-loadbalancer-service.png)
 
@@ -171,13 +171,13 @@ When you review the pods, you see a new Envoy pod running on the node.
 
 ## Deploy to Level 3
 
-In this level the there is no internet access so it is important to first install the envoy/envoy:v1.33.0 image on the level3 machine as it will not have internet access to pull it. Following that we configure name resolution to use CoreDNS resolving a list of known URI to the upstream (parent) envoy proxy service. 
+At this level, there's no internet access, so first install the envoy/envoy:v1.33.0 image on the level3 machine because it can't pull the image directly. Then, set up name resolution to use CoreDNS, which resolves a list of known URIs to the upstream (parent) Envoy proxy service.
 
-This proxying configuration is focused on enabling the control plane aspects, while the data plane traffic typically targets local endpoints or upstream clusters it does not fall into the "proxied traffic". Setting up the Envoy Proxy on this level allows the level2 server to access the required internet services (URI) while leveraging the proxies RBAC capabilities to restrict access to Kubernetes networks and level2/level3 network hosts. These can be loosened or tightened depending on the implementation specific needs.
+This proxy configuration enables control plane traffic. Data plane traffic usually targets local endpoints or upstream clusters, so it isn't considered proxied traffic. Setting up Envoy Proxy at this level lets the level2 server use required internet services (URIs) and leverages the proxy's RBAC capabilities to restrict access to Kubernetes networks and level2 or level3 network hosts. You can adjust these restrictions based on your implementation needs.
 
 Only port 443 and 8084 listeners will be setup as the control plane traffic of AIO will operate over these, not starting the level 80 http listener is a choice to improve the security posture. 
 
-Copy the previously downloaded envoy image from the jump box into the ~/ directory on the level3 machine, then upload it to the k3s image store (not using a private repository but that can be used if desired).
+Copy the previously downloaded Envoy image from the jump box to the ~/ directory on the level3 machine, then upload it to the k3s image store. You can use a private repository if you want.
 
 ```bash
 # On the jump box
@@ -198,27 +198,27 @@ exit
 cat ./level3-envoy-config.yaml
 ```
 
-The admin sight is setup to listen on port 10000.
+The admin site is set up to listen on port 10000.
 
 ![Screenshot of Envoy admin interface on port 10000](./images/envoy-admin-interface.png)
 
-There are 3 clusters configured, which are targets of the traffic that is split. In this configuration they use the machines routing etc. to operate, but could be adjusted to point to an enterprise or upstream proxy. The split of traffic into arc-connect-cluster (used for Arc to enable Arc enabled kubernetes), https-primary-cluster (used for packets that should not be in inspected by terminating proxies), and https-other-cluster (for all traffic that can be inspected by terminating proxies). The DNS resolution portion is important as it indicates the DNS server that should have the IP Addresses resolved (in our case it is CoreDNS on the local node).
+Three clusters are configured as traffic targets. In this setup, they use the machine's routing to operate, but you can adjust them to point to an enterprise or upstream proxy. Traffic splits into arc-connect-cluster (for Arc-enabled Kubernetes), https-primary-cluster (for packets that shouldn't be inspected by terminating proxies), and https-other-cluster (for all traffic that can be inspected by terminating proxies). The DNS resolution section specifies the DNS server for resolving IP addresses, which is CoreDNS on the local node.
 
 ![Screenshot of Envoy cluster configuration for Level 3](./images/envoy-clusters-level3.png)
 
-Two listeners have been setup one one that can listen (via the service) on port 443 and the other on port 8084 (Arc Connect). The 443 traffic is later split into inspectable or not inspectable traffic. The list of server names are the ones that will be routed by the specified filter chain.
+Two listeners are set up: one listens on port 443 and the other on port 8084 (Arc Connect). The 443 traffic is later split into inspectable or non-inspectable traffic. The server names in the list are routed by the specified filter chain.
 
 ![Screenshot of Envoy listener configuration for Level 3](./images/envoy-listeners-level3.png)
 
-Only certain network ranges and or machines will be allowed to use the Envoy Proxy. Kubernetes network (10.42.0.0/16 in our case), level 3 network (192.168.103.0/24), and level 2 network (192.168.102.0/24).
+Only certain network ranges or machines can use the Envoy Proxy: the Kubernetes network (10.42.0.0/16), level 3 network (192.168.103.0/24), and level 2 network (192.168.102.0/24).
 
 ![Screenshot of Envoy RBAC network ranges for Level 3](./images/envoy-rbac-networks-level3.png)
 
-There a service setup that fronts this that has been setup as a load balanced endpoint.
+A service is set up in front of this as a load-balanced endpoint.
 
 ![Screenshot of Envoy load balancer service for Level 3](./images/envoy-loadbalancer-service.png)
 
-From the jump box change to the level3 context and deploy the Envoy Proxy with configuration to it.
+From the jump box, switch to the level3 context and deploy the Envoy Proxy with its configuration.
 
 ```bash
 # Set the context
@@ -228,21 +228,21 @@ kubectl config use-context level3
 kubectl apply -f ./level3-envoy-config.yaml
 ```
 
-Reviewing the pods will show a new pod from envoy pod running on the node.
+When you review the pods, you see a new Envoy pod running on the node.
 
 ![Screenshot showing Envoy pod running on Level 3 node](./images/envoy-pod.png)
 
-Review the Core DNS config map.
+Review the CoreDNS config map.
 
 ```bash
 cat level3-coredns-config.yaml
 ```
 
-This is a Kubernetes ConfigMap that will be applied to the kube-system namespace and called coredns-custom
+This Kubernetes ConfigMap is applied to the kube-system namespace and is called coredns-custom.
 
 ![Screenshot of CoreDNS custom ConfigMap YAML for Level 3](./images/coredns-configmap.png)
 
-Domain requests for domain resolution on port 53 that are not wildcard domains will resolve the specific host to the parent address (192.168.104.10).
+Domain requests for resolution on port 53 that aren't wildcard domains resolve the specific host to the parent address (192.168.104.10).
 
 ![Screenshot of CoreDNS config for non-wildcard domain resolution to parent address](./images/coredns-nonwildcard-parent-resolution.png)
 
@@ -250,7 +250,7 @@ Wildcard domains use a similar configuration, with a clause to rewrite names so 
 
 ![Screenshot of CoreDNS config for wildcard domain rewrite](./images/coredns-wildcard-rewrite.png)
 
-Deploy the CoreDNS ConfigMap you just created and the load balancer service to let CoreDNS be accessed outside the cluster..
+Deploy the CoreDNS ConfigMap you just created and the load balancer service to let CoreDNS be accessed outside the cluster.
 
 ```bash
 # Set context of the kubectl CLI to use the previously configured level3 context (ensure it targets the proper)
@@ -273,7 +273,7 @@ kubectl get service coredns-external -n kube-system
 
 ![Screenshot showing CoreDNS deployment rollout in Level 3](./images/coredns-deployment-rollout-level3.png)
 
-Setup the host machines resolver to use the CoreDNS service that was exposed. This will point to the services external IP address, which in this tutorial is the IP Address of the level3 machine (192.168.103.10). This requires establishing an ssh session to the machine to complete
+Set up the host machine's resolver to use the CoreDNS service you exposed. This points to the service's external IP address, which in this tutorial is the IP address of the level3 machine (192.168.103.10). You need to establish an SSH session to the machine to complete this step.
 
 ```bash
 ssh ubuntu@192.168.103.10
@@ -295,11 +295,11 @@ dig example.com
 
 ![Screenshot of dig command result for CoreDNS Level 3](./images/coredns-dig-result-level3.png)
 
-The important items that indicate it is working properly are:
-- The server handling the query is 192.168.103.10 (level3's IP address)
-- The answer had the parents IP address (level4's IP address) 192.168.104.10
+The important items that show it's working properly are:
+- The server handling the query is 192.168.103.10 (level3's IP address).
+- The answer has the parent IP address (level4's IP address) 192.168.104.10.
 
-Test querying the internet through the upstream envoy proxy.
+Test querying the internet through the upstream Envoy proxy.
 
 ```bash
 curl -v https://www.example.com
@@ -335,7 +335,7 @@ The wildcard domains are almost the same with a clause to rewrite the names to n
 
 ![Screenshot of CoreDNS config for wildcard domain rewrite (Level 2)](./images/coredns-wildcard-rewrite-level2.png)
 
-Deploy the CoreDNS ConfigMap that was just created and the Load Balancer service to allow CoreDNS to be accessed outside the cluster
+Deploy the CoreDNS ConfigMap you just created and the load balancer service to let CoreDNS be used outside the cluster.
 
 ```bash
 # Set the kubectl CLI to use the previously configured level2 context
@@ -381,10 +381,10 @@ dig example.com
 ![Screenshot of dig command result for CoreDNS Level 2](./images/coredns-dig-result-level2.png)
 
 The important items that show it's working properly are:
-- The server handling the query is 192.168.102.10 (level2's IP address).
-- The answer has the parent IP address (level3's IP address), 192.168.103.10.
+- The server handling the query is 192.168.102.10 (the level2 IP address).
+- The answer has the parent IP address (the level3 IP address), 192.168.103.10.
 
-Test the ability to query the internet through the upstream envoy proxy.
+Test querying the internet through the upstream Envoy proxy.
 
 ```bash
 curl -v https://www.example.com
@@ -392,7 +392,7 @@ curl -v https://www.example.com
 
 ![Screenshot of curl command result for Envoy proxy Level 2](./images/envoy-curl-result-level2.png)
 
-Exit the ssh session to the jump box.
+Exit the SSH session to the jump box.
 
 ```bash
 exit
@@ -400,7 +400,7 @@ exit
 
 ## Troubleshooting
 
-You can remove the www.example.com and example.com Core DNS and Envoy configurations, but they're used here to demonstrate and troubleshoot the configuration. To identify a problem or test the setup, follow these steps from the jump box:
+Remove the www.example.com and example.com Core DNS and Envoy configurations if you don't need them. They're used here to demonstrate and troubleshoot the configuration. To identify a problem or test the setup, follow these steps from the jump box:
 
 1. Get and record the external or load-balanced IP address of the Envoy services on level4 and level3.
 
@@ -455,7 +455,7 @@ You can remove the www.example.com and example.com Core DNS and Envoy configurat
 
     ![Terminal output of curl command showing HTTP 200 response from www.example.com](./images/envoy-curl-result-level2.png)
 
-1. If a 2XX (200) success code isn't returned or it stops at the handshake or connection, check if the level3 logs show the request. If they do, level2 is configured correctly (the request appears in the log output in the other session).
+1. If a 2XX (200) success code isn't returned, or it stops at the handshake or connection, check if the level3 logs show the request. If they do, level2 is configured correctly (the request appears in the log output in the other session).
 
     ![Terminal output showing Envoy log entry for request from level2](./images/envoy-logs-level2.png)
 
