@@ -6,7 +6,7 @@ To deploy Azure IoT Operations, you need to Arc enable the k3s clusters you crea
 
 ## Prerequisites
 
-- Set up the jump box as outlined in previously with Azure CLI and Kubectl. Make sure it's set up to communicate with each cluster by switching context.
+- Set up the jump box as outlined in [preparing the jump box](./prerequisites.md#preparing-the-jump-box). Make sure it's set up to communicate with each cluster by switching context.
 
 - Contributor access to an Azure subscription where the clusters connect.
 

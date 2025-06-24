@@ -32,12 +32,9 @@ This guidance supports deploying Azure IoT Operations components and sending MQT
 
 ## Next steps
 
+1. For lab preparation, see the [prerequisites](./prerequisites.md).
 1. Learn how Azure IoT Operations works in a segmented network in [How Azure IoT Operations Works in a segmented network](./aio-segmented-networks.md).
 1. Learn how to use CoreDNS and Envoy Proxy in [Configure the infrastructure](./configure-infrastructure.md).
 1. Learn how to Arc enable the K3s clusters in [Arc enable the K3s clusters](./arc-enable-clusters.md).
 1. Learn how to deploy Azure IoT Operations to the clusters in [Deploy Azure IoT Operations](./deploy-aio.md).
 1. Learn how to flow asset telemetry through the deployments into Azure Event Hubs in [Flow asset telemetry](./asset-telemetry.md).
-
-## Related
-
-For lab preparation, see the [prerequisites](./prerequisites.md).
