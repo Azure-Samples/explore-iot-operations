@@ -580,17 +580,3 @@ In this section the oven1 transformed messages will have an additional piece of 
 1. Selecting one of the messages in the list displays the information received in the Event Hub
 
     ![Event Hub message detail view showing telemetry data with all transform properties](./images/event-hub-message-detail-telemetry.png)
-
-## Previous steps
-
-1. [Overview](./README.md)
-1. Learn how Azure IoT Operations works in a segmented network in [How Azure IOT Operations Works in a Segmented Network](./aio-segmented-networks.md).
-1. Use Core DNS and Envoy Proxy in [Configure the infrastructure](./configure-infrastructure.md).
-1. Arc enable the K3s clusters in [Arc enable the K3s clusters](./arc-enable-clusters.md).
-1. Deploy Azure IoT Operations to the clusters in [deploy Azure IoT Operations](./deploy-aio.md).
-
-
-
-## Related
-
-For lab preparation, see [prework](./prework.md)
