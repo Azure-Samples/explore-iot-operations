@@ -453,15 +453,15 @@ Remove the www.example.com and example.com Core DNS and Envoy configurations if 
     curl -v https://www.example.com
     ```
 
-    ![Terminal output of curl command showing HTTP 200 response from www.example.com](./images/envoy-curl-result-level2.png)
+    ![Terminal output of curl command showing HTTP 200 response from www.example.com](./images/curl-result-level2.png)
 
 1. If a 2XX (200) success code isn't returned, or it stops at the handshake or connection, check if the level3 logs show the request. If they do, level2 is configured correctly (the request appears in the log output in the other session).
 
-    ![Terminal output showing Envoy log entry for request from level2](./images/envoy-logs-level2.png)
+    ![Terminal output showing log entry for request from level2](./images/logs-level2.png)
 
 1. If the entry exists, follow the same steps for level3 to level4. You should see a similar entry in the level4 logs:
 
-    ![Terminal output showing Envoy log entry for request forwarded to level4](./images/envoy-logs-level4.png)
+    ![Terminal output showing Envoy log entry for request forwarded to level4](./images/logs-level4.png)
 
 ## Next steps
 

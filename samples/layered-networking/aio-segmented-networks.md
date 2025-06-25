@@ -41,9 +41,9 @@ The following diagram shows how to redirect traffic from an isolated network to 
 ### Event Hubs bound data flow
 
 1. Level 2 AIO Data Flow receives a new message based on its "filters"
-1. Level 2 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQ Service running on level 3
+1. Level 2 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQTT Broker service running on level 3
 1. Level 3 AIO Data Flow receives a new message based on its "filters"
-1. Level 3 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQ Service running on level 4
+1. Level 3 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQTT Broker service running on level 4
 1. Level 4 AIO Data Flow receives a new message based on its "filters"
 1. Level 4 AIO Data Flow sends the MQTT message, potentially after transformation, to Event Hubs
 
@@ -66,7 +66,7 @@ In this example, Azure IoT Operations is deployed to levels 2 through 4. At leve
 With extra configuration, you can use this technique to direct traffic east-west. This route lets Azure IoT Operations components send data to other components at upper levels and create data pipelines from the bottom layer to the cloud. In a multilayer network, you can deploy Azure IoT Operations components across layers based on your architecture and data flow needs. This example gives you general ideas about where to place individual components.
 
 - Place the connector for OPC UA at the lower layer, closer to your assets and OPC UA servers.
-- Transfer data toward the cloud through the MQ components in each layer.
+- Transfer data toward the cloud through the MQTT Broker components in each layer.
 - Use the Data Flows component on nodes with enough compute resources, because it typically uses more compute.
 
 ## Next steps

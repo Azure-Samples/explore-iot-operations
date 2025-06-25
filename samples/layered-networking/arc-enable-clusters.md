@@ -107,7 +107,7 @@ exit
 
 1. After the connection, you can see the new cluster in the portal.
 
-    ![Azure Portal showing connected Arc-enabled Kubernetes cluster](./images/azure-portal-arc-connected-cluster.png)
+    ![Azure Portal showing connected Arc-enabled Kubernetes cluster](./images/cluster-details-level4.png)
 
         > [!NOTE]
     >

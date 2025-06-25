@@ -1,6 +1,6 @@
 # Asset telemetry
 
-This article explains how to use MQ and data flows to move application telemetry through the previously configured Purdue network. The process starts with an asset deployed in Purdue level2 and moves data from cluster to cluster, eventually landing in the cloud. At each cluster, a transformation adds new information to show how you can layer contextualization throughout the system. For example, an asset might send information from the Panels Creation Manufacturing Cell, but the asset itself doesn't know this context. Adding context at the cluster is a good option.
+This article explains how to use MQTT Broker and data flows to move application telemetry through the previously configured Purdue network. The process starts with an asset deployed in Purdue level2 and moves data from cluster to cluster, eventually landing in the cloud. At each cluster, a transformation adds new information to show how you can layer contextualization throughout the system. For example, an asset might send information from the Panels Creation Manufacturing Cell, but the asset itself doesn't know this context. Adding context at the cluster is a good option.
 
 This article isn't a definitive guide or a production configuration. For core concepts, see the [Azure IoT Operations documentation](https://learn.microsoft.com/en-us/azure/iot-operations/discover-manage-assets/overview-manage-assets).
 
@@ -486,7 +486,7 @@ In this section the oven1 transformed messages will have an additional piece of 
 
 1. Go to the [Schema Gen helper](https://azure-samples.github.io/explore-iot-operations/schema-gen-helper/) to define the source schema (this level does not know about the other levels assets)
 
-  ![Schema Generation Helper tool for creating level3 input schema](./images/schema-gen-helper-level3-schema.png)
+    ![Schema Generation Helper tool for creating level3 input schema](./images/schema-gen-helper-level3-schema.png)
 
 1. On the jump box, use mosquitto_sub to retrieve some samples of the message or use the example file contents that follow:
 
