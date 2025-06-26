@@ -23,9 +23,8 @@ To deploy Azure IoT Operations, you need to Arc enable the k3s clusters you crea
     az account set -s "<Subscription_Id>"
     
     # Query for the OID and record the GUID
-    az ad sp show --id bc313c14-388c-4e7d-a58e-70017303ee3b --query id -o tsv
+    az ad sp show --id ${OID} --query id -o tsv
     ```
-
 
 ## Set required kernel parameters on each machine
 
@@ -51,8 +50,6 @@ sudo systemctl restart k3s
 exit
 ```
 
-
-
 ## Arc enable level4
 
 1. Set the environment variables for level4 connectivity.
@@ -69,7 +66,6 @@ exit
     # The OID you got in the prerequisites
     OID="<OID>"
     ```
-
 
 1. Set Azure to the right subscription and set Kubernetes to target the level 4 cluster.
 
@@ -109,14 +105,13 @@ exit
 
     ![Azure Portal showing connected Arc-enabled Kubernetes cluster](./images/cluster-details-level4.png)
 
-        > [!NOTE]
+    > [!NOTE]
     >
     > You can also check the connection by running the following command: `az connectedk8s list --resource-group $RESOURCE_GROUP --query '[].{name: name, distribution: distribution, infrastructure: infrastructure, status: connectivityStatus}'`.
 
 1. Select the cluster to see items to confirm (in red squares). The distribution is set to k3s, the wiextension is installed, and the cluster is connected.
 
     ![Azure Portal cluster details with k3s distribution and extensions](./images/azure-portal-cluster-details-k3s-2.png)
-
 
 1. Review the Kubernetes namespaces on level4 to see that arc-workload-identity, azure-arc, and azure-arc-release are present (Arc agentry).
 
@@ -153,7 +148,6 @@ exit
     
     kubectl config use-context level3
     ```
-
 
 1. Add the Azure CLI extensions and register the providers required for these steps and the Azure IoT Operations installation. If you're using the same session and subscription, skip this step.
 
@@ -192,14 +186,11 @@ exit
 
     ![Azure Portal showing connected Arc-enabled Kubernetes cluster](./images/azure-portal-arc-connected-cluster.png)
 
-    
-
 1. Select the cluster to see items to confirm (in red squares).
 
 1. The distribution is selected as k3s, the wiextension is installed, and the cluster is connected.
 
     ![Azure Portal cluster details with k3s distribution and extensions](./images/azure-portal-cluster-details-k3s-3.png)
-
 
 1. Review the Kubernetes namespaces on level3 to see that arc-workload-identity, azure-arc, and azure-arc-release are present (Arc agentry).
 
@@ -263,7 +254,7 @@ exit
 1. After the connect the new cluster can be seen in the portal.
 
     ![Screenshot of the new cluster in the Azure portal.](./images/new-cluster-portal.png)
-    
+
     > [!NOTE]
     >
     > You can also validate by running the following command: `az connectedk8s list --resource-group $RESOURCE_GROUP --query '[].{name: name, distribution: distribution, infrastructure: infrastructure, status: connectivityStatus}'`.
