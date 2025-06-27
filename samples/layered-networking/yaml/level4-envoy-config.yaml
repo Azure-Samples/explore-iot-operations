@@ -1,0 +1,331 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-lnm-demo-configmap
+  namespace: default
+  labels:
+    app: envoy-lnm-demo
+data:
+  envoy.yaml: |
+    admin:
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+          protocol: TCP
+    static_resources:
+
+      clusters:
+      - name: https-primary-cluster
+        connect_timeout: 30s
+        lb_policy: CLUSTER_PROVIDED
+        cluster_type:
+          name: envoy.clusters.dynamic_forward_proxy
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+            dns_cache_config:
+              dns_lookup_family: V4_ONLY
+              name: dynamic_forward_proxy_cache_config
+      - name: https-other-cluster
+        connect_timeout: 30s
+        lb_policy: CLUSTER_PROVIDED
+        cluster_type:
+          name: envoy.clusters.dynamic_forward_proxy
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+            dns_cache_config:
+              dns_lookup_family: V4_ONLY
+              name: dynamic_forward_proxy_cache_config
+      - name: arc-connect-cluster
+        connect_timeout: 30s
+        lb_policy: CLUSTER_PROVIDED
+        cluster_type:
+          name: envoy.clusters.dynamic_forward_proxy
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+            dns_cache_config:
+              dns_lookup_family: V4_ONLY
+              name: dynamic_forward_proxy_cache_config
+      listeners:
+      - name: https-primary
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: 443
+            protocol: TCP
+        use_original_dst: false
+        listener_filters:
+        - name: envoy.filters.listener.tls_inspector
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.listener.tls_inspector.v3.TlsInspector
+        filter_chains:
+        - filter_chain_match:
+
+            server_names:
+            - management.azure.com
+            - '*.dp.kubernetesconfiguration.azure.com'
+            - login.microsoftonline.com
+            - '*.login.microsoft.com'
+            - login.windows.net
+            - mcr.microsoft.com
+            - '*.data.mcr.microsoft.com'
+            - gbl.his.arc.azure.com
+            - '*.his.arc.azure.com'
+            - guestnotificationservice.azure.com
+            - '*.guestnotificationservice.azure.com'
+            - sts.windows.net
+            - '*.servicebus.windows.net'
+            - graph.microsoft.com/
+            - '*.arc.azure.net'
+            - linuxgeneva-microsoft.azurecr.io
+            - api.segment.io
+            - '*.azureedge.net'
+            - k8sconnectcsp.azureedge.net
+            - '*.azurecr.io'
+            - '*.prod.hot.ingestion.msftcloudes.com'
+            - login.microsoft.com
+            - obo.arc.azure.com
+            - www.powershellgallery.com
+            - dp.kubernetesconfiguration.azure.com
+            - graph.windows.net
+            - self.events.data.microsoft.com
+            - onegetcdn.azureedge.net
+            - go.microsoft.com
+            - '*.blob.core.windows.net'
+            - '*.vault.azure.net'
+            - servicebus.windows.net
+            - global.metrics.azure.eaglex.ic.gov
+            - '*.prod.microsoftmetrics.com'
+            - '*.login.microsoftonline.com'
+            - adhs.events.data.microsoft.com
+            - dc.services.visualstudio.com
+            - nw-umwatson.events.data.microsoft.com
+            - global.metrics.azure.microsoft.scloud
+            - '*.blob.storage.azure.net'
+            - '*.obo.arc.azure.com'
+            - k8connecthelm.azureedge.net
+            - '*.ods.opinsights.azure.com'
+            - '*.oms.opinsights.azure.com'
+            - '*.monitoring.azure.com'
+            - '*.arcdataservices.com'
+            - '*.gw.arc.azure.com'
+          filters:
+          - name: envoy.filters.network.rbac
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.rbac.v3.RBAC
+              stat_prefix: https-other-rbac
+              rules:
+                action: ALLOW
+                policies:
+                  "allow_policy":
+                    permissions:
+                    - any: true
+                    principals:
+                    - remote_ip:
+                        address_prefix: kubenet
+                        prefix_len: kubecidr
+                    - remote_ip:
+                        address_prefix: currentnet
+                        prefix_len: currentcidr
+                    - remote_ip:
+                        address_prefix: childnet
+                        prefix_len: childcidr
+          - name: envoy.filters.network.sni_dynamic_forward_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.sni_dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                dns_lookup_family: V4_ONLY
+                name: dynamic_forward_proxy_cache_config
+              port_value: 443
+          - name: envoy.tcp_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+              cluster: https-primary-cluster
+              stat_prefix: https-primary-tcp
+              access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    text_format_source:
+                      inline_string: "[%START_TIME%] Req: \"%REQUESTED_SERVER_NAME%\" DwnAddr: \"%DOWNSTREAM_REMOTE_ADDRESS%\" UpHost: \"%UPSTREAM_HOST%\" UpCluster: \"%UPSTREAM_CLUSTER%\"\n"
+        - filter_chain_match:
+
+            server_names:
+            - example.com
+            - '*.example.com'
+          filters:
+          - name: envoy.filters.network.rbac
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.rbac.v3.RBAC
+              stat_prefix: https-other-rbac
+              rules:
+                action: ALLOW
+                policies:
+                  "allow_policy":
+                    permissions:
+                    - any: true
+                    principals:
+                    - remote_ip:
+                        address_prefix: kubenet
+                        prefix_len: kubecidr
+                    - remote_ip:
+                        address_prefix: currentnet
+                        prefix_len: currentcidr
+                    - remote_ip:
+                        address_prefix: childnet
+                        prefix_len: childcidr
+          - name: envoy.filters.network.sni_dynamic_forward_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.sni_dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                dns_lookup_family: V4_ONLY
+                name: dynamic_forward_proxy_cache_config
+              port_value: 443
+          - name: envoy.tcp_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+              cluster: https-other-cluster
+              stat_prefix: https-other-tcp
+              access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    text_format_source:
+                      inline_string: "[%START_TIME%] Req: \"%REQUESTED_SERVER_NAME%\" DwnAddr: \"%DOWNSTREAM_REMOTE_ADDRESS%\" UpHost: \"%UPSTREAM_HOST%\" UpCluster: \"%UPSTREAM_CLUSTER%\"\n"
+
+      - name: arc-connect
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: 8084
+            protocol: TCP
+        use_original_dst: true
+        listener_filters:
+        - name: envoy.filters.listener.tls_inspector
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.listener.tls_inspector.v3.TlsInspector
+        filter_chains:
+        - filter_chain_match:
+
+            server_names:
+            - obo.arc.azure.com
+            - '*.obo.arc.azure.com'
+            - '*.gw.arc.azure.com'            
+          filters:
+          - name: envoy.filters.network.rbac
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.rbac.v3.RBAC
+              stat_prefix: https-other-rbac
+              rules:
+                action: ALLOW
+                policies:
+                  "allow_policy":
+                    permissions:
+                    - any: true
+                    principals:
+                    - remote_ip:
+                        address_prefix: kubenet
+                        prefix_len: kubecidr
+                    - remote_ip:
+                        address_prefix: currentnet
+                        prefix_len: currentcidr
+                    - remote_ip:
+                        address_prefix: childnet
+                        prefix_len: childcidr
+          - name: envoy.filters.network.sni_dynamic_forward_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.sni_dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                dns_lookup_family: V4_ONLY
+                name: dynamic_forward_proxy_cache_config
+              port_value: 8084
+          - name: envoy.tcp_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+              cluster: arc-connect-cluster
+              stat_prefix: arc-connect-tcp
+              access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    text_format_source:
+                      inline_string: "[%START_TIME%] Req: \"%REQUESTED_SERVER_NAME%\" DwnAddr: \"%DOWNSTREAM_REMOTE_ADDRESS%\" UpHost: \"%UPSTREAM_HOST%\" UpCluster: \"%UPSTREAM_CLUSTER%\"\n"
+
+---
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: envoy-lnm-demo-replicaset
+  namespace: default
+  labels:
+    app: envoy-lnm-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy-lnm-demo
+  template:
+    metadata:
+      labels:
+        app: envoy-lnm-demo
+    spec:
+      containers:
+      - name: envoy-lnm-demo-container
+        image: envoyproxy/envoy:v1.33.0
+        imagePullPolicy: IfNotPresent
+        command: [ "/usr/local/bin/envoy" ]
+        args: [ "-c", "/etc/envoy/envoy.yaml"  ]
+        ports:
+        - containerPort: 10000
+          name: admin
+          protocol: TCP
+        - containerPort: 8084
+          name: arc-connect
+          protocol: TCP
+        - containerPort: 443
+          name: https-primary
+          protocol: TCP
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/envoy
+          readOnly: true
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      volumes:
+      - name: config-volume
+        configMap:
+          defaultMode: 420
+          name: envoy-lnm-demo-configmap
+          optional: false
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-lnm-demo-service
+  namespace: default
+  labels:
+    app: envoy-lnm-demo
+spec:
+  ports:
+  - name: admin
+    port: 10000
+    protocol: TCP
+    targetPort: 10000
+  - name: arc-connect
+    port: 8084
+    protocol: TCP
+    targetPort: 8084
+  - name: https-primary
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: envoy-lnm-demo
+  type: LoadBalancer
