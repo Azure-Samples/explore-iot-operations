@@ -400,7 +400,7 @@ exit
 
 ## Troubleshooting
 
-Remove the www.example.com and example.com Core DNS and Envoy configurations if you don't need them. They're used here to demonstrate and troubleshoot the configuration. To identify a problem or test the setup, follow these steps from the jump box:
+Remove the `www.example.com` and `example.com` Core DNS and Envoy configurations if you don't need them. They're used here to demonstrate and troubleshoot the configuration. To identify a problem or test the setup, follow these steps from the jump box:
 
 1. Get and record the external or load-balanced IP address of the Envoy services on level4 and level3.
 
