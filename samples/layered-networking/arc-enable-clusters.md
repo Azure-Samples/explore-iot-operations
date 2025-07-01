@@ -2,7 +2,7 @@
 
 [Arc-enabled Kubernetes](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/overview) lets you attach Kubernetes clusters running anywhere and manage them in Azure. Managing these clusters with a single control plane gives you a more consistent development and operations experience. Azure IoT Operations uses the features from this service and is deployed as an Arc extension.
 
-To deploy Azure IoT Operations, you need to Arc enable the k3s clusters you created earlier (level2, level3, and level4). Arc enablement requires internet access, which you set up in previous steps by configuring the infrastructure (Core DNS and Envoy Proxy). This setup lets the segmented networks establish and maintain these connections as they operate.
+To deploy Azure IoT Operations, you need to Arc enable the k3s clusters you created earlier (level2, level3, and level4). Arc enablement requires internet access, which you set up in previous steps by configuring the infrastructure (Core DNS and Envoy Proxy). This setup lets the layered network establish and maintain these connections as they operate.
 
 ## Prerequisites
 

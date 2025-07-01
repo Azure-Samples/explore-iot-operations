@@ -214,7 +214,7 @@ The steps in this section will be completed for each of the machines that are to
 
 ## Next steps
 
-1. Learn how Azure IoT Operations works in a segmented network in [How Azure IoT Operations Works in a segmented network](./aio-segmented-networks.md).
+1. Learn [How Azure IoT Operations works in a layered network](./aio-layered-networks.md).
 1. Learn how to use CoreDNS and Envoy Proxy in [Configure the infrastructure](./configure-infrastructure.md).
 1. Learn how to Arc enable the K3s clusters in [Arc enable the K3s clusters](./arc-enable-clusters.md).
 1. Learn how to deploy Azure IoT Operations to the clusters in [Deploy Azure IoT Operations](./deploy-aio.md).

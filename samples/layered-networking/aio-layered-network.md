@@ -1,6 +1,6 @@
-# How Azure IoT Operations works in a segmented network
+# How Azure IoT Operations works in a layered network
 
-Deploy Azure IoT Operations in a segmented network environment by following the guidance in this article. Azure IoT Operations works in industrial network environments that have multiple isolated network segments, typically layered like those in Purdue Network architecture.
+Deploy Azure IoT Operations in a layered network environment by following the guidance in this article. Azure IoT Operations works in industrial network environments that have multiple isolated network segments, typically layered like those in Purdue Network architecture.
 
 ## Industrial Scenario for Azure IoT Operations
 
@@ -14,11 +14,11 @@ But in many industrial scenarios, computing units for different purposes are in 
 
 Sometimes, the network design has a single isolated network behind a firewall or physically disconnected from the internet. Other times, a more complex layered network topology is used, like the [Purdue Network architecture](https://en.wikipedia.org/wiki/Purdue_Enterprise_Reference_Architecture).
 
-This guidance helps you connect Azure and clusters in different types of isolated network environments. Azure IoT Operations works in both top-level and nested isolated layers as needed.
+This guidance helps you connect Azure and clusters in different types of layered network environments. Azure IoT Operations works in both top-level and nested layers as needed.
 
 ## How does this guidance work?
 
-The following diagram shows how to redirect traffic from an isolated network to Azure Arc. It explains the underlying logic. For steps to set up this mechanism, see [Arc enable the K3s clusters](./arc-enable-clusters.md).
+The following diagram shows how to redirect traffic from a layered network to Azure Arc. It explains the underlying logic. For steps to set up this mechanism, see [Arc enable the K3s clusters](./arc-enable-clusters.md).
 
 ### Arc Bound Data Flow
 
@@ -51,9 +51,9 @@ The following diagram shows how to redirect traffic from an isolated network to 
 > [!NOTE]
 > Traffic is terminated at each level, following typical segmentation practices. This lets you transform and operate on data for departmental workloads.
 
-![Diagram that shows the MQTT data flow across segmented network layers. The diagram illustrates how messages are processed and forwarded between Azure IoT Operations components at each level.](./images/MqttFlow1.jpg)
+![Diagram that shows the MQTT data flow across layered network layers. The diagram illustrates how messages are processed and forwarded between Azure IoT Operations components at each level.](./images/MqttFlow1.jpg)
 
-## Example of Azure IoT Operations in a segmented network
+## Example of Azure IoT Operations in a layered network
 
 This diagram shows Azure IoT Operations deployed to multiple clusters in different network segments. In the Purdue Network architecture, level 4 is the enterprise network, level 3 is the operation and control layer, and level 2 is the controller system layer. Only level 4 has direct internet access, and the other levels can only communicate with their adjacent levels.
 
