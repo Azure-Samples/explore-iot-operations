@@ -11,7 +11,7 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
 
 ## Prerequisites
 
-- A router or advanced switch that supports virtual networks and network rules (this can also be done with Azure networks and rules not covered here). The following configuration is assumed to have been previously setup.
+- A router or advanced switch that supports virtual networks and network rules (this can also be done with Azure networks and rules not covered here). The following configuration is assumed to have been previously setup. If you use different IP addresses/ranges in your environment, you'll need to make corresponding adaptations to the instructions throughout this article.
   - Virtual Networks: 
     - Level 4: 192.168.104.0/24
     - Level 3: 192.168.103.0/24
@@ -24,8 +24,8 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
     - Level 2: allows communication with Level 3, default, and Level 1, as well as any other device within Level 2
     - Level 1: allows communication with Level 2 and default, as well as any other device within Level 1
     - Default: allows communication with any level and internet
-- The following Small Form Factor Machines ("SFFM") or similar have been deployed with the following configurations
-  - Jumpbox
+- Physical devices or virtual machines have been deployed with the following configurations
+  - Jump box
     - Operating system: Ubuntu 22.04 LTS, updated and upgraded to the latest version
     - Virtual network: Default
     - Static IP address: 192.168.0.50
@@ -46,7 +46,7 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
       - For demonstration simplicity, ufw is disabled
       - The kubectl config file is set to the ~/.kube/config environment, and rancher k3s.yaml is moved there
   - Level 3
-     - Operating system: Ubuntu 22.04 LTS, updated and upgraded to the latest version
+    - Operating system: Ubuntu 22.04 LTS, updated and upgraded to the latest version
     - Virtual network: Level 3
     - Static IP address: 192.168.103.10
     - Host name: level3
@@ -56,7 +56,7 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
       - For demonstration simplicity, ufw is disabled
       - The kubectl config file is set to the ~/.kube/config environment, and rancher k3s.yaml is moved there
   - Level 2
-     - Operating system: Ubuntu 22.04 LTS, updated and upgraded to the latest version
+    - Operating system: Ubuntu 22.04 LTS, updated and upgraded to the latest version
     - Virtual network: Level 2
     - Static IP address: 192.168.102.10
     - Host name: level2
@@ -68,18 +68,15 @@ The Envoy Proxy uses an allow list and RBAC to restrict access and control which
 
 ## Preparing the jump box
 
-To reduce the number of URIs that you need to allowlist in this configuration, download the images to the jump box, then move them to the different machines to import into the K3s local image cache. Ideally, use a private image registry for your environment and load the images there instead, but this setup requires registry credentials for pulling.
+To reduce the number of URIs that you need to allowlist in this configuration, download the images to the jump box, then move them to the different machines to import into the K3s local image cache. This approach is used for simplicity; you might also consider using a private image registry for your environment and load the images there instead.
 
 1. Download the Envoy v1.33.0 image to the jump box.
 
     ```bash
-    # The directory to store files is ~/installfiles
-    
     docker pull envoyproxy/envoy:v1.33.0
     docker save -o ./envoy_v1.33.0.tar envoyproxy/envoy:v1.33.0
     chown ${USER} ./envoy_v1.33.0.tar && chmod 777 ./envoy_v1.33.0.tar
     ```
-
 
 1. Prepare the configuration files for Envoy Proxy on level 4.
 
@@ -104,6 +101,36 @@ To reduce the number of URIs that you need to allowlist in this configuration, d
 
 1. Prepare the configuration files for Envoy Proxy and CoreDNS on level 3.
 
+    ```bash
+    # Setup Core DNS for Level 3
+
+    # Create a backup of the original configuration file and replace the "place holder values"
+    cp ./yaml/level3-coredns-config.yaml ./level3-coredns-config.yaml
+
+    # If using a different kubernetes network and CIDR update here
+    sed -i 's/parentip/192.168.104.10/g' ./level3-coredns-config.yaml
+
+    # Setup Envoy Proxy for Level 3
+
+    # Create a backup of the original configuration file and replace the "place holder values"
+    cp ./yaml/level3-envoy-config.yaml ./level3-envoy-config.yaml
+
+    # If using a different kubernetes network and CIDR update here
+    sed -i 's/kubenet/10.42.0.0/g' ./level3-envoy-config.yaml
+    sed -i 's/kubecidr/16/g' ./level3-envoy-config.yaml
+
+    # If using a different level 3 network setup for the environment update accordingly
+    sed -i 's/currentnet/192.168.103.0/g' ./level3-envoy-config.yaml
+    sed -i 's/currentcidr/24/g' ./level3-envoy-config.yaml
+
+    # If using a different level 2 network setup for the environment update accordingly
+    sed -i 's/childnet/192.168.102.0/g' ./level3-envoy-config.yaml
+    sed -i 's/childcidr/24/g' ./level3-envoy-config.yaml
+
+    # Set the IP of the current Core DNS load balanced IP and the parent Envoy Load Balanced IP
+    sed -i 's/parentip/192.168.104.10/g' ./level3-envoy-config.yaml
+    sed -i 's/currentip/192.168.103.0/g' ./level3-envoy-config.yaml
+    ```
 
 1. Prepare the configuration file for CoreDNS on level 2.
 
@@ -468,4 +495,3 @@ Remove the `www.example.com` and `example.com` Core DNS and Envoy configurations
 1. Learn how to Arc enable the K3s clusters in [Arc enable the K3s clusters](./arc-enable-clusters.md).
 1. Learn how to deploy Azure IoT Operations to the clusters in [Deploy Azure IoT Operations](./deploy-aio.md).
 1. Learn how to flow asset telemetry through the deployments into Azure Event Hubs in [Flow asset telemetry](./asset-telemetry.md).
-
