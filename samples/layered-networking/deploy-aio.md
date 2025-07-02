@@ -4,7 +4,7 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
 
 ## Prerequisites
 
-- The jump box is set up as outlined in [preparing the jump box](./prerequisites.md#preparing-the-jump-box). Make sure it's set up to communicate with each cluster by switching context.
+- The jump box is set up as outlined in [preparing the jump box](./configure-infrastructure.md#preparing-the-jump-box). Make sure it's set up to communicate with each cluster by switching context.
 
 - Contributor access to an Azure subscription where you deploy the instance
 

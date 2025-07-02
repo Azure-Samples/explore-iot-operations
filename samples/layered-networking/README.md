@@ -32,7 +32,6 @@ This guidance supports deploying Azure IoT Operations components and sending MQT
 
 ## Next steps
 
-1. For lab preparation, see the [prerequisites](./prerequisites.md).
 1. Learn [How Azure IoT Operations Works in a layered network](./aio-layered-network.md).
 1. Learn how to use CoreDNS and Envoy Proxy in [Configure the infrastructure](./configure-infrastructure.md).
 1. Learn how to Arc enable the K3s clusters in [Arc enable the K3s clusters](./arc-enable-clusters.md).
