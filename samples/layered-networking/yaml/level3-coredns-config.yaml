@@ -1,0 +1,239 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  lnmdns.server: |
+    adhs.events.data.microsoft.com:53 {
+      hosts {
+        parentip adhs.events.data.microsoft.com
+      }
+    }
+    api.segment.io:53 {
+      hosts {
+        parentip api.segment.io
+      }
+    }
+    dc.services.visualstudio.com:53 {
+      hosts {
+        parentip dc.services.visualstudio.com
+      }
+    }
+    gbl.his.arc.azure.com:53 {
+      hosts {
+        parentip gbl.his.arc.azure.com
+      }
+    }
+    global.metrics.azure.eaglex.ic.gov:53 {
+      hosts {
+        parentip global.metrics.azure.eaglex.ic.gov
+      }
+    }
+    global.metrics.azure.microsoft.scloud:53 {
+      hosts {
+        parentip global.metrics.azure.microsoft.scloud
+      }
+    }
+    go.microsoft.com:53 {
+      hosts {
+        parentip go.microsoft.com
+      }
+    }
+    graph.microsoft.com/:53 {
+      hosts {
+        parentip graph.microsoft.com/
+      }
+    }
+    graph.windows.net:53 {
+      hosts {
+        parentip graph.windows.net
+      }
+    }
+    k8connecthelm.azureedge.net:53 {
+      hosts {
+        parentip k8connecthelm.azureedge.net
+      }
+    }
+    k8sconnectcsp.azureedge.net:53 {
+      hosts {
+        parentip k8sconnectcsp.azureedge.net
+      }
+    }
+    linuxgeneva-microsoft.azurecr.io:53 {
+      hosts {
+        parentip linuxgeneva-microsoft.azurecr.io
+      }
+    }
+    login.windows.net:53 {
+      hosts {
+        parentip login.windows.net
+      }
+    }
+    management.azure.com:53 {
+      hosts {
+        parentip management.azure.com
+      }
+    }
+    mcr.microsoft.com:53 {
+      hosts {
+        parentip mcr.microsoft.com
+      }
+    }
+    nw-umwatson.events.data.microsoft.com:53 {
+      hosts {
+        parentip nw-umwatson.events.data.microsoft.com
+      }
+    }
+    onegetcdn.azureedge.net:53 {
+      hosts {
+        parentip onegetcdn.azureedge.net
+      }
+    }
+    self.events.data.microsoft.com:53 {
+      hosts {
+        parentip self.events.data.microsoft.com
+      }
+    }
+    sts.windows.net:53 {
+      hosts {
+        parentip sts.windows.net
+      }
+    }
+    www.powershellgallery.com:53 {
+      hosts {
+        parentip www.powershellgallery.com
+      }
+    }
+    arc.azure.net:53 {
+      rewrite name regex (.*).arc.azure.net arc.azure.net
+      hosts {
+        parentip arc.azure.net
+      }
+    }
+    arcdataservices.com:53 {
+      rewrite name regex (.*).arcdataservices.com arcdataservices.com
+      hosts {
+        parentip arcdataservices.com
+      }
+    }
+    azurecr.io:53 {
+      rewrite name regex (.*).azurecr.io azurecr.io
+      hosts {
+        parentip azurecr.io
+      }
+    }
+    azureedge.net:53 {
+      rewrite name regex (.*).azureedge.net azureedge.net
+      hosts {
+        parentip azureedge.net
+      }
+    }
+    blob.core.windows.net:53 {
+      rewrite name regex (.*).blob.core.windows.net blob.core.windows.net
+      hosts {
+        parentip blob.core.windows.net
+      }
+    }
+    blob.storage.azure.net:53 {
+      rewrite name regex (.*).blob.storage.azure.net blob.storage.azure.net
+      hosts {
+        parentip blob.storage.azure.net
+      }
+    }
+    data.mcr.microsoft.com:53 {
+      rewrite name regex (.*).data.mcr.microsoft.com data.mcr.microsoft.com
+      hosts {
+        parentip data.mcr.microsoft.com
+      }
+    }
+    dp.kubernetesconfiguration.azure.com:53 {
+      rewrite name regex (.*).dp.kubernetesconfiguration.azure.com dp.kubernetesconfiguration.azure.com
+      hosts {
+        parentip dp.kubernetesconfiguration.azure.com
+      }
+    }
+    example.com:53 {
+      rewrite name regex (.*).example.com example.com
+      hosts {
+        parentip example.com
+      }
+    }
+    guestnotificationservice.azure.com:53 {
+      rewrite name regex (.*).guestnotificationservice.azure.com guestnotificationservice.azure.com
+      hosts {
+        parentip guestnotificationservice.azure.com
+      }
+    }
+    his.arc.azure.com:53 {
+      rewrite name regex (.*).his.arc.azure.com his.arc.azure.com
+      hosts {
+        parentip his.arc.azure.com
+      }
+    }
+    login.microsoft.com:53 {
+      rewrite name regex (.*).login.microsoft.com login.microsoft.com
+      hosts {
+        parentip login.microsoft.com
+      }
+    }
+    login.microsoftonline.com:53 {
+      rewrite name regex (.*).login.microsoftonline.com login.microsoftonline.com
+      hosts {
+        parentip login.microsoftonline.com
+      }
+    }
+    monitoring.azure.com:53 {
+      rewrite name regex (.*).monitoring.azure.com monitoring.azure.com
+      hosts {
+        parentip monitoring.azure.com
+      }
+    }
+    obo.arc.azure.com:53 {
+      rewrite name regex (.*).obo.arc.azure.com obo.arc.azure.com
+      hosts {
+        parentip obo.arc.azure.com
+      }
+    }
+    ods.opinsights.azure.com:53 {
+      rewrite name regex (.*).ods.opinsights.azure.com ods.opinsights.azure.com
+      hosts {
+        parentip ods.opinsights.azure.com
+      }
+    }
+    oms.opinsights.azure.com:53 {
+      rewrite name regex (.*).oms.opinsights.azure.com oms.opinsights.azure.com
+      hosts {
+        parentip oms.opinsights.azure.com
+      }
+    }
+    prod.hot.ingestion.msftcloudes.com:53 {
+      rewrite name regex (.*).prod.hot.ingestion.msftcloudes.com prod.hot.ingestion.msftcloudes.com
+      hosts {
+        parentip prod.hot.ingestion.msftcloudes.com
+      }
+    }
+    prod.microsoftmetrics.com:53 {
+      rewrite name regex (.*).prod.microsoftmetrics.com prod.microsoftmetrics.com
+      hosts {
+        parentip prod.microsoftmetrics.com
+      }
+    }
+    servicebus.windows.net:53 {
+      rewrite name regex (.*).servicebus.windows.net servicebus.windows.net
+      hosts {
+        parentip servicebus.windows.net
+      }
+    }
+    vault.azure.net:53 {
+      rewrite name regex (.*).vault.azure.net vault.azure.net
+      hosts {
+        parentip vault.azure.net
+      }
+    }
+    gw.arc.azure.com:53 {
+      rewrite name regex (.*).gw.arc.azure.com gw.arc.azure.com
+      hosts {
+        parentip gw.arc.azure.com
+      }
+    }    
