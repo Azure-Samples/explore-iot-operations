@@ -52,7 +52,7 @@ The level2 cluster will have the OPC PLC simulator deployed to it to generate th
     ![Terminal output showing successful deployment of OPC PLC simulator](./images/kubectl-opc-plc-deployment-output.png)
 
     > [!NOTE]
-    > It is important to note that this configuration uses a self-signed application instance certificate. Don't use this configuration in a production environment. To learn more, see [Configure OPC UA certificates infrastructure for the connector for OPC UA](https://learn.microsoft.com/en-gb/azure/iot-operations/discover-manage-assets/howto-configure-opcua-certificates-infrastructure).
+    > It is important to note that this configuration uses a self-signed application instance certificate. Don't use this configuration in a production environment. To learn more, see [Configure OPC UA certificates infrastructure for the connector for OPC UA](https://learn.microsoft.com/en-us/azure/iot-operations/discover-manage-assets/howto-configure-opcua-certificates-infrastructure).
 
 1. Navigate to the level2 cluster in the Azure IoT Operations portal and choose Asset endpoints
 

@@ -4,7 +4,7 @@ Deploy Azure IoT Operations in a layered network environment by following the gu
 
 ## Industrial Scenario for Azure IoT Operations
 
-In the basic architecture described in [Azure IoT Operations Architecture Overview](https://learn.microsoft.com/en-gb/azure/iot-operations/overview-iot-operations#architecture-overview), all Azure IoT Operations components are deployed to a single internet-connected cluster. In this environment, component-to-component and component-to-Azure connections are enabled by default.
+In the basic architecture described in [Azure IoT Operations Architecture Overview](https://learn.microsoft.com/en-us/azure/iot-operations/overview-iot-operations#architecture-overview), all Azure IoT Operations components are deployed to a single internet-connected cluster. In this environment, component-to-component and component-to-Azure connections are enabled by default.
 
 But in many industrial scenarios, computing units for different purposes are in separate networks. For example:
 
