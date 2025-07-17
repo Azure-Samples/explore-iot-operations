@@ -8,9 +8,9 @@
     "dockerfile": "Dockerfile"
   },
   "hostRequirements": {
-    "cpus": 4,
-    "memory": "8gb",
-    "storage": "32gb"
+    "cpus": 8,
+    "memory": "32gb",
+    "storage": "64gb"
   },
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {
