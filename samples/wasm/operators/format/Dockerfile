@@ -1,4 +1,4 @@
-ARG IMAGE=tinykube-wasm-rust-build
+ARG IMAGE=ghcr.io/azure-samples/explore-iot-operations/wasm-rust-build:latest
 FROM $IMAGE AS operator-build
 
 ARG APP_NAME
