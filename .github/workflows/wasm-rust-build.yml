@@ -39,8 +39,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+            type=raw,value=latest
 
       - name: "Build and Push Base Image"
         uses: docker/build-push-action@v5
