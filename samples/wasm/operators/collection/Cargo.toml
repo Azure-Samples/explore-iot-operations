@@ -1,0 +1,22 @@
+[package]
+name = "collection"
+version = "0.0.2"
+authors = ["TinyKube Devs"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = "0.22"
+tinykube_wasm_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
+
+serde = { version = "1", features = [
+	"derive",
+	"rc",
+] }
+serde_json = { version = "1.0", default-features = false, features = [
+	"alloc",
+] }
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
