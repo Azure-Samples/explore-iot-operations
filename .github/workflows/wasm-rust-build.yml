@@ -14,6 +14,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     defaults:
       run:
         shell: bash
@@ -32,7 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{github.repository_owner}}/explore-iot-operations/wasm-rust-build
+          images: ghcr.io/${{ github.repository }}/wasm-rust-build
           tags: |
             type=ref,event=branch
             type=ref,event=pr
