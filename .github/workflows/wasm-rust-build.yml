@@ -1,15 +1,15 @@
-name: Build and Push WASM Rust Base Image
+name: Build and Push WASM Rust Builder Image
 
 on:
   workflow_dispatch:
   push:
     branches: [ main, wasm ]
     paths:
-      - 'samples/wasm/base-image/**'
+      - 'samples/wasm/rust/Dockerfile'
   pull_request:
     branches: [ main ]
     paths:
-      - 'samples/wasm/base-image/**'
+      - 'samples/wasm/rust/Dockerfile'
 
 jobs:
   build-and-push:
@@ -35,18 +35,18 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/wasm-rust-build
+          images: ghcr.io/${{ github.repository }}/rust-wasm-builder
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=sha
             type=raw,value=latest
 
-      - name: "Build and Push Base Image"
+      - name: "Build and Push Rust Builder Image"
         uses: docker/build-push-action@v5
         with:
-          context: samples/wasm/base-image
-          file: samples/wasm/base-image/Dockerfile
+          context: samples/wasm/rust
+          file: samples/wasm/rust/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
