@@ -1,618 +1,203 @@
-# Azure IoT Operations Data Flow Graphs: WASM Development Guide
+# Azure IoT Operations WASM Data Flow Graphs - Samples
 
-This guide shows you how to develop WebAssembly (WASM) modules for Azure IoT Operations data flow graphs. Data flow graphs are a public preview feature that enables real-time data processing through configurable pipelines using **Rust** or **Python**.
+This repository contains sample WebAssembly (WASM) modules and graph definitions for [Azure IoT Operations data flow graphs](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm). These samples demonstrate how to build custom data processing workflows using WASM modules in Rust and Python.
 
-## Overview
+## Quick Start
 
-Azure IoT Operations data flow graphs process streaming data in real-time through pipelines of configurable operators. Each operator runs as a WebAssembly (WASM) module that processes timestamped data using the Timely dataflow execution model.
+1. **Get the samples**: Clone this repository and explore the examples
+2. **Learn the concepts**: Read the [data flow graphs overview](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm)
+3. **Build your own**: Follow the [WASM development guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules)
 
-### Key benefits
+## Prerequisites
 
-- **Real-time processing**: Handle streaming data with consistent low latency
-- **Configurable pipelines**: Compose custom data processing workflows without code changes
-- **Event-time semantics**: Process data based on when events occurred, not when they're processed
-- **Fault tolerance**: Built-in support for handling failures and ensuring data consistency
-- **Scalability**: Distribute processing across multiple nodes while maintaining order guarantees
-- **Multi-language support**: Develop in Rust or Python
+- Azure IoT Operations deployed on an Arc-enabled Kubernetes cluster
+- Azure Container Registry for storing WASM modules
+- ORAS CLI for pushing artifacts
+- For development: Rust toolchain or Python 3.8+
 
-## Understanding the Architecture
+## Repository Structure
 
-### From academic research to production
-
-Azure IoT Operations data flow graphs build on solid academic research and production-proven systems:
-
-1. **Academic foundation**: The system builds on research from Microsoft Research's Naiad project, which introduced the concept of timely dataflow for distributed computation.
-
-2. **Timely dataflow**: The [Timely dataflow system](https://docs.rs/timely/latest/timely/dataflow/operators/index.html) provides the computational model where:
-   - Data items have logical timestamps
-   - Operations process data while maintaining temporal ordering
-   - The system can reason about progress and completion
-
-3. **WASM modules**: User-defined logic runs as WebAssembly modules, providing:
-   - Language independence (Rust and Python supported)
-   - Sandboxed execution
-   - Portable, efficient code
-
-### Key terminology: Operators vs. modules
-
-Understanding the distinction between operators and modules is important for developing with data flow graphs:
-
-#### **Operators**
-Operators are the fundamental building blocks of data processing pipelines based on [Timely dataflow operators](https://docs.rs/timely/latest/timely/dataflow/operators/index.html). Each operator processes timestamped data while maintaining temporal ordering:
-
-- **[Map](https://docs.rs/timely/latest/timely/dataflow/operators/map/trait.Map.html)**: Transform each data item (like converting temperature units)
-- **[Filter](https://docs.rs/timely/latest/timely/dataflow/operators/filter/trait.Filter.html)**: Allow only certain data items to pass through based on predicates (like removing invalid readings)
-- **[Branch](https://docs.rs/timely/latest/timely/dataflow/operators/branch/trait.Branch.html)**: Route data to different paths based on conditions (like separating temperature vs. humidity data)
-- **[Accumulate](https://docs.rs/timely/latest/timely/dataflow/operators/count/trait.Accumulate.html)**: Collect and aggregate data within timestamps (like computing statistical summaries)
-- **[Concatenate](https://docs.rs/timely/latest/timely/dataflow/operators/core/concat/trait.Concatenate.html)**: Merge multiple data streams while preserving temporal order
-- **[Delay](https://docs.rs/timely/latest/timely/dataflow/operators/delay/trait.Delay.html)**: Advance timestamps using supplied functions to control timing
-- **Source**: Generate or receive data from external systems (MQTT, sensors, files)
-- **Sink**: Output processed data to external systems (databases, MQTT, files)
-
-#### **WebAssembly Interface Types (WIT)**
-All operators implement standardized interfaces defined using [WebAssembly Interface Types (WIT)](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md). WIT provides language-agnostic interface definitions that ensure compatibility between WASM modules and the host runtime, regardless of whether you're writing in Rust or Python.
-
-To see the complete data model and WIT interface definitions for each operator type, see the [Data Model and WIT Interfaces](#data-model-and-wit-interfaces) reference section.
-
-#### **Modules** 
-Modules are the **implementation** of operator logic as WASM code:
-
-- A single module can implement multiple operator types
-- For example, a `temperature` module might provide:
-  - A **map** operator for unit conversion
-  - A **filter** operator for threshold checking  
-  - A **branch** operator for routing decisions
-  - An **accumulate** operator for aggregation
-
-#### **The relationship**
 ```
-Graph Definition → References Module → Provides Operator → Processes Data
-     ↓                    ↓               ↓              ↓
-"temperature:1.0.0" → temperature.wasm → map function → °F to °C
+samples/wasm/
+├── graph-simple.yaml          # Basic temperature conversion graph
+├── graph-complex.yaml         # Multi-sensor processing graph
+├── rust/
+│   ├── examples/              # Rust operator implementations
+│   │   ├── temperature/       # Temperature conversion module
+│   │   ├── humidity/          # Humidity processing module
+│   │   ├── format/            # Data formatting module
+│   │   ├── collection/        # Data collection module
+│   │   ├── enrichment/        # Data enrichment module
+│   │   ├── snapshot/          # Image/snapshot processing
+│   │   └── window/            # Windowing operations
+│   └── Dockerfile             # Rust WASM builder
+└── python/
+    ├── examples/              # Python operator implementations
+    │   ├── map/               # Map operator example
+    │   ├── filter/            # Filter operator example
+    │   └── branch/            # Branch operator example
+    ├── schema/                # WIT schema definitions
+    └── Dockerfile             # Python WASM builder
 ```
 
-### Why timely dataflow?
+**Browse the code**:
+- [Graph definitions](.) - YAML configuration files  
+- [Rust examples](rust/examples) - Complete Rust operator implementations
+- [Python examples](python/examples) - Complete Python operator implementations
+- [Rust builder](rust/Dockerfile) - Rust WASM build environment
+- [Python builder](python/Dockerfile) - Python WASM build environment
 
-Traditional stream processing systems face challenges with:
-- **Out-of-order data**: Events arriving later than expected
-- **Partial results**: Not knowing when computations are complete
-- **Coordination**: Synchronizing distributed processing
+## Building Modules
 
-Timely dataflow solves these problems through:
+### Using Docker Builders (Recommended)
 
-#### **Timestamps and progress tracking**
-Every data item carries a timestamp representing its logical time. The system tracks progress through these timestamps, enabling:
-- **Deterministic processing**: Same input always produces same output
-- **Exactly-once semantics**: No duplicate or missed processing
-- **Watermarks**: Knowing when no more data will arrive for a given time
-
-#### **Hybrid logical clock**
-The timestamp mechanism uses a hybrid approach:
-```rust
-pub struct HybridLogicalClock {
-    pub physical_time: u64,  // Wall-clock time when event occurred
-    pub logical_time: u64,   // Logical ordering for events at same physical time
-}
-```
-
-This ensures:
-- **Causal ordering**: Effects follow causes
-- **Progress guarantees**: System knows when processing is complete
-- **Distributed coordination**: Multiple nodes stay synchronized
-
-
-## Rust Development
-
-### Prerequisites
-- **Rust**: Install Rust toolchain with `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y`
-- Add WASM target: `rustup target add wasm32-wasip2`
-- **Build tools**: `cargo install wasm-tools --version '=1.201.0' --locked`
-
-### Configure Azure IoT Operations Registry
-The WASM Rust SDK is available through a custom Azure DevOps registry. Configure access by setting these environment variables:
-
+**Rust modules:**
 ```bash
-export CARGO_REGISTRIES_AZURE_VSCODE_TINYKUBE_INDEX="sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
-export CARGO_NET_GIT_FETCH_WITH_CLI=true
+# In your Rust project directory
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-module
+
+# Debug build
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-module --build-mode debug
 ```
 
-Add these to your shell profile (`.bashrc`, `.zshrc`, etc.) for persistent access:
-
+**Python modules:**
 ```bash
-echo 'export CARGO_REGISTRIES_AZURE_VSCODE_TINYKUBE_INDEX="sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"' >> ~/.bashrc
-echo 'export CARGO_NET_GIT_FETCH_WITH_CLI=true' >> ~/.bashrc
-source ~/.bashrc
+# In your Python project directory  
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name my_module --app-type map
+
+# Debug build
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name my_module --app-type map --build-mode debug
 ```
 
-For comprehensive documentation of the WASM Rust SDK including APIs for state store, metrics, and logging, see the [WASM Rust SDK Reference](#wasm-rust-sdk-reference).
+### Local Development
 
-### Create your operator project
-```bash
-cargo new --lib temperature-converter
-cd temperature-converter
-```
+For local development setup and detailed instructions, see the [WASM development guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules).
 
-### Configure Cargo.toml
-```toml
-[package]
-name = "temperature-converter"
-version = "0.1.0"
-edition = "2021"
+For complete examples:
+- **[Rust examples](rust/examples)** - Complete operator implementations in Rust
+- **[Python examples](python/examples)** - Complete operator implementations in Python
 
-[dependencies]
-wit-bindgen = "0.22"
-tinykube_wasm_sdk = { version = "0.2.0", registry = "azure-vscode-tinykube" }
-serde = { version = "1", default-features = false, features = ["derive"] }
-serde_json = { version = "1", default-features = false, features = ["alloc"] }
+## Example Workflows
 
-[lib]
-crate-type = ["cdylib"]
-```
+### Simple Temperature Conversion
 
-### Implement your operator
-```rust
-// src/lib.rs
-use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::macros::map_operator;
-use serde_json::{json, Value};
-
-// Import the generated types from wit-bindgen
-use crate::tinykube_graph::processor::types::{DataModel, ModuleConfiguration, BufferOrBytes};
-
-fn temperature_converter_init(_configuration: ModuleConfiguration) -> bool {
-    logger::log(Level::Info, "temperature-converter", "Init invoked");
-    true
-}
-
-#[map_operator(init = "temperature_converter_init")]
-fn temperature_converter(input: DataModel) -> DataModel {
-    let DataModel::Message(mut result) = input else {
-        return input;
-    };
-
-    let payload = &result.payload.read();
-    if let Ok(data_str) = std::str::from_utf8(payload) {
-        if let Ok(mut data) = serde_json::from_str::<Value>(data_str) {
-            if let Some(temp) = data["value"]["temperature"].as_f64() {
-                let fahrenheit = (temp * 9.0 / 5.0) + 32.0;
-                data["value"] = json!({
-                    "temperature_fahrenheit": fahrenheit,
-                    "original_celsius": temp
-                });
-                
-                if let Ok(output_str) = serde_json::to_string(&data) {
-                    result.payload = BufferOrBytes::Bytes(output_str.into_bytes());
-                }
-            }
-        }
-    }
-
-    DataModel::Message(result)
-}
-```
-
-### Implementing operators
-For comprehensive examples of map, filter, branch, accumulate, and delay operators, see:
-- **Rust examples**: Navigate to `rust/examples/` for complete implementations
-- **Timely operators**: [Timely dataflow documentation](https://docs.rs/timely/latest/timely/dataflow/operators/index.html)
-
-### Build your module
-
-#### Local Build
-
-Build directly on your development machine using the Rust toolchain:
-
-**Prerequisites**: Ensure you have configured the Azure IoT Operations registry environment variables (see [Configure Azure IoT Operations Registry](#configure-azure-iot-operations-registry) above) before building locally.
-
-```bash
-# Build WASM module
-cargo build --release --target wasm32-wasip2
-
-# Find your module  
-ls target/wasm32-wasip2/release/*.wasm
-file target/wasm32-wasip2/release/temperature_converter.wasm
-```
-
-The wit-bindgen dependency will automatically generate the required type bindings during build.
-
-**Use local builds when you:**
-- Want fastest iteration during development
-- Need full control over the build environment
-- Are debugging build issues or dependencies
-- Prefer working with familiar Rust tooling
-
-#### Docker Build
-
-Build using a containerized environment with all dependencies pre-installed:
-
-```bash
-# Build release version (default)
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name temperature-converter
-
-# Build debug version with symbols  
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name temperature-converter --build-mode debug
-```
-
-Output will be placed in `bin/<ARCH>/<BUILD_MODE>/temperature-converter.wasm`. For complete Docker builder documentation, see the [Rust README](rust/README.md).
-
-**Use Docker builds when you:**
-- Want consistent builds across different development environments
-- Don't want to install and configure the Rust toolchain locally
-- Are building in CI/CD pipelines
-- Need to ensure reproducible builds
-
-## Python Development
-
-### Prerequisites
-- **Python**: Python 3.8 or later
-- Install componentize-py: `pip install "componentize-py==0.14"`
-
-### Create your operator
-```python
-# temperature_converter.py
-import json
-from map_impl import exports
-from map_impl import imports
-from map_impl.imports import types
-
-class Map(exports.Map):
-    def init(self, configuration) -> bool:
-        imports.logger.log(imports.logger.Level.INFO, "temperature-converter", "Init invoked")
-        return True
-
-    def process(self, message: types.DataModel) -> types.DataModel:
-        # Ensure the input is of the expected type  
-        if not isinstance(message, types.DataModel_Message):
-            imports.logger.log(imports.logger.Level.ERROR, "temperature-converter", "Unexpected input type")
-            return message
-
-        # Extract and decode the payload
-        buffer = message.value.payload.value
-        payload = buffer.read()
-        data_str = payload.decode('utf-8')
-        
-        try:
-            data = json.loads(data_str) 
-            # Process temperature conversion logic
-            if 'value' in data and 'temperature' in data['value']:
-                celsius = float(data['value']['temperature'])
-                fahrenheit = (celsius * 9/5) + 32
-                
-                output = {
-                    'value': {
-                        'temperature_fahrenheit': fahrenheit,
-                        'original_celsius': celsius
-                    }
-                }
-                
-                output_str = json.dumps(output)
-                output_bytes = output_str.encode('utf-8')
-                
-                # Update the message payload
-                message.value.payload = types.BufferOrBytes_Bytes(value=output_bytes)
-            
-            return message  # Return the modified message
-            
-        except Exception as e:
-            imports.logger.log(imports.logger.Level.ERROR, "temperature-converter", f"Error: {e}")
-            return message
-```
-
-### Build your module
-
-#### Local Build
-
-Build directly on your development machine using componentize-py:
-
-```bash
-# Generate Python bindings from schema
-componentize-py -d /path/to/schema/ -w map-impl bindings ./
-
-# Build WASM module
-componentize-py -d /path/to/schema/ -w map-impl componentize temperature_converter -o temperature_converter.wasm
-
-# Verify build
-file temperature_converter.wasm  # Should show: WebAssembly (wasm) binary module
-```
-
-**Note**: Replace `/path/to/schema/` with the actual path to the schema directory. For example:
-- If you're in the main `wasm/` directory: `samples/wasm/python/schema/`
-- If you're in `samples/wasm/python/examples/`: `../../schema/`
-
-**Use local builds when you:**
-- Want fastest iteration during development
-- Need to debug Python code or binding generation
-- Prefer working with familiar Python tooling
-- Want to customize the build process
-
-#### Docker Build
-
-Build using a containerized environment with all dependencies and schema paths pre-configured:
-
-```bash
-# Build release version (app-name should match your Python filename without .py extension)
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature_converter --app-type map
-
-# Build debug version with symbols
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature_converter --app-type map --build-mode debug
-```
-
-Output will be placed in `bin/<ARCH>/<BUILD_MODE>/temperature_converter.wasm`. The Docker builder expects your Python file to be named `${APP_NAME}.py` (e.g., `temperature_converter.py` for `--app-name temperature_converter`), matching the local development pattern.
-
-For complete Docker builder documentation, see the [Python README](python/README.md).
-
-**Use Docker builds when you:**
-- Want consistent builds across different development environments
-- Don't want to install componentize-py and its dependencies locally
-- Need automatic schema path resolution
-- Are building in CI/CD pipelines or want reproducible builds
-
-### Implementing operators
-
-For examples, see the comprehensive operator implementations in `python/examples/` which demonstrate:
-- **Map operators**: Data transformation and conversion logic
-- **Filter operators**: Conditional data processing and validation
-- **Branch operators**: Multi-path routing based on data content
-- **Accumulate operators**: Time-windowed aggregation and statistical processing
-
-## Graph Definition
-
-Data flow graphs define how WASM operators connect and process data streams using YAML configuration files. The graph definition and WASM modules are uploaded together to OCI registries, allowing Azure IoT Operations to locate modules by examining the same registry where the graph definition resides.
-
-### Schema and structure
-
-Graph definitions follow a formal [JSON schema](ConfigGraph.json) that validates structure and ensures compatibility. The configuration includes:
-
-1. **Module requirements**: API and host library version compatibility
-2. **Module configurations**: Runtime parameters for operator customization
-3. **Operations**: Processing nodes in your pipeline
-4. **Connections**: Data flow routing between operations
-5. **Schemas** (optional): Data validation schemas
-
-### Version compatibility
-
-The `moduleRequirements` section ensures compatibility using semantic versioning:
+Convert Fahrenheit to Celsius using a single WASM module ([graph-simple.yaml](graph-simple.yaml)):
 
 ```yaml
-moduleRequirements:
-  apiVersion: "0.2.0"          # WASI API version for interface compatibility
-  hostlibVersion: "0.2.0"     # Host library version providing runtime support
-  features:                    # Optional features required by modules
-    - name: "wasi-nn"
-```
-
-<!-- TODO: Expand versioning documentation when flexible semver support is added to AIO data flow graphs -->
-
-### Complete examples
-
-For working examples, see:
-- **Simple pipeline**: [graph-simple.yaml](graph-simple.yaml) - Basic source → map → sink flow
-- **Complex processing**: [graph-complex.yaml](graph-complex.yaml) - Multi-operator pipeline with branching and aggregation
-
-### Basic structure
-```yaml
-moduleRequirements:
-  apiVersion: "0.2.0"
-  hostlibVersion: "0.2.0"
-
+# graph-simple.yaml
 operations:
   - operationType: "source"
-    name: "data-source"
+    name: "temperature-source"
   - operationType: "map"
-    name: "my-operator/map"
-    module: "my-operator:1.0.0"
+    name: "temperature/map"
+    module: "temperature:1.0.0"
   - operationType: "sink"
-    name: "data-sink"
-
-connections:
-  - from: { name: "data-source" }
-    to: { name: "my-operator/map" }
-  - from: { name: "my-operator/map" }
-    to: { name: "data-sink" }
+    name: "temperature-sink"
 ```
 
-## Module Configuration Parameters
+Input: `{"temperature": {"value": 100.0, "unit": "F"}}`  
+Output: `{"temperature": {"value": 37.8, "unit": "C"}}`
 
-Module configurations define runtime parameters that your WASM operators can access. These parameters allow you to customize operator behavior without rebuilding the module.
+### Complex Multi-Sensor Processing
 
-### Parameter structure
-```yaml
-moduleConfigurations:
-  - name: my-operator/map
-    parameters:
-      threshold:
-        name: temperature_threshold
-        description: "Temperature threshold for filtering"
-        required: true
-      unit:
-        name: output_unit
-        description: "Output temperature unit"
-        required: false
+Process temperature, humidity, and image data with branching and aggregation ([graph-complex.yaml](graph-complex.yaml)):
+
+```mermaid
+graph TD
+  source["source"]
+  delay["module-window/delay"]
+  branch_snapshot["module-snapshot/branch"]
+  branch_temp["module-temperature/branch"]
+  map_temp["module-temperature/map (F -> C)"]
+  filter_temp["module-temperature/filter (valid)"]
+  accumulate_temp["module-temperature/accumulate (max, min, avg, last)"]
+  accumulate_humidity["module-humidity/accumulate (max, min, avg, last)"]
+  map_format["module-format/map (image, snapshot)"]
+  map_snapshot["module-snapshot/map (object detection)"]
+  accumulate_snapshot["module-snapshot/accumulate (collection)"]
+  concatenate["concatenate"]
+  accumulate_collection["module-collection/accumulate"]
+  map_enrichment["module-enrichment/map (overtemp, topic)"]
+  sink["sink"]
+
+  source --> delay
+  delay --> branch_snapshot
+  branch_snapshot -->|sensor data| branch_temp
+  branch_snapshot -->|snapshot| map_format
+  map_format --> map_snapshot
+  map_snapshot --> accumulate_snapshot
+  accumulate_snapshot --> concatenate
+  branch_temp -->|temp| map_temp
+  branch_temp -->|humidity| accumulate_humidity
+  map_temp --> filter_temp
+  filter_temp --> accumulate_temp
+  accumulate_temp --> concatenate
+  accumulate_humidity --> concatenate
+  concatenate --> accumulate_collection
+  accumulate_collection --> map_enrichment
+  map_enrichment --> sink
 ```
 
-### Consuming parameters in code
+## Operator Types
 
-Parameters are accessed through the `ModuleConfiguration` struct passed to your operator's `init` function:
+| Operator | Purpose | Example Use Case |
+|----------|---------|------------------|
+| **Map** | Transform data | Unit conversion, format changes |
+| **Filter** | Allow/reject data | Remove invalid readings |
+| **Branch** | Route conditionally | Separate sensor types |
+| **Accumulate** | Aggregate over time | Calculate statistics |
+| **Delay** | Control timing | Batch processing |
 
-#### Python example
-```python
-def temperature_converter_init(configuration):
-    # Access configuration parameters
-    threshold = configuration.get_parameter("temperature_threshold")
-    unit = configuration.get_parameter("output_unit", default="celsius")
-    
-    imports.logger.log(imports.logger.Level.INFO, "temperature-converter", 
-                      f"Initialized with threshold={threshold}, unit={unit}")
-    return True
-```
+## Deployment
 
-#### Rust example (see `rust/examples/branch/`)
+1. **Build your modules** using the builders above
+2. **Push to registry**:
+   ```bash
+   oras push myregistry.azurecr.io/my-graph:1.0.0 graph.yaml
+   oras push myregistry.azurecr.io/my-module:1.0.0 module.wasm
+   ```
+3. **Deploy data flow graph** - see [deployment guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm#configure-the-data-flow-graph)
+
+## Operator Examples
+
+### Rust Map Operator
+
+Example from [temperature converter](rust/examples/temperature):
+
 ```rust
+use tinykube_wasm_sdk::macros::map_operator;
 use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::ModuleConfiguration;
 
-fn branch_init(configuration: ModuleConfiguration) -> bool {
-    // Access required parameters
-    if let Some(threshold_param) = configuration.parameters.get("temperature_threshold") {
-        let threshold: f64 = threshold_param.parse().unwrap_or(25.0);
-        logger::log(Level::Info, "branch", &format!("Using threshold: {}", threshold));
-    }
-    
-    // Access optional parameters with defaults
-    let unit = configuration.parameters
-        .get("output_unit")
-        .map(|s| s.as_str())
-        .unwrap_or("celsius");
-    
+#[map_operator(init = "init")]
+fn process(input: DataModel) -> DataModel {
+    // Transform your data here
+    logger::log(Level::Info, "my-operator", "Processing data");
+    input
+}
+
+fn init(_config: ModuleConfiguration) -> bool {
     true
 }
 ```
 
-For a complete implementation example, see the branch module in `rust/examples/branch/` which demonstrates parameter usage for conditional routing logic.
+### Python Filter Operator
 
-## Data Model and WIT Interfaces
+Example from [Python examples](python/examples):
 
-All WASM operators, whether implemented in Rust or Python, work with standardized interfaces and data models defined using WebAssembly Interface Types (WIT). WIT provides language-agnostic interface definitions that ensure compatibility between WASM modules and the host runtime.
+```python
+from filter_impl import exports
+from filter_impl.imports import types
 
-### Data Model
-
-All operators work with a flexible union type `data-model` that supports various data formats:
-
-```wit
-// Core timestamp structure using hybrid logical clock
-record timestamp {
-    timestamp: timespec,     // Physical time (seconds + nanoseconds)
-    node-id: buffer-or-string,  // Logical node identifier
-}
-
-// Union type supporting multiple data formats
-variant data-model {
-    buffer-or-bytes(buffer-or-bytes),    // Raw byte data
-    message(message),                    // Structured messages with metadata
-    snapshot(snapshot),                  // Video/image frames with timestamps
-}
-
-// Structured message format
-record message {
-    timestamp: timestamp,
-    content_type: buffer-or-string,
-    payload: message-payload,
-}
+class Filter(exports.Filter):
+    def process(self, message: types.DataModel) -> bool:
+        # Return True to pass, False to filter out
+        return True
 ```
 
-### WIT Interface Definitions
+## Documentation
 
-Each operator type implements a specific WIT interface that defines its function signature:
+For complete guides and reference documentation:
 
-```wit
-// Core operator interfaces
-interface map {
-    use types.{data-model};
-    process: func(message: data-model) -> data-model;
-}
-
-interface filter {
-    use types.{data-model};
-    process: func(message: data-model) -> bool;
-}
-
-interface branch {
-    use types.{data-model, hybrid-logical-clock};
-    process: func(timestamp: hybrid-logical-clock, message: data-model) -> bool;
-}
-
-interface accumulate {
-    use types.{data-model};
-    process: func(staged: data-model, message: list<data-model>) -> data-model;
-}
-```
-
-These interfaces are used by:
-- **Python**: Generated bindings provide typed access to these interfaces
-- **Rust**: The WASM Rust SDK provides procedural macros that implement these interfaces automatically
-
-## WASM Rust SDK Reference
-
-The WASM Rust SDK provides a comprehensive development framework specifically for Rust developers creating WASM modules. Python developers work directly with generated bindings from the WIT interfaces above.
-
-### Operator Macros
-
-The Rust SDK provides procedural macros to simplify operator development:
-
-```rust
-use tinykube_wasm_sdk::macros::{map_operator, filter_operator, branch_operator};
-use tinykube_wasm_sdk::{DataModel, HybridLogicalClock};
-
-// Map operator - transforms each data item
-#[map_operator(init = "my_init_function")]
-fn my_map(input: DataModel) -> DataModel {
-    // Transform logic here
-}
-
-// Filter operator - allows/rejects data based on predicate  
-#[filter_operator(init = "my_init_function")]
-fn my_filter(input: DataModel) -> bool {
-    // Return true to pass data through, false to filter out
-}
-
-// Branch operator - routes data to different arms
-#[branch_operator(init = "my_init_function")]
-fn my_branch(input: DataModel, timestamp: HybridLogicalClock) -> bool {
-    // Return true for "True" arm, false for "False" arm
-}
-```
-
-### Host APIs
-
-The SDK provides access to host functionality:
-
-#### State Store Client
-Distributed key-value storage for persistent data:
-
-```rust
-use tinykube_wasm_sdk::state_store;
-
-// Set value
-state_store::set(key.as_bytes(), value.as_bytes(), None, None, options)?;
-
-// Get value  
-let response = state_store::get(key.as_bytes(), None)?;
-
-// Delete key
-state_store::del(key.as_bytes(), None, None)?;
-```
-
-#### Logging
-Structured logging with different levels:
-
-```rust
-use tinykube_wasm_sdk::logger::{self, Level};
-
-logger::log(Level::Info, "my-operator", "Processing started");
-logger::log(Level::Error, "my-operator", &format!("Error: {}", error));
-```
-
-#### Metrics
-OpenTelemetry-compatible metrics:
-
-```rust
-use tinykube_wasm_sdk::metrics;
-
-// Increment counter
-metrics::add_to_counter("requests_total", 1.0, Some(labels))?;
-
-// Record histogram value
-metrics::record_to_histogram("processing_duration", duration_ms, Some(labels))?;
-```
-
-### Architecture Integration
-
-The WASM Rust SDK integrates with the cloud-native architecture:
-
-- **Timely dataflow execution**: All operators run within the Timely computational model
-- **Container isolation**: WASM modules execute in sandboxed environments  
-- **Resource management**: Built-in support for memory and CPU limits
-- **Distributed processing**: Seamless scaling across multiple nodes
-- **Fault tolerance**: Automatic recovery and state management
-
-For detailed API documentation and examples, refer to the SDK source code and the comprehensive operator examples in `rust/examples/`.
+- **[Data Flow Graphs Overview](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm)** - Understand concepts and deployment
+- **[WASM Development Guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules)** - Build custom modules in Rust and Python
+- **[Configuration Reference](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm#configuration-reference)** - Complete configuration options
