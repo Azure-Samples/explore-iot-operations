@@ -85,7 +85,15 @@ if [ -z "$APP_TYPE" ]; then
     exit 1
 fi
 
+# Validate that the Python file exists (expects ${APP_NAME}.py)
+if [ ! -f "/workspace/${APP_NAME}.py" ]; then
+    echo "Error: Python file '${APP_NAME}.py' not found in workspace"
+    echo "Make sure the file exists and matches the app name"
+    exit 1
+fi
+
 echo "Building Python WASM module: $APP_NAME (type: $APP_TYPE, mode: $BUILD_MODE, arch: $ARCH)"
+echo "Using Python file: ${APP_NAME}.py"
 
 # Clean up any existing bindings
 rm -rf "${APP_TYPE}_impl"
@@ -100,11 +108,11 @@ mkdir -p "/workspace/bin/$ARCH/$BUILD_MODE"
 # Build the WASM module
 echo "Building WASM component..."
 if [ "$BUILD_MODE" = "release" ]; then
-    componentize-py -d /schema/ -w "${APP_TYPE}-impl" componentize "${APP_TYPE}" -o "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}.wasm"
+    componentize-py -d /schema/ -w "${APP_TYPE}-impl" componentize "$APP_NAME" -o "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}.wasm"
 elif [ "$BUILD_MODE" = "debug" ]; then
-    python /tools/inject_pdb.py "${APP_TYPE}.py"
-    componentize-py -d /schema/ -w "${APP_TYPE}-impl" componentize "${APP_TYPE}_debug" -o "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}.wasm"
-    cp "${APP_TYPE}_debug.py" "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}_debug.py"
+    python /tools/inject_pdb.py "${APP_NAME}.py"
+    componentize-py -d /schema/ -w "${APP_TYPE}-impl" componentize "${APP_NAME}_debug" -o "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}.wasm"
+    cp "${APP_NAME}_debug.py" "/workspace/bin/$ARCH/$BUILD_MODE/${APP_NAME}_debug.py"
 else
     echo "Invalid BUILD_MODE: $BUILD_MODE. Use 'release' or 'debug'."
     exit 1

@@ -108,6 +108,22 @@ This ensures:
 - Add WASM target: `rustup target add wasm32-wasip2`
 - **Build tools**: `cargo install wasm-tools --version '=1.201.0' --locked`
 
+### Configure Azure IoT Operations Registry
+The WASM Rust SDK is available through a custom Azure DevOps registry. Configure access by setting these environment variables:
+
+```bash
+export CARGO_REGISTRIES_AZURE_VSCODE_TINYKUBE_INDEX="sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
+export CARGO_NET_GIT_FETCH_WITH_CLI=true
+```
+
+Add these to your shell profile (`.bashrc`, `.zshrc`, etc.) for persistent access:
+
+```bash
+echo 'export CARGO_REGISTRIES_AZURE_VSCODE_TINYKUBE_INDEX="sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"' >> ~/.bashrc
+echo 'export CARGO_NET_GIT_FETCH_WITH_CLI=true' >> ~/.bashrc
+source ~/.bashrc
+```
+
 For comprehensive documentation of the WASM Rust SDK including APIs for state store, metrics, and logging, see the [WASM Rust SDK Reference](#wasm-rust-sdk-reference).
 
 ### Create your operator project
@@ -124,6 +140,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+wit-bindgen = "0.22"
 tinykube_wasm_sdk = { version = "0.2.0", registry = "azure-vscode-tinykube" }
 serde = { version = "1", default-features = false, features = ["derive"] }
 serde_json = { version = "1", default-features = false, features = ["alloc"] }
@@ -137,10 +154,12 @@ crate-type = ["cdylib"]
 // src/lib.rs
 use tinykube_wasm_sdk::logger::{self, Level};
 use tinykube_wasm_sdk::macros::map_operator;
-use tinykube_wasm_sdk::{DataModel, ModuleConfiguration};
 use serde_json::{json, Value};
 
-fn temperature_converter_init(configuration: ModuleConfiguration) -> bool {
+// Import the generated types from wit-bindgen
+use crate::tinykube_graph::processor::types::{DataModel, ModuleConfiguration, BufferOrBytes};
+
+fn temperature_converter_init(_configuration: ModuleConfiguration) -> bool {
     logger::log(Level::Info, "temperature-converter", "Init invoked");
     true
 }
@@ -162,7 +181,7 @@ fn temperature_converter(input: DataModel) -> DataModel {
                 });
                 
                 if let Ok(output_str) = serde_json::to_string(&data) {
-                    result.payload.write(output_str.as_bytes());
+                    result.payload = BufferOrBytes::Bytes(output_str.into_bytes());
                 }
             }
         }
@@ -178,18 +197,33 @@ For comprehensive examples of map, filter, branch, accumulate, and delay operato
 - **Timely operators**: [Timely dataflow documentation](https://docs.rs/timely/latest/timely/dataflow/operators/index.html)
 
 ### Build your module
+
+#### Local Build
+
+Build directly on your development machine using the Rust toolchain:
+
+**Prerequisites**: Ensure you have configured the Azure IoT Operations registry environment variables (see [Configure Azure IoT Operations Registry](#configure-azure-iot-operations-registry) above) before building locally.
+
 ```bash
 # Build WASM module
 cargo build --release --target wasm32-wasip2
 
-# Find your module
+# Find your module  
 ls target/wasm32-wasip2/release/*.wasm
 file target/wasm32-wasip2/release/temperature_converter.wasm
 ```
 
-#### Alternative: Docker Builder
+The wit-bindgen dependency will automatically generate the required type bindings during build.
 
-For simplified development without local toolchain setup, use the streamlined Docker builder:
+**Use local builds when you:**
+- Want fastest iteration during development
+- Need full control over the build environment
+- Are debugging build issues or dependencies
+- Prefer working with familiar Rust tooling
+
+#### Docker Build
+
+Build using a containerized environment with all dependencies pre-installed:
 
 ```bash
 # Build release version (default)
@@ -200,6 +234,12 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
 ```
 
 Output will be placed in `bin/<ARCH>/<BUILD_MODE>/temperature-converter.wasm`. For complete Docker builder documentation, see the [Rust README](rust/README.md).
+
+**Use Docker builds when you:**
+- Want consistent builds across different development environments
+- Don't want to install and configure the Rust toolchain locally
+- Are building in CI/CD pipelines
+- Need to ensure reproducible builds
 
 ## Python Development
 
@@ -221,9 +261,15 @@ class Map(exports.Map):
         return True
 
     def process(self, message: types.DataModel) -> types.DataModel:
+        # Ensure the input is of the expected type  
+        if not isinstance(message, types.DataModel_Message):
+            imports.logger.log(imports.logger.Level.ERROR, "temperature-converter", "Unexpected input type")
+            return message
+
         # Extract and decode the payload
         buffer = message.value.payload.value
-        data_str = buffer.decode('utf-8')
+        payload = buffer.read()
+        data_str = payload.decode('utf-8')
         
         try:
             data = json.loads(data_str) 
@@ -242,12 +288,10 @@ class Map(exports.Map):
                 output_str = json.dumps(output)
                 output_bytes = output_str.encode('utf-8')
                 
-                return types.DataModel_Message(
-                    content_type=message.value.content_type,
-                    payload=types.DataModel_MessagePayload_Bytes(output_bytes)
-                )
+                # Update the message payload
+                message.value.payload = types.BufferOrBytes_Bytes(value=output_bytes)
             
-            return message  # Pass through if no temperature found
+            return message  # Return the modified message
             
         except Exception as e:
             imports.logger.log(imports.logger.Level.ERROR, "temperature-converter", f"Error: {e}")
@@ -255,30 +299,53 @@ class Map(exports.Map):
 ```
 
 ### Build your module
+
+#### Local Build
+
+Build directly on your development machine using componentize-py:
+
 ```bash
 # Generate Python bindings from schema
-componentize-py -d ../../schema/ -w map-impl bindings ./
+componentize-py -d /path/to/schema/ -w map-impl bindings ./
 
 # Build WASM module
-componentize-py -d ../../schema/ -w map-impl componentize temperature_converter -o temperature_converter.wasm
+componentize-py -d /path/to/schema/ -w map-impl componentize temperature_converter -o temperature_converter.wasm
 
 # Verify build
 file temperature_converter.wasm  # Should show: WebAssembly (wasm) binary module
 ```
 
-#### Alternative: Docker Builder
+**Note**: Replace `/path/to/schema/` with the actual path to the schema directory. For example:
+- If you're in the main `wasm/` directory: `samples/wasm/python/schema/`
+- If you're in `samples/wasm/python/examples/`: `../../schema/`
 
-For simplified development without local toolchain setup, use the streamlined Docker builder:
+**Use local builds when you:**
+- Want fastest iteration during development
+- Need to debug Python code or binding generation
+- Prefer working with familiar Python tooling
+- Want to customize the build process
+
+#### Docker Build
+
+Build using a containerized environment with all dependencies and schema paths pre-configured:
 
 ```bash
-# Build release version (requires --app-type for Python)
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature-converter --app-type map
+# Build release version (app-name should match your Python filename without .py extension)
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature_converter --app-type map
 
 # Build debug version with symbols
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature-converter --app-type map --build-mode debug
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name temperature_converter --app-type map --build-mode debug
 ```
 
-Output will be placed in `bin/<ARCH>/<BUILD_MODE>/temperature-converter.wasm`. For complete Docker builder documentation, see the [Python README](python/README.md).
+Output will be placed in `bin/<ARCH>/<BUILD_MODE>/temperature_converter.wasm`. The Docker builder expects your Python file to be named `${APP_NAME}.py` (e.g., `temperature_converter.py` for `--app-name temperature_converter`), matching the local development pattern.
+
+For complete Docker builder documentation, see the [Python README](python/README.md).
+
+**Use Docker builds when you:**
+- Want consistent builds across different development environments
+- Don't want to install componentize-py and its dependencies locally
+- Need automatic schema path resolution
+- Are building in CI/CD pipelines or want reproducible builds
 
 ### Implementing operators
 
