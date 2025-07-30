@@ -1,6 +1,6 @@
 # Rust WASM Operator Examples
 
-This directory contains complete, production-ready WebAssembly operator examples implemented in Rust. Each example demonstrates best practices for different operator types and data processing patterns.
+This directory contains WebAssembly (WASM) examples implemented in Rust. Each example demonstrates best practices for different operator types and data processing patterns.
 
 ## Quick Start
 
