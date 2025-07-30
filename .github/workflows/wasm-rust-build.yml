@@ -35,7 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/rust-wasm-builder
+          images: ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder
           tags: |
             type=ref,event=branch
             type=ref,event=pr

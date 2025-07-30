@@ -137,6 +137,7 @@ crate-type = ["cdylib"]
 // src/lib.rs
 use tinykube_wasm_sdk::logger::{self, Level};
 use tinykube_wasm_sdk::macros::map_operator;
+use tinykube_wasm_sdk::{DataModel, ModuleConfiguration};
 use serde_json::{json, Value};
 
 fn temperature_converter_init(configuration: ModuleConfiguration) -> bool {
@@ -256,10 +257,10 @@ class Map(exports.Map):
 ### Build your module
 ```bash
 # Generate Python bindings from schema
-componentize-py -d python/operators/schema/ -w map-impl bindings ./
+componentize-py -d ../../schema/ -w map-impl bindings ./
 
 # Build WASM module
-componentize-py -d python/operators/schema/ -w map-impl componentize temperature_converter -o temperature_converter.wasm
+componentize-py -d ../../schema/ -w map-impl componentize temperature_converter -o temperature_converter.wasm
 
 # Verify build
 file temperature_converter.wasm  # Should show: WebAssembly (wasm) binary module
@@ -380,6 +381,9 @@ def temperature_converter_init(configuration):
 
 #### Rust example (see `rust/examples/branch/`)
 ```rust
+use tinykube_wasm_sdk::logger::{self, Level};
+use tinykube_wasm_sdk::ModuleConfiguration;
+
 fn branch_init(configuration: ModuleConfiguration) -> bool {
     // Access required parameters
     if let Some(threshold_param) = configuration.parameters.get("temperature_threshold") {
@@ -398,10 +402,6 @@ fn branch_init(configuration: ModuleConfiguration) -> bool {
 ```
 
 For a complete implementation example, see the branch module in `rust/examples/branch/` which demonstrates parameter usage for conditional routing logic.
-
-## Graph Definition
-
-Data flow graphs define how WASM operators connect and process data streams using YAML configuration files. The graph definition and WASM modules are uploaded together to OCI registries, allowing Azure IoT Operations to locate modules by examining the same registry where the graph definition resides.
 
 ## Data Model and WIT Interfaces
 
@@ -474,6 +474,7 @@ The Rust SDK provides procedural macros to simplify operator development:
 
 ```rust
 use tinykube_wasm_sdk::macros::{map_operator, filter_operator, branch_operator};
+use tinykube_wasm_sdk::{DataModel, HybridLogicalClock};
 
 // Map operator - transforms each data item
 #[map_operator(init = "my_init_function")]
