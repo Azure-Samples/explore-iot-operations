@@ -1,0 +1,21 @@
+// The interface of a delay operator.
+interface delay {
+	use types.{data-model,module-configuration};
+	use hybrid-logical-clock.{hybrid-logical-clock};
+
+	// A delay node takes data input and timely logic timestamp and returns a new timestamp
+	// in the execution graph.
+	// The operator can use own logic to process and return a new timestamp for delay.
+	process: func(data: data-model, timestamp: hybrid-logical-clock) -> hybrid-logical-clock;
+
+	// The init function called on module load
+	init: func(configuration: module-configuration) -> bool;
+}
+
+world delay-impl {
+	import state-store;
+	import logger;
+	import metrics;
+
+	export delay;
+}

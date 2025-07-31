@@ -1,0 +1,52 @@
+name: Build and Push WASM Rust Builder Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, wasm ]
+    paths:
+      - 'samples/wasm/rust/Dockerfile'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'samples/wasm/rust/Dockerfile'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@main
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=raw,value=latest
+
+      - name: "Build and Push Rust Builder Image"
+        uses: docker/build-push-action@v5
+        with:
+          context: samples/wasm/rust
+          file: samples/wasm/rust/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

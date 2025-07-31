@@ -1,0 +1,20 @@
+// The interface of a filter operator.
+interface filter {
+	use types.{data-model,module-configuration};
+
+	// A filter operator returns `true` if the input message should be passed
+	// to the next node in the execution graph, and false if it should be
+	// dropped.
+	process: func(message: data-model) -> bool;
+
+	// The init function called on module load
+	init: func(configuration: module-configuration) -> bool;
+}
+
+world filter-impl {
+	import state-store;
+	import logger;
+	import metrics;
+
+	export filter;
+}

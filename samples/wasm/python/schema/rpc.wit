@@ -1,0 +1,63 @@
+interface rpc-types {
+    variant rpc-error {
+        configuration-invalid,
+        payload-invalid,
+
+        timeout,
+        client-error,
+        cancellation,
+
+        header-invalid,
+        header-missing,
+        unknown-error,
+        invocation-exception,
+        execution-exception,
+        internal-logic-error,
+        state-invalid,
+        resource-table-error,
+        build-error
+    }
+}
+
+interface command-invoker {
+    use hybrid-logical-clock.{timespec, hybrid-logical-clock};
+    use rpc-types.{rpc-error};
+    resource command-request { }
+    resource command-request-builder {
+        constructor();
+        payload: func(payload: list<u8>) -> result<command-request-builder, rpc-error>;
+        custom-user-data: func(custom-user-data: list<tuple<string, string>>) -> result<command-request-builder, rpc-error>;
+        topic-tokens: func(topic-tokens: list<tuple<string, string>>)-> result<command-request-builder, rpc-error>; // HashMap<String, String>
+        timeout: func(secs: u64, nanos: u32)-> result<command-request-builder, rpc-error>;
+        build: func() -> result<command-request, rpc-error>;
+    }
+    record command-response {
+        payload: list<u8>,
+        custom-user-data: list<tuple<string, string>>,
+        timestamp: option<hybrid-logical-clock>, // Option<HybridLogicalClock>,
+
+    }
+    resource command-invoker-options {
+
+    }
+    resource command-invoker-options-builder {
+        constructor();
+        request-topic-pattern: func(request-topic-pattern: string) -> result <command-invoker-options-builder, rpc-error>;
+        response-topic-pattern: func(response-topic-pattern: string)-> result <command-invoker-options-builder, rpc-error>;
+        command-name: func(command-name: string)-> result <command-invoker-options-builder, rpc-error>;
+        topic-namespace: func(topic-namespace: string) -> result <command-invoker-options-builder, rpc-error>;
+        topic-token-map: func(topic-token-map: list<tuple<string, string>>) -> result <command-invoker-options-builder, rpc-error>; // HashMap<String, String>
+        response-topic-prefix: func(response-topic-prefix: string) -> result <command-invoker-options-builder, rpc-error>;
+        response-topic-suffix: func(response-topic-suffix: string) -> result <command-invoker-options-builder, rpc-error>;
+        build: func() ->result<command-invoker-options, rpc-error>;
+    }
+    resource command-invoker {
+        invoke: func(request: command-request) -> result<command-response, rpc-error>;
+    }
+    new-invoker: func(options: command-invoker-options)-> result<command-invoker, rpc-error>;
+}
+
+world mrpc-use{
+    import command-invoker;
+    import rpc-types;
+}

@@ -1,0 +1,31 @@
+moduleRequirements:
+  apiVersion: "0.2.0"
+  hostlibVersion: "0.2.0"
+
+moduleConfigurations:
+  - name: module-temperature/map
+    parameters:
+      key1:
+        name: key2
+        description: key2
+operations:
+  - operationType: "source"
+    name: "source"
+
+  - operationType: "map"
+    name: "module-temperature/map"
+    module: "temperature:1.0.0"
+
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-temperature/map"
+
+  - from:
+      name: "module-temperature/map"
+    to:
+      name: "sink"
