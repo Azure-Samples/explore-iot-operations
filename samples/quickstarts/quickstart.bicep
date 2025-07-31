@@ -8,6 +8,7 @@ param clusterName string
 param customLocationName string
 param aioExtensionName string
 param aioInstanceName string
+param aioNamespaceName string
 param resourceSuffix string = substring(uniqueString(subscription().id, resourceGroup().id, clusterName), 0, 10)
 param eventHubName string = 'aio-eh-${resourceSuffix}'
 param defaultDataflowEndpointName string = 'default'
@@ -44,30 +45,47 @@ resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfi
   parent: aioInstance
 }
 
+resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-07-01-preview' existing = {
+  name: aioNamespaceName
+}
+
 /*****************************************************************************/
 /*                                    Asset                                  */
 /*****************************************************************************/
 
 var assetName = 'oven'
+var opcUaEndpointName = 'opc-ua-connector-0'
 
-resource assetEndpoint 'Microsoft.DeviceRegistry/assetEndpointProfiles@2024-11-01' = {
-  name: 'opc-ua-connector-0'
+resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview' = {
+  name: 'opc-ua-connector'
+  parent: namespace
   location: resourceGroup().location
   extendedLocation: {
     type: 'CustomLocation'
     name: customLocation.id
   }
   properties: {
-    targetAddress: 'opc.tcp://opcplc-000000:50000'
-    endpointProfileType: 'Microsoft.OpcUa'
-    authentication: {
-      method: 'Anonymous'
+    endpoints: {
+      outbound: {
+        assigned: {}
+      }
+      inbound: {
+        opcUaEndpointName: {
+          endpointType: 'Microsoft.OpcUa'
+          address: 'opc.tcp://opcplc-000000:50000'
+          version: '1.0'
+          authentication: {
+            method: 'Anonymous'
+          }
+        }
+      }
     }
   }
 }
 
-resource asset 'Microsoft.DeviceRegistry/assets@2024-11-01' = {
+resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-07-01-preview' = {
   name: assetName
+  parent: namespace
   location: resourceGroup().location
   extendedLocation: {
     type: 'CustomLocation'
@@ -75,18 +93,23 @@ resource asset 'Microsoft.DeviceRegistry/assets@2024-11-01' = {
   }
   properties: {
     displayName: assetName
-    assetEndpointProfileRef: assetEndpoint.name
+    deviceRef: {
+      deviceName: device.name
+      endpointName: opcUaEndpointName
+    }
     description: 'Multi-function large oven for baked goods.'
 
     enabled: true
-    manufacturer: 'Contoso'
-    manufacturerUri: 'http://www.contoso.com/ovens'
-    model: 'Oven-003'
-    productCode: '12345C'
-    hardwareRevision: '2.3'
-    softwareRevision: '14.1'
-    serialNumber: '12345'
-    documentationUri: 'http://docs.contoso.com/ovens'
+    attributes: {
+      manufacturer: 'Contoso'
+      manufacturerUri: 'http://www.contoso.com/ovens'
+      model: 'Oven-003'
+      productCode: '12345C'
+      hardwareRevision: '2.3'
+      softwareRevision: '14.1'
+      serialNumber: '12345'
+      documentationUri: 'http://docs.contoso.com/ovens'
+    }
 
     datasets: [
       {
@@ -96,25 +119,23 @@ resource asset 'Microsoft.DeviceRegistry/assets@2024-11-01' = {
             name: 'Temperature'
             dataSource: 'ns=3;s=SpikeData'
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
-            observabilityMode: 'None'
           }
           {
             name: 'EnergyUse'
             dataSource: 'ns=3;s=FastUInt10'
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
-            observabilityMode: 'None'
           }
           {
             name: 'Weight'
             dataSource: 'ns=3;s=FastUInt9'
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
-            observabilityMode: 'None'
           }
         ]
       }
     ]
 
     defaultDatasetsConfiguration: '{"publishingInterval":1000,"samplingInterval":500,"queueSize":1}'
+    defaultEventsConfiguration: '{"publishingInterval":1000,"samplingInterval":500,"queueSize":1}'
   }
 }
 
