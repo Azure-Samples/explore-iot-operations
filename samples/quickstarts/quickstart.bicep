@@ -131,6 +131,16 @@ resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-07-01-preview' =
             dataPointConfiguration: '{"samplingInterval":500,"queueSize":1}'
           }
         ]
+        destinations: [
+          {
+            target: 'Mqtt'
+            configuration: {
+              topic: 'azure-iot-operations/data/oven'
+              retain: 'Keep'
+              qos: 'Qos1'
+            }
+          }
+        ]
       }
     ]
 
