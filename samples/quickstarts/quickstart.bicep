@@ -136,7 +136,7 @@ resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-07-01-preview' =
             target: 'Mqtt'
             configuration: {
               topic: 'azure-iot-operations/data/oven'
-              retain: 'Keep'
+              retain: 'Never'
               qos: 'Qos1'
             }
           }
