@@ -70,7 +70,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview'
         assigned: {}
       }
       inbound: {
-        [opcUaEndpointName]: {
+        opcUaEndpointName: {
           endpointType: 'Microsoft.OpcUa'
           address: 'opc.tcp://opcplc-000000:50000'
           authentication: {
