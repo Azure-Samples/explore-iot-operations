@@ -17,12 +17,11 @@ spec:
     spec:
       containers:
       - name: opc-plc
-        image: mcr.microsoft.com/iotedge/opc-plc:2.12.39
+        image: mcr.microsoft.com/iotedge/opc-plc:latest
         args:
           - "--ph=opcplc-000000"
           - "--cdn=opcplc-000000"
           - "--ut"
-          - "--sph"
           - "--sn=5"
           - "--sr=10"
           - "--fn=10"
