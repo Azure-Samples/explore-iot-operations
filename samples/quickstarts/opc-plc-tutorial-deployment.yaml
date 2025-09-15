@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: opc-plc
-        image: mcr.microsoft.com/iotedge/opc-plc:latest
+        image: mcr.microsoft.com/iotedge/opc-plc:2.12.39
         args:
           - "--plchostname=opcplc-000000"
           - "--portnum=50000"
