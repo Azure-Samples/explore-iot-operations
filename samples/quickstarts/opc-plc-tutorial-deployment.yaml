@@ -17,13 +17,12 @@ spec:
     spec:
       containers:
       - name: opc-plc
-        image: mcr.microsoft.com/iotedge/opc-plc:2.12.39
+        image: mcr.microsoft.com/iotedge/opc-plc:latest
         args:
           - "--plchostname=opcplc-000000"
           - "--portnum=50000"
           - "--certdnsnames=opcplc-000000"
           - "--unsecuretransport"
-          - "--showpnjsonph"
           - "--slownodes=5"
           - "--slowrate=10"
           - "--fastnodes=10"
