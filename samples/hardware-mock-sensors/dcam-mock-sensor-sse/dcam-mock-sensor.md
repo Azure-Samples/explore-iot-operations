@@ -66,7 +66,7 @@ export IMAGE_VERSION="<your-image-version>"  # Docker image version
 az acr login --name $ACR_NAME
 
 # Build and push DCAM mock device
-# from mock-devices directory
+# from hardware-mock-sensors directory
 docker build -t $ACR_NAME.azurecr.io/$DCAM_IMAGE_NAME:$IMAGE_VERSION ./dcam-mock-sensor-sse
 docker push $ACR_NAME.azurecr.io/$DCAM_IMAGE_NAME:$IMAGE_VERSION
 ```
