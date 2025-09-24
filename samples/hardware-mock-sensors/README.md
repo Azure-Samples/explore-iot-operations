@@ -1,6 +1,15 @@
-# Mock Devices
+# Mock Sensors for Azure IoT Operations
 
-This component provides mock sensors that simulate data from various industrial sensors including weather stations, SPOD, DCAM systems. These mock devices are crucial for testing and development of the FOF solution without requiring physical hardware.
+This collection provides containerized mock sensors designed for rapid integration and testing with Azure IoT Operations. These sensors simulate real-world industrial hardware, enabling solution architects and developers to validate data flows and downstream analytics without requiring physical devices.
+
+**Key Features:**
+- Simulate weather, air quality (SPOD), camera (DCAM via SSE protocol), and invalid sensor data
+- Expose HTTP endpoints for polling and event streaming (DCAM uses Server-Sent Events)
+- Deployable to Azure Container Instances or any cloud/container environment
+
+These mock sensors are ideal for:
+- Prototyping and validating Azure IoT Operations pipelines
+- Testing error handling and data ingestion logic
 
 ## Overview
 
