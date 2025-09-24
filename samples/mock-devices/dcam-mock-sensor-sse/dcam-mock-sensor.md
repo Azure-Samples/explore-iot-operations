@@ -1,10 +1,11 @@
-# DCAM Mock Device Component
 
-This component provides a mock DCAM device that simulates data using Server-Sent Events (SSE) protocol, making it crucial for testing and development of solutions eventually requiring physical DCAM hardware.
+# DCAM Mock Device (General Purpose)
+
+This component provides a general-purpose mock DCAM device that simulates data using Server-Sent Events (SSE) protocol. It is designed for testing and development of any solution that requires DCAM-like event and image streams, without needing physical hardware.
 
 ## Overview
 
-The DCAM mock device provides two primary endpoints:
+The DCAM mock device exposes endpoints for event streaming and image snapshots:
 
 - **`/dcam-events` endpoint**: Generates continuous event streams via SSE (Server-Sent Events) for the following event types:
   - HEARTBEAT - Regular operational status updates
@@ -21,15 +22,14 @@ The DCAM mock device provides two primary endpoints:
 
 ## Prerequisites
 
-Before deploying the DCAM mock device, ensure you have:
-
+Before deploying, ensure you have:
 - [Docker](https://docs.docker.com/get-docker/)
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Azure Container Registry](https://learn.microsoft.com/en-us/azure/container-registry/) (ACR) access
 
 ## Security
 
-The DCAM mock device uses pinned dependency versions for security. To verify package security:
+Dependencies are pinned for security. To check for vulnerabilities:
 
 ```bash
 # Install security scanner
@@ -44,6 +44,8 @@ pip-audit -r requirements.txt
 
 ## Deployment
 
+This section provides steps for building, running, and deploying the DCAM mock device. It includes instructions for deploying as an Azure Container Instance, which allows you to run containers in the cloud. For more details, see the official Azure Container Instances quickstart: [Azure Container Instances Quickstart](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-quickstart).
+
 ### 1. Build and Push Docker Image
 
 #### 1.1 Set Environment Variables
@@ -51,10 +53,10 @@ pip-audit -r requirements.txt
 Replace the values as needed:
 
 ```bash
-export RESOURCE_GROUP="rg-fof" # Resource group that will hold mock device container instances
-export ACR_NAME="acrfof"  # Azure Container Registry name
+export RESOURCE_GROUP="<your-resource-group>" # Resource group for container instances
+export ACR_NAME="<your-acr-name>"  # Azure Container Registry name
 export DCAM_IMAGE_NAME="dcam-mock-sensor-sse"  # Docker image name
-export IMAGE_VERSION="latest"  # Docker image version
+export IMAGE_VERSION="<your-image-version>"  # Docker image version
 ```
 
 #### 1.2. Build and Push Mock Device Image
@@ -73,33 +75,11 @@ docker push $ACR_NAME.azurecr.io/$DCAM_IMAGE_NAME:$IMAGE_VERSION
 
 Deploy DCAM mock device as an Azure Container Instance.
 
-> **Note:** When deploying an Azure Container Instance (ACI) with the same name to the same resource group, it will replace any existing container with that name. If you want to maintain the same endpoint URL, make sure to use the same DNS suffix when redeploying.
-
 #### Deployment Commands
 
-**Deploy using the deployment script:**
+When running the Azure deployment command, replace `$SP_APP_ID` and `$SP_SECRET` with your Azure service principal credentials, and replace the DNS label to a unique DNS name for your container instance.
+
 ```bash
-# from mock-devices directory
-source ../../infra/scripts/helper.sh
-
-# You may need to run this to set SP_APP_ID and SP_SECRET
-source ../../infra/scripts/init-chance-plains-subscription.sh
-
-# Deploy sensors with different options
-# Option 1: Use a custom DNS suffix (for consistent DNS naming and redeployment)
-deploy_mock_sensor dcam-mock-sensor-sse ./dcam-mock-sensor-sse fof-246aa
-
-# Option 2: Auto-generate a random DNS name label
-deploy_mock_sensor dcam-mock-sensor-sse ./dcam-mock-sensor-sse
-
-# The deployment will export the endpoint variable automatically but save the output of the command if needed
-# Example endpoint generated:
-export DCAM_SENSOR_ENDPOINT="http://dcam-mock-sensor-sse-fof-246aa.eastus2.azurecontainer.io:8080"
-```
-
-**Or deploy manually:**
-```bash
-
 # Deploy the container
 az container create \
     --resource-group $RESOURCE_GROUP \
@@ -109,11 +89,29 @@ az container create \
     --registry-username $SP_APP_ID \
     --registry-password=$SP_SECRET \
     --ip-address Public \
-    --dns-name-label "dcam-mock-sensor-sse-fof-246aa" \
+    --dns-name-label "dcam-mock-iot" \
     --ports 8080 \
     --os-type Linux \
     --cpu 1 \
     --memory 1.5
+```
+
+After deployment, you can get the endpoint using:
+
+```bash
+az container show -g $RESOURCE_GROUP -n dcam-mock-sensor-sse --query ipAddress.fqdn -o tsv
+```
+
+The endpoint will be in the format:
+
+```
+http://<your-dns-label>.<region>.azurecontainer.io:8080
+```
+
+After retrieving the endpoint from the Azure CLI command, set an environment variable for the sensor to use in your API call:
+
+```
+export DCAM_SENSOR_ENDPOINT="http://dcam-mock-iot.eastus2.azurecontainer.io:8080"
 ```
 
 ### 3. Verify Deployment
@@ -123,15 +121,6 @@ az container create \
 az container logs -g $RESOURCE_GROUP -n dcam-mock-sensor-sse
 ```
 
-**Container Updates:**
-You may need to delete the old container first if redeployment is not successful
-```bash
-# Delete old container if replacement fails
-az container delete -g $RESOURCE_GROUP -n dcam-mock-sensor-sse --yes
-
-# Redeploy
-deploy_mock_sensor dcam-mock-sensor-sse ./dcam-mock-sensor-sse fof-246aa
-```
 ## Usage
 
 ### Default Behavior
@@ -159,7 +148,7 @@ curl $DCAM_SENSOR_ENDPOINT/start-alert
 # Disable alert generation
 curl $DCAM_SENSOR_ENDPOINT/stop-alert
 ```
-**Important:** To get `ALERT_DLQC` events, you must enable analytics. Otherwise,if analytics are disabled, you'll only get basic `ALERT` events when you start the alert generation.
+**Important:** To get `ALERT_DLQC` events, you must enable analytics. Otherwise, if analytics are disabled, you'll only get basic `ALERT` events when you start the alert generation.
 
 To enable/disable analytics: 
 
@@ -196,19 +185,30 @@ curl $DCAM_SENSOR_ENDPOINT/healthcheck      # Check status
 curl $DCAM_SENSOR_ENDPOINT/stop-alert      # Disable alert generation
 curl $DCAM_SENSOR_ENDPOINT/set-analytics-disabled  # Disable analytics
 ```
+
 ### Adjusting Alert Frequency
 
-By default, the DCAM mock device generates alerts approximately every 120 seconds (with 50% probability on each 60-second check). You can increase the frequency of alerts by reducing the `INTERVAL` environment variable:
+By default, alerts are generated approximately every 120 seconds (50% probability per 60-second check). To adjust alert frequency in Azure Container Instance, set the INTERVAL environment variable using the `--environment-variables` flag during deployment:
 
 ```bash
-# Reduce alert frequency by increasing the interval (in seconds)
-# Higher values = fewer alerts
-deploy_mock_sensor dcam-mock-sensor-sse ./dcam-mock-sensor-sse fof-246aa INTERVAL=60
-# This will check for events every 30 seconds (INTERVAL/2) with the same 50% probability,
-# resulting in approximately one alert every minute on average
+az container create \
+  --resource-group $RESOURCE_GROUP \
+  --name dcam-mock-sensor-sse \
+  --image $ACR_NAME.azurecr.io/$DCAM_IMAGE_NAME:$IMAGE_VERSION \
+  --registry-login-server $ACR_NAME.azurecr.io \
+  --registry-username $SP_APP_ID \
+  --registry-password $SP_SECRET \
+  --ip-address Public \
+  --dns-name-label "dcam-mock-iot" \
+  --ports 8080 \
+  --os-type Linux \
+  --cpu 1 \
+  --memory 1.5 \
+  --environment-variables INTERVAL=60
 ```
+This will check for events every 30 seconds (INTERVAL/2), resulting in approximately one alert per minute on average.
 
-Alert frequency examples:
+Examples:
 - INTERVAL=120 (default): ~1 alert per 2 minutes
-- INTERVAL=60: ~1 alert per minute  
+- INTERVAL=60: ~1 alert per minute
 - INTERVAL=30: ~2 alerts per minute
