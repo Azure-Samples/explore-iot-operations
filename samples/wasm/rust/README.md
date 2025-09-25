@@ -76,6 +76,7 @@ The `examples/` directory contains complete examples:
 - **collection**: Data collection and batching
 - **enrichment**: Data enrichment and annotation
 - **window**: Time-based windowing operations
+- **viconverter**: Azure AI Video Indexer insights conversion
 
 ## Building Operators
 
