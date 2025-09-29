@@ -71,9 +71,9 @@ az iot ops ns asset query --instance <your instance name> -g <your resource grou
 Make sure the `process-control-demo/src/write.dataset.client/appsettings.json` file contains the correct values for:
 
 - `HostName` and `Port` in the `ConnectionStrings` setting.
-- `Namespace`: typically `azure-iot-operations`.
+- `Namespace`: typically `azure-iot-operations` if you used the quickstarts deployment.
 - `AssetName`: `boiler` if you used the `boiler-simulation.bicep` file to add the device and namespace asset.
-- `DatasetName`: `default` if you used the `boiler-simulation.bicep` file to add the device and namespace asset.
+- `DatasetName`: `boiler-simple-write` if you used the `boiler-simulation.bicep` file to add the device and namespace asset.
 
 To run the application:
 
