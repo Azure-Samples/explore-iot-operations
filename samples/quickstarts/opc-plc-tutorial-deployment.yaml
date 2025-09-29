@@ -23,7 +23,6 @@ spec:
           - "--portnum=50000"
           - "--certdnsnames=opcplc-000000"
           - "--unsecuretransport"
-          - "--showpnjsonph"
           - "--slownodes=5"
           - "--slowrate=10"
           - "--fastnodes=10"

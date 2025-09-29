@@ -95,6 +95,17 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
   - Time-based data processing
 - Key Features: Configurable delay intervals, preserves data ordering
 
+### Azure AI Video Indexer insights processing
+
+#### viconverter - insights conversion processing
+- Path: `viconverter/`
+- Operator Type: Map
+- Purpose: transform and flatten video indexer insights to specific format that can be further processed and stored by Azure Event Hub and Fabric Lakehouse.
+- Use Cases:
+  - Computer vision pipelines
+  - Image processing
+  - surveillance systems
+
 ## Architecture Patterns
 
 ### Operator Type Implementations
