@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS1591;SA1600;SA1300;SA1210;SA1636;SA1620;SA1201;SA1516;SA1202;CA1014;CS1711;SA1408;SA1311;SA1513;SA1413;SYSLIB1045;SA1200;CS1574;CS1573</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Iot.Operations.Protocol" Version="0.10.*-*" />
+  </ItemGroup>
+
+</Project>
