@@ -1,0 +1,30 @@
+{
+  "@context": [
+    "dtmi:dtdl:context;4",
+    "dtmi:dtdl:extension:mqtt;2",
+    "dtmi:dtdl:extension:requirement;1"
+  ],
+  "@id": "dtmi:opcua:write;1",
+  "@type": [
+    "Interface",
+    "Mqtt"
+  ],
+  "payloadFormat": "custom/0", 
+  "commandTopic": "{ex:namespace}/asset-operations/{ex:asset}/{ex:dataset}",
+  "schemas": [
+  ],
+	"contents": [
+    {
+      "@type": "Command",
+      "name": "WriteDataset",
+      "request": {
+        "name": "WriteDatasetRequest",
+        "schema": "bytes"
+      },
+      "response": {
+        "name": "WriteDatasetResponse",
+        "schema": "bytes"
+      }
+    }
+  ]
+}
