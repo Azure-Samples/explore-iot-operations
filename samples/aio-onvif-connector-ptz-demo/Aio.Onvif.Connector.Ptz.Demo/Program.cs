@@ -6,28 +6,33 @@ using Azure.Iot.Operations.Protocol.Models;
 using MediaClient.Media;
 using PtzClient.Ptz;
 
-var hostOption = new Option<string>(["--mqtt-host", "-h"], description: "The Hostname or IP of the MQTT Listener the demo connects to", getDefaultValue: () => "localhost");
-var portOption = new Option<int>(["--mqtt-port", "-p"], description: "The port of the MQTT Listener the demo connects to", getDefaultValue: () => 1883);
-var namespaceOption = new Option<string>(["--namespace", "-n"], description: "The Kubernetes namespace AIO is deployed to", getDefaultValue: () => "azure-iot-operations");
-var ptzAssetOption = new Option<string>(["--ptz-asset", "-pa"], description: "The name of the PTZ asset") { IsRequired = true };
-var mediaAssetOption = new Option<string>(["--media-asset", "-ma"], description: "The name of the media asset") { IsRequired = true };
-var modeOption = new Option<string>(["--mode", "-m"], description: "The method that should be used to move the camera", getDefaultValue: () => "relative").FromAmong("relative", "continuous");
+var hostOption = new Option<string>("--mqtt-host", "-h") { Description = "The Hostname or IP of the MQTT Listener the demo connects to", DefaultValueFactory = _ => "localhost" };
+var portOption = new Option<int>("--mqtt-port", "-p") { Description = "The port of the MQTT Listener the demo connects to", DefaultValueFactory = _ => 1883 };
+var namespaceOption = new Option<string>("--namespace", "-n") { Description = "The Kubernetes namespace AIO is deployed to", DefaultValueFactory = _ => "azure-iot-operations" };
+var assetOption = new Option<string>("--asset", "-a") { Description = "The name of the asset", Required = true };
+var modeOption = new Option<string>("--mode", "-m") { Description = "The method that should be used to move the camera", DefaultValueFactory = _ => "relative", }.AcceptOnlyFromAmong("relative", "continuous");
 
-var rootCommand = new RootCommand("AIO ONVIF Connector Demo");
-rootCommand.AddOption(hostOption);
-rootCommand.AddOption(portOption);
-rootCommand.AddOption(namespaceOption);
-rootCommand.AddOption(ptzAssetOption);
-rootCommand.AddOption(mediaAssetOption);
-rootCommand.AddOption(modeOption);
-
-rootCommand.SetHandler(async (host, port, @namespace, ptzAsset, mediaAsset, mode) =>
+var rootCommand = new RootCommand("AIO ONVIF Connector Demo")
 {
+    hostOption,
+    portOption,
+    namespaceOption,
+    assetOption,
+    modeOption
+};
+
+rootCommand.SetAction(async parseResult =>
+{
+    var host = parseResult.GetValue(hostOption) ?? throw new ArgumentNullException(nameof(hostOption), "MQTT host cannot be null");
+    var port = parseResult.GetValue(portOption);
+    var @namespace = parseResult.GetValue(namespaceOption) ?? throw new ArgumentNullException(nameof(namespaceOption), "Namespace cannot be null");
+    var asset = parseResult.GetValue(assetOption) ?? throw new ArgumentNullException(nameof(assetOption), "Asset cannot be null");
+    var mode = parseResult.GetValue(modeOption) ?? throw new ArgumentNullException(nameof(modeOption), "Mode cannot be null");
+
     Console.WriteLine($"MQTT Host: {host}");
     Console.WriteLine($"MQTT Port: {port}");
     Console.WriteLine($"Namespace: {@namespace}");
-    Console.WriteLine($"PTZ Asset: {ptzAsset}");
-    Console.WriteLine($"Media Asset: {mediaAsset}");
+    Console.WriteLine($"Asset: {asset}");
     Console.WriteLine($"Mode: {mode}");
 
     var mqttClientTcpOptions = new MqttClientTcpOptions(host, port);
@@ -37,31 +42,35 @@ rootCommand.SetHandler(async (host, port, @namespace, ptzAsset, mediaAsset, mode
     var mqttSessionClient = new MqttSessionClient(new MqttSessionClientOptions());
     await mqttSessionClient.ConnectAsync(mqttClientOptions);
     var applicationContext = new ApplicationContext();
-    var ptzClient = new OnvifPtzClient(applicationContext, mqttSessionClient);
-    var mediaClient = new OnvifMediaClient(applicationContext, mqttSessionClient);
-
-    var profiles = await mediaClient.GetProfilesAsync(new Dictionary<string, string>
+    var ptzClient = new OnvifPtzClient(applicationContext, mqttSessionClient, new Dictionary<string, string>
     {
-        { "ex:namespace", @namespace },
-        { "ex:asset", mediaAsset }
+        { "namespace", @namespace },
+        { "asset", asset }
     });
-    var profile = profiles.GetProfilesCommandResponse.Profiles.First();
+    var mediaClient = new OnvifMediaClient(applicationContext, mqttSessionClient, new Dictionary<string, string>
+    {
+        { "namespace", @namespace },
+        { "asset", asset }
+    });
+
+    var profiles = await mediaClient.GetProfilesAsync();
+    var profile = profiles.Result.Profiles.First();
 
     Console.WriteLine("Use arrow keys or WASD to move camera, Q to quit");
 
     if (mode == "relative")
     {
-        await StartRelativeMoveAsync(ptzClient, profile, @namespace, ptzAsset);
+        await StartRelativeMoveAsync(ptzClient, profile, @namespace, asset);
     }
     else if (mode == "continuous")
     {
-        await StartContinuousMoveAsync(ptzClient, profile, @namespace, ptzAsset);
+        await StartContinuousMoveAsync(ptzClient, profile, @namespace, asset);
     }
 
-    await StartRelativeMoveAsync(ptzClient, profile, @namespace, ptzAsset);
-}, hostOption, portOption, namespaceOption, ptzAssetOption, mediaAssetOption, modeOption);
+    await StartRelativeMoveAsync(ptzClient, profile, @namespace, asset);
+});
 
-await rootCommand.InvokeAsync(args);
+await new CommandLineConfiguration(rootCommand).InvokeAsync(args);
 
 async Task StartRelativeMoveAsync(OnvifPtzClient ptzClient, Profile profile, string @namespace, string ptzAssetName)
 {
@@ -109,11 +118,7 @@ async Task StartRelativeMoveAsync(OnvifPtzClient ptzClient, Profile profile, str
                 }
             };
 
-            await ptzClient.RelativeMoveAsync(request, new Dictionary<string, string>
-            {
-                { "ex:namespace", @namespace },
-                { "ex:asset", ptzAssetName }
-            });
+            await ptzClient.RelativeMoveAsync(request);
         }
         catch (Exception e)
         {
@@ -171,17 +176,9 @@ async Task StartContinuousMoveAsync(OnvifPtzClient ptzClient, Profile profile, s
                 }
             };
 
-            await ptzClient.ContinuousMoveAsync(request, new Dictionary<string, string>
-            {
-                { "ex:namespace", @namespace },
-                { "ex:asset", ptzAssetName }
-            });
+            await ptzClient.ContinuousMoveAsync(request);
             await Task.Delay(1000).ConfigureAwait(true);
-            await ptzClient.StopAsync(new StopRequestPayload { Stop = new Stop { ProfileToken = profile.Token, PanTilt = true } }, new Dictionary<string, string>
-            {
-                { "ex:namespace", @namespace },
-                { "ex:asset", ptzAssetName }
-            });
+            await ptzClient.StopAsync(new StopRequestPayload { Stop = new Stop { ProfileToken = profile.Token, PanTilt = true } });
         }
         catch (Exception e)
         {
