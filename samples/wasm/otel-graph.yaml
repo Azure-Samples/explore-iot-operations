@@ -1,0 +1,56 @@
+moduleConfigurations:
+  - name: module-otel-transform/map
+    parameters:
+      metricName:
+        name: metricName
+        description: Explicit name for metric. If metricNamePath is given as well, this will take precedence.
+      metricNamePath:
+        name: metricNamePath
+        description: Dot source path into payload for metric name
+      metricValuePath:
+        name: metricValuePath
+        description: Dot source path into payload for metric value
+      metricType:
+        name: metricType
+        description: Type for metric
+      metricTimestampPath:
+        name: metricTimestampPath
+        description: Timestamp for metric
+      metricUnits:
+        name: metricUnits
+        description: Units for metric
+  - name: module-otel-enrich/map
+    parameters:
+      enrichKeys:
+        name: enrichKeys
+        description: Comma separated list of DSS keys which will be fetched and added as attributes
+
+moduleRequirements:
+  apiVersion: "0.3.0"
+  hostlibVersion: "0.3.0"
+
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-otel-transform/map"
+    module: "otel-transform:0.1.0"
+  - operationType: "map"
+    name: "module-otel-enrich/map"
+    module: "otel-enrich:0.1.0"
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-otel-enrich/map"
+  - from:
+      name: "module-otel-enrich/map"
+    to:
+      name: "module-otel-transform/map"
+  - from:
+      name: "module-otel-transform/map"
+    to:
+      name: "sink"

@@ -1,0 +1,20 @@
+[package]
+name = "otel-transform"
+version = "0.1.0"
+authors = ["TinyKube Devs"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = "0.22"
+tinykube_wasm_sdk = { version = "=0.3.0-20250923-main-c4bc7c4", registry = 'aio-tk' }
+chrono = "0.4"
+serde = { version = "1", default-features = false, features = [
+	"derive",
+] }
+serde_json = { version = "1", default-features = false, features = [
+	"alloc", # "serde_json requires that either `std` (default) or `alloc` feature is enabled"
+] }
+
+[lib]
+crate-type = ["cdylib"]
