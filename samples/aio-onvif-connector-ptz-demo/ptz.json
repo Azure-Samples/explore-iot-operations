@@ -1,0 +1,2213 @@
+{
+    "@context": [
+        "dtmi:dtdl:context;4#limitless",
+        "dtmi:dtdl:limits:onvif;1",
+        "dtmi:dtdl:extension:mqtt;3",
+        "dtmi:dtdl:extension:requirement;1"
+    ],
+    "@id": "dtmi:onvif:ptz;1",
+    "@type": [
+        "Interface",
+        "Mqtt"
+    ],
+    "payloadFormat": "Json/ecma/404",
+    "commandTopic": "{ex:namespace}/mrpc/{ex:asset}/{commandName}",
+    "schemas": [
+        {
+            "@id": "dtmi:onvif:OnvifError;1",
+            "@type": [
+                "Object",
+                "Error"
+            ],
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required",
+                        "ErrorMessage"
+                    ],
+                    "name": "Message",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:EmptyResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:AbsoluteMove;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Position",
+                    "description": "A Position vector specifying the absolute target position.",
+                    "schema": "dtmi:onvif:ptz:PTZVector;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Speed",
+                    "description": "An optional Speed.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZVector;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "PanTilt",
+                    "description": "Pan and tilt position. The x component corresponds to pan and the y component to tilt.",
+                    "schema": "dtmi:onvif:ptz:Vector2D;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Zoom",
+                    "description": "A zoom position.",
+                    "schema": "dtmi:onvif:ptz:Vector1D;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Vector2D;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "x",
+                    "schema": "float"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "y",
+                    "schema": "float"
+                },
+                {
+                    "@type": "Field",
+                    "name": "space",
+                    "description": "Pan/tilt coordinate space selector. The following options are defined: http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Vector1D;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "x",
+                    "schema": "float"
+                },
+                {
+                    "@type": "Field",
+                    "name": "space",
+                    "description": "Zoom coordinate space selector. The following options are defined: http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZSpeed;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "PanTilt",
+                    "description": "Pan and tilt speed. The x component corresponds to pan and the y component to tilt. If omitted in a request, the current (if any) PanTilt movement should not be affected.",
+                    "schema": "dtmi:onvif:ptz:Vector2D;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Zoom",
+                    "description": "A zoom speed. If omitted in a request, the current (if any) Zoom movement should not be affected.",
+                    "schema": "dtmi:onvif:ptz:Vector1D;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:AbsoluteMoveCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ContinuousMove;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Velocity",
+                    "description": "A Velocity vector specifying the velocity of pan, tilt and zoom.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Timeout",
+                    "description": "An optional Timeout parameter.",
+                    "schema": "duration"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ContinuousMoveCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetConfigurationOptions;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ConfigurationToken",
+                    "description": "Token of an existing configuration that the options are intended for.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetConfigurationOptionsCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZConfigurationOptions",
+                    "description": "The requested PTZ configuration options.",
+                    "schema": "dtmi:onvif:ptz:PTZConfigurationOptions;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZConfigurationOptions;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Spaces",
+                    "description": "A list of supported coordinate systems including their range limitations.",
+                    "schema": "dtmi:onvif:ptz:PTZSpaces;1"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZTimeout",
+                    "description": "A timeout Range within which Timeouts are accepted by the PTZ Node.",
+                    "schema": "dtmi:onvif:ptz:DurationRange;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PTControlDirection",
+                    "description": "Supported options for PT Direction Control.",
+                    "schema": "dtmi:onvif:ptz:PTControlDirectionOptions;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZConfigurationOptions2;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PTZRamps",
+                    "description": "The list of acceleration ramps supported by the device. Thesmallest acceleration value corresponds to the minimal index, thehighest acceleration corresponds to the maximum index.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "integer"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZSpaces;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "AbsolutePanTiltPositionSpace",
+                    "description": "The Generic Pan/Tilt Position space is provided by every PTZ node that supports absolute Pan/Tilt, since it does not relate to a specific physical range. Instead, the range should be defined as the full range of the PTZ unit normalized to the range -1 to 1 resulting in the following space description.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space2DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "AbsoluteZoomPositionSpace",
+                    "description": "The Generic Zoom Position Space is provided by every PTZ node that supports absolute Zoom, since it does not relate to a specific physical range. Instead, the range should be defined as the full range of the Zoom normalized to the range 0 (wide) to 1 (tele). There is no assumption about how the generic zoom range is mapped to magnification, FOV or other physical zoom dimension.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space1DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "RelativePanTiltTranslationSpace",
+                    "description": "The Generic Pan/Tilt translation space is provided by every PTZ node that supports relative Pan/Tilt, since it does not relate to a specific physical range. Instead, the range should be defined as the full positive and negative translation range of the PTZ unit normalized to the range -1 to 1, where positive translation would mean clockwise rotation or movement in right/up direction resulting in the following space description.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space2DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "RelativeZoomTranslationSpace",
+                    "description": "The Generic Zoom Translation Space is provided by every PTZ node that supports relative Zoom, since it does not relate to a specific physical range. Instead, the corresponding absolute range should be defined as the full positive and negative translation range of the Zoom normalized to the range -1 to1, where a positive translation maps to a movement in TELE direction. The translation is signed to indicate direction (negative is to wide, positive is to tele). There is no assumption about how the generic zoom range is mapped to magnification, FOV or other physical zoom dimension. This results in the following space description.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space1DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ContinuousPanTiltVelocitySpace",
+                    "description": "The generic Pan/Tilt velocity space shall be provided by every PTZ node, since it does not relate to a specific physical range. Instead, the range should be defined as a range of the PTZ unit’s speed normalized to the range -1 to 1, where a positive velocity would map to clockwise rotation or movement in the right/up direction. A signed speed can be independently specified for the pan and tilt component resulting in the following space description.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space2DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ContinuousZoomVelocitySpace",
+                    "description": "The generic zoom velocity space specifies a zoom factor velocity without knowing the underlying physical model. The range should be normalized from -1 to 1, where a positive velocity would map to TELE direction. A generic zoom velocity space description resembles the following.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space1DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PanTiltSpeedSpace",
+                    "description": "The speed space specifies the speed for a Pan/Tilt movement when moving to an absolute position or to a relative translation. In contrast to the velocity spaces, speed spaces do not contain any directional information. The speed of a combined Pan/Tilt movement is represented by a single non-negative scalar value.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space1DDescription;1"
+                    }
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ZoomSpeedSpace",
+                    "description": "The speed space specifies the speed for a Zoom movement when moving to an absolute position or to a relative translation. In contrast to the velocity spaces, speed spaces do not contain any directional information.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:Space1DDescription;1"
+                    }
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZSpacesExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Space2DDescription;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "URI",
+                    "description": "A URI of coordinate systems.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "XRange",
+                    "description": "A range of x-axis.",
+                    "schema": "dtmi:onvif:ptz:FloatRange;1"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "YRange",
+                    "description": "A range of y-axis.",
+                    "schema": "dtmi:onvif:ptz:FloatRange;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:FloatRange;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Min",
+                    "schema": "float"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Max",
+                    "schema": "float"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Space1DDescription;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "URI",
+                    "description": "A URI of coordinate systems.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "XRange",
+                    "description": "A range of x-axis.",
+                    "schema": "dtmi:onvif:ptz:FloatRange;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZSpacesExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:DurationRange;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Min",
+                    "schema": "duration"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Max",
+                    "schema": "duration"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTControlDirectionOptions;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "EFlip",
+                    "description": "Supported options for EFlip feature.",
+                    "schema": "dtmi:onvif:ptz:EFlipOptions;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Reverse",
+                    "description": "Supported options for Reverse feature.",
+                    "schema": "dtmi:onvif:ptz:ReverseOptions;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTControlDirectionOptionsExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:EFlipOptions;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Mode",
+                    "description": "Options of EFlip mode parameter.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:EFlipMode;1"
+                    }
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:EFlipOptionsExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:EFlipMode;1",
+            "@type": "Enum",
+            "valueSchema": "string",
+            "enumValues": [
+                {
+                    "name": "OFF",
+                    "enumValue": "OFF"
+                },
+                {
+                    "name": "ON",
+                    "enumValue": "ON"
+                },
+                {
+                    "name": "Extended",
+                    "enumValue": "Extended"
+                },
+                {
+                    "name": "Unknown",
+                    "enumValue": "Unknown"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:EFlipOptionsExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ReverseOptions;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Mode",
+                    "description": "Options of Reverse mode parameter.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:ReverseMode;1"
+                    }
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:ReverseOptionsExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ReverseMode;1",
+            "@type": "Enum",
+            "valueSchema": "string",
+            "enumValues": [
+                {
+                    "name": "OFF",
+                    "enumValue": "OFF"
+                },
+                {
+                    "name": "ON",
+                    "enumValue": "ON"
+                },
+                {
+                    "name": "AUTO",
+                    "enumValue": "AUTO"
+                },
+                {
+                    "name": "Extended",
+                    "enumValue": "Extended"
+                },
+                {
+                    "name": "Unknown",
+                    "enumValue": "Unknown"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ReverseOptionsExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTControlDirectionOptionsExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZConfigurationOptions2;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetConfiguration;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZConfigurationToken",
+                    "description": "Token of the requested PTZConfiguration.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetConfigurationCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZConfiguration",
+                    "description": "A requested PTZConfiguration.",
+                    "schema": "dtmi:onvif:ptz:PTZConfiguration;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZConfiguration;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "NodeToken",
+                    "description": "A mandatory reference to the PTZ Node that the PTZ Configuration belongs to.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultAbsolutePantTiltPositionSpace",
+                    "description": "If the PTZ Node supports absolute Pan/Tilt movements, it shall specify one Absolute Pan/Tilt Position Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultAbsoluteZoomPositionSpace",
+                    "description": "If the PTZ Node supports absolute zoom movements, it shall specify one Absolute Zoom Position Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultRelativePanTiltTranslationSpace",
+                    "description": "If the PTZ Node supports relative Pan/Tilt movements, it shall specify one RelativePan/Tilt Translation Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultRelativeZoomTranslationSpace",
+                    "description": "If the PTZ Node supports relative zoom movements, it shall specify one Relative Zoom Translation Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultContinuousPanTiltVelocitySpace",
+                    "description": "If the PTZ Node supports continuous Pan/Tilt movements, it shall specify one Continuous Pan/Tilt Velocity Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultContinuousZoomVelocitySpace",
+                    "description": "If the PTZ Node supports continuous zoom movements, it shall specify one Continuous Zoom Velocity Space as default.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultPTZSpeed",
+                    "description": "If the PTZ Node supports absolute or relative PTZ movements, it shall specify corresponding default Pan/Tilt and Zoom speeds.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "DefaultPTZTimeout",
+                    "description": "If the PTZ Node supports continuous movements, it shall specify a default timeout, after which the movement stops.",
+                    "schema": "duration"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PanTiltLimits",
+                    "description": "The Pan/Tilt limits element should be present for a PTZ Node that supports an absolute Pan/Tilt. If the element is present it signals the support for configurable Pan/Tilt limits. If limits are enabled, the Pan/Tilt movements shall always stay within the specified range. The Pan/Tilt limits are disabled by setting the limits to –INF or +INF.",
+                    "schema": "dtmi:onvif:ptz:PanTiltLimits;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "ZoomLimits",
+                    "description": "The Zoom limits element should be present for a PTZ Node that supports absolute zoom. If the element is present it signals the supports for configurable Zoom limits. If limits are enabled the zoom movements shall always stay within the specified range. The Zoom limits are disabled by settings the limits to -INF and +INF.",
+                    "schema": "dtmi:onvif:ptz:ZoomLimits;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "description": "",
+                    "schema": "dtmi:onvif:ptz:PTZConfigurationExtension;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "MoveRamp",
+                    "description": "The optional acceleration ramp used by the device when moving.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PresetRamp",
+                    "description": "The optional acceleration ramp used by the device when recalling presets.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PresetTourRamp",
+                    "description": "The optional acceleration ramp used by the device when executing PresetTours.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Name",
+                    "description": "User readable name. Length up to 64 characters.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "UseCount",
+                    "description": "Number of internal references currently using this configuration. This informational parameter is read-only. Deprecated for Media2 Service.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "token",
+                    "description": "Token that uniquely references this configuration. Length up to 64 characters.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PanTiltLimits;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Range",
+                    "description": "A range of pan tilt limits.",
+                    "schema": "dtmi:onvif:ptz:Space2DDescription;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:ZoomLimits;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Range",
+                    "description": "A range of zoom limit",
+                    "schema": "dtmi:onvif:ptz:Space1DDescription;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZConfigurationExtension;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "PTControlDirection",
+                    "description": "Optional element to configure PT Control Direction related features.",
+                    "schema": "dtmi:onvif:ptz:PTControlDirection;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZConfigurationExtension2;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTControlDirection;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "EFlip",
+                    "description": "Optional element to configure related parameters for E-Flip.",
+                    "schema": "dtmi:onvif:ptz:EFlip;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Reverse",
+                    "description": "Optional element to configure related parameters for reversing of PT Control Direction.",
+                    "schema": "dtmi:onvif:ptz:Reverse;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTControlDirectionExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:EFlip;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Mode",
+                    "description": "Parameter to enable/disable E-Flip feature.",
+                    "schema": "dtmi:onvif:ptz:EFlipMode;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Reverse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Mode",
+                    "description": "Parameter to enable/disable Reverse feature.",
+                    "schema": "dtmi:onvif:ptz:ReverseMode;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTControlDirectionExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZConfigurationExtension2;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetConfigurationsCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZConfiguration",
+                    "description": "A list of all existing PTZConfigurations on the device.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:PTZConfiguration;1"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetNode;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "NodeToken",
+                    "description": "Token of the requested PTZNode.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetNodeCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZNode",
+                    "description": "A requested PTZNode.",
+                    "schema": "dtmi:onvif:ptz:PTZNode;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZNode;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "Name",
+                    "description": "A unique identifier that is used to reference PTZ Nodes.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "SupportedPTZSpaces",
+                    "description": "A list of Coordinate Systems available for the PTZ Node. For each Coordinate System, the PTZ Node MUST specify its allowed range.",
+                    "schema": "dtmi:onvif:ptz:PTZSpaces;1"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "MaximumNumberOfPresets",
+                    "description": "All preset operations MUST be available for this PTZ Node if one preset is supported.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "HomeSupported",
+                    "description": "A boolean operator specifying the availability of a home position. If set to true, the Home Position Operations MUST be available for this PTZ Node.",
+                    "schema": "boolean"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "AuxiliaryCommands",
+                    "description": "A list of supported Auxiliary commands. If the list is not empty, the Auxiliary Operations MUST be available for this PTZ Node.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "string"
+                    }
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZNodeExtension;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "FixedHomePosition",
+                    "description": "Indication whether the HomePosition of a Node is fixed or it can be changed via the SetHomePosition command.",
+                    "schema": "boolean"
+                },
+                {
+                    "@type": "Field",
+                    "name": "GeoMove",
+                    "description": "Indication whether the Node supports the geo-referenced move command.",
+                    "schema": "boolean"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "token",
+                    "description": "Unique identifier referencing the physical entity.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZNodeExtension;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "SupportedPresetTour",
+                    "description": "Detail of supported Preset Tour feature.",
+                    "schema": "dtmi:onvif:ptz:PTZPresetTourSupported;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZNodeExtension2;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZPresetTourSupported;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "MaximumNumberOfPresetTours",
+                    "description": "Indicates number of preset tours that can be created. Required preset tour operations shall be available for this PTZ Node if one or more preset tour is supported.",
+                    "schema": "integer"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZPresetTourOperation",
+                    "description": "Indicates which preset tour operations are available for this PTZ Node.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:PTZPresetTourOperation;1"
+                    }
+                },
+                {
+                    "@type": "Field",
+                    "name": "Extension",
+                    "schema": "dtmi:onvif:ptz:PTZPresetTourSupportedExtension;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZPresetTourOperation;1",
+            "@type": "Enum",
+            "valueSchema": "string",
+            "enumValues": [
+                {
+                    "name": "Start",
+                    "enumValue": "Start"
+                },
+                {
+                    "name": "Stop",
+                    "enumValue": "Stop"
+                },
+                {
+                    "name": "Pause",
+                    "enumValue": "Pause"
+                },
+                {
+                    "name": "Extended",
+                    "enumValue": "Extended"
+                },
+                {
+                    "name": "Unknown",
+                    "enumValue": "Unknown"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZPresetTourSupportedExtension;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZNodeExtension2;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetNodesCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZNode",
+                    "description": "A list of the existing PTZ Nodes on the device.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:PTZNode;1"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetPresets;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetPresetsCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Preset",
+                    "description": "A list of presets which are available for the requested MediaProfile.",
+                    "schema": {
+                        "@type": "Array",
+                        "elementSchema": "dtmi:onvif:ptz:PTZPreset;1"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZPreset;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "Name",
+                    "description": "A list of preset position name.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PTZPosition",
+                    "description": "A list of preset position.",
+                    "schema": "dtmi:onvif:ptz:PTZVector;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "token",
+                    "description": "",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetStatus;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the PTZStatus should be requested.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GetStatusCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZStatus",
+                    "description": "The PTZStatus for the requested MediaProfile.",
+                    "schema": "dtmi:onvif:ptz:PTZStatus;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZStatus;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "Position",
+                    "description": "Specifies the absolute position of the PTZ unit together with the Space references. The default absolute spaces of the corresponding PTZ configuration MUST be referenced within the Position element.",
+                    "schema": "dtmi:onvif:ptz:PTZVector;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "MoveStatus",
+                    "description": "Indicates if the Pan/Tilt/Zoom device unit is currently moving, idle or in an unknown state.",
+                    "schema": "dtmi:onvif:ptz:PTZMoveStatus;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Error",
+                    "description": "States a current PTZ error.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "UtcTime",
+                    "description": "Specifies the UTC time when this status was generated.",
+                    "schema": "dateTime"
+                },
+                {
+                    "@type": "Field",
+                    "name": "FieldOfView",
+                    "description": "States the current field of view of the video stream.",
+                    "schema": "dtmi:onvif:ptz:FieldOfView;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:PTZMoveStatus;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": "Field",
+                    "name": "PanTilt",
+                    "description": "",
+                    "schema": "dtmi:onvif:ptz:MoveStatus;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Zoom",
+                    "description": "",
+                    "schema": "dtmi:onvif:ptz:MoveStatus;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:MoveStatus;1",
+            "@type": "Enum",
+            "valueSchema": "string",
+            "enumValues": [
+                {
+                    "name": "IDLE",
+                    "enumValue": "IDLE"
+                },
+                {
+                    "name": "MOVING",
+                    "enumValue": "MOVING"
+                },
+                {
+                    "name": "UNKNOWN",
+                    "enumValue": "UNKNOWN"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:FieldOfView;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "hfov",
+                    "description": "Horizontal field-of-view in degrees.",
+                    "schema": "float"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "vfov",
+                    "description": "Vertical field-of-view in degrees.",
+                    "schema": "float"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GotoHomePosition;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Speed",
+                    "description": "A requested speed.The speed parameter can only be specified when Speed Spaces are available for the PTZ Node.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GotoHomePositionCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GotoPreset;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PresetToken",
+                    "description": "A requested preset token.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Speed",
+                    "description": "A requested speed.The speed parameter can only be specified when Speed Spaces are available for the PTZ Node.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:GotoPresetCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:RelativeMove;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "Translation",
+                    "description": "A positional Translation relative to the current position",
+                    "schema": "dtmi:onvif:ptz:PTZVector;1"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Speed",
+                    "description": "An optional Speed parameter.",
+                    "schema": "dtmi:onvif:ptz:PTZSpeed;1"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:RelativeMoveCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:RemovePreset;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PresetToken",
+                    "description": "A requested preset token.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:RemovePresetCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SendAuxiliaryCommand;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "AuxiliaryData",
+                    "description": "The Auxiliary request data.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SendAuxiliaryCommandCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "AuxiliaryResponse",
+                    "description": "The response contains the auxiliary response.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetConfiguration;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PTZConfiguration",
+                    "description": "",
+                    "schema": "dtmi:onvif:ptz:PTZConfiguration;1"
+                },
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ForcePersistence",
+                    "description": "Flag that makes configuration persistent. Example: User wants the configuration to exist after reboot.",
+                    "schema": "boolean"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetConfigurationCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetHomePosition;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the home position should be set.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetHomePositionCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetPreset;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile where the operation should take place.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PresetName",
+                    "description": "A requested preset name.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PresetToken",
+                    "description": "A requested preset token.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:SetPresetCommandResponse;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "PresetToken",
+                    "description": "A token to the Preset which has been set.",
+                    "schema": "string"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:Stop;1",
+            "@type": "Object",
+            "fields": [
+                {
+                    "@type": [
+                        "Field",
+                        "Required"
+                    ],
+                    "name": "ProfileToken",
+                    "description": "A reference to the MediaProfile that indicate what should be stopped.",
+                    "schema": "string"
+                },
+                {
+                    "@type": "Field",
+                    "name": "PanTilt",
+                    "description": "Set true when we want to stop ongoing pan and tilt movements.If PanTilt arguments are not present, this command stops these movements.",
+                    "schema": "boolean"
+                },
+                {
+                    "@type": "Field",
+                    "name": "Zoom",
+                    "description": "Set true when we want to stop ongoing zoom movement.If Zoom arguments are not present, this command stops ongoing zoom movement.",
+                    "schema": "boolean"
+                }
+            ]
+        },
+        {
+            "@id": "dtmi:onvif:ptz:StopCommandResponse;1",
+            "@type": "Object",
+            "fields": []
+        }
+    ],
+    "contents": [
+        {
+            "@type": "Command",
+            "name": "AbsoluteMove",
+            "request": {
+                "name": "AbsoluteMove",
+                "schema": "dtmi:onvif:ptz:AbsoluteMove;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "ContinuousMove",
+            "request": {
+                "name": "ContinuousMove",
+                "schema": "dtmi:onvif:ptz:ContinuousMove;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetConfigurationOptions",
+            "request": {
+                "name": "GetConfigurationOptions",
+                "schema": "dtmi:onvif:ptz:GetConfigurationOptions;1"
+            },
+            "response": {
+                "name": "GetConfigurationOptionsCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetConfigurationOptionsCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetConfiguration",
+            "request": {
+                "name": "GetConfiguration",
+                "schema": "dtmi:onvif:ptz:GetConfiguration;1"
+            },
+            "response": {
+                "name": "GetConfigurationCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetConfigurationCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetConfigurations",
+            "response": {
+                "name": "GetConfigurationsCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetConfigurationsCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetNode",
+            "request": {
+                "name": "GetNode",
+                "schema": "dtmi:onvif:ptz:GetNode;1"
+            },
+            "response": {
+                "name": "GetNodeCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetNodeCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetNodes",
+            "response": {
+                "name": "GetNodesCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetNodesCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetPresets",
+            "request": {
+                "name": "GetPresets",
+                "schema": "dtmi:onvif:ptz:GetPresets;1"
+            },
+            "response": {
+                "name": "GetPresetsCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetPresetsCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GetStatus",
+            "request": {
+                "name": "GetStatus",
+                "schema": "dtmi:onvif:ptz:GetStatus;1"
+            },
+            "response": {
+                "name": "GetStatusCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:GetStatusCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GotoHomePosition",
+            "request": {
+                "name": "GotoHomePosition",
+                "schema": "dtmi:onvif:ptz:GotoHomePosition;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "GotoPreset",
+            "request": {
+                "name": "GotoPreset",
+                "schema": "dtmi:onvif:ptz:GotoPreset;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "RelativeMove",
+            "request": {
+                "name": "RelativeMove",
+                "schema": "dtmi:onvif:ptz:RelativeMove;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "RemovePreset",
+            "request": {
+                "name": "RemovePreset",
+                "schema": "dtmi:onvif:ptz:RemovePreset;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "SendAuxiliaryCommand",
+            "request": {
+                "name": "SendAuxiliaryCommand",
+                "schema": "dtmi:onvif:ptz:SendAuxiliaryCommand;1"
+            },
+            "response": {
+                "name": "SendAuxiliaryCommandCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:SendAuxiliaryCommandCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "SetConfiguration",
+            "request": {
+                "name": "SetConfiguration",
+                "schema": "dtmi:onvif:ptz:SetConfiguration;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "SetHomePosition",
+            "request": {
+                "name": "SetHomePosition",
+                "schema": "dtmi:onvif:ptz:SetHomePosition;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "SetPreset",
+            "request": {
+                "name": "SetPreset",
+                "schema": "dtmi:onvif:ptz:SetPreset;1"
+            },
+            "response": {
+                "name": "SetPresetCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:SetPresetCommandResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "@type": "Command",
+            "name": "Stop",
+            "request": {
+                "name": "Stop",
+                "schema": "dtmi:onvif:ptz:Stop;1"
+            },
+            "response": {
+                "name": "EmptyCommandResponse",
+                "schema": {
+                    "@type": [
+                        "Object",
+                        "Result"
+                    ],
+                    "fields": [
+                        {
+                            "@type": [
+                                "Field",
+                                "NormalResult"
+                            ],
+                            "name": "Result",
+                            "schema": "dtmi:onvif:ptz:EmptyResponse;1"
+                        },
+                        {
+                            "@type": [
+                                "Field",
+                                "ErrorResult"
+                            ],
+                            "name": "Error",
+                            "schema": "dtmi:onvif:OnvifError;1"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

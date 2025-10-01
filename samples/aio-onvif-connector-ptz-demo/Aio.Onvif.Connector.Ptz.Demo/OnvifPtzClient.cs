@@ -7,7 +7,7 @@ namespace Aio.Onvif.Connector.Ptz.Demo;
 
 public class OnvifPtzClient : Client
 {
-    public OnvifPtzClient(ApplicationContext applicationContext, IMqttPubSubClient mqttClient) : base(applicationContext, mqttClient)
+    public OnvifPtzClient(ApplicationContext applicationContext, IMqttPubSubClient mqttClient, Dictionary<string, string> topicTokenMap) : base(applicationContext, mqttClient, topicTokenMap)
     {
     }
 }
