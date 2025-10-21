@@ -8,12 +8,13 @@ mod otel_transform {
     use std::sync::OnceLock;
 
     use serde_json::Value;
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::map_operator;
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::map_operator;
 
     static METRIC_NAME: OnceLock<String> = OnceLock::new();
     static METRIC_NAME_PATH: OnceLock<String> = OnceLock::new();
     static METRIC_VALUE: OnceLock<String> = OnceLock::new();
+    static METRIC_UNITS: OnceLock<String> = OnceLock::new();
     static METRIC_TYPE: OnceLock<String> = OnceLock::new();
     static METRIC_TIMESTAMP: OnceLock<String> = OnceLock::new();
 
@@ -33,6 +34,7 @@ mod otel_transform {
         pub name: String,
         pub value: f64,
         pub metric_type: String,
+        pub unit: Option<String>,
         pub timestamp: Option<i64>,
         pub attributes: Option<Vec<KeyValuePair>>,
     }
@@ -84,6 +86,14 @@ mod otel_transform {
                         &format!("Configured metric type: {value}"),
                     );
                 }
+                "metricUnits" => {
+                    METRIC_UNITS.set(value.clone()).unwrap();
+                    logger::log(
+                        Level::Info,
+                        "module-otel-transform/map",
+                        &format!("Configured metric unit: {value}"),
+                    );
+                }
                 "metricTimestampPath" => {
                     METRIC_TIMESTAMP.set(value.clone()).unwrap();
                     logger::log(
@@ -118,10 +128,10 @@ mod otel_transform {
     }
 
     #[map_operator(init = "value_to_otel_init")]
-    fn value_to_otel(input: DataModel) -> Result<DataModel, ModuleError> {
+    fn value_to_otel(input: DataModel) -> Result<DataModel, Error> {
         // Default result is unmodified input
         let DataModel::Message(mut result) = input else {
-            return Err(ModuleError {
+            return Err(Error {
                 message: "Unexpected input type".to_string(),
             });
         };
@@ -192,6 +202,8 @@ mod otel_transform {
             hardcoded_metric_name.unwrap().to_string()
         };
 
+        let metric_units = METRIC_UNITS.get().cloned();
+
         let metric_value = get_by_path(&parsed_payload, find_metric_value)
             .and_then(serde_json::Value::as_f64)
             .unwrap_or(0.0) as f64;
@@ -228,6 +240,7 @@ mod otel_transform {
         let new_payload = OtelMetric {
             name: metric_name,
             value: metric_value,
+            unit: metric_units,
             metric_type,
             timestamp,
             attributes,

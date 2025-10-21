@@ -207,17 +207,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
-name = "module-otel-transform"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "tinykube_wasm_sdk",
- "wit-bindgen 0.22.0",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -231,6 +220,17 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+
+[[package]]
+name = "otel-transform"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "wasm_graph_sdk",
+ "wit-bindgen 0.22.0",
+]
 
 [[package]]
 name = "prettyplease"
@@ -385,28 +385,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tinykube_wasm_sdk"
-version = "0.3.0-20250923-main-c4bc7c4"
-source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/Tinykube/Cargo/index/"
-checksum = "187f6b672ec0939680627bb4f1a8def5ae26864fa65bd2c31cf43b1c5418f444"
-dependencies = [
- "thiserror",
- "tinykube_wasm_sdk_wit",
- "wit-bindgen 0.32.0",
-]
-
-[[package]]
-name = "tinykube_wasm_sdk_wit"
-version = "0.3.0-20250923-main-c4bc7c4"
-source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/Tinykube/Cargo/index/"
-checksum = "31d41f44602425359fe4d1571c2b763010a48c75d3337b23d039ec6244eea577"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "unicode-ident"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -538,6 +516,28 @@ dependencies = [
  "spdx",
  "wasm-encoder 0.217.1",
  "wasmparser 0.217.1",
+]
+
+[[package]]
+name = "wasm_graph_sdk"
+version = "1.1.1"
+source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
+checksum = "0a6b4b8777dec4062371a865dc0bcb535f16676c26e693a7030df704a69f6413"
+dependencies = [
+ "thiserror",
+ "wasm_graph_sdk_wit",
+ "wit-bindgen 0.32.0",
+]
+
+[[package]]
+name = "wasm_graph_sdk_wit"
+version = "1.1.1"
+source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
+checksum = "7f401084148ea3df87f553890db136b40b10749f0729fb5160cbc0c50ba3c812"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

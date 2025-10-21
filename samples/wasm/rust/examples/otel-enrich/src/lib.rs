@@ -8,10 +8,10 @@ mod otel_enrich {
     use std::sync::OnceLock;
     use std::vec;
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::map_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
-    use tinykube_wasm_sdk::state_store::{self};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::map_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::state_store::{self};
 
     static ATTR_KEYS: OnceLock<String> = OnceLock::new();
 

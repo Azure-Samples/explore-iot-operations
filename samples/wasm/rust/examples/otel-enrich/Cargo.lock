@@ -120,7 +120,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 name = "otel-enrich"
 version = "0.1.0"
 dependencies = [
- "tinykube_wasm_sdk",
+ "wasm_graph_sdk",
  "wit-bindgen 0.22.0",
 ]
 
@@ -264,18 +264,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "tinykube_wasm_sdk"
+name = "wasm_graph_sdk"
 version = "0.3.0-20250923-main-c4bc7c4"
 source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/Tinykube/Cargo/index/"
 checksum = "187f6b672ec0939680627bb4f1a8def5ae26864fa65bd2c31cf43b1c5418f444"
 dependencies = [
  "thiserror",
- "tinykube_wasm_sdk_wit",
+ "wasm_graph_sdk_wit",
  "wit-bindgen 0.32.0",
 ]
 
 [[package]]
-name = "tinykube_wasm_sdk_wit"
+name = "wasm_graph_sdk_wit"
 version = "0.3.0-20250923-main-c4bc7c4"
 source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/Tinykube/Cargo/index/"
 checksum = "31d41f44602425359fe4d1571c2b763010a48c75d3337b23d039ec6244eea577"

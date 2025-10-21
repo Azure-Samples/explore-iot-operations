@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 wit-bindgen = "0.22"
-tinykube_wasm_sdk = { version = "=0.3.0-20250923-main-c4bc7c4", registry = 'aio-tk' }
+wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
 chrono = "0.4"
 serde = { version = "1", default-features = false, features = [
 	"derive",
