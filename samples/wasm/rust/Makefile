@@ -16,9 +16,7 @@ $(1P_MODULES):
 	mkdir -p ./graphs/wasm-modules
 	$(eval VERSION ?= 1.0.0)
 	$(eval MODE := $(if $(DEBUG),debug,release))
-# 	pushd $(REPOSITORY_ROOT)/samples/wasm/rust/examples/$@
-	cd examples/$@
-	cargo build --target wasm32-wasip2 -p $@ $(if $(DEBUG),, --release) $(CARGOFLAGS)
-# 	popd
+	cd $(REPOSITORY_ROOT)/samples/wasm/rust/examples/$@ && \
+	cargo build --target wasm32-wasip2 -p $@ $(if $(DEBUG),, --release) $(CARGO_FLAGS)
 	$(eval file_naming := $(subst -,_,$@))
-	cp --archive ./target/wasm32-wasip2/$(MODE)/$(file_naming).wasm ./graphs/wasm-modules/processor-$@-$(VERSION).wasm
+	cp --archive $(REPOSITORY_ROOT)/samples/wasm/rust/examples/$@/target/wasm32-wasip2/$(MODE)/$(file_naming).wasm ./graphs/wasm-modules/processor-$@-$(VERSION).wasm
