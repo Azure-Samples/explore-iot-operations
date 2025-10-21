@@ -9,7 +9,7 @@ This sample application demonstrates how to use the MRPC API provided by ONVIF C
 
 ## Build instructions
 
-Make sure you have the .NET 8.0 SDK installed. You can download it from [here](https://dotnet.microsoft.com/download).
+Make sure you have the .NET 9.0 SDK installed. You can download it from [here](https://dotnet.microsoft.com/download).
 
 Once installed open this directory in your terminal and run `dotnet build`
 
@@ -21,9 +21,8 @@ To create the asset endpoint and assets that the sample application interacts wi
 
 The how-to guide  walks you through the steps to create:
 
-- The `contoso-onvif-aep` asset endpoint
-- The `camera-ptz` asset
-- The `camera-media` asset
+- The `my-onvif-camera` device with a inbound endpoint called `onvifep`
+- The discovered ONVIF and media assets
 
 ### Create Broker Listener
 
@@ -60,7 +59,7 @@ Leave this open to keep the port forward active.
 
 ## Run instructions
 
-Start the application by running `dotnet run --project Aio.Onvif.Connector.Ptz.Demo -- --mqtt-host localhost --mqtt-port 1883 --namespace azure-iot-operations --ptz-asset onvif-camera-ptz --media-asset onvif-camera-media --mode relative`
+Start the application by running `dotnet run --project Aio.Onvif.Connector.Ptz.Demo -- --mqtt-host localhost --mqtt-port 1883 --namespace azure-iot-operations --ptz-asset <your ONVIF asset name> --media-asset <your media asset name> --mode relative`
 
 After entering this information, the application will connect to the AIO Broker and the camera can be moved with keyboard input. Press 'q' to exit the application.
 
