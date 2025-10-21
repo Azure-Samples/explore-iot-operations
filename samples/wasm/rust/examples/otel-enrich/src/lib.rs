@@ -53,7 +53,7 @@ mod otel_enrich {
     }
 
     #[map_operator(init = "enrich_init")]
-    fn factory_id_enrich(input: DataModel) -> Result<DataModel, ModuleError> {
+    fn factory_id_enrich(input: DataModel) -> Result<DataModel, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-otel-enrich/map".to_owned(),
@@ -61,7 +61,7 @@ mod otel_enrich {
         let _ = metrics::add_to_counter("requests", CounterValue::U64(1), Some(&labels));
 
         let DataModel::Message(mut result) = input else {
-            return Err(ModuleError {
+            return Err(Error {
                 message: "Unexpected input type".to_string(),
             });
         };
