@@ -25,6 +25,8 @@ samples/wasm/
 │   ├── examples/              # Rust operator implementations
 │   │   ├── temperature/       # Temperature conversion module
 │   │   ├── humidity/          # Humidity processing module
+│   │   ├── otel-enrich/       # Otel enrich module
+│   │   ├── otel-transform/    # Otel transformation module
 │   │   ├── format/            # Data formatting module
 │   │   ├── collection/        # Data collection module
 │   │   ├── enrichment/        # Data enrichment module

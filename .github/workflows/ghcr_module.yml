@@ -1,0 +1,82 @@
+name: ghcr_module
+
+on:
+  workflow_dispatch:
+    inputs:
+      module-name:
+        required: false
+        type: string
+        description: "Name of the module to build and push. If not provided, all modules will be processed."
+      module-tag:
+        required: false
+        type: string
+        default: "1.0.0"
+        description: "Tag to use for the modules."
+  workflow_call:
+    inputs:
+      module-name:
+        required: false
+        type: string
+        description: "Name of the module to build and push. If not provided, all modules will be processed."
+      module-tag:
+        required: false
+        type: string
+        default: "1.0.0"
+        description: "Tag to use for the modules."
+
+jobs:
+  push-store-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@main
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      
+      - name: "Install Cargo"
+        run: |
+          # Install cargo
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+      
+      - name: "Install ORAS CLI"
+        run: |
+          VERSION="1.3.0"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: "Build Module(s)"
+        working-directory: ${{ github.workspace }}
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          source $HOME/.cargo/env
+
+          cd samples/wasm/rust
+          make graphs
+
+          if [ -n "${{ inputs.module-name }}" ]; then
+            echo "Building specific module: ${{ inputs.module-name }}"
+
+            cd graphs/wasm-modules
+            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.module-name }}:${{ inputs.module-tag }} ./${{ inputs.module-name }}-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+          else
+            echo "Building all modules"
+
+            cd graphs/wasm-modules
+            for moduleFile in *.wasm; do
+              moduleName=$(basename "$moduleFile" .wasm | sed 's/-${{ inputs.module-tag }}$//')
+              echo "Pushing module: $moduleName"
+              oras push ghcr.io/$owner/explore-iot-operations/$moduleName:${{ inputs.module-tag }} ./$moduleName-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+            done
+          fi
