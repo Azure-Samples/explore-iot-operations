@@ -17,10 +17,12 @@ on:
       module-name:
         required: false
         type: string
+        description: "Name of the module to build and push. If not provided, all modules will be processed."
       graph-tag:
         required: false
         type: string
         default: "1.0.0"
+        description: "Tag to use for the graph modules."
 
 jobs:
   push-store-image:
