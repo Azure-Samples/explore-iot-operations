@@ -1,3 +1,10 @@
+metadata:
+  name: "Otel transform graph"
+  description: "A graph that transforms input data into OpenTelemetry metrics"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  vendor: "Microsoft"
+
 moduleConfigurations:
   - name: module-otel-transform/map
     parameters:
@@ -21,15 +28,15 @@ moduleConfigurations:
         description: Units for metric
 
 moduleRequirements:
-  apiVersion: "0.3.0"
-  hostlibVersion: "0.3.0"
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
 
 operations:
   - operationType: "source"
     name: "source"
   - operationType: "map"
     name: "module-otel-transform/map"
-    module: "otel-transform:0.1.0"
+    module: "otel-transform:1.0.0"
   - operationType: "sink"
     name: "sink"
 

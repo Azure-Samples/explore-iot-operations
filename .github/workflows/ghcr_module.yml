@@ -68,13 +68,15 @@ jobs:
           if [ -n "${{ inputs.module-name }}" ]; then
             echo "Building specific module: ${{ inputs.module-name }}"
 
-            oras push ghcr.io/$owner/${{ inputs.module-name }}:${{ inputs.module-tag }} ./graphs/wasm-modules/${{ inputs.module-name }}-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+            cd graphs/wasm-modules
+            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.module-name }}:${{ inputs.module-tag }} ./${{ inputs.module-name }}-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
           else
             echo "Building all modules"
 
-            for moduleFile in graphs/wasm-modules/*.wasm; do
+            cd graphs/wasm-modules
+            for moduleFile in *.wasm; do
               moduleName=$(basename "$moduleFile" .wasm | sed 's/-${{ inputs.module-tag }}$//')
               echo "Pushing module: $moduleName"
-              oras push ghcr.io/$owner/$moduleName:${{ inputs.module-tag }} ./graphs/wasm-modules/$moduleName-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+              oras push ghcr.io/$owner/explore-iot-operations/$moduleName:${{ inputs.module-tag }} ./$moduleName-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
             done
           fi
