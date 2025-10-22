@@ -1,0 +1,72 @@
+name: ghcr_graph
+
+on:
+  workflow_dispatch:
+    inputs:
+      graph-name:
+        required: false
+        type: string
+        description: "Name of the graph to build and push. If not provided, all graphs will be processed."
+      graph-tag:
+        required: false
+        type: string
+        default: "1.0.0"
+        description: "Tag to use for the graph."
+  workflow_call:
+    inputs:
+      graph-name:
+        required: false
+        type: string
+        description: "Name of the graph to build and push. If not provided, all graphs will be processed."
+      graph-tag:
+        required: false
+        type: string
+        default: "1.0.0"
+        description: "Tag to use for the graph."
+
+jobs:
+  push-store-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@main
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: "Install ORAS CLI"
+        run: |
+          VERSION="1.3.0"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: "Push Graphs(s)"
+        working-directory: ${{ github.workspace }}
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          cd samples/wasm/rust
+
+          if [ -n "${{ inputs.graph-name }}" ]; then
+            echo "Pushing specific graph: ${{ inputs.graph-name }}"
+
+            oras push ghcr.io/$owner/${{ inputs.graph-name }}:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./graphs/${{ inputs.graph-name }}:application/yaml --disable-path-validation
+          else
+            echo "Pushing all graphs"
+
+            for graphFile in graphs/*.yaml; do
+              graphName=$(basename "$graphFile" .yaml)
+              echo "Processing graph file: $graphName"
+              oras push ghcr.io/$owner/$graphName:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./graphs/$graphName.yaml:application/yaml --disable-path-validation
+            done
+          fi

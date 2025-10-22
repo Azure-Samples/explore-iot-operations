@@ -1,4 +1,4 @@
-name: module_ghcr
+name: ghcr_module
 
 on:
   workflow_dispatch:
@@ -7,22 +7,22 @@ on:
         required: false
         type: string
         description: "Name of the module to build and push. If not provided, all modules will be processed."
-      graph-tag:
+      module-tag:
         required: false
         type: string
         default: "1.0.0"
-        description: "Tag to use for the graph modules."
+        description: "Tag to use for the modules."
   workflow_call:
     inputs:
       module-name:
         required: false
         type: string
         description: "Name of the module to build and push. If not provided, all modules will be processed."
-      graph-tag:
+      module-tag:
         required: false
         type: string
         default: "1.0.0"
-        description: "Tag to use for the graph modules."
+        description: "Tag to use for the modules."
 
 jobs:
   push-store-image:
@@ -70,12 +70,12 @@ jobs:
 
             echo "Building specific module: ${{ inputs.module-name }}"
 
-            oras push ghcr.io/$owner/${{ inputs.module-name }}:${{ inputs.graph-tag }} ./graphs/wasm-modules/${{ inputs.module-name }}-${{ inputs.graph-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+            oras push ghcr.io/$owner/${{ inputs.module-name }}:${{ inputs.module-tag }} ./graphs/wasm-modules/${{ inputs.module-name }}-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
           else
             echo "Building all modules"
 
             for moduleFile in graphs/wasm-modules/*.wasm; do
-                moduleName=$(basename "$moduleFile" .wasm | sed 's/-${{ inputs.graph-tag }}$//')
-              oras push ghcr.io/$owner/$moduleName:${{ inputs.graph-tag }} ./graphs/wasm-modules/$moduleName-${{ inputs.graph-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+              moduleName=$(basename "$moduleFile" .wasm | sed 's/-${{ inputs.module-tag }}$//')
+              oras push ghcr.io/$owner/$moduleName:${{ inputs.module-tag }} ./graphs/wasm-modules/$moduleName-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
             done
           fi
