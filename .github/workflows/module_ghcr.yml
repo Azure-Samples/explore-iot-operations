@@ -1,11 +1,16 @@
 name: module_ghcr
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       module-name:
-        required: true
+        required: false
         type: string
+      graph-tag:
+        required: false
+        type: string
+        default: "1.0.0"
       context:
         required: true
         type: string
@@ -30,8 +35,24 @@ jobs:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: "Build Module"
+      - name: "Build Module(s)"
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker build ${{ inputs.context }} -f ${{ inputs.module-name }} --tag ghcr.io/$owner/explore-iot-operations/${{ inputs.name }}:latest
-          docker push ghcr.io/$owner/explore-iot-operations/${{ inputs.name }}:latest
+
+          cd wasm/rust
+          make graphs
+
+          if [ -n "${{ inputs.module-name }}" ]; then
+            # Build and push specific module
+
+            echo "Building specific module: ${{ inputs.module-name }}"
+
+            oras push ghcr.io/$owner/${{ inputs.module-name }}:${{ inputs.graph-tag }} ./graphs/wasm-modules/${{ inputs.module-name }}-${{ parameters.graph_tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+          else
+            # Build and push all modules
+            echo "Building all modules"
+
+            for moduleName in graphs/wasm-modules; do
+              oras push ghcr.io/$owner/$moduleName:${{ inputs.graph-tag }} ./graphs/wasm-modules/$moduleName-${{ parameters.graph_tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+            done
+          fi
