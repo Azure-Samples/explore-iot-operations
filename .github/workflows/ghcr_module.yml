@@ -66,8 +66,6 @@ jobs:
           make graphs
 
           if [ -n "${{ inputs.module-name }}" ]; then
-            # Build and push specific module
-
             echo "Building specific module: ${{ inputs.module-name }}"
 
             oras push ghcr.io/$owner/${{ inputs.module-name }}:${{ inputs.module-tag }} ./graphs/wasm-modules/${{ inputs.module-name }}-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
@@ -76,6 +74,7 @@ jobs:
 
             for moduleFile in graphs/wasm-modules/*.wasm; do
               moduleName=$(basename "$moduleFile" .wasm | sed 's/-${{ inputs.module-tag }}$//')
+              echo "Pushing module: $moduleName"
               oras push ghcr.io/$owner/$moduleName:${{ inputs.module-tag }} ./graphs/wasm-modules/$moduleName-${{ inputs.module-tag }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
             done
           fi

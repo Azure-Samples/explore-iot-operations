@@ -59,14 +59,13 @@ jobs:
 
           if [ -n "${{ inputs.graph-name }}" ]; then
             echo "Pushing specific graph: ${{ inputs.graph-name }}"
-
             oras push ghcr.io/$owner/${{ inputs.graph-name }}:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./graphs/${{ inputs.graph-name }}:application/yaml --disable-path-validation
           else
             echo "Pushing all graphs"
 
             for graphFile in graphs/*.yaml; do
               graphName=$(basename "$graphFile" .yaml)
-              echo "Processing graph file: $graphName"
+              echo "Pushing graph: $graphName"
               oras push ghcr.io/$owner/$graphName:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./graphs/$graphName.yaml:application/yaml --disable-path-validation
             done
           fi
