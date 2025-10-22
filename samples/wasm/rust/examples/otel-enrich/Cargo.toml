@@ -1,0 +1,13 @@
+[package]
+name = "otel-enrich"
+version = "0.1.0"
+authors = ["TinyKube Devs"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = "0.22"
+wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
+
+[lib]
+crate-type = ["cdylib"]
