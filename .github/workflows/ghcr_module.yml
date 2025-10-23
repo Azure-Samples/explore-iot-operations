@@ -1,5 +1,8 @@
 name: ghcr_module
 
+permissions:
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:

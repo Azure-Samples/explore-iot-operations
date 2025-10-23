@@ -1,5 +1,8 @@
 name: ghcr_graph
 
+permissions:
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:
