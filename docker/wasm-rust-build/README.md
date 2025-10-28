@@ -44,7 +44,7 @@ ENTRYPOINT [ "${APP_NAME}.wasm" ]
 
 ## Environment Variables
 
-- `CARGO_REGISTRIES_AZURE_VSCODE_TINYKUBE_INDEX`: Azure IoT Operations Cargo registry URL
+- `CARGO_REGISTRIES_AZURE_WASM_SDK_INDEX`: Azure IoT Operations Cargo registry URL
 - `CARGO_NET_GIT_FETCH_WITH_CLI`: Use Git CLI for fetching dependencies
 
 ## Publishing
