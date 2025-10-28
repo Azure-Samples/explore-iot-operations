@@ -40,7 +40,7 @@ edition = "2021"
 
 [dependencies]
 wit-bindgen = "0.22"
-tinykube_wasm_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
+wasm_graph_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
 serde = { version = "1", default-features = false, features = ["derive"] }
 serde_json = { version = "1", default-features = false, features = ["alloc"] }
 
@@ -53,8 +53,8 @@ EOF
 ### Implement Operator
 
 ```rust
-use tinykube_wasm_sdk::macros::map_operator;
-use tinykube_wasm_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::map_operator;
+use wasm_graph_sdk::logger::{self, Level};
 
 #[map_operator]
 fn my_operator(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {
@@ -138,8 +138,8 @@ docker build -t rust-wasm-builder .
 ### Map Operator
 
 ```rust
-use tinykube_wasm_sdk::macros::map_operator;
-use tinykube_wasm_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::map_operator;
+use wasm_graph_sdk::logger::{self, Level};
 
 #[map_operator]
 fn transform_data(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {
@@ -160,7 +160,7 @@ fn transform_data(timestamp: HybridLogicalClock, input: DataModel) -> DataModel 
 ### Filter Operator
 
 ```rust
-use tinykube_wasm_sdk::macros::filter_operator;
+use wasm_graph_sdk::macros::filter_operator;
 
 #[filter_operator]
 fn temperature_filter(timestamp: HybridLogicalClock, input: DataModel) -> bool {
@@ -177,7 +177,7 @@ fn temperature_filter(timestamp: HybridLogicalClock, input: DataModel) -> bool {
 ### Branch Operator
 
 ```rust
-use tinykube_wasm_sdk::macros::branch_operator;
+use wasm_graph_sdk::macros::branch_operator;
 
 #[branch_operator]
 fn route_by_sensor(timestamp: HybridLogicalClock, input: DataModel) -> bool {
@@ -201,7 +201,7 @@ fn route_by_sensor(timestamp: HybridLogicalClock, input: DataModel) -> bool {
 ### Error Handling
 
 ```rust
-use tinykube_wasm_sdk::logger::{self, Level};
+use wasm_graph_sdk::logger::{self, Level};
 
 #[map_operator]
 fn safe_processor(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {
@@ -223,9 +223,9 @@ fn process_data(input: DataModel) -> Result<DataModel, String> {
 ### Logging and Metrics
 
 ```rust
-use tinykube_wasm_sdk::{logger, metrics};
-use tinykube_wasm_sdk::logger::Level;
-use tinykube_wasm_sdk::metrics::{CounterValue, Label};
+use wasm_graph_sdk::{logger, metrics};
+use wasm_graph_sdk::logger::Level;
+use wasm_graph_sdk::metrics::{CounterValue, Label};
 
 #[map_operator]
 fn instrumented_operator(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {

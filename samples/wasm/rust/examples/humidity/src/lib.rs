@@ -6,9 +6,9 @@
 
 use core::panic;
 
-use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::macros::accumulate_operator;
-use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+use wasm_graph_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::accumulate_operator;
+use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
 #[accumulate_operator]
 fn accumulate_humidity(staged: DataModel, inputs: Vec<DataModel>) -> DataModel {

@@ -7,9 +7,9 @@
 mod map_snapshot {
     use std::sync::LazyLock;
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::map_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::map_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     use crate::{Measurement, MeasurementObject};
 
@@ -190,9 +190,9 @@ mod map_snapshot {
 
 mod branch_snapshot {
     use std::sync::OnceLock;
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::branch_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::branch_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     static SNAPSHOT_MQTT_TOPIC: OnceLock<Vec<u8>> = OnceLock::new();
 
@@ -259,9 +259,9 @@ mod branch_snapshot {
 }
 
 mod accumulate_snapshot {
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::accumulate_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::accumulate_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     use crate::{Measurement, MeasurementObject};
 

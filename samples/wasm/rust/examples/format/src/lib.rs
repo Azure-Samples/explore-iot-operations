@@ -7,9 +7,9 @@
 mod map_format {
     use core::panic;
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::map_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::map_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     // Set 224*224 and rgb24 since object detection models expect this size.
     const WIDTH: u32 = 224;
@@ -44,9 +44,7 @@ mod map_format {
         let _ = metrics::add_to_counter("requests", CounterValue::U64(1), Some(&labels));
 
         let (payload, timestamp) = match input {
-            DataModel::Message(message) => {
-                (message.payload.read(), message.timestamp)
-            },
+            DataModel::Message(message) => (message.payload.read(), message.timestamp),
             DataModel::Snapshot(snapshot) => {
                 let format = match snapshot.format {
                     BufferOrString::Buffer(ref s) => String::from_utf8_lossy(&s.read()).to_string(),
@@ -57,7 +55,7 @@ mod map_format {
                     return DataModel::Snapshot(snapshot);
                 }
                 (snapshot.frame.read(), snapshot.timestamp)
-            },
+            }
             DataModel::BufferOrBytes(_) => panic!("Unexpected input type"),
         };
 
@@ -73,9 +71,11 @@ mod map_format {
                     logger::log(
                         Level::Info,
                         "module-format/map",
-                        &format!("Unexpected image format or size: expected {} bytes, got {} bytes",
-                                 WIDTH * HEIGHT * CELL_LENGTH,
-                                 payload.len()),
+                        &format!(
+                            "Unexpected image format or size: expected {} bytes, got {} bytes",
+                            WIDTH * HEIGHT * CELL_LENGTH,
+                            payload.len()
+                        ),
                     );
                     panic!("Unexpected image format or size");
                 }

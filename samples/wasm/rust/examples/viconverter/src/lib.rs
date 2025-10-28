@@ -5,8 +5,8 @@
 #![allow(clippy::missing_safety_doc)]
 
 use serde::{Deserialize, Serialize};
-use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::macros::map_operator;
+use wasm_graph_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::map_operator;
 
 /// Minimal view of the input: we only deserialize what we need.
 #[derive(Debug, Deserialize)]

@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 image = { version = "0.24" }
 wit-bindgen = "0.22"
-tinykube_wasm_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
+wasm_graph_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
 serde = { version = "1", default-features = false, features = [
 	"derive",
 ] }

@@ -167,8 +167,8 @@ graph TD
 Example from [temperature converter](rust/examples/temperature):
 
 ```rust
-use tinykube_wasm_sdk::macros::map_operator;
-use tinykube_wasm_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::map_operator;
+use wasm_graph_sdk::logger::{self, Level};
 
 #[map_operator(init = "init")]
 fn process(input: DataModel) -> DataModel {

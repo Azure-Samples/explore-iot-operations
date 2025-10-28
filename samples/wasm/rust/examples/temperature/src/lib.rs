@@ -13,9 +13,9 @@
 mod map_temperature {
     use crate::{Measurement, MeasurementTemperatureUnit};
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::map_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::map_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     fn fahrenheit_to_celsius_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
@@ -211,9 +211,9 @@ mod map_temperature {
 mod branch_temperature {
     use crate::Measurement;
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::branch_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::branch_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     fn check_temperature_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
@@ -272,9 +272,9 @@ mod filter_temperature {
 
     use crate::{Measurement, MeasurementTemperature, MeasurementTemperatureUnit};
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::filter_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::filter_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     static LOWER_BOUND: OnceLock<f64> = OnceLock::new();
     static UPPER_BOUND: OnceLock<f64> = OnceLock::new();
@@ -398,9 +398,9 @@ mod filter_temperature {
 mod accumulate_temperature {
     use crate::{Measurement, MeasurementTemperatureUnit};
 
-    use tinykube_wasm_sdk::logger::{self, Level};
-    use tinykube_wasm_sdk::macros::accumulate_operator;
-    use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+    use wasm_graph_sdk::logger::{self, Level};
+    use wasm_graph_sdk::macros::accumulate_operator;
+    use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
     fn accumulate_temperature_values_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
