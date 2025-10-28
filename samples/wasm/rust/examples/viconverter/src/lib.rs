@@ -76,7 +76,7 @@ fn map_init(_configuration: ModuleConfiguration) -> bool {
 }
 
 #[map_operator(init = "map_init")]
-fn map(input: DataModel) -> DataModel {
+fn map(input: DataModel) -> Result<DataModel, Error> {
     logger::log(Level::Info, "viconverter/map", "Get a map request");
     // create result object from input
     let DataModel::Message(mut result) = input else {
@@ -127,5 +127,5 @@ fn map(input: DataModel) -> DataModel {
     let serialized_rows = serde_json::to_vec(&rows).unwrap();
     result.payload = BufferOrBytes::Bytes(serialized_rows);
     // return result
-    DataModel::Message(result)
+    Ok(DataModel::Message(result))
 }
