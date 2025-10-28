@@ -34,7 +34,7 @@ mod map_snapshot {
     });
 
     #[map_operator]
-    fn object_detection(message: DataModel) -> DataModel {
+    fn object_detection(message: DataModel) -> Result<DataModel, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-snapshot/map".to_owned(),
@@ -145,7 +145,7 @@ mod map_snapshot {
             }
         }
 
-        DataModel::Snapshot(result)
+        Ok(DataModel::Snapshot(result))
     }
 
     pub fn bytes_to_f32_vec(data: &[u8]) -> Vec<f32> {
@@ -222,7 +222,7 @@ mod branch_snapshot {
     }
 
     #[branch_operator(init = "check_snapshot_init")]
-    fn check_snapshot(_timestamp: HybridLogicalClock, input: DataModel) -> bool {
+    fn check_snapshot(_timestamp: HybridLogicalClock, input: DataModel) -> Result<bool, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-snapshot/branch".to_owned(),
@@ -254,7 +254,7 @@ mod branch_snapshot {
             "module-snapshot/branch",
             &format!("check_snapshot result: {}", result),
         );
-        result
+        Ok(result)
     }
 }
 
@@ -266,7 +266,10 @@ mod accumulate_snapshot {
     use crate::{Measurement, MeasurementObject};
 
     #[accumulate_operator]
-    fn accumulate_detected_objects(staged: DataModel, inputs: Vec<DataModel>) -> DataModel {
+    fn accumulate_detected_objects(
+        staged: DataModel,
+        inputs: Vec<DataModel>,
+    ) -> Result<DataModel, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-snapshot/accumulate".to_owned(),
@@ -292,7 +295,7 @@ mod accumulate_snapshot {
                     // Directly push the object into the list
                     objects.push(measurement.result);
                 }
-                _ => {},
+                _ => {}
             }
         }
 
@@ -301,10 +304,15 @@ mod accumulate_snapshot {
             let (_ts, _width, _height, payload) = match input {
                 DataModel::Snapshot(temp) => {
                     // Extract payload from message to process
-                    (temp.timestamp.timestamp, temp.width, temp.height, match &temp.frame {
-                        BufferOrBytes::Buffer(buffer) => buffer.read(),
-                        BufferOrBytes::Bytes(bytes) => bytes.clone(),
-                    })
+                    (
+                        temp.timestamp.timestamp,
+                        temp.width,
+                        temp.height,
+                        match &temp.frame {
+                            BufferOrBytes::Buffer(buffer) => buffer.read(),
+                            BufferOrBytes::Bytes(bytes) => bytes.clone(),
+                        },
+                    )
                 }
                 _ => panic!("Unexpected input type"),
             };
@@ -323,19 +331,22 @@ mod accumulate_snapshot {
 
         let result_payload = serde_json::to_vec(&Measurement::Object(MeasurementObject {
             result: objects.join("; "),
-        })).unwrap();
+        }))
+        .unwrap();
 
         logger::log(
             Level::Info,
             "module-snapshot/accumulate",
-            &result_payload.iter().map(|b| *b as char).collect::<String>(),
+            &result_payload
+                .iter()
+                .map(|b| *b as char)
+                .collect::<String>(),
         );
 
         result.payload = BufferOrBytes::Bytes(result_payload);
-        DataModel::Message(result)
+        Ok(DataModel::Message(result))
     }
 }
-
 
 #[derive(Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum Measurement {

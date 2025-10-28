@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 ndarray = "0.16.1"
 wit-bindgen = "0.22"
-wasm_graph_sdk = { version = "0.2.0", registry="azure-vscode-tinykube" }
+wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
 serde = { version = "1", features = [
 	"derive",
 	"rc",
