@@ -1,5 +1,8 @@
 name: Build and Push WASM Rust Builder Image
 
+permissions:
+  packages: write
+
 on:
   workflow_dispatch:
   push:
