@@ -36,7 +36,7 @@ mod map_format {
     }
 
     #[map_operator(init = "decode_and_rescale_init")]
-    fn decode_and_rescale(input: DataModel) -> DataModel {
+    fn decode_and_rescale(input: DataModel) -> Result<DataModel, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-format/map".to_owned(),
@@ -52,7 +52,7 @@ mod map_format {
                 };
                 if format == FORMAT && snapshot.width == WIDTH && snapshot.height == HEIGHT {
                     // If the snapshot is already in the desired format and size, return it directly
-                    return DataModel::Snapshot(snapshot);
+                    return Ok(DataModel::Snapshot(snapshot));
                 }
                 (snapshot.frame.read(), snapshot.timestamp)
             }
@@ -88,7 +88,7 @@ mod map_format {
                     height: HEIGHT,
                     frame: BufferOrBytes::Bytes(payload.to_vec()),
                 };
-                return DataModel::Snapshot(result);
+                return Ok(DataModel::Snapshot(result));
             }
         };
 
@@ -108,6 +108,6 @@ mod map_format {
             frame: BufferOrBytes::Bytes(resized_img.to_vec()),
         };
 
-        DataModel::Snapshot(result)
+        Ok(DataModel::Snapshot(result))
     }
 }

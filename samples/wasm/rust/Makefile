@@ -4,7 +4,7 @@ TARGET_SUBDIRECTORY := $(if $(value RELEASE),release,debug)
 
 REPOSITORY_ROOT := $(shell git rev-parse --show-toplevel)
 
-1P_MODULES := collection enrichment otel-transform otel-enrich
+1P_MODULES := collection enrichment format otel-transform otel-enrich
 
 TAGS ?= {{repository}}
 EXTRA_FLAGS += $(if $(value PUSH),--push,--load)
