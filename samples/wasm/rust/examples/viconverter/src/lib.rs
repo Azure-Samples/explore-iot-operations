@@ -5,8 +5,8 @@
 #![allow(clippy::missing_safety_doc)]
 
 use serde::{Deserialize, Serialize};
-use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::macros::map_operator;
+use wasm_graph_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::map_operator;
 
 /// Minimal view of the input: we only deserialize what we need.
 #[derive(Debug, Deserialize)]
@@ -76,7 +76,7 @@ fn map_init(_configuration: ModuleConfiguration) -> bool {
 }
 
 #[map_operator(init = "map_init")]
-fn map(input: DataModel) -> DataModel {
+fn map(input: DataModel) -> Result<DataModel, Error> {
     logger::log(Level::Info, "viconverter/map", "Get a map request");
     // create result object from input
     let DataModel::Message(mut result) = input else {
@@ -127,5 +127,5 @@ fn map(input: DataModel) -> DataModel {
     let serialized_rows = serde_json::to_vec(&rows).unwrap();
     result.payload = BufferOrBytes::Bytes(serialized_rows);
     // return result
-    DataModel::Message(result)
+    Ok(DataModel::Message(result))
 }

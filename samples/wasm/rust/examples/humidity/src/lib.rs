@@ -6,12 +6,12 @@
 
 use core::panic;
 
-use tinykube_wasm_sdk::logger::{self, Level};
-use tinykube_wasm_sdk::macros::accumulate_operator;
-use tinykube_wasm_sdk::metrics::{self, CounterValue, Label};
+use wasm_graph_sdk::logger::{self, Level};
+use wasm_graph_sdk::macros::accumulate_operator;
+use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
 #[accumulate_operator]
-fn accumulate_humidity(staged: DataModel, inputs: Vec<DataModel>) -> DataModel {
+fn accumulate_humidity(staged: DataModel, inputs: Vec<DataModel>) -> Result<DataModel, Error> {
     let labels = vec![Label {
         key: "module".to_owned(),
         value: "module-humidity/accumulate".to_owned(),
@@ -56,10 +56,14 @@ fn accumulate_humidity(staged: DataModel, inputs: Vec<DataModel>) -> DataModel {
         let (ts, topic, payload) = match input {
             DataModel::Message(temp) => {
                 // Extract payload from message to process
-                (temp.timestamp.timestamp, temp.topic, match &temp.payload {
-                    BufferOrBytes::Buffer(buffer) => buffer.read(),
-                    BufferOrBytes::Bytes(bytes) => bytes.clone(),
-                })
+                (
+                    temp.timestamp.timestamp,
+                    temp.topic,
+                    match &temp.payload {
+                        BufferOrBytes::Buffer(buffer) => buffer.read(),
+                        BufferOrBytes::Bytes(bytes) => bytes.clone(),
+                    },
+                )
             }
             _ => panic!("Unexpected input type"),
         };
@@ -102,20 +106,15 @@ fn accumulate_humidity(staged: DataModel, inputs: Vec<DataModel>) -> DataModel {
         r#"{{"humidity":{{"count":{count},"max":{max},"min":{min},"average":{avg},"last":{last}}}}}"#,
     );
 
-    logger::log(
-        Level::Info,
-        "module-humidity/accumulate",
-        &payload_str,
-    );
+    logger::log(Level::Info, "module-humidity/accumulate", &payload_str);
 
     let payload = payload_str.as_bytes().to_vec();
     result.payload = BufferOrBytes::Bytes(payload);
     result.timestamp.timestamp.secs = last_secs;
     result.timestamp.timestamp.nanos = last_nanos;
     result.topic = result_topic;
-    DataModel::Message(result)
+    Ok(DataModel::Message(result))
 }
-
 
 #[derive(Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum Measurement {
