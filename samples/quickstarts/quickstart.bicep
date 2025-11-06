@@ -32,20 +32,20 @@ resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' 
   scope: connectedCluster
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2024-11-01' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2025-04-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-11-01' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2025-04-01' existing = {
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-11-01' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2025-04-01' existing = {
   name: defaultDataflowProfileName
   parent: aioInstance
 }
 
-resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-07-01-preview' existing = {
+resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-10-01' existing = {
   name: aioNamespaceName
 }
 
@@ -55,9 +55,10 @@ resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-07-01-preview' exis
 
 var assetName = 'oven'
 var opcUaEndpointName = 'opc-ua-connector-0'
+var deviceName = 'opc-ua-connector'
 
-resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview' = {
-  name: 'opc-ua-connector'
+resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-10-01' = {
+  name: deviceName
   parent: namespace
   location: resourceGroup().location
   extendedLocation: {
@@ -82,7 +83,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview'
   }
 }
 
-resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-07-01-preview' = {
+resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-10-01' = {
   name: assetName
   parent: namespace
   location: resourceGroup().location
@@ -185,7 +186,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 /*                                    Data flow                              */
 /*****************************************************************************/
 
-resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-11-01' = {
+resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2025-04-01' = {
   parent: aioInstance
   name: 'quickstart-eh-endpoint'
   extendedLocation: {
@@ -216,7 +217,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   ]
 }
 
-resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-11-01' = {
+resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2025-04-01' = {
   parent: defaultDataflowProfile
   name: 'quickstart-oven-data-flow'
   extendedLocation: {
@@ -232,7 +233,7 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
           endpointRef: defaultDataflowEndpoint.name
           assetRef: asset.name
           serializationFormat: 'Json'
-          dataSources: ['azure-iot-operations/data/${assetName}']
+          dataSources: ['azure-iot-operations/data/${asset.name}']
         }
       }
       {
@@ -300,4 +301,3 @@ output eventHub object = {
   name: eventHub.name
   namespace: eventHubNamespace.name
 }
-
