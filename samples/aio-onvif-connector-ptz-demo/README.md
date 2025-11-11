@@ -1,19 +1,19 @@
-# AIO ONVIF Connector PTZ Demo
+# Azure IoT Operations ONVIF Connector PTZ Demo
 
-## MRPC Sample Application
+## MRPC sample application
 
-This sample application demonstrates how to use the MRPC API provided by ONVIF Connector to interact with an ONVIF device. The sample consists of 3 dotnet assemblies:
-- PTZClient: This assembly contains code to interact with the PTZ service of an ONVIF device. It is generated from the PTZ service DTDL file.
-- MediaClient: This assembly contains code to interact with the media service of an ONVIF device. It is generated from the media service DTDL file.
+This sample application demonstrates how to use the MRPC API provided by the connector for ONVIF to interact with an ONVIF device. The sample consists of 3 dotnet assemblies:
+- PTZClient: This assembly contains code to interact with the PTZ service of an ONVIF device. It's generated from the PTZ service DTDL file.
+- MediaClient: This assembly contains code to interact with the media service of an ONVIF device. It's generated from the media service DTDL file.
 - Aio.Onvif.Connector.Ptz.Demo: A simple console application that demonstrates how to use the PTZ assembly to move the camera.
 
-## Build instructions
-
-Make sure you have the .NET 9.0 SDK installed. You can download it from [here](https://dotnet.microsoft.com/download).
-
-Once installed open this directory in your terminal and run `dotnet build`
-
 ## Prerequisites
+
+### .NET SDK
+
+Make sure you have the .NET 9.0 SDK installed. You can download it from [Download .NET](https://dotnet.microsoft.com/download).
+
+After it's installed, open this directory in your terminal and run `dotnet build`
 
 ### Create the asset endpoint and assets
 
@@ -21,7 +21,7 @@ To create the asset endpoint and assets that the sample application interacts wi
 
 The how-to guide  walks you through the steps to create:
 
-- The `my-onvif-camera` device with a inbound endpoint called `onvifep`
+- The `my-onvif-camera` device with a inbound endpoint called `my-onvif-device-0`
 - The discovered ONVIF and media assets
 
 ### Create Broker Listener
@@ -47,6 +47,8 @@ Execute the following to apply it to the cluster:
 kubectl apply -f broker-listener.yaml -n azure-iot-operations
 ```
 
+Note: This configuration isn't secure and is only suitable in test and development environments. It enables an external client to connect to the internal MQTT broker without any credentials.
+
 ### Port Forward Broker Listener
 
 Port forward the broker listener to your local machine in a second terminal:
@@ -59,11 +61,11 @@ Leave this open to keep the port forward active.
 
 ## Run instructions
 
-Start the application by running `dotnet run --project Aio.Onvif.Connector.Ptz.Demo -- --mqtt-host localhost --mqtt-port 1883 --namespace azure-iot-operations --ptz-asset <your ONVIF asset name> --media-asset <your media asset name> --mode relative`
+Start the application by running `dotnet run --project Aio.Onvif.Connector.Ptz.Demo --mqtt-host localhost --mqtt-port 1883 --namespace azure-iot-operations --asset <your ONVIF asset name> --mode relative`
 
-After entering this information, the application will connect to the AIO Broker and the camera can be moved with keyboard input. Press 'q' to exit the application.
+After entering this information, the application connects to the AIO Broker and the camera can be moved with keyboard input. Press 'q' to exit the application.
 
-This example uses RelativeMove by default. Depending on the camera, you may need to use ContinuousMove instead. To do this, add the `--mode continuous` option when starting the application.
+This example uses `RelativeMove` by default. Depending on the camera, you may need to use `ContinuousMove` instead. To do this, add the `--mode continuous` option when starting the application.
 
 ## Cleanup
 
