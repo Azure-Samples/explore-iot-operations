@@ -150,9 +150,16 @@ for param in required_params {
 These examples can be referenced in graph YAML configurations:
 
 ```yaml
+metadata:
+  name: "Simple graph"
+  description: "A graph that transforms temperature from Fahrenheit to Celsius"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  vendor: "Microsoft"
+
 moduleRequirements:
-  apiVersion: "0.2.0"
-  hostlibVersion: "0.2.0"
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
 
 operations:
   - operationType: "map"
