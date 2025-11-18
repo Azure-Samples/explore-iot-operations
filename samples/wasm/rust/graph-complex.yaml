@@ -1,6 +1,13 @@
+metadata:
+  name: "Complex graph"
+  description: "A graph that processes temperature and humidity data from sensors, along with snapshot data. The graph performs filtering, accumulation, and enrichment operations before sending the processed data to the sink."
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  vendor: "Microsoft"
+
 moduleRequirements:
-  apiVersion: "0.2.0"
-  hostlibVersion: "0.2.0"
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
 
 moduleConfigurations:
   - name: module-temperature/map
