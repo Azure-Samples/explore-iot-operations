@@ -1,7 +1,7 @@
 [package]
 name = "otel-transform"
 version = "0.1.0"
-authors = ["TinyKube Devs"]
+authors = ["Wasm Graph Devs"]
 license = "MIT"
 edition = "2021"
 

@@ -1,13 +1,13 @@
 [package]
 name = "snapshot"
 version = "0.0.1"
-authors = ["TinyKube Devs"]
+authors = ["Wasm Graph Devs"]
 license = "MIT"
 edition = "2021"
 
 [dependencies]
 ndarray = "0.16.1"
-wit-bindgen = "0.22"
+wit-bindgen = "0.32"
 wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
 serde = { version = "1", features = [
 	"derive",
@@ -16,7 +16,6 @@ serde = { version = "1", features = [
 serde_json = { version = "1.0", default-features = false, features = [
 	"alloc",
 ] }
-wasi-nn = {git = "https://github.com/bytecodealliance/wasi-nn.git"}
 
 [lib]
 crate-type = ["cdylib"]

@@ -1,7 +1,7 @@
 [package]
 name = "collection"
 version = "0.0.2"
-authors = ["TinyKube Devs"]
+authors = ["Wasm Graph Devs"]
 license = "MIT"
 edition = "2021"
 
