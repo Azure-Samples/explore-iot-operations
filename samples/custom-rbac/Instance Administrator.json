@@ -9,8 +9,9 @@
             {
                 "actions": [
                     "Microsoft.Authorization/roleAssignments/write",
-                    "Microsoft.DeviceRegistry/assets/read",
-                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/read",
                     "Microsoft.DeviceRegistry/register/action",
                     "Microsoft.DeviceRegistry/schemaRegistries/read",
                     "Microsoft.DeviceRegistry/schemaRegistries/schemas/read",

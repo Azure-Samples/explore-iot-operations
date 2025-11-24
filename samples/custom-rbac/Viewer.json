@@ -8,10 +8,12 @@
         "permissions": [
             {
                 "actions": [
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/assets/read",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/Assets/read",
+                    "Microsoft.DeviceRegistry/AssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/read",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",

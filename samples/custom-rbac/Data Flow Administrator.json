@@ -8,8 +8,9 @@
         "permissions": [ 
             { 
                 "actions": [ 
-                    "Microsoft.DeviceRegistry/assets/read",
-                    "Microsoft.DeviceRegistry/discoveredAssets/read",
+                    "Microsoft.DeviceRegistry/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/read",
                     "Microsoft.DeviceRegistry/schemaRegistries/read",
                     "Microsoft.DeviceRegistry/schemaRegistries/schemas/read",
                     "Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions/read",
