@@ -1,15 +1,15 @@
 { 
     "properties": { 
-        "roleName": "Azure IoT Operations Asset Endpoint Viewer", 
-        "description": "View Azure IoT Operations Asset Endpoint list and details", 
+        "roleName": "Azure IoT Operations Device Viewer", 
+        "description": "View Azure IoT Operations Device list and details", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 
         "permissions": [ 
             { 
                 "actions": [         
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/read",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",

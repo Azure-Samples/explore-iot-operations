@@ -8,14 +8,12 @@
         "permissions": [ 
             { 
                 "actions": [ 
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/assets/delete",
-                    "Microsoft.DeviceRegistry/assets/read",
-                    "Microsoft.DeviceRegistry/assets/write",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/discoveredAssets/delete",
-                    "Microsoft.DeviceRegistry/discoveredAssets/read",
-                    "Microsoft.DeviceRegistry/discoveredAssets/write",
+                    "Microsoft.DeviceRegistry/Assets/*",
+                    "Microsoft.DeviceRegistry/AssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/*",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/*",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/read",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/deploy/action",

@@ -1,19 +1,15 @@
 {
     "properties": { 
-        "roleName": "Azure IoT Operations Asset Endpoint Administrator", 
-        "description": "View, create, edit and delete Azure IoT Operations Asset Endpoints", 
+        "roleName": "Azure IoT Operations Device Administrator", 
+        "description": "View, create, edit and delete Azure IoT Operations Devices", 
         "assignableScopes": [ 
             "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
         ], 
         "permissions": [ 
             { 
                 "actions": [ 
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/delete",
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/assetEndpointProfiles/write",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/delete",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/read",
-                    "Microsoft.DeviceRegistry/discoveredAssetEndpointProfiles/write",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/*",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/*",
                     "Microsoft.Edge/sites/read",
                     "Microsoft.Edgeorder/addresses/read",
                     "Microsoft.ExtendedLocation/customLocations/deploy/action",
