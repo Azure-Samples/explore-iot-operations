@@ -16,22 +16,28 @@ class Branch(exports.Branch):
         if isinstance(input, types.DataModel_Message):
 
             message = input.value
-            if isinstance(message.payload, types.BufferOrBytes_Buffer):
+            payload_variant = message.payload
 
-                buffer = message.payload.value
+            if isinstance(payload_variant, types.BufferOrBytes_Buffer):
+                buffer = payload_variant.value
                 payload = buffer.read()
-                decoded = payload.decode("utf-8")
-                p = Payload(decoded)
-
-                if p.is_temperature():
-                    imports.logger.log(imports.logger.Level.INFO, "module3/branch", "temperature")
-                    return 0
-                else:
-                    imports.logger.log(imports.logger.Level.INFO, "module3/branch", "humidity")
-                    return 1
+                imports.logger.log(imports.logger.Level.INFO, "module3/branch", "Reading payload from Buffer")
+            elif isinstance(payload_variant, types.BufferOrBytes_Bytes):
+                payload = payload_variant.value
+                imports.logger.log(imports.logger.Level.INFO, "module3/branch", "Reading payload from Bytes")
             else:
                 imports.logger.log(imports.logger.Level.INFO, "module3/branch", "payload type not expected")
                 return 2
-        else:
-            imports.logger.log(imports.logger.Level.INFO, "module3/branch", "not mqtt message")
-            return 2
+
+            decoded = payload.decode("utf-8")
+            p = Payload(decoded)
+
+            if p.is_temperature():
+                imports.logger.log(imports.logger.Level.INFO, "module3/branch", "temperature")
+                return 0
+            else:
+                imports.logger.log(imports.logger.Level.INFO, "module3/branch", "humidity")
+                return 1
+
+        imports.logger.log(imports.logger.Level.INFO, "module3/branch", "not mqtt message")
+        return 2

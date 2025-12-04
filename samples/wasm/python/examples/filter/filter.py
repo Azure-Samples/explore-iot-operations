@@ -39,8 +39,23 @@ class Filter(exports.Filter):
                 return True
 
             # Extract and decode the payload
-            buffer = message.value.payload.value
-            payload = buffer.read()
+            payload_variant = message.value.payload
+
+            if isinstance(payload_variant, types.BufferOrBytes_Buffer):
+                buffer = payload_variant.value
+                payload = buffer.read()
+                imports.logger.log(imports.logger.Level.INFO, "temperature-filter", "Reading payload from Buffer")
+            elif isinstance(payload_variant, types.BufferOrBytes_Bytes):
+                payload = payload_variant.value
+                imports.logger.log(imports.logger.Level.INFO, "temperature-filter", "Reading payload from Bytes")
+            else:
+                imports.logger.log(
+                    imports.logger.Level.WARN,
+                    "temperature-filter",
+                    "Unexpected payload type"
+                )
+                return True
+
             decoded = payload.decode("utf-8")
 
             # Parse the JSON data
