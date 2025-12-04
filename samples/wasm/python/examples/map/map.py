@@ -17,8 +17,18 @@ class Map(exports.Map):
             raise ValueError("Unexpected input type: Expected DataModel_Message")
 
         # Extract and decode the payload
-        buffer = message.value.payload.value
-        payload = buffer.read()
+        payload_variant = message.value.payload
+        if isinstance(payload_variant, types.BufferOrBytes_Buffer):
+            # It's a Buffer handle - read from host
+            imports.logger.log(imports.logger.Level.INFO, "module4/map", "Reading payload from Buffer")
+            payload = payload_variant.value.read()
+        elif isinstance(payload_variant, types.BufferOrBytes_Bytes):
+            # It's already bytes
+            imports.logger.log(imports.logger.Level.INFO, "module4/map", "Reading payload from Bytes")
+            payload = payload_variant.value
+        else:
+            raise ValueError("Unexpected payload type")
+
         decoded = payload.decode("utf-8")
 
         # Parse the JSON data
