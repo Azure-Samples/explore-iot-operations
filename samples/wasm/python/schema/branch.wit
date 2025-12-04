@@ -1,12 +1,12 @@
 // The interface of a branch operator.
 interface branch {
-	use types.{data-model,module-configuration};
+	use types.{data-model,error,module-configuration};
 	use hybrid-logical-clock.{hybrid-logical-clock};
 
 	// A branch node has two output branches in the execution graph.
 	// The operator returns `false` if the input message should be passed to the first branch,
 	// and `true` if it should be passed to the second branch.
-	process: func(timestamp: hybrid-logical-clock, message: data-model) -> bool;
+	process: func(timestamp: hybrid-logical-clock, message: data-model) -> result<bool, error>;
 
 	// The init function called on module load
 	init: func(configuration: module-configuration) -> bool;

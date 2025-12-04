@@ -1,10 +1,10 @@
 // The interface of a map operator.
 interface map {
-	use types.{data-model,module-configuration};
+	use types.{data-model,error,module-configuration};
 
 	// A map operator takes a message and returns a new message
 	// that will be passed to the next node in the execution graph.
-	process: func(message: data-model) -> data-model;
+	process: func(message: data-model) -> result<data-model, error>;
 
 	// The init function called on module load
 	init: func(configuration: module-configuration) -> bool;

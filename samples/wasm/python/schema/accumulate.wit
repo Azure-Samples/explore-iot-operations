@@ -1,13 +1,13 @@
 // The interface of an accumulate operator.
 interface accumulate {
-	use types.{data-model,module-configuration};
+	use types.{data-model,error,module-configuration};
 
 	// An accumulate operator takes two arguments:
 	// 1) A staged area which stores previous accumulated result.
 	// 2) A sequence of messages to be accumulated.
 	// A new combined message that will be passed to next accumulate operation,
 	// or the next node in the execution graph when all messages finish combining.
-	process: func(staged: data-model, message: list<data-model>) -> data-model;
+	process: func(staged: data-model, message: list<data-model>) -> result<data-model, error>;
 
 	// The init function called on module load
 	init: func(configuration: module-configuration) -> bool;
