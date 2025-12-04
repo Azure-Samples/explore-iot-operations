@@ -18,7 +18,7 @@ class Branch(exports.Branch):
         imports.logger.log(imports.logger.Level.INFO, "module3/branch", "Init invoked")
         return True
 
-    def process(self, timestamp: int, input: types.DataModel) -> int:
+    def process(self, timestamp: int, input: types.DataModel) -> bool:
         imports.logger.log(imports.logger.Level.INFO, "module3/branch", "processing from python")
 
         if not isinstance(input, types.DataModel_Message):
@@ -31,7 +31,7 @@ class Branch(exports.Branch):
 
         if p.is_temperature():
             imports.logger.log(imports.logger.Level.INFO, "module3/branch", "temperature")
-            return 0
+            return False  # first branch
 
         imports.logger.log(imports.logger.Level.INFO, "module3/branch", "humidity")
-        return 1
+        return True  # second branch
