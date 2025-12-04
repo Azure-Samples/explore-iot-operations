@@ -1,4 +1,4 @@
-package tinykube-graph:processor@1.0.0;
+package wasm-graph:processor@1.1.0;
 
 interface types {
 	use hybrid-logical-clock.{timespec};
@@ -100,6 +100,11 @@ interface types {
 		properties: list<tuple<string, string>>,
 		module-schemas: list<module-schema>
 	}
+
+	record error
+	{
+		message: string,
+	}
 }
 
 world host {
@@ -110,6 +115,7 @@ world host {
 	import logger;
 	import metrics;
 	import command-invoker;
+	import schema-registry;
 }
 
 world test {
