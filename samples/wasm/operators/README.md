@@ -1,13 +1,13 @@
-# Rust WASM Operator Examples
+# Rust WASM Operators
 
-This directory contains WebAssembly (WASM) examples implemented in Rust. Each example demonstrates best practices for different operator types and data processing patterns.
+This directory contains WebAssembly (WASM) operator projects implemented in Rust. Each operator demonstrates best practices for different operator types and data processing patterns and is wired for the VS Code extension layout (operators live beside the graph YAML files).
 
 ## Quick Start
 
-To build any example:
+To build any operator in this folder:
 
 ```bash
-# Navigate to an example directory
+# Navigate to an operator directory
 cd temperature/
 
 # Build with the streamlined Docker builder
@@ -16,7 +16,7 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
 # Output will be in: bin/x86_64/release/temperature.wasm
 ```
 
-## Example Categories
+## Operator Categories
 
 ### Data Processing Operators
 
@@ -110,7 +110,7 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
 
 ### Operator Type Implementations
 
-Each example demonstrates different operator patterns:
+Each operator demonstrates different patterns:
 
 - Map Operators: 1:1 data transformations with state preservation
 - Filter Operators: Conditional data passing with configurable predicates  
@@ -120,7 +120,7 @@ Each example demonstrates different operator patterns:
 
 ### Configuration Patterns
 
-Examples show various configuration approaches:
+Operators show various configuration approaches:
 
 ```rust
 // Parameter-driven configuration
@@ -147,7 +147,7 @@ for param in required_params {
 
 ## Usage in Data Flow Graphs
 
-These examples can be referenced in graph YAML configurations:
+These operators can be referenced in graph YAML configurations:
 
 ```yaml
 metadata:
@@ -183,14 +183,14 @@ moduleConfigurations:
 
 ## Development Guidelines
 
-### Building Examples
+### Building Operators
 
-Each example includes:
+Each operator includes:
 - Cargo.toml: Dependency configuration with SDK version
 - src/lib.rs: Operator implementation with proper error handling  
 - README.md: Specific usage instructions and configuration options
 
-### Testing Examples
+### Testing Operators
 
 ```bash
 # Build in debug mode for testing

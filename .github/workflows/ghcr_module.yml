@@ -65,7 +65,7 @@ jobs:
 
           source $HOME/.cargo/env
 
-          cd samples/wasm/rust
+          cd samples/wasm
           make graphs
 
           if [ -n "${{ inputs.module-name }}" ]; then
