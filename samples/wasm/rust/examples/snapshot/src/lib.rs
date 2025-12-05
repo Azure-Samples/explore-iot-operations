@@ -24,7 +24,6 @@ mod map_snapshot {
 
     // wasmtime-wasi-nn example requirements
     // from https://github.com/bytecodealliance/wasmtime/blob/main/crates/wasi-nn/examples/classification-component-onnx/src/main.rs
-    use core::panic;
     use ndarray::{Array, Dim};
     use std::io::BufRead;
 
@@ -48,7 +47,7 @@ mod map_snapshot {
 
         // Obtain Snapshot instance
         let DataModel::Snapshot(snapshot) = message else {
-            panic!("Unexpected input type");
+            return Err(Error {message: "Unexpected input type.".to_string()});
         };
 
         // Extract payload from message to process
@@ -95,7 +94,7 @@ mod map_snapshot {
                         "module-snapshot/map",
                         &format!("Error executing graph inference: {e:?}"),
                     );
-                    panic!("Error executing graph inference: {e:?}");
+                    return Err(Error {message: format!("Error executing graph inference: {e:?}"),});
                 }
             };
 
@@ -215,7 +214,10 @@ mod branch_snapshot {
     }
 
     #[branch_operator(init = "check_snapshot_init")]
-    fn check_snapshot(_timestamp: HybridLogicalClock, input: DataModel) -> Result<bool, Error> {
+    fn check_snapshot(
+        _timestamp: HybridLogicalClock,
+        input: DataModel,
+    ) -> Result<bool, Error> {
         let labels = vec![Label {
             key: "module".to_owned(),
             value: "module-snapshot/branch".to_owned(),
@@ -240,7 +242,7 @@ mod branch_snapshot {
                 res
             }
             DataModel::Snapshot(_frame) => true,
-            DataModel::BufferOrBytes(_) => panic!("Unexpected input type"),
+            DataModel::BufferOrBytes(_) => return Err(Error {message: "Unexpected input type.".to_string()}),
         };
         logger::log(
             Level::Info,
@@ -270,7 +272,7 @@ mod accumulate_snapshot {
         let _ = metrics::add_to_counter("requests", CounterValue::U64(1), Some(&labels));
 
         let DataModel::Message(mut result) = staged else {
-            panic!("Unexpected input type");
+            return Err(Error {message: "Unexpected input type.".to_string()});
         };
 
         // Extract payload from message to process
@@ -288,7 +290,7 @@ mod accumulate_snapshot {
                     // Directly push the object into the list
                     objects.push(measurement.result);
                 }
-                _ => {}
+                _ => {},
             }
         }
 
@@ -297,17 +299,12 @@ mod accumulate_snapshot {
             let (_ts, _width, _height, payload) = match input {
                 DataModel::Snapshot(temp) => {
                     // Extract payload from message to process
-                    (
-                        temp.timestamp.timestamp,
-                        temp.width,
-                        temp.height,
-                        match &temp.frame {
-                            BufferOrBytes::Buffer(buffer) => buffer.read(),
-                            BufferOrBytes::Bytes(bytes) => bytes.clone(),
-                        },
-                    )
+                    (temp.timestamp.timestamp, temp.width, temp.height, match &temp.frame {
+                        BufferOrBytes::Buffer(buffer) => buffer.read(),
+                        BufferOrBytes::Bytes(bytes) => bytes.clone(),
+                    })
                 }
-                _ => panic!("Unexpected input type"),
+                _ => return Err(Error {message: "Unexpected input type.".to_string()}),
             };
 
             let measurement: Measurement = serde_json::from_slice(&payload).unwrap();
@@ -318,28 +315,25 @@ mod accumulate_snapshot {
                         objects.push(measurement.result);
                     }
                 }
-                _ => panic!("Unexpected input type"),
+                _ => return Err(Error {message: "Unexpected input type.".to_string()}),
             }
         }
 
         let result_payload = serde_json::to_vec(&Measurement::Object(MeasurementObject {
             result: objects.join("; "),
-        }))
-        .unwrap();
+        })).unwrap();
 
         logger::log(
             Level::Info,
             "module-snapshot/accumulate",
-            &result_payload
-                .iter()
-                .map(|b| *b as char)
-                .collect::<String>(),
+            &result_payload.iter().map(|b| *b as char).collect::<String>(),
         );
 
         result.payload = BufferOrBytes::Bytes(result_payload);
         Ok(DataModel::Message(result))
     }
 }
+
 
 #[derive(Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum Measurement {

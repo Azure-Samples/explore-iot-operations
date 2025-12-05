@@ -25,7 +25,7 @@ fn overtemp_check(input: DataModel) -> Result<DataModel, Error> {
 
     // Extract message from input
     let DataModel::Message(message) = input else {
-        panic!("Unexpected input type");
+        return Err(Error {message: "Unexpected input type.".to_string()});
     };
 
     // Extract payload from message to process
@@ -56,7 +56,7 @@ fn overtemp_check(input: DataModel) -> Result<DataModel, Error> {
     let sensor_data = match payload_json {
         Measurement::SensorData(sensor_data) => Measurement::SensorData(sensor_data),
         _ => {
-            panic!("Unexpected type for result.");
+            return Err(Error {message: "Unexpected type for result.".to_string()});
         }
     };
 
@@ -193,7 +193,7 @@ fn overtemp_check(input: DataModel) -> Result<DataModel, Error> {
             sensor_data
         }
         _ => {
-            panic!("Unexpected type for result.");
+            return Err(Error {message: "Unexpected type for result.".to_string()});
         }
     };
 
