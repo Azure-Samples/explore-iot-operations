@@ -50,6 +50,13 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
   - Data normalization
 - Key Features: Image processing, memory-efficient transformations
 
+#### opc-ua - Data Transformation
+ - Path: `opc-ua/`
+ - Operator Type: Map
+ - Purpose: "Flatten" OPC UA DataType to produce database-friendly payloads.
+ - Use Case: Convert OPC UA-formatted telemetry—typically represented as nested structures such as
+"TagName": { "Value": X, "SourceTimeStamp": Y }—into a flat, database-friendly format where each tag becomes an individual row with the fields tagName, value, and timestamp.
+
 ### Sensor-Specific Processors
 
 #### temperature - Temperature Processing Suite
