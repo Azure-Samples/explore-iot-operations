@@ -1,12 +1,13 @@
-# Python WASM Operators Development Guide
+# Python WASM Operators (VS Code extension ready)
 
-This guide provides comprehensive documentation for developing WebAssembly (WASM) operators using Python for Azure IoT Operations data flow graphs.
+This guide shows how to build and run Python-based WASM operators for Azure IoT Operations. The folder follows the VS Code extension layout: operators live under `operators/`, and builds drop artifacts into each operator’s `bin/` directory.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Development Environment Setup](#development-environment-setup)
+- [Build Options](#build-options)
 - [Python Operator Development](#python-operator-development)
 - [Building Python WASM Operators](#building-python-wasm-operators)
 - [Available Operator Templates](#available-operator-templates)
@@ -82,7 +83,18 @@ sudo apt-get update
 sudo apt-get install -y clang lld musl-dev git perl make cmake
 ```
 
+## Build Options
+
+You can build operators three ways:
+- **VS Code extension (recommended):** Open `samples/wasm-python` → `Ctrl+Shift+P` → **Azure IoT Operations: Build All Data Flow Operators** → pick **release** or **debug**. Output: `operators/<name>/bin/<arch>/<mode>/`.
+- **Docker builder:** Use the published builder image (see [Building Python WASM Operators](#building-python-wasm-operators)). Run it from an operator directory; output goes to that operator’s `bin/` folder.
+- **Local componentize-py:** Install prerequisites and run `componentize-py` directly (see [Build WASM Component](#build-wasm-component)).
+
+To run any module you need a graph YAML that references the built operator (for example `graph.dataflow.yaml`). Keep the graph file alongside the operators when running locally or with the extension.
+
 ## Python Operator Development
+
+Operators live under `operators/`. The sections below cover the interfaces and workflow.
 
 ### Understanding the Interface
 
@@ -239,7 +251,7 @@ componentize-py -d ./schema/ -w map-impl componentize map_debug -o my-operator-d
 
 ## Building Python WASM Operators
 
-### Using the Streamlined Docker Builder
+### Using the streamlined Docker builder
 
 The recommended approach uses a single Docker command with the built-in builder:
 
@@ -286,12 +298,12 @@ bin/x86_64/debug/my-operator.wasm
 bin/x86_64/debug/my-operator_debug.py
 ```
 
-### Build the Docker Builder (One-time Setup)
+### Build the Docker builder (one-time setup)
 
 The recommended approach is to use the published images from GitHub Container Registry. However, if you need to build the Docker builder image locally:
 
 ```bash
-cd /path/to/samples/wasm/python
+cd /path/to/samples/wasm-python
 docker build -t python-wasm-builder .
 ```
 
@@ -302,17 +314,17 @@ docker build -t python-wasm-builder .
 The repository includes templates for all supported operator types:
 
 ### Map Operator
-- **Path**: `examples/map/`
+- **Path**: `operators/map/`
 - **Purpose**: Transform individual data items
 - **Interface**: `process(timestamp, input) -> output`
 
 ### Filter Operator  
-- **Path**: `examples/filter/`
+- **Path**: `operators/filter/`
 - **Purpose**: Allow/reject data based on conditions
 - **Interface**: `process(timestamp, input) -> bool`
 
 ### Branch Operator
-- **Path**: `examples/branch/`
+- **Path**: `operators/branch/`
 - **Purpose**: Route data to different output paths
 - **Interface**: `process(timestamp, input) -> int`
 
