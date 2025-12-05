@@ -1,0 +1,42 @@
+metadata:
+  name: "OPC UA graph"  
+  description: "Transforms payloads with OPC UA DataType to flat database friendly arrays"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"  
+  vendor: "Microsoft"
+
+moduleConfigurations:
+  - name: module-opc/map
+    parameters:
+      dataschema:
+        name: dataschema
+        description: schema to tag on messages (optional)
+      headers:
+        name: headers
+        description: header items to copy into the payload (optional)
+      copy_all:
+        name: copy_all
+        description: copy properties that are not OPC UA DataTypes
+
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-opc/map"
+    module: "opc:1.0.0"
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-opc/map"
+  - from:
+      name: "module-opc/map"
+    to:
+      name: "sink"
