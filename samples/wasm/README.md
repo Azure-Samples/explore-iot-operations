@@ -1,205 +1,97 @@
-# Azure IoT Operations WASM Data Flow Graphs - Samples
+# Azure IoT Operations WASM samples for Rust
 
-This repository contains sample WebAssembly (WASM) modules and graph definitions for [Azure IoT Operations data flow graphs](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm). These samples demonstrate how to build custom data processing workflows using WASM modules in Rust and Python.
+This workspace is structured for the Azure IoT Operations VS Code extension so the `operators/` folder and graph YAML files sit side by side. Use it to build and run WASM operators locally before deploying them.
 
-## Quick Start
+## Layout
 
-1. **Get the samples**: Clone this repository and explore the examples
-2. **Learn the concepts**: Read the [data flow graphs overview](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm)
-3. **Build your own**: Follow the [WASM development guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules)
+- `operators/` – Rust operator source
+- `graph.dataflow.yaml` – default graph for the extension (copy of the complex sample)
+- `graph-complex.yaml`, `graph-otel.yaml`, `graph-otel-transform.yaml`, `graph-simple.yaml` – additional graphs
+- `data/`, `data-and-images/`, `images/` – sample inputs; extension runs write output to `data-and-images/output`
+- `schema-registry-scenario/`, `statestore-scenario/` – scenario source code YAMLs for schema registry and state store usage
+- `Dockerfile`, `Makefile`, `.cargo/` – Rust builder assets co-located here (see **Rust builds**)
+- [`../wasm-python`](../wasm-python/README.md) – Python operator workspace; see its README for language-specific guidance
 
-## Prerequisites
+## Quick start with the VS Code extension
 
-- Azure IoT Operations deployed on an Arc-enabled Kubernetes cluster
-- Azure Container Registry for storing WASM modules
-- ORAS CLI for pushing artifacts
-- For development: Rust toolchain or Python 3.8+
+1. Install VS Code plus the Azure IoT Operations data flow extension (v0.4.13 or later) and ensure Docker is running. The RedHat YAML extension is optional but helpful.
+2. Open `samples/wasm` in VS Code.
+3. Build operators: `Ctrl+Shift+P` → **Azure IoT Operations: Build All Data Flow Operators** → choose **release**. The extension builds every project under `operators/`.
+4. Run the sample graph: `Ctrl+Shift+P` → **Azure IoT Operations: Run Application Graph** → pick **release** → select `graph.dataflow.yaml` → choose the `data-and-images` folder when prompted for input. Logs and output land under `data-and-images/output`.
+5. Explore other graphs by choosing a different YAML in step 4 (for example `graph-otel.yaml` or `graph-simple.yaml`).
 
-## Repository Structure
+## Rust builds (Docker builder)
 
-```
-samples/wasm/
-├── graph-simple.yaml          # Basic temperature conversion graph
-├── graph-complex.yaml         # Multi-sensor processing graph
-├── rust/
-│   ├── examples/              # Rust operator implementations
-│   │   ├── temperature/       # Temperature conversion module
-│   │   ├── humidity/          # Humidity processing module
-│   │   ├── otel-enrich/       # Otel enrich module
-│   │   ├── otel-transform/    # Otel transformation module
-│   │   ├── format/            # Data formatting module
-│   │   ├── collection/        # Data collection module
-│   │   ├── enrichment/        # Data enrichment module
-│   │   ├── snapshot/          # Image/snapshot processing
-│   │   └── window/            # Windowing operations
-│   └── Dockerfile             # Rust WASM builder
-└── python/
-    ├── examples/              # Python operator implementations
-    │   ├── map/               # Map operator example
-    │   ├── filter/            # Filter operator example
-    │   └── branch/            # Branch operator example
-    ├── schema/                # WIT schema definitions
-    └── Dockerfile             # Python WASM builder
-```
+Run these from `samples/wasm`:
 
-**Browse the code**:
-- [Graph definitions](.) - YAML configuration files  
-- [Rust examples](rust/examples) - Complete Rust operator implementations
-- [Python examples](python/examples) - Complete Python operator implementations
-- [Rust builder](rust/Dockerfile) - Rust WASM build environment
-- [Python builder](python/Dockerfile) - Python WASM build environment
-
-## Building Modules
-
-### Using Docker Builders (Recommended)
-
-**Rust modules:**
 ```bash
-# In your Rust project directory
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-module
+# Release build for a specific operator
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-operator
 
-# Debug build
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-module --build-mode debug
+# Debug build with symbols
+docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/rust-wasm-builder --app-name my-operator --build-mode debug
 ```
 
-**Python modules:**
-```bash
-# In your Python project directory  
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name my_module --app-type map
+Output lands under `operators/<name>/bin/<arch>/<mode>/`. CI uses the `Makefile` in this folder to package modules from `operators/`.
 
-# Debug build
-docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operations/python-wasm-builder --app-name my_module --app-type map --build-mode debug
-```
+### Rust development essentials
 
-### Local Development
+- Install toolchain + target:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  source $HOME/.cargo/env
+  rustup target add wasm32-wasip2
+  ```
+- New operator template (minimal `Cargo.toml`):
+  ```toml
+  [package]
+  name = "my-rust-operator"
+  version = "0.1.0"
+  edition = "2021"
 
-For local development setup and detailed instructions, see the [WASM development guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules).
+  [dependencies]
+  wit-bindgen = "0.22"
+  wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
+  serde = { version = "1", default-features = false, features = ["derive"] }
+  serde_json = { version = "1", default-features = false, features = ["alloc"] }
 
-For complete examples:
-- **[Rust examples](rust/examples)** - Complete operator implementations in Rust
-- **[Python examples](python/examples)** - Complete operator implementations in Python
+  [lib]
+  crate-type = ["cdylib"]
+  path = "src/lib.rs"
+  ```
+- Map operator pattern:
+  ```rust
+  use wasm_graph_sdk::macros::map_operator;
+  use wasm_graph_sdk::logger::{self, Level};
 
-## Example Workflows
+  #[map_operator]
+  fn transform_data(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {
+      logger::log(Level::Info, "my-operator", "Processing data");
+      input
+  }
+  ```
+- Filter operator pattern:
+  ```rust
+  use wasm_graph_sdk::macros::filter_operator;
 
-### Simple Temperature Conversion
+  #[filter_operator]
+  fn temperature_filter(_ts: HybridLogicalClock, input: DataModel) -> bool {
+      matches!(input, DataModel::Temperature(temp) if temp.value > 0.0)
+  }
+  ```
+- More operators live in `operators/` (temperature, humidity, format, snapshot, collection, enrichment, window, viconverter) for fuller examples and configuration patterns.
 
-Convert Fahrenheit to Celsius using a single WASM module ([graph-simple.yaml](graph-simple.yaml)):
+## Python operators
 
-```yaml
-# graph-simple.yaml
-operations:
-  - operationType: "source"
-    name: "temperature-source"
-  - operationType: "map"
-    name: "temperature/map"
-    module: "temperature:1.0.0"
-  - operationType: "sink"
-    name: "temperature-sink"
-```
+Python samples and instructions now live in [`samples/wasm-python`](../wasm-python/README.md). The VS Code extension can also build Python operators when that workspace is opened.
 
-Input: `{"temperature": {"value": 100.0, "unit": "F"}}`  
-Output: `{"temperature": {"value": 37.8, "unit": "C"}}`
+## Notes
 
-### Complex Multi-Sensor Processing
+- Operator names should avoid hyphens or underscores to satisfy current extension constraints.
+- Use the provided `graph.dataflow.yaml` for a ready-to-run graph; other YAMLs provide additional scenarios.
+- Sample inputs live under `data-and-images/`; extension runs write outputs to `data-and-images/output`.
 
-Process temperature, humidity, and image data with branching and aggregation ([graph-complex.yaml](graph-complex.yaml)):
+## Links
 
-```mermaid
-graph TD
-  source["source"]
-  delay["module-window/delay"]
-  branch_snapshot["module-snapshot/branch"]
-  branch_temp["module-temperature/branch"]
-  map_temp["module-temperature/map (F -> C)"]
-  filter_temp["module-temperature/filter (valid)"]
-  accumulate_temp["module-temperature/accumulate (max, min, avg, last)"]
-  accumulate_humidity["module-humidity/accumulate (max, min, avg, last)"]
-  map_format["module-format/map (image, snapshot)"]
-  map_snapshot["module-snapshot/map (object detection)"]
-  accumulate_snapshot["module-snapshot/accumulate (collection)"]
-  concatenate["concatenate"]
-  accumulate_collection["module-collection/accumulate"]
-  map_enrichment["module-enrichment/map (overtemp, topic)"]
-  sink["sink"]
-
-  source --> delay
-  delay --> branch_snapshot
-  branch_snapshot -->|sensor data| branch_temp
-  branch_snapshot -->|snapshot| map_format
-  map_format --> map_snapshot
-  map_snapshot --> accumulate_snapshot
-  accumulate_snapshot --> concatenate
-  branch_temp -->|temp| map_temp
-  branch_temp -->|humidity| accumulate_humidity
-  map_temp --> filter_temp
-  filter_temp --> accumulate_temp
-  accumulate_temp --> concatenate
-  accumulate_humidity --> concatenate
-  concatenate --> accumulate_collection
-  accumulate_collection --> map_enrichment
-  map_enrichment --> sink
-```
-
-## Operator Types
-
-| Operator | Purpose | Example Use Case |
-|----------|---------|------------------|
-| **Map** | Transform data | Unit conversion, format changes |
-| **Filter** | Allow/reject data | Remove invalid readings |
-| **Branch** | Route conditionally | Separate sensor types |
-| **Accumulate** | Aggregate over time | Calculate statistics |
-| **Delay** | Control timing | Batch processing |
-
-## Deployment
-
-1. **Build your modules** using the builders above
-2. **Push to registry**:
-   ```bash
-   oras push myregistry.azurecr.io/my-graph:1.0.0 graph.yaml
-   oras push myregistry.azurecr.io/my-module:1.0.0 module.wasm
-   ```
-3. **Deploy data flow graph** - see [deployment guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm#configure-the-data-flow-graph)
-
-## Operator Examples
-
-### Rust Map Operator
-
-Example from [temperature converter](rust/examples/temperature):
-
-```rust
-use wasm_graph_sdk::macros::map_operator;
-use wasm_graph_sdk::logger::{self, Level};
-
-#[map_operator(init = "init")]
-fn process(input: DataModel) -> DataModel {
-    // Transform your data here
-    logger::log(Level::Info, "my-operator", "Processing data");
-    input
-}
-
-fn init(_config: ModuleConfiguration) -> bool {
-    true
-}
-```
-
-### Python Filter Operator
-
-Example from [Python examples](python/examples):
-
-```python
-from filter_impl import exports
-from filter_impl.imports import types
-
-class Filter(exports.Filter):
-    def process(self, message: types.DataModel) -> bool:
-        # Return True to pass, False to filter out
-        return True
-```
-
-## Documentation
-
-For complete guides and reference documentation:
-
-- **[Data Flow Graphs Overview](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm)** - Understand concepts and deployment
-- **[WASM Development Guide](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules)** - Build custom modules in Rust and Python
-- **[Configuration Reference](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm#configuration-reference)** - Complete configuration options
+- Data Flow Graphs overview: https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-dataflow-graph-wasm
+- WASM development guide: https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-develop-wasm-modules

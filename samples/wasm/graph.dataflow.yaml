@@ -1,0 +1,153 @@
+metadata:
+  name: "Complex graph"
+  description: "A graph that processes temperature and humidity data from sensors, along with snapshot data. The graph performs filtering, accumulation, and enrichment operations before sending the processed data to the sink."
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+
+moduleConfigurations:
+  - name: module-temperature/map
+    parameters:
+      key1:
+        name: key2
+        description: key2
+  - name: module-snapshot/branch
+    parameters:
+      snapshot_topic:
+        name: snapshot_topic
+        description: Transform app snapshot_topic in snapshot branch's init routine
+operations:
+  - operationType: "source"
+    name: "source"
+
+  - operationType: delay
+    name: module-window/delay
+    module: window:1.0.0
+  - operationType: "map"
+    name: "module-format/map"
+    module: "format:1.0.0"
+  - operationType: map
+    name: module-snapshot/map
+    module: snapshot:1.0.0
+  - operationType: branch
+    name: module-snapshot/branch
+    module: snapshot:1.0.0
+  - operationType: accumulate
+    name: module-snapshot/accumulate
+    module: snapshot:1.0.0
+  - operationType: map
+    name: module-temperature/map
+    module: temperature:1.0.0
+  - operationType: branch
+    name: module-temperature/branch
+    module: temperature:1.0.0
+  - operationType: filter
+    name: module-temperature/filter
+    module: temperature:1.0.0
+  - operationType: accumulate
+    name: module-temperature/accumulate
+    module: temperature:1.0.0
+  - operationType: accumulate
+    name: module-humidity/accumulate
+    module: humidity:1.0.0
+  - operationType: concatenate
+    name: concatenate1
+    module:
+  - operationType: accumulate
+    name: module-collection/accumulate
+    module: collection:1.0.0
+  - operationType: map
+    name: module-enrichment/map
+    module: enrichment:1.0.0
+
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: source
+    to:
+      name: module-window/delay
+
+  - from:
+      name: module-window/delay
+    to:
+      name: module-snapshot/branch
+
+  - from:
+      name: module-snapshot/branch
+      arm: "False"
+    to:
+      name: module-temperature/branch
+
+  - from:
+      name: module-snapshot/branch
+      arm: "True"
+    to:
+      name: module-format/map
+
+  - from:
+      name: module-format/map
+    to:
+      name: module-snapshot/map
+
+  - from:
+      name: module-snapshot/map
+    to:
+      name: module-snapshot/accumulate
+
+  - from:
+      name: module-snapshot/accumulate
+    to:
+      name: concatenate1
+
+  - from:
+      name: module-temperature/branch
+      arm: "True"
+    to:
+      name: module-temperature/map
+
+  - from:
+      name: module-temperature/branch
+      arm: "False"
+    to:
+      name: module-humidity/accumulate
+
+  - from:
+      name: module-humidity/accumulate
+    to:
+      name: concatenate1
+
+  - from:
+      name: module-temperature/map
+    to:
+      name: module-temperature/filter
+
+  - from:
+      name: module-temperature/filter
+    to:
+      name: module-temperature/accumulate
+
+  - from:
+      name: module-temperature/accumulate
+    to:
+      name: concatenate1
+
+  - from:
+      name: concatenate1
+    to:
+      name: module-collection/accumulate
+
+  - from:
+      name: module-collection/accumulate
+    to:
+      name: module-enrichment/map
+
+  - from:
+      name: module-enrichment/map
+    to:
+      name: sink
