@@ -31,4 +31,3 @@ spec:
     deviceName: my-rest-thermostat-device-name
     endpointName: my-rest-thermostat-endpoint-name
   version: 1
-  

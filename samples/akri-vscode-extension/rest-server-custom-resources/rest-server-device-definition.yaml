@@ -18,4 +18,3 @@ spec:
         endpointType: rest-thermostat-endpoint-type
   uuid: 1234-5678-9012-3456
   version: 2
-  
