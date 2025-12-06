@@ -1,0 +1,20 @@
+apiVersion: namespaces.deviceregistry.microsoft.com/v1
+kind: Device
+metadata:
+  name: my-rest-thermostat-device-name
+  namespace: azure-iot-operations
+spec:
+  attributes:
+    deviceId: my-thermostat
+    deviceType: thermostat-device-type
+  enabled: true
+  endpoints:
+    inbound:
+      my-rest-thermostat-endpoint-name:
+        additionalConfiguration: '{}'
+        address: http://restserver:3000
+        authentication:
+          method: Anonymous
+        endpointType: rest-thermostat-endpoint-type
+  uuid: 1234-5678-9012-3456
+  version: 2
