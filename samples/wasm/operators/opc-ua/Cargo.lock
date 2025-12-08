@@ -343,9 +343,9 @@ dependencies = [
 
 [[package]]
 name = "wasm_graph_sdk"
-version = "1.1.1"
+version = "1.1.3"
 source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
-checksum = "0a6b4b8777dec4062371a865dc0bcb535f16676c26e693a7030df704a69f6413"
+checksum = "fb1778833e6a133fccbd9d6afc796614c50d15aeb482e7f19909199137de2e65"
 dependencies = [
  "thiserror",
  "wasm_graph_sdk_wit",
@@ -354,9 +354,9 @@ dependencies = [
 
 [[package]]
 name = "wasm_graph_sdk_wit"
-version = "1.1.1"
+version = "1.1.3"
 source = "sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
-checksum = "7f401084148ea3df87f553890db136b40b10749f0729fb5160cbc0c50ba3c812"
+checksum = "9f9eb84b37eaebc3d23488614d9fd9e633c20e4900e007b5da3d7d2c84514d56"
 dependencies = [
  "proc-macro2",
  "quote",
