@@ -14,9 +14,8 @@ graphs: $(1P_MODULES)
 .PHONY: $(1P_MODULES)
 $(1P_MODULES):
 	mkdir -p ./graphs/wasm-modules
-	$(eval VERSION ?= 1.0.0)
 	$(eval MODE := $(if $(DEBUG),debug,release))
 		cd $(REPOSITORY_ROOT)/samples/wasm/operators/$@ && \
 	cargo build --target wasm32-wasip2 -p $@ $(if $(DEBUG),, --release) $(CARGO_FLAGS)
 	$(eval file_naming := $(subst -,_,$@))
-	cp --archive $(REPOSITORY_ROOT)/samples/wasm/operators/$@/target/wasm32-wasip2/$(MODE)/$(file_naming).wasm ./graphs/wasm-modules/$@-$(VERSION).wasm
+	cp --archive $(REPOSITORY_ROOT)/samples/wasm/operators/$@/target/wasm32-wasip2/$(MODE)/$(file_naming).wasm ./graphs/wasm-modules/$@.wasm
