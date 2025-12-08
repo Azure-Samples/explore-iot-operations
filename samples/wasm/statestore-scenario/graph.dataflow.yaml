@@ -1,0 +1,33 @@
+metadata:
+    $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+    name: "StateStore Scenario"
+    description: "A sample dataflow demonstrating stateful operations with state store"
+    version: "1.0.0"
+    vendor: "Microsoft"
+moduleConfigurations:
+  - name: "module-otel-enrich/map"
+    parameters:
+      enrichKeys:
+        name: "enrichKeys"
+        description: "Comma separated list of DSS keys which will be fetched and added as attributes"
+        default: "factoryId,machineId"
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-otel-enrich/map"
+    module: "otel-enrich"
+  - operationType: "sink"
+    name: "sink"
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-otel-enrich/map"
+  - from:
+      name: "module-otel-enrich/map"
+    to:
+      name: "sink"

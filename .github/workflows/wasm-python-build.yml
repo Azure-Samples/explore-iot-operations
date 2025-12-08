@@ -5,15 +5,15 @@ on:
   push:
     branches: [ main, wasm ]
     paths:
-      - 'samples/wasm/python/Dockerfile'
-      - 'samples/wasm/python/schema/**'
-      - 'samples/wasm/python/inject_pdb.py'
+      - 'samples/wasm-python/Dockerfile'
+      - 'samples/wasm-python/schema/**'
+      - 'samples/wasm-python/inject_pdb.py'
   pull_request:
     branches: [ main ]
     paths:
-      - 'samples/wasm/python/Dockerfile'
-      - 'samples/wasm/python/schema/**'
-      - 'samples/wasm/python/inject_pdb.py'
+      - 'samples/wasm-python/Dockerfile'
+      - 'samples/wasm-python/schema/**'
+      - 'samples/wasm-python/inject_pdb.py'
 
 jobs:
   build-and-push:
@@ -49,8 +49,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: samples/wasm/python
-        file: samples/wasm/python/Dockerfile
+        context: samples/wasm-python
+        file: samples/wasm-python/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

@@ -58,7 +58,7 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
 
-          cd samples/wasm/rust
+          cd samples/wasm
 
           if [ -n "${{ inputs.graph-name }}" ]; then
             echo "Pushing specific graph: ${{ inputs.graph-name }}"
