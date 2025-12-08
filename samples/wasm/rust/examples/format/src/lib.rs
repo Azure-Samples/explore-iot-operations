@@ -5,7 +5,6 @@
 #![allow(clippy::missing_safety_doc)]
 
 mod map_format {
-    use core::panic;
 
     use wasm_graph_sdk::logger::{self, Level};
     use wasm_graph_sdk::macros::map_operator;
@@ -44,19 +43,21 @@ mod map_format {
         let _ = metrics::add_to_counter("requests", CounterValue::U64(1), Some(&labels));
 
         let (payload, timestamp) = match input {
-            DataModel::Message(message) => (message.payload.read(), message.timestamp),
+            DataModel::Message(message) => {
+                (message.payload.read(), message.timestamp)
+            },
             DataModel::Snapshot(snapshot) => {
                 let format = match snapshot.format {
                     BufferOrString::Buffer(ref s) => String::from_utf8_lossy(&s.read()).to_string(),
-                    BufferOrString::String(_) => panic!("Unexpected format type"),
+                    BufferOrString::String(ref s) => s.clone(),
                 };
                 if format == FORMAT && snapshot.width == WIDTH && snapshot.height == HEIGHT {
                     // If the snapshot is already in the desired format and size, return it directly
                     return Ok(DataModel::Snapshot(snapshot));
                 }
                 (snapshot.frame.read(), snapshot.timestamp)
-            }
-            DataModel::BufferOrBytes(_) => panic!("Unexpected input type"),
+            },
+            DataModel::BufferOrBytes(_) => return Err(Error {message: "Unexpected input type.".to_string()}),
         };
 
         // Extract payload from message to process
@@ -71,13 +72,11 @@ mod map_format {
                     logger::log(
                         Level::Info,
                         "module-format/map",
-                        &format!(
-                            "Unexpected image format or size: expected {} bytes, got {} bytes",
-                            WIDTH * HEIGHT * CELL_LENGTH,
-                            payload.len()
-                        ),
+                        &format!("Unexpected image format or size: expected {} bytes, got {} bytes",
+                                 WIDTH * HEIGHT * CELL_LENGTH,
+                                 payload.len()),
                     );
-                    panic!("Unexpected image format or size");
+                    return Err(Error {message: "Unexpected image format or size.".to_string()});
                 }
                 // If the image format cannot be guessed but the payload size is correct, it
                 // is possibly already in the desired format. So we will return it directly.

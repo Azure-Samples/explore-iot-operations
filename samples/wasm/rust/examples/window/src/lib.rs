@@ -29,7 +29,10 @@ fn delay_init(configuration: ModuleConfiguration) -> bool {
 }
 
 #[delay_operator(init = "delay_init")]
-fn delay(input: DataModel, timestamp: HybridLogicalClock) -> Result<HybridLogicalClock, Error> {
+fn delay(
+    input: DataModel,
+    timestamp: HybridLogicalClock,
+) -> Result<HybridLogicalClock, Error> {
     let labels = vec![Label {
         key: "module".to_owned(),
         value: "module-window/delay".to_owned(),
