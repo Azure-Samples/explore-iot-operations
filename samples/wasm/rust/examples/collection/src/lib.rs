@@ -9,7 +9,10 @@ use wasm_graph_sdk::macros::accumulate_operator;
 use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
 #[accumulate_operator]
-fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<DataModel, Error> {
+fn accumulate_sensor_data(
+    staged: DataModel,
+    inputs: Vec<DataModel>,
+) -> Result<DataModel, Error> {
     let labels = vec![Label {
         key: "module".to_owned(),
         value: "module-collection/accumulate".to_owned(),
@@ -23,7 +26,7 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
     );
 
     let DataModel::Message(mut result) = staged else {
-        panic!("Unexpected input type");
+        return Err(Error {message: "Unexpected input type.".to_string()});
     };
 
     // Extract payload from message to process
@@ -31,18 +34,14 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
 
     // Initialize sensor data
     let mut sensor_data = if staged_payload.is_empty() {
-        logger::log(
-            Level::Info,
-            "module-collection/accumulate",
-            "first initialization",
-        );
+        logger::log(Level::Info, "module-collection/accumulate", "first initialization");
         Measurement::SensorData(MeasurementSensorData::new())
     } else {
         logger::log(Level::Info, "module-collection/accumulate", "adding ...");
         match serde_json::from_slice(&staged_payload).unwrap() {
             Measurement::SensorData(sensor_data) => Measurement::SensorData(sensor_data),
             _ => {
-                panic!("Unexpected type for result.");
+                return Err(Error {message: "Unexpected type for result.".to_string()});
             }
         }
     };
@@ -57,7 +56,9 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
                 // Extract payload from message to process
                 rtsp.frame.read()
             }
-            DataModel::BufferOrBytes(_) => panic!("Unexpected input type"),
+            DataModel::BufferOrBytes(_) => {
+                return Err(Error {message: "Unexpected input type.".to_string()});
+            }
         };
 
         let measurement: Measurement = serde_json::from_slice(&payload).unwrap();
@@ -70,7 +71,7 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
                         sensor_data.temperature.push(measurement);
                         Measurement::SensorData(sensor_data)
                     }
-                    _ => panic!("Unexpected type for result."),
+                    _ => return Err(Error {message: "Unexpected type for result.".to_string()}),
                 }
             }
             Measurement::Humidity(measurement) => {
@@ -81,7 +82,7 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
                         sensor_data.humidity.push(measurement);
                         Measurement::SensorData(sensor_data)
                     }
-                    _ => panic!("Unexpected type for result."),
+                    _ => return Err(Error {message: "Unexpected type for result.".to_string()}),
                 }
             }
             Measurement::Object(measurement) => {
@@ -92,10 +93,10 @@ fn accumulate_sensor_data(staged: DataModel, inputs: Vec<DataModel>) -> Result<D
                         sensor_data.object.push(measurement);
                         Measurement::SensorData(sensor_data)
                     }
-                    _ => panic!("Unexpected type for result."),
+                    _ => return Err(Error {message: "Unexpected type for result.".to_string()}),
                 }
             }
-            Measurement::SensorData(_) => panic!("Unexpected measurement type."),
+            Measurement::SensorData(_) => return Err(Error {message: "Unexpected measurement type.".to_string()}),
         }
     }
 
