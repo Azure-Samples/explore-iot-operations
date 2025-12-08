@@ -5,11 +5,11 @@ on:
   push:
     branches: [ main, wasm ]
     paths:
-      - 'samples/wasm/rust/Dockerfile'
+      - 'samples/wasm/Dockerfile'
   pull_request:
     branches: [ main ]
     paths:
-      - 'samples/wasm/rust/Dockerfile'
+      - 'samples/wasm/Dockerfile'
 
 jobs:
   build-and-push:
@@ -45,8 +45,8 @@ jobs:
       - name: "Build and Push Rust Builder Image"
         uses: docker/build-push-action@v5
         with:
-          context: samples/wasm/rust
-          file: samples/wasm/rust/Dockerfile
+          context: samples/wasm
+          file: samples/wasm/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

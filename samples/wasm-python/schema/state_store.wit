@@ -1,0 +1,44 @@
+interface state-store-types {
+    use hybrid-logical-clock.{hybrid-logical-clock, timespec};
+    record duration {
+        seconds: u64,
+        nanos: u32,
+    }
+    enum set-conditions {
+        only-if-does-not-exist,
+        only-if-equal-or-does-not-exist,
+        unconditional,
+    }
+    record set-options {
+        conditions: set-conditions,
+        expires: option<duration>,
+    }
+    variant state-store-error {
+        request-error(string),
+        timeout,
+        protocol,
+        internal,
+    }
+    record state-store-get-response {
+        response: option<list<u8>>,
+        version: option<hybrid-logical-clock>,
+    }
+    record state-store-del-response {
+        response: s64,
+        version: option<hybrid-logical-clock>,
+    }
+    record state-store-set-response {
+        response: bool,
+        version: option<hybrid-logical-clock>,
+    }
+}
+interface state-store {
+    use state-store-types.{duration, set-options, hybrid-logical-clock, state-store-error, state-store-get-response, state-store-del-response, state-store-set-response};
+    get: func(key: list<u8>, timeout: option<duration>) -> result<state-store-get-response, state-store-error>;
+    set: func(key: list<u8>, value: list<u8>, timeout: option<duration>, fencing-token: option<hybrid-logical-clock>, options: set-options) -> result<state-store-set-response, state-store-error>;
+    del: func(key: list<u8>, fencing-token: option<hybrid-logical-clock>, timeout: option<duration>) -> result<state-store-del-response, state-store-error>;
+    vdel: func(key: list<u8>, value: list<u8>, fencing-token: option<hybrid-logical-clock>, timeout: option<duration>) -> result<state-store-del-response, state-store-error>;
+}
+world state-store-use {
+	import state-store;
+}

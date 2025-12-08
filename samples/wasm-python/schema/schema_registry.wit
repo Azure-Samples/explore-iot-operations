@@ -1,0 +1,45 @@
+interface schema-types {
+    type secs = u64;
+    type nanos = u32;
+    type duration = tuple<secs, nanos>;
+    type schema-content = string;
+    type schema-fully-qualified-name = string;
+    variant schema-format {
+        json,
+        delta,
+    }
+    variant schema-error {
+        request(string),
+        internal(string),
+        timeout,
+        not-found,
+        not-available,
+    }
+
+    variant schema-type {
+        message-schema
+    }
+
+    record schema {
+        description: option<string>,
+        display-name: option<string>,
+        format: schema-format,
+        hash: option<string>,
+        name: string,
+        namespace: string,
+        schema-content: string,
+        schema-type: schema-type,
+        tags: list<tuple<string, string>>,
+        version: string,
+    }
+}
+
+interface schema-registry {
+    use schema-types.{duration, schema-format, schema-error, schema-content, schema};
+    get: func(id: string, version: string, timeout: duration) -> result<schema, schema-error>;
+}
+
+world schema-registry-use {
+    import schema-registry;
+    import schema-types;
+}
