@@ -3,7 +3,7 @@
 Run the following commands to build a sample rest server docker image:
 
 ```bash
-    cd preview/akri-connectors-extension/SampleRestServer 
+    cd samples/akri-vscode-extension/sample-rest-server 
     docker build -t rest-server:latest .
 ```
 
