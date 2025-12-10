@@ -9,11 +9,6 @@ on:
     paths:
       - "samples/wasm/*.yaml"
       - ".github/workflows/ghcr_graph.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "samples/wasm/*.yaml"
-      - ".github/workflows/ghcr_graph.yml"
   workflow_dispatch:
     inputs:
       graph-name:
