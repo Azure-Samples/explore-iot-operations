@@ -4,6 +4,12 @@ permissions:
   packages: write
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "samples/wasm/operators/**"
+      - "samples/wasm/Makefile"
+      - ".github/workflows/ghcr_module.yml"
   workflow_dispatch:
     inputs:
       module-name:
