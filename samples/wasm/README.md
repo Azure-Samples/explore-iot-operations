@@ -65,9 +65,9 @@ Output lands under `operators/<name>/bin/<arch>/<mode>/`. CI uses the `Makefile`
   use wasm_graph_sdk::logger::{self, Level};
 
   #[map_operator]
-  fn transform_data(timestamp: HybridLogicalClock, input: DataModel) -> DataModel {
+  fn transform_data(timestamp: HybridLogicalClock, input: DataModel) -> Result<DataModel, Error> {
       logger::log(Level::Info, "my-operator", "Processing data");
-      input
+      Ok(input)
   }
   ```
 - Filter operator pattern:
@@ -75,8 +75,8 @@ Output lands under `operators/<name>/bin/<arch>/<mode>/`. CI uses the `Makefile`
   use wasm_graph_sdk::macros::filter_operator;
 
   #[filter_operator]
-  fn temperature_filter(_ts: HybridLogicalClock, input: DataModel) -> bool {
-      matches!(input, DataModel::Temperature(temp) if temp.value > 0.0)
+  fn temperature_filter(_ts: HybridLogicalClock, input: DataModel) -> Result<DataModel, bool> {
+      Ok(matches!(input, DataModel::Temperature(temp) if temp.value > 0.0))
   }
   ```
 - More operators live in `operators/` (temperature, humidity, format, snapshot, collection, enrichment, window, viconverter) for fuller examples and configuration patterns.
