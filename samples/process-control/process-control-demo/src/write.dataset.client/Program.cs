@@ -1,5 +1,7 @@
 ﻿namespace Aio.Connectors.OpcUa.Demo;
 
+using System.Buffers;
+using System.Text;
 using Azure.Iot.Operations.Mqtt.Session;
 using Azure.Iot.Operations.Protocol;
 using Azure.Iot.Operations.Protocol.Connection;
@@ -7,12 +9,8 @@ using Azure.Iot.Operations.Protocol.Models;
 using Azure.Iot.Operations.Protocol.RPC;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using mrpc.client.generated.v3;
-using System;
-using System.Buffers;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+using OpcUaMqttRpc;
+using OpcUaMqttRpc.Write;
 using Terminal.Gui;
 
 /// <summary>

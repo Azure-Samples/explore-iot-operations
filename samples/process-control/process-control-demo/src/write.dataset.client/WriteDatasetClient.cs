@@ -1,7 +1,7 @@
 namespace Aio.Connectors.OpcUa.Demo;
 
 using Azure.Iot.Operations.Protocol;
-using static mrpc.client.generated.v3.Write.Write;
+using static OpcUaMqttRpc.Write.Write;
 
 /// <summary>
 /// Client to write datasets.
