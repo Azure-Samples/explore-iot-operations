@@ -2,7 +2,7 @@
 
 #nullable enable
 
-namespace mrpc.client.generated.v3.Write
+namespace OpcUaMqttRpc.Write
 {
     using System;
     using System.Collections.Generic;
@@ -13,9 +13,9 @@ namespace mrpc.client.generated.v3.Write
     using Azure.Iot.Operations.Protocol;
     using Azure.Iot.Operations.Protocol.RPC;
     using Azure.Iot.Operations.Protocol.Telemetry;
-    using mrpc.client.generated.v3;
+    using OpcUaMqttRpc;
 
-    [CommandTopic("{ex:namespace}/asset-operations/{ex:asset}/{ex:dataset}")]
+    [CommandTopic("{ex:namespace}/asset-operations/{ex:asset}/builtin/{ex:dataset}")]
     [System.CodeDom.Compiler.GeneratedCode("Azure.Iot.Operations.ProtocolCompiler", "0.10.0.0")]
     public static partial class Write
     {
@@ -51,7 +51,6 @@ namespace mrpc.client.generated.v3.Write
             }
 
             public WriteDatasetCommandInvoker WriteDatasetCommandInvoker { get => this.writeDatasetCommandInvoker; }
-
 
             /// <summary>
             /// Invoke a command.

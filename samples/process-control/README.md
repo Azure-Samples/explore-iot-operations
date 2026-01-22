@@ -1,6 +1,6 @@
 # OPC UA process control
 
-In Azure IoT Operations `aio-opc-ua-commander` lets you send changes to an OPC UA server from the edge or from the cloud. The current preview includes support for writing data points from an asset dataset with simple and complex data-types as well as dumping the address space of an OPC UA server.
+In Azure IoT Operations `aio-opc-ua-commander` lets you send changes to an OPC UA server from the edge or from the cloud. The current version includes support for writing data points from an asset dataset with simple and complex data-types as well as dumping the address space of an OPC UA server.
 
 The OPC-UA commander:
 
@@ -23,7 +23,7 @@ This sample illustrates some of these capabilities using the OPC PLC simulator b
 
 To run the sample application, you need:
 
-- A preview instance of Azure IoT Operations deployed. If you don't already have an instance, see [Create an Azure IoT Operations instance](https://learn.microsoft.com/azure/iot-operations/get-started-end-to-end-sample/quickstart-deploy).
+- An instance of Azure IoT Operations deployed. If you don't already have an instance, see [Create an Azure IoT Operations instance](https://learn.microsoft.com/azure/iot-operations/get-started-end-to-end-sample/quickstart-deploy).
 - Access to the internal MQTT broker in the Azure IoT Operations cluster. To configure access the broker, see [Test connectivity to MQTT broker with MQTT clients](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-test-connection).
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) version 2.67.0 or higher.
 - [NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
