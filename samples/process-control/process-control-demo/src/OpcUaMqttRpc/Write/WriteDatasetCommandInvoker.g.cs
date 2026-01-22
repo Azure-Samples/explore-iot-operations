@@ -2,14 +2,14 @@
 
 #nullable enable
 
-namespace mrpc.client.generated.v3.Write
+namespace OpcUaMqttRpc.Write
 {
     using System;
     using System.Collections.Generic;
     using Azure.Iot.Operations.Protocol;
     using Azure.Iot.Operations.Protocol.RPC;
     using Azure.Iot.Operations.Protocol.Models;
-    using mrpc.client.generated.v3;
+    using OpcUaMqttRpc;
 
     public static partial class Write
     {

@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/mrpc.client.generated.v3/mrpc.client.generated.v3.csproj" />
+    <Project Path="src/OpcUaMqttRpc/OpcUaMqttRpc.csproj" />
     <Project Path="src/write.dataset.client/write.dataset.client.csproj" />
   </Folder>
 </Solution>

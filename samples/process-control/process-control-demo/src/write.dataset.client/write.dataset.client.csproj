@@ -21,7 +21,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\mrpc.client.generated.v3\mrpc.client.generated.v3.csproj" />
+    <ProjectReference Include="..\OpcUaMqttRpc\OpcUaMqttRpc.csproj" />
   </ItemGroup>
 
   <ItemGroup>
