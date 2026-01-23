@@ -17,7 +17,7 @@ After it's installed, open this directory in your terminal and run `dotnet build
 
 ### Create the asset endpoint and assets
 
-To create the asset endpoint and assets that the sample application interacts with, follow the steps in [Configure the connector for ONVIF (preview)](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-use-onvif-connector).
+To create the asset endpoint and assets that the sample application interacts with, follow the steps in [Configure the connector for ONVIF](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-use-onvif-connector).
 
 The how-to guide  walks you through the steps to create:
 
