@@ -8,7 +8,6 @@ This project provides the following:
 
 * Pre-configured codespace with [K3s](https://k3s.io/) cluster via [K3d](https://k3d.io/)
 * MQTT Device Simulator
-* HTTP & GRPC Callout Server
 
 > [!IMPORTANT]
 > Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use a validated environment from the official documentation.
