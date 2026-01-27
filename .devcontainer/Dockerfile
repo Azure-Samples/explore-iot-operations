@@ -1,7 +1,9 @@
-FROM mcr.microsoft.com/devcontainers/universal:4.1.1-linux
+FROM mcr.microsoft.com/devcontainers/universal:linux
 
 # Install mosquitto client
-RUN apt-get update && apt-get install mosquitto-clients -y
+RUN rm -f /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && \
+    apt-get install mosquitto-clients -y
 
 # Install Step CLI
 RUN wget https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.23.4/step-cli_0.23.4_amd64.deb && \
