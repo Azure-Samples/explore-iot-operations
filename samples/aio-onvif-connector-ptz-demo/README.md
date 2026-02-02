@@ -26,38 +26,16 @@ The how-to guide  walks you through the steps to create:
 
 ### Create Broker Listener
 
-Create a file called broker-listener.yaml with the following content:
+For the sample application to access the MQTT broker from outside the cluster, you need to create a listener that enables insecure connectivity to the broker from outside the cluster.
 
-```yaml
-apiVersion: mqttbroker.iotoperations.azure.com/v1
-kind: BrokerListener
-metadata:
-  name: test-listener
-spec:
-  brokerRef: default
-  serviceType: LoadBalancer
-  ports:
-  - port: 1883
-    protocol: Mqtt
-```
+There are two options to achieve this:
 
-Execute the following to apply it to the cluster:
+- [Create a new broker listener with the NodePort service type](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-test-connection#node-port).
+- [Create a new broker listener with the LoadBalancer service type](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-test-connection#load-balancer).
 
-```bash
-kubectl apply -f broker-listener.yaml -n azure-iot-operations
-```
+Tip: Use a [client MQTT tool](https://learn.microsoft.com/azure/iot-operations/troubleshoot/tips-tools#mqtt-tools) to verify connectivity to the broker using the created listener before you run the sample application.
 
-Note: This configuration isn't secure and is only suitable in test and development environments. It enables an external client to connect to the internal MQTT broker without any credentials.
-
-### Port Forward Broker Listener
-
-Port forward the broker listener to your local machine in a second terminal:
-
-```bash
-kubectl port-forward svc/test-listener -n azure-iot-operations 1883:1883
-```
-
-Leave this open to keep the port forward active.
+Important: These configurations aren't secure and are only suitable in test and development environments. They enable an external client to connect to the internal MQTT broker without any credentials.
 
 ## Run instructions
 
