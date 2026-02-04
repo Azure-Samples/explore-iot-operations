@@ -17,8 +17,9 @@ This workspace is structured for the Azure IoT Operations VS Code extension so t
 1. Install VS Code plus the Azure IoT Operations data flow extension (v0.4.13 or later) and ensure Docker is running. The RedHat YAML extension is optional but helpful.
 2. Open `samples/wasm` in VS Code.
 3. Build operators: `Ctrl+Shift+P` → **Azure IoT Operations: Build All Data Flow Operators** → choose **release**. The extension builds every project under `operators/`.
-4. Run the sample graph: `Ctrl+Shift+P` → **Azure IoT Operations: Run Application Graph** → pick **release** → select `graph.dataflow.yaml` → choose the `data-and-images` folder when prompted for input. Logs and output land under `data-and-images/output`.
-5. Explore other graphs by choosing a different YAML in step 4 (for example `graph-otel.yaml` or `graph-simple.yaml`).
+4. Start the development environment container:  `Ctrl+Shift+P` → **Azure IoT Operations: Start Development Environment**→ pick **release**. The devx container should start.
+5. Run the sample graph: `Ctrl+Shift+P` → **Azure IoT Operations: Run Application Graph** → pick **release** → select `graph.dataflow.yaml` → choose the `data-and-images` folder when prompted for input. Logs and output land under `data-and-images/output`.
+6. Explore other graphs by choosing a different YAML in step 4 (for example `graph-otel.yaml` or `graph-simple.yaml`).
 
 ## Rust builds (Docker builder)
 

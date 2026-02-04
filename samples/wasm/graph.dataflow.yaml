@@ -8,7 +8,8 @@ metadata:
 moduleRequirements:
   apiVersion: "1.1.0"
   runtimeVersion: "1.1.0"
-
+  features:
+    - name: "wasi-nn"
 moduleConfigurations:
   - name: module-temperature/map
     parameters:
@@ -20,6 +21,17 @@ moduleConfigurations:
       snapshot_topic:
         name: snapshot_topic
         description: Transform app snapshot_topic in snapshot branch's init routine
+        default: snapshot_simulation
+  - name: module-temperature/filter
+    parameters:
+      temperature_lower_bound:
+        name: temperature_lower_bound
+        description: Defines the lower bound for valid temperature values
+        default: "-273.15"
+      temperature_upper_bound:
+        name: temperature_upper_bound
+        description: Defines the upper bound for valid temperature values
+        default: "5000.0"
 operations:
   - operationType: "source"
     name: "source"
