@@ -2,9 +2,6 @@
 
 A comprehensive Grafana dashboard for monitoring Azure IoT Operations (AIO) deployments, combining Prometheus metrics with Azure Log Analytics logs in a single unified view.
 
-![Grafana](https://img.shields.io/badge/Grafana-11.x-orange)
-![Azure IoT Operations](https://img.shields.io/badge/Azure%20IoT%20Operations-1.x-blue)
-
 ## Overview
 
 This dashboard provides end-to-end observability for Azure IoT Operations running on Arc-enabled Kubernetes clusters. It consolidates metrics and logs from all AIO components into a single pane of glass, enabling operators to:
