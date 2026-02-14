@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC",
-      "label": "Managed_Prometheus_aio-monitor-64cebc",
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
       "description": "",
       "type": "datasource",
       "pluginId": "prometheus",
@@ -204,7 +204,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  sum(\r\n    sum_over_time(\r\n      aio_broker_connect_route_replication_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  )\r\n  /\r\n  sum(\r\n    count_over_time(\r\n      aio_broker_connect_route_replication_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  ) OR on() vector(404),\r\n  \"_\", \"Connect\", \"__name__\", \".*\"\r\n)\r\n",
@@ -228,7 +228,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  sum(\r\n    sum_over_time(\r\n      aio_broker_subscribe_route_replication_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  )\r\n  /\r\n  sum(\r\n    count_over_time(\r\n      aio_broker_subscribe_route_replication_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  ) OR on() vector(404),\r\n  \"_\", \"Subscribe\", \"__name__\", \".*\"\r\n)\r\n\r\n",
@@ -252,7 +252,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  sum(\r\n    sum_over_time(\r\n      aio_broker_ping_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  )\r\n  /\r\n  sum(\r\n    count_over_time(\r\n      aio_broker_ping_correctness{cluster=\"$cluster\"}[10m]\r\n    )\r\n  ) OR on() vector(404),\r\n  \"_\", \"Ping\", \"__name__\", \".*\"\r\n)\r\n\r\n",
@@ -345,7 +345,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  sum by (_) (\r\n    1 - max_over_time(aio_dataflow_reconcile_errors{cluster=\"$cluster\"}[1m])\r\n  ) OR on() vector(1),\r\n  \"_\", \"Operator Health\", \"__name__\", \".*\"\r\n)",
@@ -368,7 +368,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  1 - clamp_max(\r\n    sum(rate(aio_dataflow_errors{cluster=\"$cluster\"}[5m])) /\r\n    (sum(rate(aio_dataflow_messages_received{cluster=\"$cluster\"}[5m])) + 1),\r\n    1\r\n  )\r\n  OR on() vector(1),\r\n  \"_\", \"Success Rate\", \"__name__\", \".*\"\r\n)",
@@ -394,7 +394,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(\r\n  sgn(sum(rate(aio_dataflow_messages_sent{cluster=\"$cluster\"}[5m])) > 0)\r\n  OR on() vector(404),\r\n  \"_\", \"Message Flow\", \"__name__\", \".*\"\r\n)",
@@ -488,7 +488,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "## Workload Readiness health\r\n############################\r\nlabel_replace(min(\r\navg(label_join( # Workload ready percents (for deployment, daemonset, and statefulset)\r\n    label_replace(label_join(\r\n        kube_deployment_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_daemonset_status_number_ready{cluster=\"$cluster\",namespace=~\"$namespacem\"} or\r\n        kube_statefulset_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_status_.*\")\r\n  / label_replace(label_join(\r\n        kube_daemonset_status_desired_number_scheduled{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_deployment_spec_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_statefulset_status_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_(status|spec)_.*\")\r\n  ,\"workload\", \":\", \"workloadType\", \"workloadName\")\r\n) by (workload) >=0 \r\n) or vector(404),\"_\",\"AIO Workload Readiness\",\"\",\"\")",
@@ -512,7 +512,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "## Container CPU top-level health\r\n################################\r\nlabel_replace(\r\nmin(sgn( # Check for throttling > N indicating container is exceeding its CPU limits\r\n      rate(container_cpu_cfs_throttled_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m]) \r\n    / rate(container_cpu_cfs_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m])\r\n    >= 0.80)\r\n    ) \r\n    * 0.0\r\nor\r\nmin(\r\n    sgn(min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"cpu\"}) by (namespace,container))\r\n    )\r\n,\"_\",\"AIO Container CPU\",\"\",\"\")",
@@ -541,7 +541,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -626,7 +626,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "#############################\r\n# Node CPU Health\r\nlabel_replace(min(\r\n# BEGIN inner query\r\nmin by(_)(label_replace(vector(0)>0\r\n    or 0.0 * sgn(\r\n        100 - ((avg by (instance) (rate(node_cpu_seconds_total{cluster=\"$cluster\",mode=\"idle\"}[5m])) \r\n              + avg by (instance) (rate(node_cpu_seconds_total{cluster=\"$cluster\",mode=\"iowait\"}[5m]))\r\n        ) * 100) > 90)\r\n    or 1.0 * sgn(sum by (instance)(node_cpu_seconds_total{cluster=\"$cluster\"} > 0))\r\n    or -1 * sgn(max by (instance) (label_replace(kube_node_info{cluster=\"$cluster\"},\"instance\",\"$1\",\"node\",\"(.*)\")))\r\n    ,\"_\",\"$1\",\"instance\",\"(.*)\"))\r\n# END inner query\r\n),\"_\",\"Node CPU\", \"\",\"\")",
@@ -650,7 +650,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "#############################\r\n# Disk Usage Health\r\nlabel_replace(min(\r\n# BEGIN inner query\r\nmin by(node)(label_replace(vector(0)>0\r\n  or 0.0 * sgn(max by(instance) (100 - (100 * node_filesystem_avail_bytes{cluster=\"$cluster\"} \r\n            / node_filesystem_size_bytes{cluster=\"$cluster\"}) > 10) > 90)\r\n  or 1.0 * sgn(max by(instance) (100 - (100 * node_filesystem_avail_bytes{cluster=\"$cluster\"} \r\n            / node_filesystem_size_bytes{cluster=\"$cluster\"})))\r\n,\"node\",\"$1\",\"instance\",\"(.*)\"))\r\nor max by (node) (kube_node_info{cluster=\"$cluster\"}) * -1 # Baseline by node\r\n# END inner query\r\n),\"_\",\"Node Disk\", \"\",\"\")",
@@ -761,7 +761,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum by (_) (\r\n  label_replace(\r\n    0 < increase(\r\n      aio_broker_authentication_failures{\r\n        cluster   = \"$cluster\",\r\n        namespace =~ \"$namespace\"\r\n      }[5m:1m]\r\n    ),\r\n    \"_\", \"Broker:authn_failure\", \"\", \"\"\r\n  )\r\n)\r\nor\r\nsum by (_) (\r\n  label_replace(\r\n    0 < increase(\r\n      aio_broker_authorization_failures{\r\n        cluster   = \"$cluster\",\r\n        namespace =~ \"$namespace\"\r\n      }[5m:1m]\r\n    ),\r\n    \"_\", \"Broker:authz_failure\", \"\", \"\"\r\n  )\r\n)\r\nor\r\nsum by (_) (\r\n  label_replace(\r\n    0 < increase(\r\n      aio_broker_backpressure_packets_rejected_memory{\r\n        cluster   = \"$cluster\",\r\n        namespace =~ \"$namespace\"\r\n      }[5m:1m]\r\n    ),\r\n    \"_\", \"Broker:backpressure_memory\", \"\", \"\"\r\n  )\r\n)\r\nor\r\nsum by (_) (\r\n  label_replace(\r\n    0 < increase(\r\n      aio_broker_backpressure_packets_rejected_disk{\r\n        cluster   = \"$cluster\",\r\n        namespace =~ \"$namespace\"\r\n      }[5m:1m]\r\n    ),\r\n    \"_\", \"Broker:backpressure_disk\", \"\", \"\"\r\n  )\r\n)\r\nor\r\nvector(0) > 0",
@@ -785,7 +785,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum by (_) (\r\n  label_replace(\r\n    increase(\r\n      aio_dataflow_errors{\r\n        cluster = \"$cluster\"\r\n      }[5m:1m]\r\n    ),\r\n    \"_\",\r\n    \"Dataflows:$1\",\r\n    \"errorcode\",\r\n    \"(.*)\"\r\n  )\r\n)",
@@ -866,7 +866,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(aio_broker_store_total_sessions{cluster=\"$cluster\"})",
@@ -931,7 +931,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(aio_broker_store_subscriptions{cluster=\"$cluster\"}) + sum(aio_broker_store_shared_subscriptions{cluster=\"$cluster\"})",
@@ -995,7 +995,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_broker_publishes_received{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -1057,7 +1057,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_broker_publishes_sent{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -1127,7 +1127,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "avg(aio_broker_connect_latency_mu_ms{cluster=\"$cluster\"})",
@@ -1199,7 +1199,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "avg(aio_broker_publish_latency_mu_ms{cluster=\"$cluster\"})",
           "legendFormat": "__auto",
@@ -1297,7 +1297,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum by (category) (rate(aio_broker_authentication_failures{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -1397,7 +1397,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum by (category) (rate(aio_broker_authorization_deny{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "Authz: {{category}}",
@@ -1491,7 +1491,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "clamp_max(clamp_min(sum(rate(aio_broker_backpressure_packets_rejected_memory{cluster=\"$cluster\"}[$__rate_interval])) / (sum(rate(aio_broker_publishes_received{cluster=\"$cluster\"}[$__rate_interval])) + 0.001), 0), 1)",
@@ -1517,7 +1517,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1607,7 +1607,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_broker_publishes_sent{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "Sent",
@@ -1701,7 +1701,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_broker_payload_bytes_received{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -1840,7 +1840,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1904,7 +1904,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1968,7 +1968,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2032,7 +2032,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2096,7 +2096,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2164,7 +2164,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2236,7 +2236,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2328,7 +2328,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_messages_sent{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -2424,7 +2424,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_bytes_received{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -2450,7 +2450,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "Message Dropped due to \n- Processing errors\n- Dropped when busy\n- Expired\n- Filtered",
       "fieldConfig": {
@@ -2548,7 +2548,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_messages_dropped_when_busy{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -2572,7 +2572,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_messages_filtered{cluster=\"$cluster\"}[$__rate_interval]))",
@@ -2675,7 +2675,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_errors{cluster=\"$cluster\"}[$__rate_interval])) by (error_code)",
@@ -2697,7 +2697,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_dataflow_errors{cluster=\"$cluster\"}[$__rate_interval])) by (assetId)",
@@ -2861,7 +2861,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+                "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
               "expr": "sum(aio_akri_operator_active_assets{cluster=\"$cluster\"}) or vector(0)",
@@ -2925,7 +2925,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+                "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
               "expr": "sum(aio_akri_operator_active_devices{cluster=\"$cluster\"}) or vector(0)",
@@ -2989,7 +2989,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(aio_akri_discovered_assets_total_count{cluster=\"$cluster\"}) or vector(0)",
               "legendFormat": "__auto",
@@ -3051,7 +3051,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "sum(aio_akri_discovered_devices_total_count{cluster=\"$cluster\"}) or vector(0)",
               "legendFormat": "__auto",
@@ -3130,7 +3130,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(aio_opc_asset_datapoint_count{cluster=\"$cluster\"}) or vector(0)",
           "legendFormat": "__auto",
@@ -3192,7 +3192,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(aio_opc_endpoint_count{cluster=\"$cluster\"}) or vector(0)",
           "legendFormat": "__auto",
@@ -3254,7 +3254,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(rate(aio_opc_mqtt_message_publishing_duration_count{cluster=\"$cluster\", aio_opc_mqtt_publish_result=\"success\"}[$__rate_interval]))",
@@ -3326,7 +3326,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(aio_opc_mqtt_message_publishing_duration_bucket{cluster=\"$cluster\"}[$__rate_interval])) by (le)) * 1000",
           "legendFormat": "__auto",
@@ -3392,7 +3392,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_opc_mqtt_message_publishing_duration_count{cluster=\"$cluster\", aio_opc_mqtt_publish_result!~\"success|nomatchingsubscribers\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -3486,7 +3486,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_opc_mqtt_message_publishing_duration_count{cluster=\"$cluster\", aio_opc_mqtt_publish_result=\"success\"}[$__rate_interval]))",
           "legendFormat": "Success",
@@ -3508,7 +3508,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3598,7 +3598,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_opc_session_connect_duration_count{cluster=\"$cluster\", aio_opc_connect_result!=\"success\"}[$__rate_interval]))",
           "legendFormat": "Failed Connections",
@@ -3761,7 +3761,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_schema_registry_requests{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -3827,7 +3827,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(aio_schema_registry_errors{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -3902,7 +3902,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(otelcol_exporter_sent_metric_points{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -3968,7 +3968,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(otelcol_exporter_send_failed_metric_points{cluster=\"$cluster\"}[$__rate_interval]))",
           "legendFormat": "__auto",
@@ -4053,7 +4053,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",cluster=\"$cluster\"}[$__rate_interval]))) * 100",
           "legendFormat": "__auto",
@@ -4125,7 +4125,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - (avg(node_memory_MemAvailable_bytes{cluster=\"$cluster\"}) / avg(node_memory_MemTotal_bytes{cluster=\"$cluster\"}))) * 100",
           "legendFormat": "__auto",
@@ -4197,7 +4197,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - (avg(node_filesystem_avail_bytes{cluster=\"$cluster\",mountpoint=\"/\"}) / avg(node_filesystem_size_bytes{cluster=\"$cluster\",mountpoint=\"/\"}))) * 100",
           "legendFormat": "__auto",
@@ -4259,7 +4259,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "count(kube_pod_info{cluster=\"$cluster\",namespace=~\"azure-iot-operations.*\"})",
           "legendFormat": "__auto",
@@ -4329,7 +4329,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(increase(kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"azure-iot-operations.*\"}[1h]))",
           "legendFormat": "__auto",
@@ -4395,7 +4395,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "count(kube_pod_status_phase{cluster=\"$cluster\",namespace=~\"azure-iot-operations.*\",phase!=\"Running\",phase!=\"Succeeded\"}) or vector(0)",
           "legendFormat": "__auto",
@@ -4489,7 +4489,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",cluster=\"$cluster\"}[$__rate_interval]))) * 100",
           "legendFormat": "CPU",
@@ -4507,7 +4507,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - (avg(node_filesystem_avail_bytes{cluster=\"$cluster\",mountpoint=\"/\"}) / avg(node_filesystem_size_bytes{cluster=\"$cluster\",mountpoint=\"/\"}))) * 100",
           "legendFormat": "Disk",
@@ -4606,7 +4606,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(increase(kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"azure-iot-operations.*\"}[5m])) by (pod) > 0",
           "legendFormat": "{{pod}}",
@@ -5009,7 +5009,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_MANAGED_PROMETHEUS_AIO-MONITOR-64CEBC}"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(kube_namespace_status_phase{cluster=\"$cluster\"}, namespace)",
         "includeAll": true,
@@ -5024,8 +5024,8 @@
       },
       {
         "current": {
-          "text": "1b713c39-9ab4-4cde-a274-7b9ba795664d",
-          "value": "1b713c39-9ab4-4cde-a274-7b9ba795664d"
+          "text": "<YOUR_SUBSCRIPTION_ID>",
+          "value": "<YOUR_SUBSCRIPTION_ID>"
         },
         "description": "Required for Log Analytics queries. Enter your Azure Subscription ID.",
         "label": "Subscription ID",
@@ -5033,23 +5033,23 @@
         "options": [
           {
             "selected": true,
-            "text": "1b713c39-9ab4-4cde-a274-7b9ba795664d",
-            "value": "1b713c39-9ab4-4cde-a274-7b9ba795664d"
+            "text": "<YOUR_SUBSCRIPTION_ID>",
+            "value": "<YOUR_SUBSCRIPTION_ID>"
           }
         ],
-        "query": "1b713c39-9ab4-4cde-a274-7b9ba795664d",
+        "query": "<YOUR_SUBSCRIPTION_ID>",
         "type": "textbox"
       }
     ]
   },
   "time": {
-    "from": "2026-02-04T22:38:47.644Z",
-    "to": "2026-02-04T22:47:34.829Z"
+    "from": "now-1h",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "AIO Unified Observability Dashboard v4",
-  "uid": "aio-unified-v4",
-  "version": 51,
+  "title": "AIO Unified Observability Dashboard",
+  "uid": "aio-unified-observability",
+  "version": 1,
   "weekStart": ""
 }
