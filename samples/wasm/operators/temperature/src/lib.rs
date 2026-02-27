@@ -294,12 +294,12 @@ mod filter_temperature {
     static LOWER_BOUND: OnceLock<f64> = OnceLock::new();
     static UPPER_BOUND: OnceLock<f64> = OnceLock::new();
 
-    // Note!: The initialization parameters LOWER_BOUND and UPPER_BOUND must be set via
-    // configuration properties. If these values are not configured, the function
-    // filter_temperature will panic when attempting to access them.
-    //
-    // Users can define these parameters either by using default values or by specifying
-    // them during application setup.
+    // Default bounds: -40°C to 3422°C (melting point of tungsten).
+    // Override via configuration properties "temperature_lower_bound" and
+    // "temperature_upper_bound".
+    const DEFAULT_LOWER_BOUND: f64 = -40.0;
+    const DEFAULT_UPPER_BOUND: f64 = 3422.0;
+
     #[allow(clippy::needless_pass_by_value)]
     fn filter_temperature_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
@@ -308,55 +308,48 @@ mod filter_temperature {
             "Initialization function invoked",
         );
 
-        if let Some(value_string) = configuration
+        let lower = configuration
             .properties
             .iter()
-            .find(|(key, _value)| key == "temperature_lower_bound") // or whatever it is
-            .map(|(_key, value)| value.clone())
-        {
-            match value_string.parse::<f64>() {
-                Ok(value) => {
-                    LOWER_BOUND.set(value).unwrap();
-                    logger::log(
-                        Level::Info,
-                        "module-temperature/filter",
-                        &format!("Lower bound set to {value}"),
-                    );
-                }
+            .find(|(key, _value)| key == "temperature_lower_bound")
+            .and_then(|(_key, value)| match value.parse::<f64>() {
+                Ok(v) => Some(v),
                 Err(_) => {
                     logger::log(
                         Level::Error,
                         "module-temperature/filter",
-                        &format!("Failed to parse lower bound value: {value_string}"),
+                        &format!("Failed to parse lower bound value: {value}"),
                     );
+                    None
                 }
-            }
-        }
+            })
+            .unwrap_or(DEFAULT_LOWER_BOUND);
 
-        if let Some(value_string) = configuration
+        let upper = configuration
             .properties
             .iter()
-            .find(|(key, _value)| key == "temperature_upper_bound") // or whatever it is
-            .map(|(_key, value)| value.clone())
-        {
-            match value_string.parse::<f64>() {
-                Ok(value) => {
-                    UPPER_BOUND.set(value).unwrap();
-                    logger::log(
-                        Level::Info,
-                        "module-temperature/filter",
-                        &format!("Upper bound set to {value}"),
-                    );
-                }
+            .find(|(key, _value)| key == "temperature_upper_bound")
+            .and_then(|(_key, value)| match value.parse::<f64>() {
+                Ok(v) => Some(v),
                 Err(_) => {
                     logger::log(
                         Level::Error,
                         "module-temperature/filter",
-                        &format!("Failed to parse upper bound value: {value_string}"),
+                        &format!("Failed to parse upper bound value: {value}"),
                     );
+                    None
                 }
-            }
-        }
+            })
+            .unwrap_or(DEFAULT_UPPER_BOUND);
+
+        LOWER_BOUND.set(lower).unwrap();
+        UPPER_BOUND.set(upper).unwrap();
+
+        logger::log(
+            Level::Info,
+            "module-temperature/filter",
+            &format!("Filter bounds: lower={lower}, upper={upper}"),
+        );
 
         true
     }
@@ -386,8 +379,10 @@ mod filter_temperature {
             &format!("incoming measurement {measurement:?}"),
         );
 
-        let lower_bound = LOWER_BOUND.get().expect("Lower bound not initialized");
-        let upper_bound = UPPER_BOUND.get().expect("Upper bound not initialized");
+        // Safe to unwrap: bounds are always initialized in filter_temperature_init
+        // with either configured values or defaults.
+        let lower_bound = LOWER_BOUND.get().unwrap();
+        let upper_bound = UPPER_BOUND.get().unwrap();
 
         // Malfunctioning probe sometimes reports higher temperature than melting point of tungsten.
         // Ignore these values.
