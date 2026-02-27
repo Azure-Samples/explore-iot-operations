@@ -628,6 +628,42 @@ prepare_definition_for_api() {
     echo "${def_json}"
 }
 
+# Replace any object .id values that are not valid UUIDs with freshly generated UUIDs.
+# Fabric requires all node IDs in Eventstream definitions to be valid GUIDs.
+# Usage: replace_non_uuid_ids <json>
+replace_non_uuid_ids() {
+    local json="$1"
+
+    # Collect all non-UUID string id values (unique)
+    local non_uuid_ids
+    non_uuid_ids=$(echo "${json}" | jq -r '
+        [.. | objects | select(has("id")) | .id | select(type == "string")] |
+        unique[] |
+        select(test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$") | not)
+    ' 2>/dev/null || true)
+
+    [[ -z "${non_uuid_ids}" ]] && { echo "${json}"; return; }
+
+    # Build a JSON map { oldId: newUuid, ... } then apply in one jq pass
+    local map='{}'
+    while IFS= read -r old_id; do
+        [[ -z "${old_id}" ]] && continue
+        local new_uuid
+        new_uuid=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || true)
+        if [[ -z "${new_uuid}" ]]; then
+            log_warn "  Could not generate UUID — skipping id replacement for '${old_id}'"
+            continue
+        fi
+        log_info "    Replacing non-UUID id '${old_id}' → ${new_uuid}"
+        map=$(echo "${map}" | jq --arg k "${old_id}" --arg v "${new_uuid}" '. + {($k): $v}')
+    done <<< "${non_uuid_ids}"
+
+    echo "${json}" | jq --argjson m "${map}" '
+        walk(if type == "object" and (has("id")) and (.id | type == "string") and ($m[.id] != null)
+             then .id = $m[.id]
+             else . end)'
+}
+
 # Create a tenant-level ShareableCloud connection for Azure Event Hubs.
 # The connection ID can then be injected as dataConnectionId in an Eventstream source.
 # Returns the new connection ID on stdout, or empty string on failure.
@@ -706,7 +742,7 @@ create_cloud_connection() {
     local display_name="${EVENTHUB_NAMESPACE}/${EVENTHUB_ENTITY_PATH}"
     log_info "  Checking for existing cloud connection: ${display_name}"
 
-    # Delete any existing connection with the same display name so creation starts clean
+    # Reuse an existing connection with the same display name if present
     local all_conns existing_id
     all_conns=$(fabric_get "/connections" "${token}")
     existing_id=$(echo "${all_conns}" | jq -r \
@@ -714,17 +750,9 @@ create_cloud_connection() {
         '.value[]? | select(.displayName == $dn) | .id' | head -1)
 
     if [[ -n "${existing_id}" ]]; then
-        log_warn "  Connection '${display_name}' already exists (${existing_id}) – deleting it..."
-        local del_code
-        del_code=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X DELETE \
-            -H "Authorization: Bearer ${token}" \
-            "${FABRIC_API_BASE}/connections/${existing_id}")
-        if [[ "${del_code}" -ge 200 && "${del_code}" -lt 300 ]]; then
-            log_ok "  Deleted connection: ${existing_id}"
-        else
-            log_warn "  Failed to delete existing connection (HTTP ${del_code}) — proceeding anyway."
-        fi
+        log_ok "  Reusing existing connection: ${existing_id} (${display_name})"
+        CREATED_EVENTHUB_CONN_ID="${existing_id}"
+        return
     fi
 
     log_info "  Creating Event Hub connection: ${display_name}"
@@ -781,6 +809,7 @@ create_eventstreams() {
 
         # If a cloud connection was pre-created (Step 5), patch its ID into the
         # definition in place of the old dataConnectionId.
+        log_info "  Cloud connection ID (Step 5): ${CREATED_EVENTHUB_CONN_ID:-<not set>}"
         if [[ -n "${CREATED_EVENTHUB_CONN_ID}" && $(echo "${raw_def}" | jq 'keys | length') -gt 0 ]]; then
             local _old_conn_id
             # dataConnectionId is stored as plain JSON in the snapshot (InlineJSON parts)
@@ -790,11 +819,25 @@ create_eventstreams() {
                    .payload |
                    .. | objects | select(.dataConnectionId?) | .dataConnectionId
                  ] | first // empty' 2>/dev/null || true)
+            log_info "  dataConnectionId in definition: ${_old_conn_id:-<not found>}"
             if [[ -n "${_old_conn_id}" && "${_old_conn_id}" != "${CREATED_EVENTHUB_CONN_ID}" ]]; then
-                log_info "  Patching Event Hub connection ID: ${CREATED_EVENTHUB_CONN_ID}"
+                log_info "  Patching Event Hub connection ID: ${_old_conn_id} → ${CREATED_EVENTHUB_CONN_ID}"
                 raw_def=$(patch_definition_raw "${raw_def}" "" "" \
                     "${_old_conn_id}" "${CREATED_EVENTHUB_CONN_ID}")
+            else
+                log_info "  No connection ID patch needed."
             fi
+        fi
+
+        # Replace any non-UUID node IDs in the eventstream.json part —
+        # Fabric requires all object .id fields to be valid GUIDs.
+        local es_part_idx
+        es_part_idx=$(echo "${raw_def}" | jq '[.definition.parts[].path] | index("eventstream.json")' 2>/dev/null || echo "null")
+        if [[ "${es_part_idx}" != "null" && -n "${es_part_idx}" ]]; then
+            local es_payload; es_payload=$(echo "${raw_def}" | jq -c ".definition.parts[${es_part_idx}].payload")
+            es_payload=$(replace_non_uuid_ids "${es_payload}")
+            raw_def=$(echo "${raw_def}" | jq --argjson idx "${es_part_idx}" --argjson p "${es_payload}" \
+                '.definition.parts[$idx].payload = $p')
         fi
 
         # Re-encode InlineJSON parts to InlineBase64 required by the Fabric API
@@ -883,8 +926,11 @@ create_eventstreams() {
             if [[ "${has_def}" == "true" ]]; then
                 # Definition was rejected (e.g. dataConnectionId not found in this tenant).
                 # Retry without a definition so the eventstream shell is still created.
+                local es_err_msg
+                es_err_msg=$(echo "${es_result}" | jq -r '.message // .error.message // empty' 2>/dev/null || true)
                 log_warn "  Definition rejected (HTTP ${es_http_code}: ${es_err_code}). Retrying without definition."
-                log_warn "  Set EVENTHUB_NAMESPACE, EVENTHUB_ENTITY_PATH, EVENTHUB_KEY_NAME, and EVENTHUB_KEY to recreate the Event Hub source connection automatically."
+                [[ -n "${es_err_msg}" ]] && log_warn "  API message: ${es_err_msg}"
+                log_warn "  Full response: ${es_result}"
                 local retry_payload retry_code retry_resp retry_header
                 retry_resp=$(mktemp); retry_header=$(mktemp)
                 retry_payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')

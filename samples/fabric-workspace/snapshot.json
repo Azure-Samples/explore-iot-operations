@@ -2,24 +2,24 @@
   "schema_version": "1.0",
   "exported_at": "2026-02-27T09:53:52Z",
   "workspace": {
-    "id": "b91aecf2-f192-4bde-91ad-64bf4b9f8973",
-    "displayName": "my-new-qs-workspace"
+    "id": "unique-workspace-id",
+    "displayName": "contoso-qs-workspace"
   },
   "eventhouses": [
     {
-      "id": "7858e25b-e4f8-4e10-84d2-9399e24b532e",
+      "id": "unique-eventhouse-id",
       "displayName": "contoso-qs-eh"
     }
   ],
   "kql_databases": [
     {
-      "id": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+      "id": "unique-kql-database-id",
       "displayName": "contoso-qs-eh"
     }
   ],
   "eventstreams": [
     {
-      "id": "bd5cc1b0-7b71-4a2d-b010-6b77c616e15b",
+      "id": "unique-event-stream-id",
       "displayName": "contoso-qs-es",
       "description": "",
       "export_definition": {
@@ -30,11 +30,11 @@
               "payload": {
                 "sources": [
                   {
-                    "id": "59e83080-77fc-4059-aae4-deb44719f658",
+                    "id": "unique-event-stream-source-id",
                     "name": "azure-event-hub",
                     "type": "AzureEventHub",
                     "properties": {
-                      "dataConnectionId": "3574c371-4788-44b8-b425-440d3dc2280d",
+                      "dataConnectionId": "unique-event-stream-data-connection-id",
                       "consumerGroupName": "$Default",
                       "inputSerialization": {
                         "type": "Json",
@@ -47,13 +47,13 @@
                 ],
                 "destinations": [
                   {
-                    "id": "b77c1ab5-58f6-4bf0-9ec8-d19981c66744",
+                    "id": "unique-event-stream-destination-id",
                     "name": "KQL-database-destination",
                     "type": "Eventhouse",
                     "properties": {
                       "dataIngestionMode": "DirectIngestion",
-                      "workspaceId": "b91aecf2-f192-4bde-91ad-64bf4b9f8973",
-                      "itemId": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+                      "workspaceId": "unique-workspace-id",
+                      "itemId": "unique-kql-database-id",
                       "tableName": "OPCUA",
                       "connectionName": "contoso-qs-es_3arl9j",
                       "mappingRuleName": "opcua_mapping"
@@ -67,7 +67,7 @@
                 ],
                 "streams": [
                   {
-                    "id": "c8c4a879-7c4d-416c-b011-7e3fdd022fcc",
+                    "id": "unique-event-stream-stream-id",
                     "name": "contoso-qs-es-stream",
                     "type": "DefaultStream",
                     "properties": {},
@@ -115,7 +115,7 @@
   ],
   "realtime_dashboards": [
     {
-      "id": "030953e1-7506-479f-b218-c0c5267f4171",
+      "id": "unique-dashboard-id",
       "displayName": "Contoso monitor",
       "description": "Contoso monitor",
       "export_definition": {
@@ -422,7 +422,7 @@
                     "name": "AIOdata",
                     "clusterUri": "https://trd-9r3e1cwxvyu421bh97.z2.kusto.fabric.microsoft.com",
                     "id": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3",
-                    "database": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+                    "database": "unique-kql-database-id",
                     "workspace": "00000000-0000-0000-0000-000000000000",
                     "scopeId": "kusto-trident"
                   }
