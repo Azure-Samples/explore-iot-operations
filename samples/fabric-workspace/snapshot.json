@@ -1,146 +1,112 @@
 {
   "schema_version": "1.0",
-  "exported_at": "2026-02-26T10:42:15Z",
+  "exported_at": "2026-02-27T09:53:52Z",
   "workspace": {
-    "id": "713d094a-1d37-4643-ac74-3601434dde6f",
-    "displayName": "test-qs",
-    "description": "Testing the third AIO quickstart",
-    "type": "Workspace",
-    "capacityId": "67f7b6d2-6124-4e78-9efc-8b26c9ff2186",
-    "capacityRegion": "East US 2",
-    "oneLakeEndpoints": {
-      "blobEndpoint": "https://eastus2-onelake.blob.fabric.microsoft.com",
-      "dfsEndpoint": "https://eastus2-onelake.dfs.fabric.microsoft.com"
-    },
-    "capacityAssignmentProgress": "Completed"
+    "id": "b91aecf2-f192-4bde-91ad-64bf4b9f8973",
+    "displayName": "my-new-qs-workspace"
   },
   "eventhouses": [
     {
-      "id": "b09bf01d-4278-4962-b893-c1439768a5ae",
-      "type": "Eventhouse",
-      "displayName": "contoso-qs-eh",
-      "description": "contoso-qs-eh",
-      "workspaceId": "713d094a-1d37-4643-ac74-3601434dde6f",
-      "properties": {
-        "queryServiceUri": "https://trd-v8ghyqt812dqqy1xss.z9.kusto.fabric.microsoft.com",
-        "ingestionServiceUri": "https://ingest-trd-v8ghyqt812dqqy1xss.z9.kusto.fabric.microsoft.com",
-        "databasesItemIds": [
-          "6927569d-6497-402c-92e4-20898c4ce801"
-        ],
-        "minimumConsumptionUnits": 0.0
-      }
+      "id": "7858e25b-e4f8-4e10-84d2-9399e24b532e",
+      "displayName": "contoso-qs-eh"
     }
   ],
   "kql_databases": [
     {
-      "id": "6927569d-6497-402c-92e4-20898c4ce801",
-      "type": "KQLDatabase",
-      "displayName": "contoso-qs-eh",
-      "description": "contoso-qs-eh",
-      "workspaceId": "713d094a-1d37-4643-ac74-3601434dde6f",
-      "properties": {
-        "parentEventhouseItemId": "b09bf01d-4278-4962-b893-c1439768a5ae",
-        "queryServiceUri": "https://trd-v8ghyqt812dqqy1xss.z9.kusto.fabric.microsoft.com",
-        "ingestionServiceUri": "https://ingest-trd-v8ghyqt812dqqy1xss.z9.kusto.fabric.microsoft.com",
-        "databaseType": "ReadWrite"
-      },
-      "export_schema": {
-        "Databases": {
-          "6927569d-6497-402c-92e4-20898c4ce801": {
-            "Name": "6927569d-6497-402c-92e4-20898c4ce801",
-            "Tables": {
-              "OPCUA": {
-                "Name": "OPCUA",
-                "DocString": "Store ingested data from cluster",
-                "OrderedColumns": [
-                  {
-                    "Name": "AssetId",
-                    "Type": "System.String",
-                    "CslType": "string"
-                  },
-                  {
-                    "Name": "Spike",
-                    "Type": "System.SByte",
-                    "CslType": "bool"
-                  },
-                  {
-                    "Name": "Temperature",
-                    "Type": "System.Data.SqlTypes.SqlDecimal",
-                    "CslType": "decimal"
-                  },
-                  {
-                    "Name": "FillWeight",
-                    "Type": "System.Data.SqlTypes.SqlDecimal",
-                    "CslType": "decimal"
-                  },
-                  {
-                    "Name": "EnergyUse",
-                    "Type": "System.Data.SqlTypes.SqlDecimal",
-                    "CslType": "decimal"
-                  },
-                  {
-                    "Name": "Timestamp",
-                    "Type": "System.DateTime",
-                    "CslType": "datetime"
-                  }
-                ]
-              }
-            },
-            "PrettyName": "contoso-qs-eh",
-            "MajorVersion": 17,
-            "MinorVersion": 38,
-            "Functions": {},
-            "DatabaseAccessMode": "ReadWrite",
-            "ExternalTables": {},
-            "MaterializedViews": {},
-            "EntityGroups": {},
-            "Graphs": {},
-            "StoredQueryResults": {}
-          }
-        }
-      },
-      "export_tables": [
-        [
-          "OPCUA",
-          "6927569d-6497-402c-92e4-20898c4ce801",
-          null,
-          "Store ingested data from cluster"
-        ]
-      ],
-      "export_mappings": [
-        {
-          "table": "OPCUA",
-          "name": "opcua_mapping",
-          "kind": "Json",
-          "mapping": "[{\"column\":\"AssetId\",\"path\":\"$['AssetId']\",\"datatype\":\"\"},{\"column\":\"Spike\",\"path\":\"$.Spike\",\"datatype\":\"\"},{\"column\":\"Temperature\",\"path\":\"$.TemperatureF\",\"datatype\":\"\"},{\"column\":\"FillWeight\",\"path\":\"$.FillWeight\",\"datatype\":\"\"},{\"column\":\"EnergyUse\",\"path\":\"$.EnergyUse.Value\",\"datatype\":\"\"},{\"column\":\"Timestamp\",\"path\":\"$['EventProcessedUtcTime']\",\"datatype\":\"\"}]"
-        }
-      ]
+      "id": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+      "displayName": "contoso-qs-eh"
     }
   ],
   "eventstreams": [
     {
-      "id": "929dfa94-bb06-4565-9e07-36570213f9c0",
-      "type": "Eventstream",
+      "id": "bd5cc1b0-7b71-4a2d-b010-6b77c616e15b",
       "displayName": "contoso-qs-es",
       "description": "",
-      "workspaceId": "713d094a-1d37-4643-ac74-3601434dde6f",
       "export_definition": {
         "definition": {
           "parts": [
             {
               "path": "eventstream.json",
-              "payload": "ew0KICAic291cmNlcyI6IFsNCiAgICB7DQogICAgICAiaWQiOiAiNTllODMwODAtNzdmYy00MDU5LWFhZTQtZGViNDQ3MTlmNjU4IiwNCiAgICAgICJuYW1lIjogImF6dXJlLWV2ZW50LWh1YiIsDQogICAgICAidHlwZSI6ICJBenVyZUV2ZW50SHViIiwNCiAgICAgICJwcm9wZXJ0aWVzIjogew0KICAgICAgICAiZGF0YUNvbm5lY3Rpb25JZCI6ICIzNGM4MDNjMi00YWQxLTRhZWQtOWY3My1lOTUwYzM5YjYwZDkiLA0KICAgICAgICAiY29uc3VtZXJHcm91cE5hbWUiOiAiJERlZmF1bHQiLA0KICAgICAgICAiaW5wdXRTZXJpYWxpemF0aW9uIjogew0KICAgICAgICAgICJ0eXBlIjogIkpzb24iLA0KICAgICAgICAgICJwcm9wZXJ0aWVzIjogew0KICAgICAgICAgICAgImVuY29kaW5nIjogIlVURjgiDQogICAgICAgICAgfQ0KICAgICAgICB9DQogICAgICB9DQogICAgfQ0KICBdLA0KICAiZGVzdGluYXRpb25zIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICJiNzdjMWFiNS01OGY2LTRiZjAtOWVjOC1kMTk5ODFjNjY3NDQiLA0KICAgICAgIm5hbWUiOiAiNWUxNzM3ZGQtZGE1Zi00MzI1LTgwODMtZGRhNjEzMjdjZDhlIiwNCiAgICAgICJ0eXBlIjogIkV2ZW50aG91c2UiLA0KICAgICAgInByb3BlcnRpZXMiOiB7DQogICAgICAgICJkYXRhSW5nZXN0aW9uTW9kZSI6ICJEaXJlY3RJbmdlc3Rpb24iLA0KICAgICAgICAid29ya3NwYWNlSWQiOiAiNzEzZDA5NGEtMWQzNy00NjQzLWFjNzQtMzYwMTQzNGRkZTZmIiwNCiAgICAgICAgIml0ZW1JZCI6ICI2OTI3NTY5ZC02NDk3LTQwMmMtOTJlNC0yMDg5OGM0Y2U4MDEiLA0KICAgICAgICAidGFibGVOYW1lIjogIk9QQ1VBIiwNCiAgICAgICAgImNvbm5lY3Rpb25OYW1lIjogImNvbnRvc28tcXMtZXNfM2FybDlqIiwNCiAgICAgICAgIm1hcHBpbmdSdWxlTmFtZSI6ICJvcGN1YV9tYXBwaW5nIg0KICAgICAgfSwNCiAgICAgICJpbnB1dE5vZGVzIjogWw0KICAgICAgICB7DQogICAgICAgICAgIm5hbWUiOiAiY29udG9zby1xcy1lcy1zdHJlYW0iDQogICAgICAgIH0NCiAgICAgIF0NCiAgICB9DQogIF0sDQogICJzdHJlYW1zIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICJjOGM0YTg3OS03YzRkLTQxNmMtYjAxMS03ZTNmZGQwMjJmY2MiLA0KICAgICAgIm5hbWUiOiAiY29udG9zby1xcy1lcy1zdHJlYW0iLA0KICAgICAgInR5cGUiOiAiRGVmYXVsdFN0cmVhbSIsDQogICAgICAicHJvcGVydGllcyI6IHt9LA0KICAgICAgImlucHV0Tm9kZXMiOiBbDQogICAgICAgIHsNCiAgICAgICAgICAibmFtZSI6ICJhenVyZS1ldmVudC1odWIiDQogICAgICAgIH0NCiAgICAgIF0NCiAgICB9DQogIF0sDQogICJvcGVyYXRvcnMiOiBbXSwNCiAgImNvbXBhdGliaWxpdHlMZXZlbCI6ICIxLjEiDQp9",
-              "payloadType": "InlineBase64"
+              "payload": {
+                "sources": [
+                  {
+                    "id": "59e83080-77fc-4059-aae4-deb44719f658",
+                    "name": "azure-event-hub",
+                    "type": "AzureEventHub",
+                    "properties": {
+                      "dataConnectionId": "3574c371-4788-44b8-b425-440d3dc2280d",
+                      "consumerGroupName": "$Default",
+                      "inputSerialization": {
+                        "type": "Json",
+                        "properties": {
+                          "encoding": "UTF8"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "destinations": [
+                  {
+                    "id": "b77c1ab5-58f6-4bf0-9ec8-d19981c66744",
+                    "name": "KQL-database-destination",
+                    "type": "Eventhouse",
+                    "properties": {
+                      "dataIngestionMode": "DirectIngestion",
+                      "workspaceId": "b91aecf2-f192-4bde-91ad-64bf4b9f8973",
+                      "itemId": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+                      "tableName": "OPCUA",
+                      "connectionName": "contoso-qs-es_3arl9j",
+                      "mappingRuleName": "opcua_mapping"
+                    },
+                    "inputNodes": [
+                      {
+                        "name": "contoso-qs-es-stream"
+                      }
+                    ]
+                  }
+                ],
+                "streams": [
+                  {
+                    "id": "c8c4a879-7c4d-416c-b011-7e3fdd022fcc",
+                    "name": "contoso-qs-es-stream",
+                    "type": "DefaultStream",
+                    "properties": {},
+                    "inputNodes": [
+                      {
+                        "name": "azure-event-hub"
+                      }
+                    ]
+                  }
+                ],
+                "operators": [],
+                "compatibilityLevel": "1.1"
+              },
+              "payloadType": "InlineJSON"
             },
             {
               "path": "eventstreamProperties.json",
-              "payload": "ew0KICAicmV0ZW50aW9uVGltZUluRGF5cyI6IDEsDQogICJldmVudFRocm91Z2hwdXRMZXZlbCI6ICJMb3ciLA0KICAic2NoZW1hTW9kZSI6ICJOb25lIg0KfQ==",
-              "payloadType": "InlineBase64"
+              "payload": {
+                "retentionTimeInDays": 1,
+                "eventThroughputLevel": "Low",
+                "schemaMode": "None"
+              },
+              "payloadType": "InlineJSON"
             },
             {
               "path": ".platform",
-              "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIkV2ZW50c3RyZWFtIiwKICAgICJkaXNwbGF5TmFtZSI6ICJjb250b3NvLXFzLWVzIgogIH0sCiAgImNvbmZpZyI6IHsKICAgICJ2ZXJzaW9uIjogIjIuMCIsCiAgICAibG9naWNhbElkIjogIjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIKICB9Cn0=",
-              "payloadType": "InlineBase64"
+              "payload": {
+                "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+                "metadata": {
+                  "type": "Eventstream",
+                  "displayName": "contoso-qs-es",
+                  "description": ""
+                },
+                "config": {
+                  "version": "2.0",
+                  "logicalId": "00000000-0000-0000-0000-000000000000"
+                }
+              },
+              "payloadType": "InlineJSON"
             }
           ]
         }
@@ -149,23 +115,431 @@
   ],
   "realtime_dashboards": [
     {
-      "id": "e1d8ed29-3c86-4bfb-994d-7403d90de17e",
-      "type": "KQLDashboard",
+      "id": "030953e1-7506-479f-b218-c0c5267f4171",
       "displayName": "Contoso monitor",
       "description": "Contoso monitor",
-      "workspaceId": "713d094a-1d37-4643-ac74-3601434dde6f",
       "export_definition": {
         "definition": {
           "parts": [
             {
               "path": "RealTimeDashboard.json",
-              "payload": "ew0KICAic2NoZW1hX3ZlcnNpb24iOiA2OCwNCiAgInRpbGVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICJiMWIxYjFiMS1jY2NjLWRkZGQtZWVlZS1mMmYyZjJmMmYyZjIiLA0KICAgICAgInRpdGxlIjogIlRlbXBlcmF0dXJlIHdpdGggc3Bpa2VzIG92ZXIgdGltZSIsDQogICAgICAiZGVzY3JpcHRpb24iOiAiU2hvd3MgdGhlIHRlbXBlcmF0dXJlIG92ZXIgdGltZSwgd2l0aCBzcGlrZSBtYXJrZXJzLiIsDQogICAgICAidmlzdWFsVHlwZSI6ICJsaW5lIiwNCiAgICAgICJwYWdlSWQiOiAiYzZjNmM2YzYtZGRkZC1lZWVlLWZmZmYtYTdhN2E3YTdhN2E3IiwNCiAgICAgICJsYXlvdXQiOiB7DQogICAgICAgICJ4IjogMCwNCiAgICAgICAgInkiOiAwLA0KICAgICAgICAid2lkdGgiOiAxMiwNCiAgICAgICAgImhlaWdodCI6IDgNCiAgICAgIH0sDQogICAgICAicXVlcnlSZWYiOiB7DQogICAgICAgICJraW5kIjogInF1ZXJ5IiwNCiAgICAgICAgInF1ZXJ5SWQiOiAiZjFmMWYxZjEtYWFhYS1iYmJiLWNjY2MtZDJkMmQyZDJkMmQyIg0KICAgICAgfSwNCiAgICAgICJ2aXN1YWxPcHRpb25zIjogew0KICAgICAgICAibXVsdGlwbGVZQXhlcyI6IHsNCiAgICAgICAgICAiYmFzZSI6IHsNCiAgICAgICAgICAgICJpZCI6ICItMSIsDQogICAgICAgICAgICAibGFiZWwiOiAiVGVtcGVyYXR1cmUgKMKwRikiLA0KICAgICAgICAgICAgImNvbHVtbnMiOiBbXSwNCiAgICAgICAgICAgICJ5QXhpc01heGltdW1WYWx1ZSI6IG51bGwsDQogICAgICAgICAgICAieUF4aXNNaW5pbXVtVmFsdWUiOiBudWxsLA0KICAgICAgICAgICAgInlBeGlzU2NhbGUiOiAibGluZWFyIiwNCiAgICAgICAgICAgICJob3Jpem9udGFsTGluZXMiOiBbXQ0KICAgICAgICAgIH0sDQogICAgICAgICAgImFkZGl0aW9uYWwiOiBbXSwNCiAgICAgICAgICAic2hvd011bHRpcGxlUGFuZWxzIjogZmFsc2UNCiAgICAgICAgfSwNCiAgICAgICAgImhpZGVMZWdlbmQiOiBmYWxzZSwNCiAgICAgICAgImxlZ2VuZExvY2F0aW9uIjogImJvdHRvbSIsDQogICAgICAgICJ4Q29sdW1uVGl0bGUiOiAiVGltZXN0YW1wIiwNCiAgICAgICAgInhDb2x1bW4iOiBudWxsLA0KICAgICAgICAieUNvbHVtbnMiOiBudWxsLA0KICAgICAgICAic2VyaWVzQ29sdW1ucyI6IG51bGwsDQogICAgICAgICJ4QXhpc1NjYWxlIjogImxpbmVhciIsDQogICAgICAgICJ2ZXJ0aWNhbExpbmUiOiAiIiwNCiAgICAgICAgImNyb3NzRmlsdGVyRGlzYWJsZWQiOiBmYWxzZSwNCiAgICAgICAgImRyaWxsdGhyb3VnaERpc2FibGVkIjogZmFsc2UsDQogICAgICAgICJjcm9zc0ZpbHRlciI6IFtdLA0KICAgICAgICAiZHJpbGx0aHJvdWdoIjogW10sDQogICAgICAgICJzZWxlY3RlZERhdGFPbkxvYWQiOiB7DQogICAgICAgICAgImFsbCI6IHRydWUsDQogICAgICAgICAgImxpbWl0IjogMTANCiAgICAgICAgfSwNCiAgICAgICAgImRhdGFQb2ludHNUb29sdGlwIjogew0KICAgICAgICAgICJhbGwiOiBmYWxzZSwNCiAgICAgICAgICAibGltaXQiOiAxDQogICAgICAgIH0NCiAgICAgIH0NCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICJjMmMyYzJjMi1kZGRkLWVlZWUtZmZmZi1hM2EzYTNhM2EzYTMiLA0KICAgICAgInRpdGxlIjogIlNwaWtlIGluZGljYXRvciIsDQogICAgICAiZGVzY3JpcHRpb24iOiAiU2hvd3MgdGhlIGxhdGVzdCB0ZW1wZXJhdHVyZSwgd2l0aCBhbGVydCBmb3JtYXR0aW5nIGlmIGl0IGlzIGEgc3Bpa2UuIiwNCiAgICAgICJ2aXN1YWxUeXBlIjogImNhcmQiLA0KICAgICAgInBhZ2VJZCI6ICJjNmM2YzZjNi1kZGRkLWVlZWUtZmZmZi1hN2E3YTdhN2E3YTciLA0KICAgICAgImxheW91dCI6IHsNCiAgICAgICAgIngiOiAwLA0KICAgICAgICAieSI6IDgsDQogICAgICAgICJ3aWR0aCI6IDEyLA0KICAgICAgICAiaGVpZ2h0IjogMw0KICAgICAgfSwNCiAgICAgICJxdWVyeVJlZiI6IHsNCiAgICAgICAgImtpbmQiOiAicXVlcnkiLA0KICAgICAgICAicXVlcnlJZCI6ICJiM2IzYjNiMy1jY2NjLWRkZGQtZWVlZS1mNGY0ZjRmNGY0ZjQiDQogICAgICB9LA0KICAgICAgInZpc3VhbE9wdGlvbnMiOiB7DQogICAgICAgICJtdWx0aVN0YXRfX3RleHRTaXplIjogImF1dG8iLA0KICAgICAgICAibXVsdGlTdGF0X192YWx1ZUNvbHVtbiI6IG51bGwsDQogICAgICAgICJjb2xvclJ1bGVzRGlzYWJsZWQiOiBmYWxzZSwNCiAgICAgICAgImNvbG9yUnVsZXMiOiBbDQogICAgICAgICAgew0KICAgICAgICAgICAgImlkIjogImQzZDNkM2QzLWVlZWUtZmZmZi1hYWFhLWI0YjRiNGI0YjRiNCIsDQogICAgICAgICAgICAicnVsZVR5cGUiOiAiY29sb3JCeUNvbmRpdGlvbiIsDQogICAgICAgICAgICAiYXBwbHlUb0NvbHVtbiI6IG51bGwsDQogICAgICAgICAgICAiaGlkZVRleHQiOiBmYWxzZSwNCiAgICAgICAgICAgICJhcHBseVRvIjogImNlbGxzIiwNCiAgICAgICAgICAgICJjb25kaXRpb25zIjogWw0KICAgICAgICAgICAgICB7DQogICAgICAgICAgICAgICAgIm9wZXJhdG9yIjogIj09IiwNCiAgICAgICAgICAgICAgICAiY29sdW1uIjogIlNwaWtlIiwNCiAgICAgICAgICAgICAgICAidmFsdWVzIjogWw0KICAgICAgICAgICAgICAgICAgInRydWUiDQogICAgICAgICAgICAgICAgXQ0KICAgICAgICAgICAgICB9DQogICAgICAgICAgICBdLA0KICAgICAgICAgICAgImNoYWluaW5nT3BlcmF0b3IiOiAiYW5kIiwNCiAgICAgICAgICAgICJjb2xvclN0eWxlIjogImJvbGQiLA0KICAgICAgICAgICAgImNvbG9yIjogInJlZCIsDQogICAgICAgICAgICAidGFnIjogIiIsDQogICAgICAgICAgICAiaWNvbiI6ICJ3YXJuaW5nIiwNCiAgICAgICAgICAgICJydWxlTmFtZSI6ICIiLA0KICAgICAgICAgICAgInZpc3VhbFR5cGUiOiAiY2FyZCINCiAgICAgICAgICB9DQogICAgICAgIF0NCiAgICAgIH0NCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICJlNGU0ZTRlNC1mZmZmLWFhYWEtYmJiYi1jNWM1YzVjNWM1YzUiLA0KICAgICAgInRpdGxlIjogIlRlbXBlcmF0dXJlICjCsEYpIHZzLiBGaWxsIFdlaWdodCIsDQogICAgICAidmlzdWFsVHlwZSI6ICJsaW5lIiwNCiAgICAgICJwYWdlSWQiOiAiYzZjNmM2YzYtZGRkZC1lZWVlLWZmZmYtYTdhN2E3YTdhN2E3IiwNCiAgICAgICJsYXlvdXQiOiB7DQogICAgICAgICJ4IjogMTIsDQogICAgICAgICJ5IjogMCwNCiAgICAgICAgIndpZHRoIjogMTEsDQogICAgICAgICJoZWlnaHQiOiA3DQogICAgICB9LA0KICAgICAgInF1ZXJ5UmVmIjogew0KICAgICAgICAia2luZCI6ICJxdWVyeSIsDQogICAgICAgICJxdWVyeUlkIjogImM0YzRjNGM0LWRkZGQtZWVlZS1mZmZmLWE1YTVhNWE1YTVhNSINCiAgICAgIH0sDQogICAgICAidmlzdWFsT3B0aW9ucyI6IHsNCiAgICAgICAgIm11bHRpcGxlWUF4ZXMiOiB7DQogICAgICAgICAgImJhc2UiOiB7DQogICAgICAgICAgICAiaWQiOiAiLTEiLA0KICAgICAgICAgICAgImxhYmVsIjogIlVuaXRzIiwNCiAgICAgICAgICAgICJjb2x1bW5zIjogW10sDQogICAgICAgICAgICAieUF4aXNNYXhpbXVtVmFsdWUiOiBudWxsLA0KICAgICAgICAgICAgInlBeGlzTWluaW11bVZhbHVlIjogbnVsbCwNCiAgICAgICAgICAgICJ5QXhpc1NjYWxlIjogImxpbmVhciIsDQogICAgICAgICAgICAiaG9yaXpvbnRhbExpbmVzIjogW10NCiAgICAgICAgICB9LA0KICAgICAgICAgICJhZGRpdGlvbmFsIjogW10sDQogICAgICAgICAgInNob3dNdWx0aXBsZVBhbmVscyI6IGZhbHNlDQogICAgICAgIH0sDQogICAgICAgICJoaWRlTGVnZW5kIjogZmFsc2UsDQogICAgICAgICJsZWdlbmRMb2NhdGlvbiI6ICJib3R0b20iLA0KICAgICAgICAieENvbHVtblRpdGxlIjogIlRpbWVzdGFtcCIsDQogICAgICAgICJ4Q29sdW1uIjogbnVsbCwNCiAgICAgICAgInlDb2x1bW5zIjogbnVsbCwNCiAgICAgICAgInNlcmllc0NvbHVtbnMiOiBudWxsLA0KICAgICAgICAieEF4aXNTY2FsZSI6ICJsaW5lYXIiLA0KICAgICAgICAidmVydGljYWxMaW5lIjogIiIsDQogICAgICAgICJjcm9zc0ZpbHRlckRpc2FibGVkIjogZmFsc2UsDQogICAgICAgICJkcmlsbHRocm91Z2hEaXNhYmxlZCI6IGZhbHNlLA0KICAgICAgICAiY3Jvc3NGaWx0ZXIiOiBbXSwNCiAgICAgICAgImRyaWxsdGhyb3VnaCI6IFtdLA0KICAgICAgICAic2VsZWN0ZWREYXRhT25Mb2FkIjogew0KICAgICAgICAgICJhbGwiOiB0cnVlLA0KICAgICAgICAgICJsaW1pdCI6IDEwDQogICAgICAgIH0sDQogICAgICAgICJkYXRhUG9pbnRzVG9vbHRpcCI6IHsNCiAgICAgICAgICAiYWxsIjogZmFsc2UsDQogICAgICAgICAgImxpbWl0IjogMQ0KICAgICAgICB9DQogICAgICB9DQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiZjVmNWY1ZjUtYWFhYS1iYmJiLWNjY2MtZDZkNmQ2ZDZkNmQ2IiwNCiAgICAgICJ0aXRsZSI6ICJUZW1wZXJhdHVyZSAowrBGKSB2cy4gRW5lcmd5IFVzZSIsDQogICAgICAidmlzdWFsVHlwZSI6ICJsaW5lIiwNCiAgICAgICJwYWdlSWQiOiAiYzZjNmM2YzYtZGRkZC1lZWVlLWZmZmYtYTdhN2E3YTdhN2E3IiwNCiAgICAgICJsYXlvdXQiOiB7DQogICAgICAgICJ4IjogMTIsDQogICAgICAgICJ5IjogNywNCiAgICAgICAgIndpZHRoIjogMTEsDQogICAgICAgICJoZWlnaHQiOiA3DQogICAgICB9LA0KICAgICAgInF1ZXJ5UmVmIjogew0KICAgICAgICAia2luZCI6ICJxdWVyeSIsDQogICAgICAgICJxdWVyeUlkIjogImQ1ZDVkNWQ1LWVlZWUtZmZmZi1hYWFhLWI2YjZiNmI2YjZiNiINCiAgICAgIH0sDQogICAgICAidmlzdWFsT3B0aW9ucyI6IHsNCiAgICAgICAgIm11bHRpcGxlWUF4ZXMiOiB7DQogICAgICAgICAgImJhc2UiOiB7DQogICAgICAgICAgICAiaWQiOiAiLTEiLA0KICAgICAgICAgICAgImxhYmVsIjogIlVuaXRzIiwNCiAgICAgICAgICAgICJjb2x1bW5zIjogW10sDQogICAgICAgICAgICAieUF4aXNNYXhpbXVtVmFsdWUiOiBudWxsLA0KICAgICAgICAgICAgInlBeGlzTWluaW11bVZhbHVlIjogbnVsbCwNCiAgICAgICAgICAgICJ5QXhpc1NjYWxlIjogImxpbmVhciIsDQogICAgICAgICAgICAiaG9yaXpvbnRhbExpbmVzIjogW10NCiAgICAgICAgICB9LA0KICAgICAgICAgICJhZGRpdGlvbmFsIjogW10sDQogICAgICAgICAgInNob3dNdWx0aXBsZVBhbmVscyI6IGZhbHNlDQogICAgICAgIH0sDQogICAgICAgICJoaWRlTGVnZW5kIjogZmFsc2UsDQogICAgICAgICJsZWdlbmRMb2NhdGlvbiI6ICJib3R0b20iLA0KICAgICAgICAieENvbHVtblRpdGxlIjogIlRpbWVzdGFtcCIsDQogICAgICAgICJ4Q29sdW1uIjogbnVsbCwNCiAgICAgICAgInlDb2x1bW5zIjogbnVsbCwNCiAgICAgICAgInNlcmllc0NvbHVtbnMiOiBudWxsLA0KICAgICAgICAieEF4aXNTY2FsZSI6ICJsaW5lYXIiLA0KICAgICAgICAidmVydGljYWxMaW5lIjogIiIsDQogICAgICAgICJjcm9zc0ZpbHRlckRpc2FibGVkIjogZmFsc2UsDQogICAgICAgICJkcmlsbHRocm91Z2hEaXNhYmxlZCI6IGZhbHNlLA0KICAgICAgICAiY3Jvc3NGaWx0ZXIiOiBbXSwNCiAgICAgICAgImRyaWxsdGhyb3VnaCI6IFtdLA0KICAgICAgICAic2VsZWN0ZWREYXRhT25Mb2FkIjogew0KICAgICAgICAgICJhbGwiOiB0cnVlLA0KICAgICAgICAgICJsaW1pdCI6IDEwDQogICAgICAgIH0sDQogICAgICAgICJkYXRhUG9pbnRzVG9vbHRpcCI6IHsNCiAgICAgICAgICAiYWxsIjogZmFsc2UsDQogICAgICAgICAgImxpbWl0IjogMQ0KICAgICAgICB9DQogICAgICB9DQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiYTZhNmE2YTYtYmJiYi1jY2NjLWRkZGQtZTdlN2U3ZTdlN2U3IiwNCiAgICAgICJ0aXRsZSI6ICJNYXggdGVtcGVyYXR1cmUiLA0KICAgICAgInZpc3VhbFR5cGUiOiAiY2FyZCIsDQogICAgICAicGFnZUlkIjogImM2YzZjNmM2LWRkZGQtZWVlZS1mZmZmLWE3YTdhN2E3YTdhNyIsDQogICAgICAibGF5b3V0Ijogew0KICAgICAgICAieCI6IDAsDQogICAgICAgICJ5IjogMTEsDQogICAgICAgICJ3aWR0aCI6IDYsDQogICAgICAgICJoZWlnaHQiOiAzDQogICAgICB9LA0KICAgICAgInF1ZXJ5UmVmIjogew0KICAgICAgICAia2luZCI6ICJxdWVyeSIsDQogICAgICAgICJxdWVyeUlkIjogImU2ZTZlNmU2LWZmZmYtYWFhYS1iYmJiLWM3YzdjN2M3YzdjNyINCiAgICAgIH0sDQogICAgICAidmlzdWFsT3B0aW9ucyI6IHsNCiAgICAgICAgIm11bHRpU3RhdF9fdGV4dFNpemUiOiAiYXV0byIsDQogICAgICAgICJtdWx0aVN0YXRfX3ZhbHVlQ29sdW1uIjogbnVsbCwNCiAgICAgICAgImNvbG9yUnVsZXNEaXNhYmxlZCI6IGZhbHNlLA0KICAgICAgICAiY29sb3JSdWxlcyI6IFtdDQogICAgICB9DQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiYjdiN2I3YjctY2NjYy1kZGRkLWVlZWUtZjhmOGY4ZjhmOGY4IiwNCiAgICAgICJ0aXRsZSI6ICJOdW1iZXIgb2Ygc3Bpa2VzIGluIHRpbWUgZnJhbWUiLA0KICAgICAgInZpc3VhbFR5cGUiOiAiY2FyZCIsDQogICAgICAicGFnZUlkIjogImM2YzZjNmM2LWRkZGQtZWVlZS1mZmZmLWE3YTdhN2E3YTdhNyIsDQogICAgICAibGF5b3V0Ijogew0KICAgICAgICAieCI6IDYsDQogICAgICAgICJ5IjogMTEsDQogICAgICAgICJ3aWR0aCI6IDYsDQogICAgICAgICJoZWlnaHQiOiAzDQogICAgICB9LA0KICAgICAgInF1ZXJ5UmVmIjogew0KICAgICAgICAia2luZCI6ICJxdWVyeSIsDQogICAgICAgICJxdWVyeUlkIjogImY3ZjdmN2Y3LWFhYWEtYmJiYi1jY2NjLWQ4ZDhkOGQ4ZDhkOCINCiAgICAgIH0sDQogICAgICAidmlzdWFsT3B0aW9ucyI6IHsNCiAgICAgICAgIm11bHRpU3RhdF9fdGV4dFNpemUiOiAiYXV0byIsDQogICAgICAgICJtdWx0aVN0YXRfX3ZhbHVlQ29sdW1uIjogbnVsbCwNCiAgICAgICAgImNvbG9yUnVsZXNEaXNhYmxlZCI6IGZhbHNlLA0KICAgICAgICAiY29sb3JSdWxlcyI6IFtdDQogICAgICB9DQogICAgfQ0KICBdLA0KICAiYmFzZVF1ZXJpZXMiOiBbXSwNCiAgInBhcmFtZXRlcnMiOiBbDQogICAgew0KICAgICAgImtpbmQiOiAic3RyaW5nIiwNCiAgICAgICJpZCI6ICJkOWQ5ZDlkOS1lZWVlLWZmZmYtYWFhYS1iMGIwYjBiMGIwYjAiLA0KICAgICAgImRpc3BsYXlOYW1lIjogIkFzc2V0IiwNCiAgICAgICJkZXNjcmlwdGlvbiI6ICIiLA0KICAgICAgInZhcmlhYmxlTmFtZSI6ICJfYXNzZXQiLA0KICAgICAgInNlbGVjdGlvblR5cGUiOiAic2NhbGFyIiwNCiAgICAgICJpbmNsdWRlQWxsT3B0aW9uIjogZmFsc2UsDQogICAgICAiZGVmYXVsdFZhbHVlIjogew0KICAgICAgICAia2luZCI6ICJxdWVyeS1yZXN1bHQiDQogICAgICB9LA0KICAgICAgImRhdGFTb3VyY2UiOiB7DQogICAgICAgICJraW5kIjogInF1ZXJ5IiwNCiAgICAgICAgImNvbHVtbnMiOiB7DQogICAgICAgICAgInZhbHVlIjogIkFzc2V0SWQiDQogICAgICAgIH0sDQogICAgICAgICJxdWVyeVJlZiI6IHsNCiAgICAgICAgICAia2luZCI6ICJxdWVyeSIsDQogICAgICAgICAgInF1ZXJ5SWQiOiAiYThhOGE4YTgtYmJiYi1jY2NjLWRkZGQtZTllOWU5ZTllOWU5Ig0KICAgICAgICB9DQogICAgICB9LA0KICAgICAgInNob3dPblBhZ2VzIjogew0KICAgICAgICAia2luZCI6ICJhbGwiDQogICAgICB9DQogICAgfSwNCiAgICB7DQogICAgICAia2luZCI6ICJkdXJhdGlvbiIsDQogICAgICAiaWQiOiAiYzhjOGM4YzgtZGRkZC1lZWVlLWZmZmYtYTlhOWE5YTlhOWE5IiwNCiAgICAgICJkaXNwbGF5TmFtZSI6ICJUaW1lIHJhbmdlIiwNCiAgICAgICJkZXNjcmlwdGlvbiI6ICIiLA0KICAgICAgImJlZ2luVmFyaWFibGVOYW1lIjogIl9zdGFydFRpbWUiLA0KICAgICAgImVuZFZhcmlhYmxlTmFtZSI6ICJfZW5kVGltZSIsDQogICAgICAiZGVmYXVsdFZhbHVlIjogew0KICAgICAgICAia2luZCI6ICJkeW5hbWljIiwNCiAgICAgICAgImNvdW50IjogMSwNCiAgICAgICAgInVuaXQiOiAiaG91cnMiDQogICAgICB9LA0KICAgICAgInNob3dPblBhZ2VzIjogew0KICAgICAgICAia2luZCI6ICJhbGwiDQogICAgICB9DQogICAgfQ0KICBdLA0KICAiZGF0YVNvdXJjZXMiOiBbDQogICAgew0KICAgICAgImtpbmQiOiAia3VzdG8tdHJpZGVudCIsDQogICAgICAibmFtZSI6ICJBSU9kYXRhIiwNCiAgICAgICJjbHVzdGVyVXJpIjogImh0dHBzOi8vdHJkLXY4Z2h5cXQ4MTJkcXF5MXhzcy56OS5rdXN0by5mYWJyaWMubWljcm9zb2Z0LmNvbSIsDQogICAgICAiaWQiOiAiYTJhMmEyYTItYmJiYi1jY2NjLWRkZGQtZTNlM2UzZTNlM2UzIiwNCiAgICAgICJkYXRhYmFzZSI6ICI2OTI3NTY5ZC02NDk3LTQwMmMtOTJlNC0yMDg5OGM0Y2U4MDEiLA0KICAgICAgIndvcmtzcGFjZSI6ICIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLA0KICAgICAgInNjb3BlSWQiOiAia3VzdG8tdHJpZGVudCINCiAgICB9DQogIF0sDQogICJwYWdlcyI6IFsNCiAgICB7DQogICAgICAibmFtZSI6ICJQYWdlIDEiLA0KICAgICAgImlkIjogImM2YzZjNmM2LWRkZGQtZWVlZS1mZmZmLWE3YTdhN2E3YTdhNyINCiAgICB9DQogIF0sDQogICJxdWVyaWVzIjogWw0KICAgIHsNCiAgICAgICJkYXRhU291cmNlIjogew0KICAgICAgICAia2luZCI6ICJpbmxpbmUiLA0KICAgICAgICAiZGF0YVNvdXJjZUlkIjogImEyYTJhMmEyLWJiYmItY2NjYy1kZGRkLWUzZTNlM2UzZTNlMyINCiAgICAgIH0sDQogICAgICAidGV4dCI6ICJPUENVQSBcbnwgd2hlcmUgVGltZXN0YW1wIGJldHdlZW4gKF9zdGFydFRpbWUgLi4gX2VuZFRpbWUpXG58IHdoZXJlIEFzc2V0SWQgPT0gX2Fzc2V0XG58IHByb2plY3QgVGltZXN0YW1wLCBUZW1wZXJhdHVyZSwgU3Bpa2VcbnwgZXh0ZW5kIFNwaWtlTWFya2VyID0gaWZmKFNwaWtlID09IHRydWUsIFRlbXBlcmF0dXJlLCBkZWNpbWFsKG51bGwpKSIsDQogICAgICAiaWQiOiAiZjFmMWYxZjEtYWFhYS1iYmJiLWNjY2MtZDJkMmQyZDJkMmQyIiwNCiAgICAgICJ1c2VkVmFyaWFibGVzIjogWw0KICAgICAgICAiX2Fzc2V0IiwNCiAgICAgICAgIl9lbmRUaW1lIiwNCiAgICAgICAgIl9zdGFydFRpbWUiDQogICAgICBdDQogICAgfSwNCiAgICB7DQogICAgICAiZGF0YVNvdXJjZSI6IHsNCiAgICAgICAgImtpbmQiOiAiaW5saW5lIiwNCiAgICAgICAgImRhdGFTb3VyY2VJZCI6ICJhMmEyYTJhMi1iYmJiLWNjY2MtZGRkZC1lM2UzZTNlM2UzZTMiDQogICAgICB9LA0KICAgICAgInRleHQiOiAiT1BDVUFcbnwgd2hlcmUgVGltZXN0YW1wIGJldHdlZW4gKF9zdGFydFRpbWUgLi4gX2VuZFRpbWUpXG58IHdoZXJlIEFzc2V0SWQgPT0gX2Fzc2V0XG58IHByb2plY3QgVGltZXN0YW1wLCBUZW1wZXJhdHVyZSwgU3Bpa2VcbnwgdG9wIDEgYnkgVGltZXN0YW1wIGRlc2MiLA0KICAgICAgImlkIjogImIzYjNiM2IzLWNjY2MtZGRkZC1lZWVlLWY0ZjRmNGY0ZjRmNCIsDQogICAgICAidXNlZFZhcmlhYmxlcyI6IFsNCiAgICAgICAgIl9hc3NldCIsDQogICAgICAgICJfZW5kVGltZSIsDQogICAgICAgICJfc3RhcnRUaW1lIg0KICAgICAgXQ0KICAgIH0sDQogICAgew0KICAgICAgImRhdGFTb3VyY2UiOiB7DQogICAgICAgICJraW5kIjogImlubGluZSIsDQogICAgICAgICJkYXRhU291cmNlSWQiOiAiYTJhMmEyYTItYmJiYi1jY2NjLWRkZGQtZTNlM2UzZTNlM2UzIg0KICAgICAgfSwNCiAgICAgICJ0ZXh0IjogIk9QQ1VBIFxufCB3aGVyZSBUaW1lc3RhbXAgYmV0d2VlbiAoX3N0YXJ0VGltZS4uX2VuZFRpbWUpXG58IHdoZXJlIEFzc2V0SWQgPT0gX2Fzc2V0XG58IHByb2plY3QgVGltZXN0YW1wLCBUZW1wZXJhdHVyZSwgRmlsbFdlaWdodCIsDQogICAgICAiaWQiOiAiYzRjNGM0YzQtZGRkZC1lZWVlLWZmZmYtYTVhNWE1YTVhNWE1IiwNCiAgICAgICJ1c2VkVmFyaWFibGVzIjogWw0KICAgICAgICAiX2Fzc2V0IiwNCiAgICAgICAgIl9lbmRUaW1lIiwNCiAgICAgICAgIl9zdGFydFRpbWUiDQogICAgICBdDQogICAgfSwNCiAgICB7DQogICAgICAiZGF0YVNvdXJjZSI6IHsNCiAgICAgICAgImtpbmQiOiAiaW5saW5lIiwNCiAgICAgICAgImRhdGFTb3VyY2VJZCI6ICJhMmEyYTJhMi1iYmJiLWNjY2MtZGRkZC1lM2UzZTNlM2UzZTMiDQogICAgICB9LA0KICAgICAgInRleHQiOiAiT1BDVUEgXG58IHdoZXJlIFRpbWVzdGFtcCBiZXR3ZWVuIChfc3RhcnRUaW1lLi5fZW5kVGltZSlcbnwgd2hlcmUgQXNzZXRJZCA9PSBfYXNzZXRcbnwgcHJvamVjdCBUaW1lc3RhbXAsIFRlbXBlcmF0dXJlLCBFbmVyZ3lVc2UiLA0KICAgICAgImlkIjogImQ1ZDVkNWQ1LWVlZWUtZmZmZi1hYWFhLWI2YjZiNmI2YjZiNiIsDQogICAgICAidXNlZFZhcmlhYmxlcyI6IFsNCiAgICAgICAgIl9hc3NldCIsDQogICAgICAgICJfZW5kVGltZSIsDQogICAgICAgICJfc3RhcnRUaW1lIg0KICAgICAgXQ0KICAgIH0sDQogICAgew0KICAgICAgImRhdGFTb3VyY2UiOiB7DQogICAgICAgICJraW5kIjogImlubGluZSIsDQogICAgICAgICJkYXRhU291cmNlSWQiOiAiYTJhMmEyYTItYmJiYi1jY2NjLWRkZGQtZTNlM2UzZTNlM2UzIg0KICAgICAgfSwNCiAgICAgICJ0ZXh0IjogIk9QQ1VBXG58IHdoZXJlIFRpbWVzdGFtcCBiZXR3ZWVuIChfc3RhcnRUaW1lLi5fZW5kVGltZSlcbnwgd2hlcmUgQXNzZXRJZCA9PSBfYXNzZXRcbnwgdG9wIDEgYnkgVGVtcGVyYXR1cmUgZGVzY1xufCBzdW1tYXJpemUgYnkgVGVtcGVyYXR1cmUiLA0KICAgICAgImlkIjogImU2ZTZlNmU2LWZmZmYtYWFhYS1iYmJiLWM3YzdjN2M3YzdjNyIsDQogICAgICAidXNlZFZhcmlhYmxlcyI6IFsNCiAgICAgICAgIl9hc3NldCIsDQogICAgICAgICJfZW5kVGltZSIsDQogICAgICAgICJfc3RhcnRUaW1lIg0KICAgICAgXQ0KICAgIH0sDQogICAgew0KICAgICAgImRhdGFTb3VyY2UiOiB7DQogICAgICAgICJraW5kIjogImlubGluZSIsDQogICAgICAgICJkYXRhU291cmNlSWQiOiAiYTJhMmEyYTItYmJiYi1jY2NjLWRkZGQtZTNlM2UzZTNlM2UzIg0KICAgICAgfSwNCiAgICAgICJ0ZXh0IjogIk9QQ1VBXG58IHdoZXJlIFRpbWVzdGFtcCBiZXR3ZWVuIChfc3RhcnRUaW1lIC4uIF9lbmRUaW1lKVxufCB3aGVyZSBBc3NldElkID09IF9hc3NldFxufCB3aGVyZSBTcGlrZSA9PSB0cnVlXG58IHN1bW1hcml6ZSBTcGlrZUNvdW50ID0gY291bnQoKSIsDQogICAgICAiaWQiOiAiZjdmN2Y3ZjctYWFhYS1iYmJiLWNjY2MtZDhkOGQ4ZDhkOGQ4IiwNCiAgICAgICJ1c2VkVmFyaWFibGVzIjogWw0KICAgICAgICAiX2Fzc2V0IiwNCiAgICAgICAgIl9lbmRUaW1lIiwNCiAgICAgICAgIl9zdGFydFRpbWUiDQogICAgICBdDQogICAgfSwNCiAgICB7DQogICAgICAiZGF0YVNvdXJjZSI6IHsNCiAgICAgICAgImtpbmQiOiAiaW5saW5lIiwNCiAgICAgICAgImRhdGFTb3VyY2VJZCI6ICJhMmEyYTJhMi1iYmJiLWNjY2MtZGRkZC1lM2UzZTNlM2UzZTMiDQogICAgICB9LA0KICAgICAgInRleHQiOiAiT1BDVUFcbnwgc3VtbWFyaXplIGJ5IEFzc2V0SWQiLA0KICAgICAgImlkIjogImE4YThhOGE4LWJiYmItY2NjYy1kZGRkLWU5ZTllOWU5ZTllOSIsDQogICAgICAidXNlZFZhcmlhYmxlcyI6IFtdDQogICAgfQ0KICBdDQp9",
-              "payloadType": "InlineBase64"
+              "payload": {
+                "schema_version": 68,
+                "tiles": [
+                  {
+                    "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2",
+                    "title": "Temperature with spikes over time",
+                    "description": "Shows the temperature over time, with spike markers.",
+                    "visualType": "line",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 12,
+                      "height": 8
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "f1f1f1f1-aaaa-bbbb-cccc-d2d2d2d2d2d2"
+                    },
+                    "visualOptions": {
+                      "multipleYAxes": {
+                        "base": {
+                          "id": "-1",
+                          "label": "Temperature (°F)",
+                          "columns": [],
+                          "yAxisMaximumValue": null,
+                          "yAxisMinimumValue": null,
+                          "yAxisScale": "linear",
+                          "horizontalLines": []
+                        },
+                        "additional": [],
+                        "showMultiplePanels": false
+                      },
+                      "hideLegend": false,
+                      "legendLocation": "bottom",
+                      "xColumnTitle": "Timestamp",
+                      "xColumn": null,
+                      "yColumns": null,
+                      "seriesColumns": null,
+                      "xAxisScale": "linear",
+                      "verticalLine": "",
+                      "crossFilterDisabled": false,
+                      "drillthroughDisabled": false,
+                      "crossFilter": [],
+                      "drillthrough": [],
+                      "selectedDataOnLoad": {
+                        "all": true,
+                        "limit": 10
+                      },
+                      "dataPointsTooltip": {
+                        "all": false,
+                        "limit": 1
+                      }
+                    }
+                  },
+                  {
+                    "id": "c2c2c2c2-dddd-eeee-ffff-a3a3a3a3a3a3",
+                    "title": "Spike indicator",
+                    "description": "Shows the latest temperature, with alert formatting if it is a spike.",
+                    "visualType": "card",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 0,
+                      "y": 8,
+                      "width": 12,
+                      "height": 3
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "b3b3b3b3-cccc-dddd-eeee-f4f4f4f4f4f4"
+                    },
+                    "visualOptions": {
+                      "multiStat__textSize": "auto",
+                      "multiStat__valueColumn": null,
+                      "colorRulesDisabled": false,
+                      "colorRules": [
+                        {
+                          "id": "d3d3d3d3-eeee-ffff-aaaa-b4b4b4b4b4b4",
+                          "ruleType": "colorByCondition",
+                          "applyToColumn": null,
+                          "hideText": false,
+                          "applyTo": "cells",
+                          "conditions": [
+                            {
+                              "operator": "==",
+                              "column": "Spike",
+                              "values": [
+                                "true"
+                              ]
+                            }
+                          ],
+                          "chainingOperator": "and",
+                          "colorStyle": "bold",
+                          "color": "red",
+                          "tag": "",
+                          "icon": "warning",
+                          "ruleName": "",
+                          "visualType": "card"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "e4e4e4e4-ffff-aaaa-bbbb-c5c5c5c5c5c5",
+                    "title": "Temperature (°F) vs. Fill Weight",
+                    "visualType": "line",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 12,
+                      "y": 0,
+                      "width": 11,
+                      "height": 7
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "c4c4c4c4-dddd-eeee-ffff-a5a5a5a5a5a5"
+                    },
+                    "visualOptions": {
+                      "multipleYAxes": {
+                        "base": {
+                          "id": "-1",
+                          "label": "Units",
+                          "columns": [],
+                          "yAxisMaximumValue": null,
+                          "yAxisMinimumValue": null,
+                          "yAxisScale": "linear",
+                          "horizontalLines": []
+                        },
+                        "additional": [],
+                        "showMultiplePanels": false
+                      },
+                      "hideLegend": false,
+                      "legendLocation": "bottom",
+                      "xColumnTitle": "Timestamp",
+                      "xColumn": null,
+                      "yColumns": null,
+                      "seriesColumns": null,
+                      "xAxisScale": "linear",
+                      "verticalLine": "",
+                      "crossFilterDisabled": false,
+                      "drillthroughDisabled": false,
+                      "crossFilter": [],
+                      "drillthrough": [],
+                      "selectedDataOnLoad": {
+                        "all": true,
+                        "limit": 10
+                      },
+                      "dataPointsTooltip": {
+                        "all": false,
+                        "limit": 1
+                      }
+                    }
+                  },
+                  {
+                    "id": "f5f5f5f5-aaaa-bbbb-cccc-d6d6d6d6d6d6",
+                    "title": "Temperature (°F) vs. Energy Use",
+                    "visualType": "line",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 12,
+                      "y": 7,
+                      "width": 11,
+                      "height": 7
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "d5d5d5d5-eeee-ffff-aaaa-b6b6b6b6b6b6"
+                    },
+                    "visualOptions": {
+                      "multipleYAxes": {
+                        "base": {
+                          "id": "-1",
+                          "label": "Units",
+                          "columns": [],
+                          "yAxisMaximumValue": null,
+                          "yAxisMinimumValue": null,
+                          "yAxisScale": "linear",
+                          "horizontalLines": []
+                        },
+                        "additional": [],
+                        "showMultiplePanels": false
+                      },
+                      "hideLegend": false,
+                      "legendLocation": "bottom",
+                      "xColumnTitle": "Timestamp",
+                      "xColumn": null,
+                      "yColumns": null,
+                      "seriesColumns": null,
+                      "xAxisScale": "linear",
+                      "verticalLine": "",
+                      "crossFilterDisabled": false,
+                      "drillthroughDisabled": false,
+                      "crossFilter": [],
+                      "drillthrough": [],
+                      "selectedDataOnLoad": {
+                        "all": true,
+                        "limit": 10
+                      },
+                      "dataPointsTooltip": {
+                        "all": false,
+                        "limit": 1
+                      }
+                    }
+                  },
+                  {
+                    "id": "a6a6a6a6-bbbb-cccc-dddd-e7e7e7e7e7e7",
+                    "title": "Max temperature",
+                    "visualType": "card",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 0,
+                      "y": 11,
+                      "width": 6,
+                      "height": 3
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "e6e6e6e6-ffff-aaaa-bbbb-c7c7c7c7c7c7"
+                    },
+                    "visualOptions": {
+                      "multiStat__textSize": "auto",
+                      "multiStat__valueColumn": null,
+                      "colorRulesDisabled": false,
+                      "colorRules": []
+                    }
+                  },
+                  {
+                    "id": "b7b7b7b7-cccc-dddd-eeee-f8f8f8f8f8f8",
+                    "title": "Number of spikes in time frame",
+                    "visualType": "card",
+                    "pageId": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7",
+                    "layout": {
+                      "x": 6,
+                      "y": 11,
+                      "width": 6,
+                      "height": 3
+                    },
+                    "queryRef": {
+                      "kind": "query",
+                      "queryId": "f7f7f7f7-aaaa-bbbb-cccc-d8d8d8d8d8d8"
+                    },
+                    "visualOptions": {
+                      "multiStat__textSize": "auto",
+                      "multiStat__valueColumn": null,
+                      "colorRulesDisabled": false,
+                      "colorRules": []
+                    }
+                  }
+                ],
+                "baseQueries": [],
+                "parameters": [
+                  {
+                    "kind": "string",
+                    "id": "d9d9d9d9-eeee-ffff-aaaa-b0b0b0b0b0b0",
+                    "displayName": "Asset",
+                    "description": "",
+                    "variableName": "_asset",
+                    "selectionType": "scalar",
+                    "includeAllOption": false,
+                    "defaultValue": {
+                      "kind": "query-result"
+                    },
+                    "dataSource": {
+                      "kind": "query",
+                      "columns": {
+                        "value": "AssetId"
+                      },
+                      "queryRef": {
+                        "kind": "query",
+                        "queryId": "a8a8a8a8-bbbb-cccc-dddd-e9e9e9e9e9e9"
+                      }
+                    },
+                    "showOnPages": {
+                      "kind": "all"
+                    }
+                  },
+                  {
+                    "kind": "duration",
+                    "id": "c8c8c8c8-dddd-eeee-ffff-a9a9a9a9a9a9",
+                    "displayName": "Time range",
+                    "description": "",
+                    "beginVariableName": "_startTime",
+                    "endVariableName": "_endTime",
+                    "defaultValue": {
+                      "kind": "dynamic",
+                      "count": 1,
+                      "unit": "hours"
+                    },
+                    "showOnPages": {
+                      "kind": "all"
+                    }
+                  }
+                ],
+                "dataSources": [
+                  {
+                    "kind": "kusto-trident",
+                    "name": "AIOdata",
+                    "clusterUri": "https://trd-9r3e1cwxvyu421bh97.z2.kusto.fabric.microsoft.com",
+                    "id": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3",
+                    "database": "49463ce9-528b-43af-a2e3-64aa80d0d6ad",
+                    "workspace": "00000000-0000-0000-0000-000000000000",
+                    "scopeId": "kusto-trident"
+                  }
+                ],
+                "pages": [
+                  {
+                    "name": "Page 1",
+                    "id": "c6c6c6c6-dddd-eeee-ffff-a7a7a7a7a7a7"
+                  }
+                ],
+                "queries": [
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA \n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike\n| extend SpikeMarker = iff(Spike == true, Temperature, decimal(null))",
+                    "id": "f1f1f1f1-aaaa-bbbb-cccc-d2d2d2d2d2d2",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, Spike\n| top 1 by Timestamp desc",
+                    "id": "b3b3b3b3-cccc-dddd-eeee-f4f4f4f4f4f4",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA \n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, FillWeight",
+                    "id": "c4c4c4c4-dddd-eeee-ffff-a5a5a5a5a5a5",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA \n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| project Timestamp, Temperature, EnergyUse",
+                    "id": "d5d5d5d5-eeee-ffff-aaaa-b6b6b6b6b6b6",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA\n| where Timestamp between (_startTime.._endTime)\n| where AssetId == _asset\n| top 1 by Temperature desc\n| summarize by Temperature",
+                    "id": "e6e6e6e6-ffff-aaaa-bbbb-c7c7c7c7c7c7",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA\n| where Timestamp between (_startTime .. _endTime)\n| where AssetId == _asset\n| where Spike == true\n| summarize SpikeCount = count()",
+                    "id": "f7f7f7f7-aaaa-bbbb-cccc-d8d8d8d8d8d8",
+                    "usedVariables": [
+                      "_asset",
+                      "_endTime",
+                      "_startTime"
+                    ]
+                  },
+                  {
+                    "dataSource": {
+                      "kind": "inline",
+                      "dataSourceId": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3"
+                    },
+                    "text": "OPCUA\n| summarize by AssetId",
+                    "id": "a8a8a8a8-bbbb-cccc-dddd-e9e9e9e9e9e9",
+                    "usedVariables": []
+                  }
+                ]
+              },
+              "payloadType": "InlineJSON"
             },
             {
               "path": ".platform",
-              "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIktRTERhc2hib2FyZCIsCiAgICAiZGlzcGxheU5hbWUiOiAiQ29udG9zbyBtb25pdG9yIiwKICAgICJkZXNjcmlwdGlvbiI6ICJDb250b3NvIG1vbml0b3IiCiAgfSwKICAiY29uZmlnIjogewogICAgInZlcnNpb24iOiAiMi4wIiwKICAgICJsb2dpY2FsSWQiOiAiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIgogIH0KfQ==",
-              "payloadType": "InlineBase64"
+              "payload": {
+                "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+                "metadata": {
+                  "type": "KQLDashboard",
+                  "displayName": "Contoso monitor",
+                  "description": "Contoso monitor"
+                },
+                "config": {
+                  "version": "2.0",
+                  "logicalId": "00000000-0000-0000-0000-000000000000"
+                }
+              },
+              "payloadType": "InlineJSON"
             }
           ]
         }

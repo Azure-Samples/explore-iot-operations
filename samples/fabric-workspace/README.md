@@ -1,8 +1,8 @@
 # Microsoft Fabric Workspace – Export and Recreation Scripts
 
-Two Bash scripts that use the [Microsoft Fabric REST API](https://learn.microsoft.com/rest/api/fabric/core) and the [Azure Data Explorer (Kusto) REST API](https://learn.microsoft.com/azure/data-explorer/kusto/api/rest/) to capture and replay the full configuration of a Fabric workspace, including:
+Two Bash scripts that use the [Microsoft Fabric REST API](https://learn.microsoft.com/rest/api/fabric/core) to capture and replay the full configuration of a Fabric workspace, including:
 
-- **Eventhouse** and its **KQL Databases** (tables, column schemas, ingestion mappings)
+- **Eventhouse** and its **KQL Database** (tables and ingestion mappings)
 - **Eventstream** with Event Hubs source connection
 - **Real-Time Dashboard** with tile layout and queries
 
@@ -13,8 +13,8 @@ export-fabric-workspace.sh   →   snapshot.json   →   recreate-fabric-workspa
        (reads existing)               (file)              (creates new workspace)
 ```
 
-1. **Export** – connects to your existing workspace, pulls every resource definition via the Fabric API and the Kusto management API, and saves everything to `snapshot.json`
-2. **Recreate** – reads `snapshot.json`, creates the workspace and all resources in the correct order, then runs the KQL table/mapping commands against the new cluster
+1. **Export** – connects to your existing workspace, fetches every resource definition via the Fabric API, decodes the base64 item definitions to plain JSON for readability, and saves everything to `snapshot.json`
+2. **Recreate** – reads `snapshot.json`, creates the workspace and all resources in the correct order, re-encodes the definitions before posting to the Fabric API, then runs the KQL table/mapping commands against the new cluster
 
 ## Prerequisites
 
@@ -61,9 +61,8 @@ chmod +x recreate-fabric-workspace.sh
 | `FABRIC_WORKSPACE_ID` | export | **Yes** | Source workspace to export |
 | `SNAPSHOT_FILE` | both | No | Snapshot path (default: `snapshot.json`) |
 | `FABRIC_CAPACITY_ID` | recreate | Yes* | Capacity for the new workspace |
-| `FABRIC_WORKSPACE_ID` | recreate | No | Reuse an existing workspace instead of creating one |
+| `TARGET_WORKSPACE_ID` | recreate | No | Reuse an existing workspace instead of creating one |
 | `NEW_WORKSPACE_NAME` | recreate | **Yes** | Display name for the new workspace |
-| `EVENTHUB_CONNECTION_STRING` | recreate | No† | Full SAS connection string — overrides the four individual fields below if set |
 | `EVENTHUB_NAMESPACE` | recreate | No† | Namespace name only (without `.servicebus.windows.net`) |
 | `EVENTHUB_ENTITY_PATH` | recreate | No† | Event Hub name (entity path) |
 | `EVENTHUB_KEY_NAME` | recreate | No† | Shared-access policy name |
@@ -71,34 +70,32 @@ chmod +x recreate-fabric-workspace.sh
 | `EVENTHUB_CONSUMER_GROUP` | recreate | No | Consumer group (default: `$Default`) |
 | `DRY_RUN` | recreate | No | `true` = print plan only |
 
-\* Required when creating a new workspace; not needed if `FABRIC_WORKSPACE_ID` is set. `NEW_WORKSPACE_NAME` is always required.  
-† To create a new Event Hub source connection, set either `EVENTHUB_CONNECTION_STRING` **or** all four of `EVENTHUB_NAMESPACE` + `EVENTHUB_ENTITY_PATH` + `EVENTHUB_KEY_NAME` + `EVENTHUB_KEY`. Without any of these the script reuses the connection ID from the snapshot (works within the same tenant; fails across tenants).
+\* Required when creating a new workspace; not needed if `TARGET_WORKSPACE_ID` is set. `NEW_WORKSPACE_NAME` is always required.  
+† To create a new Event Hub source connection, set all four of `EVENTHUB_NAMESPACE` + `EVENTHUB_ENTITY_PATH` + `EVENTHUB_KEY_NAME` + `EVENTHUB_KEY`. Without these the script reuses the connection ID from the snapshot (works within the same tenant; fails across tenants).
 
 ## What gets exported and recreated
 
 ### Eventhouse / KQL Database
 
-The export script runs the following Kusto management commands:
+Only the Eventhouse `id` and `displayName` are stored in the snapshot – Fabric automatically creates a KQL database with the same name when the Eventhouse is provisioned. Tables and ingestion mappings are **not** exported; they are recreated from hardcoded KQL commands in `recreate-fabric-workspace.sh`:
 
-| Command | Captures |
+| Object | KQL command |
 |---|---|
-| `.show database ['<db>'] schema as json` | All tables, column names, and data types |
-| `.show table * ingestion mappings` | All CSV/JSON/Avro/… ingestion mappings |
-
-On recreation, tables are created with `.create-merge table` (idempotent) and mappings with `.create-or-alter table … ingestion … mapping`.
+| `OPCUA` table | `.create-merge table [OPCUA] (...)` |
+| `opcua_mapping` | `.create table ['OPCUA'] ingestion json mapping ...` |
 
 ### Eventstream
 
-The full item definition is exported via `POST /v1/workspaces/{id}/eventstreams/{id}/getDefinition`. This includes:
+The full item definition is exported via `POST /v1/workspaces/{id}/eventstreams/{id}/getDefinition`. The base64-encoded definition parts are decoded to plain JSON in the snapshot so they are human-readable. On recreation the JSON is re-encoded to base64 before being submitted to the Fabric API. This includes:
 - Source node configuration (Event Hubs namespace, hub name, consumer group, serialization format)
 - Destination node configuration
 - Stream transformations
 
-The Event Hubs **connection string / shared-access key** is a secret and is not stored in the Fabric API definition. Supply it at recreation time via `EVENTHUB_CONNECTION_STRING`, which is patched into the definition before the Eventstream is created.
+The Event Hubs shared-access key is a secret and is not stored in the Fabric API definition. Supply the four `EVENTHUB_*` credentials at recreation time; the script creates a new cloud connection and patches its ID into the definition before the Eventstream is created.
 
 ### Real-Time Dashboard
 
-The full dashboard definition is exported via `POST /v1/workspaces/{id}/items/{id}/getDefinition` and recreated verbatim (including all tiles, KQL queries, time ranges, and visual settings).
+The full dashboard definition is exported via `POST /v1/workspaces/{id}/kqlDashboards/{id}/getDefinition`. As with the Eventstream, base64 parts are decoded to plain JSON in the snapshot and re-encoded on recreation. The Eventhouse cluster URI and all resource IDs are patched to point at the new workspace before the dashboard is created.
 
 ## Finding your Fabric Capacity ID
 
@@ -110,6 +107,6 @@ Or in the Azure portal: **Microsoft Fabric → Capacities → \<your capacity\> 
 
 ## Notes
 
-- The scripts are idempotent in the sense that KQL objects use `.create-merge` and `.create-or-alter`; workspace and Fabric item creation may fail with a name conflict if the workspace already exists.
+- The scripts are idempotent in the sense that KQL objects use `.create-merge`; workspace and Fabric item creation may fail with a name conflict if the workspace already exists (the scripts delete and recreate in that case).
 - Long-running Fabric API operations (HTTP 202) are automatically polled until completion.
-- Kusto tokens are obtained per-cluster using `az account get-access-token --resource <cluster-uri>`. Make sure your account has at least *AllDatabasesViewer* on the source cluster and *AllDatabasesAdmin* on the target.
+- The export script does **not** require Kusto tokens. The recreate script obtains a Kusto token per-cluster via `az account get-access-token --resource <cluster-uri>` to run the table and mapping commands. Make sure your account has at least *AllDatabasesAdmin* on the target cluster.

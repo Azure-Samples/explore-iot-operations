@@ -91,14 +91,6 @@ get_fabric_token() {
     || { log_error "Failed to obtain Fabric token. Run 'az login'."; exit 1; }
 }
 
-get_kusto_token() {
-    local cluster_uri="$1"
-    az account get-access-token \
-        --resource "${cluster_uri}" \
-        --query accessToken --output tsv 2>/dev/null \
-    || { log_warn "Could not obtain Kusto token for ${cluster_uri}"; echo ""; }
-}
-
 # ── HTTP helpers ──────────────────────────────────────────────────────────────
 fabric_get() {
     # Returns body on 2xx, empty string on 404, exits on other errors
@@ -166,34 +158,6 @@ poll_operation() {
     log_error "Operation timed out."; return 1
 }
 
-kusto_mgmt() {
-    # Runs a KQL management command via the Kusto REST API.
-    # Usage: kusto_mgmt <cluster_uri> <database> <kql_command> <kusto_token>
-    local cluster="$1" database="$2" command="$3" token="$4"
-    local body_file http_code body
-
-    [[ -z "${token}" ]] && { echo "{}"; return; }
-
-    local payload
-    payload=$(jq -n --arg db "${database}" --arg csl "${command}" \
-        '{"db": $db, "csl": $csl, "properties": {"Options": {"servertimeout": "00:01:00"}}}')
-
-    body_file=$(mktemp)
-    http_code=$(curl -s -o "${body_file}" -w "%{http_code}" \
-        -H "Authorization: Bearer ${token}" \
-        -H "Content-Type: application/json; charset=utf-8" \
-        -d "${payload}" \
-        "${cluster}/v1/rest/mgmt")
-    body=$(cat "${body_file}"); rm -f "${body_file}"
-
-    if [[ "${http_code}" -ge 200 && "${http_code}" -lt 300 ]]; then
-        echo "${body}"
-    else
-        log_warn "Kusto mgmt (${command}) → HTTP ${http_code}: ${body}" >&2
-        echo "{}"
-    fi
-}
-
 # ── List helpers ──────────────────────────────────────────────────────────────
 # Fabric list responses use either .value or .items
 fabric_list() {
@@ -204,19 +168,41 @@ fabric_list() {
     echo "${body}" | jq '[.value // .items // [] | .[]]'
 }
 
-# ── Extract definition payload (handles 202 + base64-encoded parts) ───────────
-get_item_definition() {
-    local workspace_id="$1" item_id="$2" token="$3"
+# ── Decode definition payload parts from base64 to JSON ───────────────────────
+# Converts InlineBase64 parts to InlineJSON so the snapshot is human-readable.
+# recreate-fabric-workspace.sh re-encodes to InlineBase64 before posting to the API.
+decode_definition_parts() {
+    local def_json="$1"
+    [[ -z "${def_json}" || "${def_json}" == "{}" ]] && { echo "${def_json}"; return; }
 
-    local result
-    result=$(fabric_post \
-        "/workspaces/${workspace_id}/items/${item_id}/getDefinition" \
-        "${token}" "{}")
-    [[ -z "${result}" ]] && { echo "{}"; return; }
+    if ! echo "${def_json}" | jq -e '.definition.parts' &>/dev/null 2>&1; then
+        echo "${def_json}"; return
+    fi
 
-    # The definition is in result.definition.parts[] as base64-encoded content
-    # Return the full object so we can re-use it verbatim on recreation
-    echo "${result}"
+    local parts_count
+    parts_count=$(echo "${def_json}" | jq '.definition.parts | length')
+    local pi=0
+    while [[ ${pi} -lt ${parts_count} ]]; do
+        local payload_type payload decoded parsed
+        payload_type=$(echo "${def_json}" | jq -r ".definition.parts[${pi}].payloadType // \"\"")
+        if [[ "${payload_type}" == "InlineBase64" ]]; then
+            payload=$(echo "${def_json}" | jq -r ".definition.parts[${pi}].payload // \"\"")
+            if [[ -n "${payload}" ]]; then
+                decoded=$(echo "${payload}" | base64 -d 2>/dev/null || echo "")
+                if [[ -n "${decoded}" ]]; then
+                    if parsed=$(echo "${decoded}" | jq '.' 2>/dev/null); then
+                        def_json=$(echo "${def_json}" | jq \
+                            --argjson idx "${pi}" \
+                            --argjson val "${parsed}" \
+                            '.definition.parts[$idx].payloadType = "InlineJSON" |
+                             .definition.parts[$idx].payload = $val')
+                    fi
+                fi
+            fi
+        fi
+        pi=$((pi+1))
+    done
+    echo "${def_json}"
 }
 
 get_eventstream_definition() {
@@ -238,7 +224,8 @@ export_workspace() {
     ws=$(fabric_get "/workspaces/${FABRIC_WORKSPACE_ID}" "${token}")
     [[ -z "${ws}" ]] && { log_error "Workspace ${FABRIC_WORKSPACE_ID} not found."; exit 1; }
     log_ok "Workspace: $(echo "${ws}" | jq -r '.displayName')"
-    echo "${ws}"
+    # Keep only id and displayName – the recreate script needs id for definition patching
+    echo "${ws}" | jq '{id, displayName}'
 }
 
 export_eventhouses() {
@@ -250,28 +237,12 @@ export_eventhouses() {
     local count; count=$(echo "${houses}" | jq 'length')
     log_ok "Found ${count} Eventhouse(s)"
 
-    local result="[]"
-    local i=0
-    while [[ ${i} -lt ${count} ]]; do
-        local house
-        house=$(echo "${houses}" | jq ".[${i}]")
-        local house_id
-        house_id=$(echo "${house}" | jq -r '.id')
-        log_info "  Eventhouse: $(echo "${house}" | jq -r '.displayName') (${house_id})"
-
-        # Get detailed view (includes queryServiceUri)
-        local detail
-        detail=$(fabric_get "/workspaces/${workspace_id}/eventhouses/${house_id}" "${token}")
-        [[ -n "${detail}" ]] && house="${detail}"
-
-        result=$(echo "${result}" | jq --argjson h "${house}" '. + [$h]')
-        i=$((i+1))
-    done
-    echo "${result}"
+    # Keep only id and displayName – the recreate script uses id for old→new ID mapping
+    echo "${houses}" | jq '[.[] | {id, displayName}]'
 }
 
 export_kql_databases() {
-    local workspace_id="$1" token="$2" eventhouse_list="$3"
+    local workspace_id="$1" token="$2"
     log_info "Fetching KQL Databases..."
 
     local dbs
@@ -279,91 +250,10 @@ export_kql_databases() {
     local count; count=$(echo "${dbs}" | jq 'length')
     log_ok "Found ${count} KQL Database(s)"
 
-    # Build a map of eventhouse queryServiceUri by ID (for Kusto access)
-    local cluster_map
-    cluster_map=$(echo "${eventhouse_list}" | jq \
-        'map(select(.properties.queryServiceUri != null)) |
-         map({key: .id, value: .properties.queryServiceUri}) |
-         from_entries')
-
-    local result="[]"
-    local i=0
-    while [[ ${i} -lt ${count} ]]; do
-        local db db_id db_name parent_id cluster_uri
-        db=$(echo "${dbs}" | jq ".[${i}]")
-        db_id=$(echo "${db}"  | jq -r '.id')
-        db_name=$(echo "${db}" | jq -r '.displayName')
-        parent_id=$(echo "${db}" | jq -r '.properties.parentEventhouseItemId // empty')
-        cluster_uri=$(echo "${cluster_map}" | jq -r --arg k "${parent_id}" '.[$k] // empty')
-
-        log_info "  KQL DB: ${db_name} (parent eventhouse: ${parent_id:-unknown})"
-
-        # Enrich with schema and mappings via Kusto mgmt API
-        local schema_raw mappings_raw schema_obj tables_schema mappings_obj
-        schema_obj="{}"
-        tables_schema="[]"
-        mappings_obj="{}"
-
-        if [[ -n "${cluster_uri}" ]]; then
-            local kusto_token
-            kusto_token=$(get_kusto_token "${cluster_uri}")
-
-            if [[ -n "${kusto_token}" ]]; then
-                log_info "    Fetching schema for ${db_name}..."
-                schema_raw=$(kusto_mgmt "${cluster_uri}" "${db_name}" ".show database ['${db_name}'] schema as json" "${kusto_token}")
-                schema_obj=$(echo "${schema_raw}" | jq -r '.Tables[0].Rows[0][0] // "{}"' 2>/dev/null | jq '.' 2>/dev/null || echo "{}")
-
-                log_info "    Fetching tables for ${db_name}..."
-                tables_raw=$(kusto_mgmt "${cluster_uri}" "${db_name}" ".show tables" "${kusto_token}")
-                tables_schema=$(echo "${tables_raw}" | jq '.Tables[0].Rows // []' 2>/dev/null || echo "[]")
-
-                # Fetch ingestion mappings per table (wildcards are not supported in KQL)
-                # Columns returned by .show table <T> ingestion mappings:
-                #   [0]=Name, [1]=Kind, [2]=Mapping (JSON), [3]=LastUpdatedOn, [4]=Database, [5]=Table
-                log_info "    Fetching ingestion mappings for ${db_name}..."
-                local table_names
-                table_names=$(echo "${tables_raw}" | jq -r '.Tables[0].Rows[]? | .[0]' 2>/dev/null || true)
-                mappings_obj="[]"
-                while IFS= read -r tname; do
-                    [[ -z "${tname}" ]] && continue
-                    local tmap_raw tmap
-                    tmap_raw=$(kusto_mgmt "${cluster_uri}" "${db_name}" \
-                        ".show table ['${tname}'] ingestion mappings" "${kusto_token}")
-                    tmap=$(echo "${tmap_raw}" | jq \
-                        --arg tbl "${tname}" '
-                        if (.Tables[0].Rows // []) | length > 0 then
-                            [.Tables[0].Rows[] |
-                                {
-                                    table:   $tbl,
-                                    name:    .[0],
-                                    kind:    .[1],
-                                    mapping: .[2]
-                                }]
-                        else [] end' 2>/dev/null || echo "[]")
-                    mappings_obj=$(echo "${mappings_obj}" | jq --argjson m "${tmap}" '. + $m')
-                done <<< "${table_names}"
-
-                log_ok "    Schema + mappings captured for ${db_name}"
-            else
-                log_warn "    Skipping Kusto schema (no token for ${cluster_uri})"
-            fi
-        else
-            log_warn "    No cluster URI found for ${db_name} – schema not exported"
-        fi
-
-        local enriched
-        enriched=$(echo "${db}" | jq \
-            --argjson schema   "${schema_obj}" \
-            --argjson tables   "${tables_schema}" \
-            --argjson mappings "${mappings_obj}" \
-            '.export_schema   = $schema   |
-             .export_tables   = $tables   |
-             .export_mappings = $mappings')
-
-        result=$(echo "${result}" | jq --argjson d "${enriched}" '. + [$d]')
-        i=$((i+1))
-    done
-    echo "${result}"
+    # Keep only id and displayName – the recreate script uses id for definition patching.
+    # Table creation is handled by hardcoded KQL in recreate-fabric-workspace.sh, so
+    # exporting the full Kusto schema is not required.
+    echo "${dbs}" | jq '[.[] | {id, displayName}]'
 }
 
 export_eventstreams() {
@@ -386,9 +276,10 @@ export_eventstreams() {
         log_info "  Fetching definition for Eventstream: ${stream_name}..."
         local definition
         definition=$(get_eventstream_definition "${workspace_id}" "${stream_id}" "${token}")
+        definition=$(decode_definition_parts "${definition}")
 
         local enriched
-        enriched=$(echo "${stream}" | jq --argjson def "${definition}" '.export_definition = $def')
+        enriched=$(echo "${stream}" | jq --argjson def "${definition}" '{id, displayName, description, export_definition: $def}')
         result=$(echo "${result}" | jq --argjson s "${enriched}" '. + [$s]')
         log_ok "  Eventstream captured: ${stream_name}"
         i=$((i+1))
@@ -420,9 +311,10 @@ export_realtime_dashboards() {
             "/workspaces/${workspace_id}/kqlDashboards/${item_id}/getDefinition" \
             "${token}" "{}")
         [[ -z "${definition}" ]] && definition="{}"
+        definition=$(decode_definition_parts "${definition}")
 
         local enriched
-        enriched=$(echo "${item}" | jq --argjson def "${definition}" '.export_definition = $def')
+        enriched=$(echo "${item}" | jq --argjson def "${definition}" '{id, displayName, description, export_definition: $def}')
         result=$(echo "${result}" | jq --argjson d "${enriched}" '. + [$d]')
         log_ok "  Dashboard captured: ${item_name}"
         i=$((i+1))
@@ -453,7 +345,7 @@ main() {
 
     log_step "Step 3/5: KQL Databases"
     local kql_databases
-    kql_databases=$(export_kql_databases "${FABRIC_WORKSPACE_ID}" "${token}" "${eventhouses}")
+    kql_databases=$(export_kql_databases "${FABRIC_WORKSPACE_ID}" "${token}")
 
     log_step "Step 4/5: Eventstreams"
     local eventstreams

@@ -16,10 +16,8 @@
 #
 # Environment variable overrides (all optional unless noted):
 #   FABRIC_CAPACITY_ID          Required for a new workspace
-#   FABRIC_WORKSPACE_ID         If set, use this existing workspace instead of creating one
+#   TARGET_WORKSPACE_ID         If set, use this existing workspace instead of creating one
 #   NEW_WORKSPACE_NAME          Workspace display name (required)
-#   EVENTHUB_CONNECTION_STRING  Full SAS connection string for the Event Hubs source
-#                               (alternative: set the four individual fields below)
 #   EVENTHUB_NAMESPACE          Event Hubs namespace name (without .servicebus.windows.net)
 #   EVENTHUB_ENTITY_PATH        Event Hub name (entity path)
 #   EVENTHUB_KEY_NAME           Shared-access policy name
@@ -55,9 +53,8 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Optional env vars:"
             echo "  FABRIC_CAPACITY_ID          Fabric capacity ID (required for new workspace)"
-            echo "  FABRIC_WORKSPACE_ID         Use an existing workspace"
+            echo "  TARGET_WORKSPACE_ID         Use an existing workspace instead of creating one"
             echo "  NEW_WORKSPACE_NAME          Workspace display name (required)"
-            echo "  EVENTHUB_CONNECTION_STRING  Full SAS connection string (or set the four fields below)"
             echo "  EVENTHUB_NAMESPACE          Namespace name (without .servicebus.windows.net)"
             echo "  EVENTHUB_ENTITY_PATH        Event Hub name"
             echo "  EVENTHUB_KEY_NAME           Shared-access policy name"
@@ -89,26 +86,14 @@ fi
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 FABRIC_CAPACITY_ID="${FABRIC_CAPACITY_ID:-}"
-FABRIC_WORKSPACE_ID="${FABRIC_WORKSPACE_ID:-}"
+TARGET_WORKSPACE_ID="${TARGET_WORKSPACE_ID:-}"
 NEW_WORKSPACE_NAME="${NEW_WORKSPACE_NAME:-}"
-EVENTHUB_CONNECTION_STRING="${EVENTHUB_CONNECTION_STRING:-}"
 EVENTHUB_NAMESPACE="${EVENTHUB_NAMESPACE:-}"
 EVENTHUB_ENTITY_PATH="${EVENTHUB_ENTITY_PATH:-}"
 EVENTHUB_KEY_NAME="${EVENTHUB_KEY_NAME:-}"
 EVENTHUB_KEY="${EVENTHUB_KEY:-}"
 EVENTHUB_CONSUMER_GROUP="${EVENTHUB_CONSUMER_GROUP:-\$Default}"
 DRY_RUN="${DRY_RUN:-false}"
-
-# Auto-assemble EVENTHUB_CONNECTION_STRING from individual fields when it is not
-# set directly.  This lets config files (and CI environments) supply the four
-# components separately without having to hand-craft the SAS connection string.
-if [[ -z "${EVENTHUB_CONNECTION_STRING}" && -n "${EVENTHUB_NAMESPACE}" && \
-      -n "${EVENTHUB_ENTITY_PATH}" && -n "${EVENTHUB_KEY_NAME}" && -n "${EVENTHUB_KEY}" ]]; then
-    EVENTHUB_CONNECTION_STRING="Endpoint=sb://${EVENTHUB_NAMESPACE}.servicebus.windows.net/;"
-    EVENTHUB_CONNECTION_STRING+="SharedAccessKeyName=${EVENTHUB_KEY_NAME};"
-    EVENTHUB_CONNECTION_STRING+="SharedAccessKey=${EVENTHUB_KEY};"
-    EVENTHUB_CONNECTION_STRING+="EntityPath=${EVENTHUB_ENTITY_PATH}"
-fi
 FABRIC_API_BASE="https://api.fabric.microsoft.com/v1"
 
 # ── Resolve capacity ID ───────────────────────────────────────────────────────
@@ -161,7 +146,8 @@ resolve_capacity_id() {
 # ── Track created resource IDs for summary ────────────────────────────────────
 CREATED_WORKSPACE_ID=""
 CREATED_EVENTHUB_CONN_ID=""         # tenant-level cloud connection ID for Event Hubs
-declare -A CREATED_EVENTHOUSES=()   # displayName → id
+CREATED_EH_ID=""                    # new eventhouse ID
+ORIG_EH_ID=""                       # snapshot eventhouse ID (for definition patching)
 declare -A CREATED_KQL_DATABASES=() # displayName → id
 declare -A CREATED_KQL_CLUSTERS=()  # eventhouse_id → cluster_uri
 declare -A CREATED_EVENTSTREAMS=()  # displayName → id
@@ -345,7 +331,7 @@ print_plan() {
     echo "${snapshot}" | jq -r '.eventhouses[].displayName' | sed 's/^/    - /'
 
     echo "  KQL Databases (${db_count}):"
-    echo "${snapshot}" | jq -r '.kql_databases[] | "    - \(.displayName)  [\(.export_tables | length) tables, \(.export_mappings | length) mappings]"'
+    echo "${snapshot}" | jq -r '.kql_databases[].displayName' | sed 's/^/    - /'
 
     echo "  Eventstreams (${es_count}):"
     echo "${snapshot}" | jq -r '.eventstreams[].displayName' | sed 's/^/    - /'
@@ -361,13 +347,13 @@ print_plan() {
 create_workspace() {
     local token="$1"
 
-    if [[ -n "${FABRIC_WORKSPACE_ID}" ]]; then
-        log_info "Using existing workspace: ${FABRIC_WORKSPACE_ID}"
+    if [[ -n "${TARGET_WORKSPACE_ID}" ]]; then
+        log_info "Using existing workspace: ${TARGET_WORKSPACE_ID}"
         local ws
-        ws=$(fabric_get "/workspaces/${FABRIC_WORKSPACE_ID}" "${token}")
+        ws=$(fabric_get "/workspaces/${TARGET_WORKSPACE_ID}" "${token}")
         [[ -z "${ws}" ]] && { log_error "Workspace not found."; exit 1; }
         log_ok "Workspace: $(echo "${ws}" | jq -r '.displayName')"
-        CREATED_WORKSPACE_ID="${FABRIC_WORKSPACE_ID}"
+        CREATED_WORKSPACE_ID="${TARGET_WORKSPACE_ID}"
         return
     fi
 
@@ -382,7 +368,7 @@ create_workspace() {
 
     [[ -z "${FABRIC_CAPACITY_ID}" ]] && {
         log_error "FABRIC_CAPACITY_ID is required to create a new workspace."
-        log_error "Set it via env var or config file, or set FABRIC_WORKSPACE_ID to use an existing one."
+        log_error "Set it via env var or config file, or set TARGET_WORKSPACE_ID to use an existing one."
         exit 1
     }
 
@@ -447,68 +433,58 @@ create_workspace() {
 # ── Step 2: Eventhouses ───────────────────────────────────────────────────────
 create_eventhouses() {
     local snapshot="$1" ws_id="$2" token="$3"
-    local count; count=$(echo "${snapshot}" | jq '.eventhouses | length')
-    log_info "Creating ${count} Eventhouse(s)..."
+    local name="contoso-qs-eh"
+    local desc="Quickstart Eventhouse"
+    local orig_id; orig_id=$(echo "${snapshot}" | jq -r '.eventhouses[0].id')
+    log_info "Creating Eventhouse: ${name}..."
 
-    local i=0
-    while [[ ${i} -lt ${count} ]]; do
-        local house name desc payload result id cluster_uri
-        house=$(echo "${snapshot}" | jq ".eventhouses[${i}]")
-        name="contoso-qs-eh"
-        desc="Quickstart Eventhouse"
-        local orig_id; orig_id=$(echo "${house}" | jq -r '.id')
+    local payload
+    payload=$(jq -n \
+        --arg n "${name}" \
+        --arg d "${desc}" \
+        '{displayName: $n, description: $d}')
 
-        log_info "  Creating Eventhouse: ${name}"
+    # Use a raw curl call so we can inspect the exact HTTP status
+    local eh_header eh_body_file eh_code eh_result
+    eh_header=$(mktemp); eh_body_file=$(mktemp)
+    eh_code=$(curl -s -o "${eh_body_file}" -D "${eh_header}" -w "%{http_code}" \
+        -H "Authorization: Bearer ${token}" \
+        -H "Content-Type: application/json" \
+        -d "${payload}" \
+        "${FABRIC_API_BASE}/workspaces/${ws_id}/eventhouses")
+    eh_result=$(cat "${eh_body_file}")
+    rm -f "${eh_header}" "${eh_body_file}"
 
-        payload=$(jq -n \
-            --arg n "${name}" \
-            --arg d "${desc}" \
-            '{displayName: $n, description: $d}')
-
-        # Use a raw curl call so we can inspect the exact HTTP status
-        local eh_header eh_body eh_code
-        eh_header=$(mktemp); local eh_body_file; eh_body_file=$(mktemp)
-        eh_code=$(curl -s -o "${eh_body_file}" -D "${eh_header}" -w "%{http_code}" \
-            -H "Authorization: Bearer ${token}" \
-            -H "Content-Type: application/json" \
-            -d "${payload}" \
-            "${FABRIC_API_BASE}/workspaces/${ws_id}/eventhouses")
-        local eh_result; eh_result=$(cat "${eh_body_file}")
-        rm -f "${eh_header}" "${eh_body_file}"
-
-        if [[ "${eh_code}" -ge 200 && "${eh_code}" -lt 300 ]]; then
-            if [[ "${eh_code}" == "202" ]]; then
-                eh_result=$(poll_operation \
-                    "$(echo "${eh_result}" | jq -r '.location // empty')" \
-                    "${token}" "5") || true
-            fi
-            id=$(echo "${eh_result}" | jq -r '.id // empty')
-        else
-            log_warn "  Failed to create Eventhouse: ${name} (HTTP ${eh_code})"
-            i=$((i+1)); continue
+    if [[ "${eh_code}" -ge 200 && "${eh_code}" -lt 300 ]]; then
+        if [[ "${eh_code}" == "202" ]]; then
+            eh_result=$(poll_operation \
+                "$(echo "${eh_result}" | jq -r '.location // empty')" \
+                "${token}" "5") || true
         fi
-        [[ -z "${id}" ]] && { log_warn "  Could not extract ID for ${name}"; i=$((i+1)); continue; }
-        log_ok "  Created: ${name} (${id})"
+    else
+        log_warn "  Failed to create Eventhouse: ${name} (HTTP ${eh_code})"; return
+    fi
 
-        # Wait for cluster URI to be available
-        cluster_uri=$(wait_for_cluster_uri "${ws_id}" "${id}" "${token}")
-        if [[ -n "${cluster_uri}" ]]; then
-            CREATED_KQL_CLUSTERS["${id}"]="${cluster_uri}"
-            log_ok "  Cluster URI: ${cluster_uri}"
-        fi
+    local id; id=$(echo "${eh_result}" | jq -r '.id // empty')
+    [[ -z "${id}" ]] && { log_warn "  Could not extract ID for ${name}"; return; }
+    log_ok "  Created: ${name} (${id})"
 
-        CREATED_EVENTHOUSES["${name}"]="${id}"
-        # Store old→new ID mapping for KQL DB creation
-        CREATED_EVENTHOUSES["orig:${orig_id}"]="${id}"
-        i=$((i+1))
-    done
+    # Wait for cluster URI to be available
+    local cluster_uri; cluster_uri=$(wait_for_cluster_uri "${ws_id}" "${id}" "${token}")
+    if [[ -n "${cluster_uri}" ]]; then
+        CREATED_KQL_CLUSTERS["${id}"]="${cluster_uri}"
+        log_ok "  Cluster URI: ${cluster_uri}"
+    fi
+
+    CREATED_EH_ID="${id}"
+    ORIG_EH_ID="${orig_id}"
 }
 
 # ── Step 3: KQL Databases ─────────────────────────────────────────────────────
 create_kql_databases() {
     local ws_id="$1" token="$2"
 
-    local eh_id="${CREATED_EVENTHOUSES["contoso-qs-eh"]:-}"
+    local eh_id="${CREATED_EH_ID:-}"
     if [[ -z "${eh_id}" ]]; then
         log_warn "  Could not find Eventhouse 'contoso-qs-eh'. Skipping KQL Database lookup."
         return
@@ -549,7 +525,7 @@ create_kql_schema() {
 
     # Find cluster URI via the fixed eventhouse
     local eh_id cluster_uri
-    eh_id="${CREATED_EVENTHOUSES["contoso-qs-eh"]:-}"
+    eh_id="${CREATED_EH_ID:-}"
     cluster_uri="${CREATED_KQL_CLUSTERS["${eh_id}"]:-}"
     if [[ -z "${cluster_uri}" ]]; then
         log_warn "  No cluster URI found. Skipping schema creation."
@@ -591,7 +567,9 @@ create_kql_schema() {
 }
 
 # Patch a definition JSON by doing string replacement on the entire serialised form
-# (safe because Fabric IDs are GUIDs and won't appear as substrings of other values)
+# (safe because Fabric IDs are GUIDs and won't appear as substrings of other values).
+# Definitions are stored in the snapshot as InlineJSON (decoded from base64 by the
+# export script), so every GUID is visible as plain text – no base64 decode needed.
 patch_definition_raw() {
     local def_json="$1"
     local old_ws="$2"
@@ -616,71 +594,46 @@ patch_definition_raw() {
         pi=$((pi+2))
     done
 
-    # We do this by processing the definition JSON parts array if present
-    if echo "${patched}" | jq -e '.definition.parts' &>/dev/null 2>&1; then
-        local parts_count
-        parts_count=$(echo "${patched}" | jq '.definition.parts | length')
-        local pi2=0
-        while [[ ${pi2} -lt ${parts_count} ]]; do
-            local payload_type payload decoded re_encoded
-            payload_type=$(echo "${patched}" | jq -r ".definition.parts[${pi2}].payloadType // \"\"")
-            if [[ "${payload_type}" == "InlineBase64" ]]; then
-                payload=$(echo "${patched}" | jq -r ".definition.parts[${pi2}].payload // \"\"")
-                if [[ -n "${payload}" ]]; then
-                    decoded=$(echo "${payload}" | base64 -d 2>/dev/null || echo "")
-                    if [[ -n "${decoded}" ]]; then
-                        # Apply same replacements on decoded content
-                        [[ -n "${old_ws}" && -n "${new_ws}" && "${old_ws}" != "${new_ws}" ]] && \
-                            decoded="${decoded//${old_ws}/${new_ws}}"
-                        local pi3=0
-                        while [[ ${pi3} -lt ${#id_pairs[@]} ]]; do
-                            local oid="${id_pairs[${pi3}]}"
-                            local nid="${id_pairs[$((pi3+1))]}"
-                            [[ -n "${oid}" && -n "${nid}" && "${oid}" != "${nid}" ]] && \
-                                decoded="${decoded//${oid}/${nid}}"
-                            pi3=$((pi3+2))
-                        done
-                        # dataConnectionId values in AzureEventHub sources are Fabric
-                        # tenant-level ShareableCloud connections.  They can be referenced
-                        # from any workspace in the same tenant, so we keep them as-is.
-                        # If EVENTHUB_CONNECTION_STRING is set, the caller will have already
-                        # replaced the dataConnectionId with a newly created connection's ID.
-                        re_encoded=$(echo -n "${decoded}" | base64 -w 0)
-                        patched=$(echo "${patched}" | jq \
-                            --argjson idx "${pi2}" \
-                            --arg enc "${re_encoded}" \
-                            '.definition.parts[$idx].payload = $enc')
-                    fi
-                fi
-            fi
-            pi2=$((pi2+1))
-        done
+    echo "${patched}"
+}
+
+# Re-encode InlineJSON definition parts back to InlineBase64 for the Fabric API.
+# export-fabric-workspace.sh stores definitions with InlineJSON for readability;
+# the Fabric REST API only accepts InlineBase64.
+prepare_definition_for_api() {
+    local def_json="$1"
+    [[ -z "${def_json}" || "${def_json}" == "{}" ]] && { echo "${def_json}"; return; }
+
+    if ! echo "${def_json}" | jq -e '.definition.parts' &>/dev/null 2>&1; then
+        echo "${def_json}"; return
     fi
 
-    echo "${patched}"
+    local parts_count
+    parts_count=$(echo "${def_json}" | jq '.definition.parts | length')
+    local pi=0
+    while [[ ${pi} -lt ${parts_count} ]]; do
+        local payload_type json_payload encoded
+        payload_type=$(echo "${def_json}" | jq -r ".definition.parts[${pi}].payloadType // \"\"")
+        if [[ "${payload_type}" == "InlineJSON" ]]; then
+            json_payload=$(echo "${def_json}" | jq -c ".definition.parts[${pi}].payload")
+            encoded=$(echo -n "${json_payload}" | base64 -w 0)
+            def_json=$(echo "${def_json}" | jq \
+                --argjson idx "${pi}" \
+                --arg enc "${encoded}" \
+                '.definition.parts[$idx].payloadType = "InlineBase64" |
+                 .definition.parts[$idx].payload = $enc')
+        fi
+        pi=$((pi+1))
+    done
+    echo "${def_json}"
 }
 
 # Create a tenant-level ShareableCloud connection for Azure Event Hubs.
 # The connection ID can then be injected as dataConnectionId in an Eventstream source.
 # Returns the new connection ID on stdout, or empty string on failure.
-# Usage: create_eventhub_connection <connection_string> <consumer_group> <token>
+# Usage: create_eventhub_connection <namespace> <entity_path> <keyname> <key> <consumer_group> <token>
 create_eventhub_connection() {
-    local conn_str="$1" consumer_group="$2" token="$3"
-
-    # Parse connection string fields.
-    # Use a negative-lookahead so 'SharedAccessKey=' does not match 'SharedAccessKeyName='.
-    local endpoint entity keyname key
-    endpoint=$(echo "${conn_str}" | grep -oP 'Endpoint=sb://\K[^.]+' || true)
-    entity=$(echo "${conn_str}"   | grep -oP 'EntityPath=\K[^;]+'              || true)
-    keyname=$(echo "${conn_str}"  | grep -oP 'SharedAccessKeyName=\K[^;]+'     || true)
-    key=$(echo "${conn_str}"      | grep -oP 'SharedAccessKey=(?!Name)\K[^;]+' || true)
-
-    if [[ -z "${endpoint}" || -z "${entity}" || -z "${keyname}" || -z "${key}" ]]; then
-        log_warn "  Could not parse EVENTHUB_CONNECTION_STRING — skipping connection creation."
-        log_warn "    endpoint='${endpoint}' entity='${entity}' keyname='${keyname}' key=${key:+(set)}"
-        echo ""; return 0
-    fi
-
+    local endpoint="$1" entity="$2" keyname="$3" key="$4" consumer_group="$5" token="$6"
     local display_name="${endpoint}/${entity}"
 
     # Build the request body using the Fabric Connections API schema:
@@ -744,24 +697,13 @@ create_eventhub_connection() {
 create_cloud_connection() {
     local token="$1"
 
-    if [[ -z "${EVENTHUB_CONNECTION_STRING}" ]]; then
-        log_info "  No EVENTHUB_CONNECTION_STRING set — skipping cloud connection creation."
+    if [[ -z "${EVENTHUB_NAMESPACE}" || -z "${EVENTHUB_ENTITY_PATH}" || \
+          -z "${EVENTHUB_KEY_NAME}"  || -z "${EVENTHUB_KEY}" ]]; then
+        log_info "  EVENTHUB_NAMESPACE/ENTITY_PATH/KEY_NAME/KEY not set — skipping cloud connection creation."
         return
     fi
 
-    # Parse connection string fields
-    local endpoint entity keyname key
-    endpoint=$(echo "${EVENTHUB_CONNECTION_STRING}" | grep -oP 'Endpoint=sb://\K[^.]+' || true)
-    entity=$(echo "${EVENTHUB_CONNECTION_STRING}"   | grep -oP 'EntityPath=\K[^;]+'              || true)
-    keyname=$(echo "${EVENTHUB_CONNECTION_STRING}"  | grep -oP 'SharedAccessKeyName=\K[^;]+'     || true)
-    key=$(echo "${EVENTHUB_CONNECTION_STRING}"      | grep -oP 'SharedAccessKey=(?!Name)\K[^;]+' || true)
-
-    if [[ -z "${endpoint}" || -z "${entity}" || -z "${keyname}" || -z "${key}" ]]; then
-        log_warn "  Could not parse EVENTHUB_CONNECTION_STRING — skipping cloud connection creation."
-        return
-    fi
-
-    local display_name="${endpoint}/${entity}"
+    local display_name="${EVENTHUB_NAMESPACE}/${EVENTHUB_ENTITY_PATH}"
     log_info "  Checking for existing cloud connection: ${display_name}"
 
     # Delete any existing connection with the same display name so creation starts clean
@@ -788,7 +730,10 @@ create_cloud_connection() {
     log_info "  Creating Event Hub connection: ${display_name}"
     local conn_id
     conn_id=$(create_eventhub_connection \
-        "${EVENTHUB_CONNECTION_STRING}" \
+        "${EVENTHUB_NAMESPACE}" \
+        "${EVENTHUB_ENTITY_PATH}" \
+        "${EVENTHUB_KEY_NAME}" \
+        "${EVENTHUB_KEY}" \
         "${EVENTHUB_CONSUMER_GROUP}" \
         "${token}")
 
@@ -810,17 +755,7 @@ create_eventstreams() {
     local old_ws_id
     old_ws_id=$(echo "${snapshot}" | jq -r '.workspace.id')
     local id_pairs=()
-    for old_eh_key in "${!CREATED_EVENTHOUSES[@]}"; do
-        [[ "${old_eh_key}" == orig:* ]] || continue
-        local old_item_id="${old_eh_key#orig:}"
-        local new_item_id="${CREATED_EVENTHOUSES[${old_eh_key}]}"
-        id_pairs+=("${old_item_id}" "${new_item_id}")
-    done
-    # The auto-created KQL database in the new workspace was looked up by parent
-    # eventhouse ID and stored under the "contoso-qs-db" key.  Find the old KQL
-    # database ID from the snapshot (there is always exactly one; matching by
-    # display name is fragile because the auto-created DB takes the eventhouse name,
-    # not "contoso-qs-db").
+    [[ -n "${ORIG_EH_ID}" && -n "${CREATED_EH_ID}" ]] && id_pairs+=("${ORIG_EH_ID}" "${CREATED_EH_ID}")
     local old_db_id new_db_id
     old_db_id=$(echo "${snapshot}" | jq -r '.kql_databases[0].id // empty')
     new_db_id="${CREATED_KQL_DATABASES["contoso-qs-db"]:-}"
@@ -848,32 +783,22 @@ create_eventstreams() {
         # definition in place of the old dataConnectionId.
         if [[ -n "${CREATED_EVENTHUB_CONN_ID}" && $(echo "${raw_def}" | jq 'keys | length') -gt 0 ]]; then
             local _old_conn_id
-            # dataConnectionId is inside the base64-encoded payload – decode each part to find it
-            _old_conn_id=""
-            local _part_count _part_idx
-            _part_count=$(echo "${raw_def}" | jq '.definition.parts | length // 0')
-            for (( _part_idx=0; _part_idx<_part_count; _part_idx++ )); do
-                local _ptype _payload _decoded _found_id
-                _ptype=$(echo "${raw_def}" | jq -r ".definition.parts[${_part_idx}].payloadType // \"\"")
-                if [[ "${_ptype}" == "InlineBase64" ]]; then
-                    _payload=$(echo "${raw_def}" | jq -r ".definition.parts[${_part_idx}].payload // \"\"")
-                    _decoded=$(echo "${_payload}" | base64 -d 2>/dev/null || echo "")
-                    _found_id=$(echo "${_decoded}" | jq -r \
-                        '[.. | objects | select(.dataConnectionId?) | .dataConnectionId] | first // empty' \
-                        2>/dev/null || true)
-                    if [[ -n "${_found_id}" ]]; then
-                        _old_conn_id="${_found_id}"
-                        break
-                    fi
-                fi
-            done
+            # dataConnectionId is stored as plain JSON in the snapshot (InlineJSON parts)
+            _old_conn_id=$(echo "${raw_def}" | jq -r '
+                [.definition.parts[] |
+                   select(.payloadType == "InlineJSON") |
+                   .payload |
+                   .. | objects | select(.dataConnectionId?) | .dataConnectionId
+                 ] | first // empty' 2>/dev/null || true)
             if [[ -n "${_old_conn_id}" && "${_old_conn_id}" != "${CREATED_EVENTHUB_CONN_ID}" ]]; then
                 log_info "  Patching Event Hub connection ID: ${CREATED_EVENTHUB_CONN_ID}"
-                # Replace old connection ID inside base64-encoded parts
                 raw_def=$(patch_definition_raw "${raw_def}" "" "" \
                     "${_old_conn_id}" "${CREATED_EVENTHUB_CONN_ID}")
             fi
         fi
+
+        # Re-encode InlineJSON parts to InlineBase64 required by the Fabric API
+        raw_def=$(prepare_definition_for_api "${raw_def}")
 
         local has_def; has_def=$(echo "${raw_def}" | jq 'keys | length > 0')
 
@@ -915,7 +840,7 @@ create_eventstreams() {
                 # Async validation failed (e.g. cloud connection not found in this tenant).
                 # Retry without a definition so the eventstream shell is still created.
                 log_warn "  Eventstream async operation failed. Retrying without definition."
-                log_warn "  Set EVENTHUB_CONNECTION_STRING (or individual EVENTHUB_* fields) to recreate the Event Hub source connection automatically."
+                log_warn "  Set EVENTHUB_NAMESPACE, EVENTHUB_ENTITY_PATH, EVENTHUB_KEY_NAME, and EVENTHUB_KEY to recreate the Event Hub source connection automatically."
                 local retry2_payload retry2_code retry2_resp retry2_header
                 retry2_resp=$(mktemp); retry2_header=$(mktemp)
                 retry2_payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')
@@ -959,7 +884,7 @@ create_eventstreams() {
                 # Definition was rejected (e.g. dataConnectionId not found in this tenant).
                 # Retry without a definition so the eventstream shell is still created.
                 log_warn "  Definition rejected (HTTP ${es_http_code}: ${es_err_code}). Retrying without definition."
-                log_warn "  Set EVENTHUB_CONNECTION_STRING to recreate the Event Hub source connection automatically."
+                log_warn "  Set EVENTHUB_NAMESPACE, EVENTHUB_ENTITY_PATH, EVENTHUB_KEY_NAME, and EVENTHUB_KEY to recreate the Event Hub source connection automatically."
                 local retry_payload retry_code retry_resp retry_header
                 retry_resp=$(mktemp); retry_header=$(mktemp)
                 retry_payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')
@@ -1002,14 +927,15 @@ create_eventstreams() {
         [[ -z "${stream_id}" ]] && { log_warn "  Could not extract ID for ${name}"; i=$((i+1)); continue; }
 
         log_ok "  Eventstream created: ${name} (${stream_id})"
-        # If EVENTHUB_CONNECTION_STRING was not supplied:
+        # If Event Hub credentials were not supplied:
         #   • If the original dataConnectionId exists in this tenant the definition was accepted
         #     and the eventstream is fully connected.
         #   • If the connection was not found the definition was rejected; an empty shell was
-        #     created instead.  Set EVENTHUB_CONNECTION_STRING and re-run, or configure the
-        #     source manually in the Fabric portal.
-        if [[ -z "${EVENTHUB_CONNECTION_STRING}" ]]; then
-            log_warn "  NOTE: EVENTHUB_CONNECTION_STRING was not set. If the Event Hub source is not connected, set EVENTHUB_CONNECTION_STRING and re-run to create a new connection."
+        #     created instead.  Set EVENTHUB_NAMESPACE/ENTITY_PATH/KEY_NAME/KEY and re-run,
+        #     or configure the source manually in the Fabric portal.
+        if [[ -z "${EVENTHUB_NAMESPACE}" || -z "${EVENTHUB_ENTITY_PATH}" || \
+              -z "${EVENTHUB_KEY_NAME}"  || -z "${EVENTHUB_KEY}" ]]; then
+            log_warn "  NOTE: EVENTHUB_* credentials not set. If the Event Hub source is not connected, set EVENTHUB_NAMESPACE, EVENTHUB_ENTITY_PATH, EVENTHUB_KEY_NAME, and EVENTHUB_KEY then re-run."
         fi
         CREATED_EVENTSTREAMS["${name}"]="${stream_id}"
         i=$((i+1))
@@ -1026,12 +952,7 @@ create_dashboards() {
     local old_ws_id
     old_ws_id=$(echo "${snapshot}" | jq -r '.workspace.id')
     local id_pairs=()
-    for old_eh_key in "${!CREATED_EVENTHOUSES[@]}"; do
-        [[ "${old_eh_key}" == orig:* ]] || continue
-        local old_item_id="${old_eh_key#orig:}"
-        local new_item_id="${CREATED_EVENTHOUSES[${old_eh_key}]}"
-        id_pairs+=("${old_item_id}" "${new_item_id}")
-    done
+    [[ -n "${ORIG_EH_ID}" && -n "${CREATED_EH_ID}" ]] && id_pairs+=("${ORIG_EH_ID}" "${CREATED_EH_ID}")
     local old_db_id new_db_id
     old_db_id=$(echo "${snapshot}" | jq -r '.kql_databases[0].id // empty')
     new_db_id="${CREATED_KQL_DATABASES["contoso-qs-db"]:-}"
@@ -1040,25 +961,19 @@ create_dashboards() {
     # The dashboard also embeds the Eventhouse clusterUri (a hostname, not a GUID).
     # Extract the old URI from the snapshot definition and replace with the new one.
     local new_eh_id new_cluster_uri old_cluster_uri
-    new_eh_id="${CREATED_EVENTHOUSES["contoso-qs-eh"]:-}"
+    new_eh_id="${CREATED_EH_ID:-}"
     new_cluster_uri="${CREATED_KQL_CLUSTERS["${new_eh_id}"]:-}"
     old_cluster_uri=""
     if [[ -n "${new_cluster_uri}" && ${count} -gt 0 ]]; then
-        local _snap_def _p_count _p_idx
+        local _snap_def
         _snap_def=$(echo "${snapshot}" | jq '.realtime_dashboards[0].export_definition // {}')
-        _p_count=$(echo "${_snap_def}" | jq '.definition.parts | length // 0')
-        for (( _p_idx=0; _p_idx<_p_count; _p_idx++ )); do
-            local _ptype _payload _decoded
-            _ptype=$(echo "${_snap_def}" | jq -r ".definition.parts[${_p_idx}].payloadType // \"\"")
-            if [[ "${_ptype}" == "InlineBase64" ]]; then
-                _payload=$(echo "${_snap_def}" | jq -r ".definition.parts[${_p_idx}].payload // \"\"")
-                _decoded=$(echo "${_payload}" | base64 -d 2>/dev/null || echo "")
-                old_cluster_uri=$(echo "${_decoded}" | jq -r \
-                    '[.dataSources[]? | select(.clusterUri?) | .clusterUri] | first // empty' \
-                    2>/dev/null || true)
-                [[ -n "${old_cluster_uri}" ]] && break
-            fi
-        done
+        # clusterUri is stored as plain JSON in the snapshot (InlineJSON parts)
+        old_cluster_uri=$(echo "${_snap_def}" | jq -r '
+            [.definition.parts[] |
+               select(.payloadType == "InlineJSON") |
+               .payload |
+               .dataSources[]? | select(.clusterUri?) | .clusterUri
+             ] | first // empty' 2>/dev/null || true)
         if [[ -n "${old_cluster_uri}" && "${old_cluster_uri}" != "${new_cluster_uri}" ]]; then
             log_info "  Patching cluster URI: ${old_cluster_uri} → ${new_cluster_uri}"
             id_pairs+=("${old_cluster_uri}" "${new_cluster_uri}")
@@ -1081,6 +996,9 @@ create_dashboards() {
         fi
 
         log_info "  Creating Dashboard: ${name}"
+
+        # Re-encode InlineJSON parts to InlineBase64 required by the Fabric API
+        raw_def=$(prepare_definition_for_api "${raw_def}")
 
         local has_def; has_def=$(echo "${raw_def}" | jq 'keys | length > 0')
 
@@ -1134,13 +1052,10 @@ print_summary() {
     echo ""
     echo -e "  Workspace:  ${CYAN}${ws_id}${NC}"
 
-    if [[ ${#CREATED_EVENTHOUSES[@]} -gt 0 ]]; then
+    if [[ -n "${CREATED_EH_ID}" ]]; then
         echo ""
         echo "  Eventhouses:"
-        for name in "${!CREATED_EVENTHOUSES[@]}"; do
-            [[ "${name}" == orig:* ]] && continue
-            echo -e "    ${name}: ${CYAN}${CREATED_EVENTHOUSES[${name}]}${NC}"
-        done
+        echo -e "    contoso-qs-eh: ${CYAN}${CREATED_EH_ID}${NC}"
     fi
 
     if [[ ${#CREATED_KQL_DATABASES[@]} -gt 0 ]]; then
