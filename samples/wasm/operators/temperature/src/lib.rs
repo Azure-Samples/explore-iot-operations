@@ -291,15 +291,15 @@ mod filter_temperature {
     use wasm_graph_sdk::macros::filter_operator;
     use wasm_graph_sdk::metrics::{self, CounterValue, Label};
 
+    const DEFAULT_LOWER_BOUND: f64 = -40.0; // reasonable minimum for sensor data
+    const DEFAULT_UPPER_BOUND: f64 = 3422.0; // melting point of tungsten
+
     static LOWER_BOUND: OnceLock<f64> = OnceLock::new();
     static UPPER_BOUND: OnceLock<f64> = OnceLock::new();
 
-    // Note!: The initialization parameters LOWER_BOUND and UPPER_BOUND must be set via
-    // configuration properties. If these values are not configured, the function
-    // filter_temperature will panic when attempting to access them.
-    //
-    // Users can define these parameters either by using default values or by specifying
-    // them during application setup.
+    // The initialization parameters LOWER_BOUND and UPPER_BOUND can be set via
+    // configuration properties. If not configured, sensible defaults are used
+    // (-40°C lower bound, 3422°C upper bound / melting point of tungsten).
     #[allow(clippy::needless_pass_by_value)]
     fn filter_temperature_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
@@ -311,7 +311,7 @@ mod filter_temperature {
         if let Some(value_string) = configuration
             .properties
             .iter()
-            .find(|(key, _value)| key == "temperature_lower_bound") // or whatever it is
+            .find(|(key, _value)| key == "temperature_lower_bound")
             .map(|(_key, value)| value.clone())
         {
             match value_string.parse::<f64>() {
@@ -331,12 +331,18 @@ mod filter_temperature {
                     );
                 }
             }
+        } else {
+            logger::log(
+                Level::Info,
+                "module-temperature/filter",
+                &format!("temperature_lower_bound not configured, using default: {DEFAULT_LOWER_BOUND}"),
+            );
         }
 
         if let Some(value_string) = configuration
             .properties
             .iter()
-            .find(|(key, _value)| key == "temperature_upper_bound") // or whatever it is
+            .find(|(key, _value)| key == "temperature_upper_bound")
             .map(|(_key, value)| value.clone())
         {
             match value_string.parse::<f64>() {
@@ -356,6 +362,12 @@ mod filter_temperature {
                     );
                 }
             }
+        } else {
+            logger::log(
+                Level::Info,
+                "module-temperature/filter",
+                &format!("temperature_upper_bound not configured, using default: {DEFAULT_UPPER_BOUND}"),
+            );
         }
 
         true
@@ -386,8 +398,8 @@ mod filter_temperature {
             &format!("incoming measurement {measurement:?}"),
         );
 
-        let lower_bound = LOWER_BOUND.get().expect("Lower bound not initialized");
-        let upper_bound = UPPER_BOUND.get().expect("Upper bound not initialized");
+        let lower_bound = LOWER_BOUND.get().copied().unwrap_or(DEFAULT_LOWER_BOUND);
+        let upper_bound = UPPER_BOUND.get().copied().unwrap_or(DEFAULT_UPPER_BOUND);
 
         // Malfunctioning probe sometimes reports higher temperature than melting point of tungsten.
         // Ignore these values.
@@ -402,7 +414,7 @@ mod filter_temperature {
                 last: _,
                 unit: MeasurementTemperatureUnit::Celsius,
                 overtemp: _,
-            }) if value.unwrap() < *upper_bound && value.unwrap() > *lower_bound,
+            }) if value.unwrap() < upper_bound && value.unwrap() > lower_bound,
         ))
     }
 }

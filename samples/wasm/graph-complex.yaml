@@ -20,6 +20,14 @@ moduleConfigurations:
       snapshot_topic:
         name: snapshot_topic
         description: Transform app snapshot_topic in snapshot branch's init routine
+  - name: module-temperature/filter
+    parameters:
+      temperature_lower_bound:
+        name: temperature_lower_bound
+        description: "Minimum valid temperature in Celsius (default: -40)"
+      temperature_upper_bound:
+        name: temperature_upper_bound
+        description: "Maximum valid temperature in Celsius (default: 3422)"
 operations:
   - operationType: "source"
     name: "source"
