@@ -145,11 +145,11 @@ resolve_capacity_id() {
 
 # ── Track created resource IDs for summary ────────────────────────────────────
 CREATED_WORKSPACE_ID=""
-CREATED_EVENTHUB_CONN_ID=""         # tenant-level cloud connection ID for Event Hubs
-CREATED_EH_ID=""                    # new eventhouse ID
-ORIG_EH_ID=""                       # snapshot eventhouse ID (for definition patching)
-declare -A CREATED_KQL_DATABASES=() # displayName → id
-declare -A CREATED_KQL_CLUSTERS=()  # eventhouse_id → cluster_uri
+CREATED_EVENTHUB_CONN_ID=""    # tenant-level cloud connection ID for Event Hubs
+CREATED_EH_ID=""               # new eventhouse ID
+ORIG_EH_ID=""                  # snapshot eventhouse ID (for definition patching)
+CREATED_KQL_DB_ID=""           # KQL Database auto-created by the Eventhouse
+CREATED_KQL_CLUSTER_URI=""     # queryServiceUri for the Eventhouse cluster
 declare -A CREATED_EVENTSTREAMS=()  # displayName → id
 declare -A CREATED_DASHBOARDS=()    # displayName → id
 
@@ -249,40 +249,40 @@ poll_operation() {
     log_error "Operation timed out."; return 1
 }
 
+# Generic: poll a Fabric GET endpoint until the given jq expression yields a non-empty value.
+# Prints the extracted value on stdout; returns non-zero on timeout.
+# Usage: wait_for_property <api_path> <jq_expr> <human_label> <token> [max_attempts]
+wait_for_property() {
+    local path="$1" jq_expr="$2" label="$3" token="$4"
+    local max="${5:-30}" attempts=0
+    while [[ ${attempts} -lt ${max} ]]; do
+        local detail val
+        detail=$(fabric_get "${path}" "${token}")
+        val=$(echo "${detail}" | jq -r "${jq_expr} // empty" 2>/dev/null)
+        if [[ -n "${val}" ]]; then echo "${val}"; return 0; fi
+        attempts=$((attempts+1))
+        log_info "  Waiting for ${label}... (${attempts}/${max})"
+        sleep 5
+    done
+    log_warn "${label} not available after waiting."; echo ""; return 1
+}
+
 # Wait for an eventhouse to expose its queryServiceUri (it takes a few seconds)
 wait_for_cluster_uri() {
     local workspace_id="$1" house_id="$2" token="$3"
-    local attempts=0 max=30
-    while [[ ${attempts} -lt ${max} ]]; do
-        local detail uri
-        detail=$(fabric_get "/workspaces/${workspace_id}/eventhouses/${house_id}" "${token}")
-        uri=$(echo "${detail}" | jq -r '.properties.queryServiceUri // empty')
-        if [[ -n "${uri}" ]]; then
-            echo "${uri}"; return 0
-        fi
-        attempts=$((attempts+1))
-        log_info "  Waiting for cluster URI... (${attempts}/${max})"
-        sleep 5
-    done
-    log_warn "Cluster URI not available after waiting."; echo ""; return 1
+    wait_for_property \
+        "/workspaces/${workspace_id}/eventhouses/${house_id}" \
+        '.properties.queryServiceUri' \
+        "cluster URI" "${token}"
 }
 
 wait_for_kql_database() {
     local workspace_id="$1" db_id="$2" token="$3"
-    local attempts=0 max=30
-    while [[ ${attempts} -lt ${max} ]]; do
-        local detail state
-        detail=$(fabric_get "/workspaces/${workspace_id}/kqlDatabases/${db_id}" "${token}")
-        # A KQL database is ready when its readWriteState is "RW" or if it just exists
-        state=$(echo "${detail}" | jq -r '.properties.readWriteState // empty')
-        if [[ -n "${detail}" && ("${state}" == "RW" || "${state}" == "") ]]; then
-            return 0
-        fi
-        attempts=$((attempts+1))
-        log_info "  Waiting for KQL database to be ready... (${attempts}/${max})"
-        sleep 5
-    done
-    log_warn "KQL database not ready after waiting."; return 1
+    # A KQL database is ready when readWriteState is "RW" or absent
+    wait_for_property \
+        "/workspaces/${workspace_id}/kqlDatabases/${db_id}" \
+        'if ((.properties.readWriteState // "") == "" or .properties.readWriteState == "RW") then "ready" else empty end' \
+        "KQL database" "${token}" >/dev/null
 }
 
 kusto_run() {
@@ -318,26 +318,21 @@ print_plan() {
     echo -e "${YELLOW}  DRY-RUN – the following resources would be created:${NC}"
     echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  Workspace:  $(echo "${snapshot}" | jq -r '.workspace.displayName')"
-    echo ""
-
-    local eh_count db_count es_count dash_count
-    eh_count=$(echo "${snapshot}"   | jq '.eventhouses | length')
-    db_count=$(echo "${snapshot}"   | jq '.kql_databases | length')
-    es_count=$(echo "${snapshot}"   | jq '.eventstreams | length')
-    dash_count=$(echo "${snapshot}" | jq '.realtime_dashboards | length')
-
-    echo "  Eventhouses (${eh_count}):"
-    echo "${snapshot}" | jq -r '.eventhouses[].displayName' | sed 's/^/    - /'
-
-    echo "  KQL Databases (${db_count}):"
-    echo "${snapshot}" | jq -r '.kql_databases[].displayName' | sed 's/^/    - /'
-
-    echo "  Eventstreams (${es_count}):"
-    echo "${snapshot}" | jq -r '.eventstreams[].displayName' | sed 's/^/    - /'
-
-    echo "  Real-Time Dashboards (${dash_count}):"
-    echo "${snapshot}" | jq -r '.realtime_dashboards[].displayName' | sed 's/^/    - /'
+    echo "${snapshot}" | jq -r '
+        "  Workspace:  " + .workspace.displayName,
+        "",
+        "  Eventhouses (\(.eventhouses | length)):",
+        (.eventhouses[].displayName | "    - " + .),
+        "",
+        "  KQL Databases (\(.kql_databases | length)):",
+        (.kql_databases[].displayName | "    - " + .),
+        "",
+        "  Eventstreams (\(.eventstreams | length)):",
+        (.eventstreams[].displayName | "    - " + .),
+        "",
+        "  Real-Time Dashboards (\(.realtime_dashboards | length)):",
+        (.realtime_dashboards[].displayName | "    - " + .)
+    '
     echo ""
     echo -e "${YELLOW}Remove --dry-run to apply.${NC}"
     echo ""
@@ -472,7 +467,7 @@ create_eventhouses() {
     # Wait for cluster URI to be available
     local cluster_uri; cluster_uri=$(wait_for_cluster_uri "${ws_id}" "${id}" "${token}")
     if [[ -n "${cluster_uri}" ]]; then
-        CREATED_KQL_CLUSTERS["${id}"]="${cluster_uri}"
+        CREATED_KQL_CLUSTER_URI="${cluster_uri}"
         log_ok "  Cluster URI: ${cluster_uri}"
     fi
 
@@ -510,7 +505,7 @@ create_kql_databases() {
 
     wait_for_kql_database "${ws_id}" "${db_id}" "${token}" || true
 
-    CREATED_KQL_DATABASES["contoso-qs-db"]="${db_id}"
+    CREATED_KQL_DB_ID="${db_id}"
 }
 
 # ── Step 4: Tables and Ingestion Mappings ─────────────────────────────────────
@@ -518,15 +513,14 @@ create_kql_schema() {
     local ws_id="$1" token="$2"
 
     local db_name="contoso-qs-db"
-    local db_id="${CREATED_KQL_DATABASES["${db_name}"]:-}"
+    local db_id="${CREATED_KQL_DB_ID:-}"
     if [[ -z "${db_id}" ]]; then
         log_warn "  Skipping schema (KQL Database '${db_name}' was not created)"; return
     fi
 
     # Find cluster URI via the fixed eventhouse
-    local eh_id cluster_uri
-    eh_id="${CREATED_EH_ID:-}"
-    cluster_uri="${CREATED_KQL_CLUSTERS["${eh_id}"]:-}"
+    local cluster_uri
+    cluster_uri="${CREATED_KQL_CLUSTER_URI:-}"
     if [[ -z "${cluster_uri}" ]]; then
         log_warn "  No cluster URI found. Skipping schema creation."
         return
@@ -597,6 +591,20 @@ patch_definition_raw() {
     echo "${patched}"
 }
 
+# Build the old→new ID substitution pairs common to Eventstream and Dashboard
+# definition patching.  Populates globals GLOBAL_OLD_WS_ID and GLOBAL_ID_PAIRS.
+build_id_pairs() {
+    local snapshot="$1"
+    GLOBAL_OLD_WS_ID=$(echo "${snapshot}" | jq -r '.workspace.id')
+    GLOBAL_ID_PAIRS=()
+    [[ -n "${ORIG_EH_ID}" && -n "${CREATED_EH_ID}" ]] && \
+        GLOBAL_ID_PAIRS+=("${ORIG_EH_ID}" "${CREATED_EH_ID}")
+    local snap_db_id
+    snap_db_id=$(echo "${snapshot}" | jq -r '.kql_databases[0].id // empty')
+    [[ -n "${snap_db_id}" && -n "${CREATED_KQL_DB_ID:-}" ]] && \
+        GLOBAL_ID_PAIRS+=("${snap_db_id}" "${CREATED_KQL_DB_ID}")
+}
+
 # Re-encode InlineJSON definition parts back to InlineBase64 for the Fabric API.
 # export-fabric-workspace.sh stores definitions with InlineJSON for readability;
 # the Fabric REST API only accepts InlineBase64.
@@ -608,24 +616,13 @@ prepare_definition_for_api() {
         echo "${def_json}"; return
     fi
 
-    local parts_count
-    parts_count=$(echo "${def_json}" | jq '.definition.parts | length')
-    local pi=0
-    while [[ ${pi} -lt ${parts_count} ]]; do
-        local payload_type json_payload encoded
-        payload_type=$(echo "${def_json}" | jq -r ".definition.parts[${pi}].payloadType // \"\"")
-        if [[ "${payload_type}" == "InlineJSON" ]]; then
-            json_payload=$(echo "${def_json}" | jq -c ".definition.parts[${pi}].payload")
-            encoded=$(echo -n "${json_payload}" | base64 -w 0)
-            def_json=$(echo "${def_json}" | jq \
-                --argjson idx "${pi}" \
-                --arg enc "${encoded}" \
-                '.definition.parts[$idx].payloadType = "InlineBase64" |
-                 .definition.parts[$idx].payload = $enc')
-        fi
-        pi=$((pi+1))
-    done
-    echo "${def_json}"
+    echo "${def_json}" | jq '
+        .definition.parts |= map(
+            if .payloadType == "InlineJSON" then
+                .payloadType = "InlineBase64" |
+                .payload = (.payload | tojson | @base64)
+            else . end
+        )'
 }
 
 # Replace any object .id values that are not valid UUIDs with freshly generated UUIDs.
@@ -773,6 +770,43 @@ create_cloud_connection() {
     fi
 }
 
+# POST an Eventstream without a definition (displayName + description only).
+# Used as a fallback when the full-definition POST is rejected or fails async.
+# Sets global SHELL_STREAM_ID; returns 0 on success (or ItemDisplayNameAlreadyInUse),
+# 1 on hard failure (caller should skip the current item).
+post_eventstream_shell() {
+    local ws_id="$1" token="$2" name="$3" desc="$4"
+    SHELL_STREAM_ID=""
+    local payload rc_resp rc_header rc_code rc_result
+    payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')
+    rc_resp=$(mktemp); rc_header=$(mktemp)
+    rc_code=$(curl -sS -o "${rc_resp}" -D "${rc_header}" -w "%{http_code}" \
+        -X POST \
+        -H "Authorization: Bearer ${token}" \
+        -H "Content-Type: application/json" \
+        -d "${payload}" \
+        "${FABRIC_API_BASE}/workspaces/${ws_id}/eventstreams")
+    rc_result=$(cat "${rc_resp}"); rm -f "${rc_resp}"
+    if [[ "${rc_code}" == "202" ]]; then
+        local rc_loc
+        rc_loc=$(grep -i "^location:" "${rc_header}" | head -1 | tr -d '\r' | sed 's/[Ll]ocation: *//')
+        rm -f "${rc_header}"
+        [[ -n "${rc_loc}" ]] && rc_result=$(poll_operation "${rc_loc}" "${token}" "5") || true
+        SHELL_STREAM_ID=$(echo "${rc_result}" | jq -r '.createdItemId // .id // empty')
+    elif [[ "${rc_code}" -ge 200 && "${rc_code}" -lt 300 ]]; then
+        SHELL_STREAM_ID=$(echo "${rc_result}" | jq -r '.createdItemId // .id // empty')
+        rm -f "${rc_header}"
+    else
+        local rc_err; rc_err=$(echo "${rc_result}" | jq -r '.errorCode // ""' 2>/dev/null || true)
+        rm -f "${rc_header}"
+        if [[ "${rc_err}" == "ItemDisplayNameAlreadyInUse" ]]; then
+            return 0  # already exists; name-fallback search below will find the ID
+        fi
+        log_warn "  Retry also failed (HTTP ${rc_code}: ${rc_err}). Skipping Eventstream: ${name}."
+        return 1
+    fi
+}
+
 # ── Step 6: Eventstreams ──────────────────────────────────────────────────────
 create_eventstreams() {
     local snapshot="$1" ws_id="$2" token="$3"
@@ -780,14 +814,9 @@ create_eventstreams() {
     log_info "Creating ${count} Eventstream(s)..."
 
     # Build old→new item ID pairs for patching definitions
-    local old_ws_id
-    old_ws_id=$(echo "${snapshot}" | jq -r '.workspace.id')
-    local id_pairs=()
-    [[ -n "${ORIG_EH_ID}" && -n "${CREATED_EH_ID}" ]] && id_pairs+=("${ORIG_EH_ID}" "${CREATED_EH_ID}")
-    local old_db_id new_db_id
-    old_db_id=$(echo "${snapshot}" | jq -r '.kql_databases[0].id // empty')
-    new_db_id="${CREATED_KQL_DATABASES["contoso-qs-db"]:-}"
-    [[ -n "${old_db_id}" && -n "${new_db_id}" ]] && id_pairs+=("${old_db_id}" "${new_db_id}")
+    build_id_pairs "${snapshot}"
+    local old_ws_id="${GLOBAL_OLD_WS_ID}"
+    local id_pairs=("${GLOBAL_ID_PAIRS[@]+"${GLOBAL_ID_PAIRS[@]}"}")
 
     local i=0
     while [[ ${i} -lt ${count} ]]; do
@@ -884,35 +913,10 @@ create_eventstreams() {
                 # Retry without a definition so the eventstream shell is still created.
                 log_warn "  Eventstream async operation failed. Retrying without definition."
                 log_warn "  Set EVENTHUB_NAMESPACE, EVENTHUB_ENTITY_PATH, EVENTHUB_KEY_NAME, and EVENTHUB_KEY to recreate the Event Hub source connection automatically."
-                local retry2_payload retry2_code retry2_resp retry2_header
-                retry2_resp=$(mktemp); retry2_header=$(mktemp)
-                retry2_payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')
-                retry2_code=$(curl -sS -o "${retry2_resp}" -D "${retry2_header}" -w "%{http_code}" \
-                    -X POST \
-                    -H "Authorization: Bearer ${token}" \
-                    -H "Content-Type: application/json" \
-                    -d "${retry2_payload}" \
-                    "${FABRIC_API_BASE}/workspaces/${ws_id}/eventstreams")
-                es_result=$(cat "${retry2_resp}"); rm -f "${retry2_resp}"
-                if [[ "${retry2_code}" == "202" ]]; then
-                    local retry2_loc
-                    retry2_loc=$(grep -i "^location:" "${retry2_header}" | head -1 | tr -d '\r' | sed 's/[Ll]ocation: *//')
-                    rm -f "${retry2_header}"
-                    [[ -n "${retry2_loc}" ]] && es_result=$(poll_operation "${retry2_loc}" "${token}" "5") || true
-                    stream_id=$(echo "${es_result}" | jq -r '.createdItemId // .id // empty')
-                elif [[ "${retry2_code}" -ge 200 && "${retry2_code}" -lt 300 ]]; then
-                    stream_id=$(echo "${es_result}" | jq -r '.createdItemId // .id // empty')
-                    rm -f "${retry2_header}"
-                else
-                    local retry2_err; retry2_err=$(echo "${es_result}" | jq -r '.errorCode // ""' 2>/dev/null || true)
-                    rm -f "${retry2_header}"
-                    if [[ "${retry2_err}" == "ItemDisplayNameAlreadyInUse" ]]; then
-                        : # will be caught by the name-fallback search below
-                    else
-                        log_warn "  Retry also failed (HTTP ${retry2_code}). Skipping Eventstream: ${name}."
-                        i=$((i+1)); continue
-                    fi
+                if ! post_eventstream_shell "${ws_id}" "${token}" "${name}" "${desc}"; then
+                    i=$((i+1)); continue
                 fi
+                stream_id="${SHELL_STREAM_ID}"
             else
                 stream_id=$(echo "${es_result}" | jq -r '.createdItemId // .id // empty')
             fi
@@ -931,30 +935,10 @@ create_eventstreams() {
                 log_warn "  Definition rejected (HTTP ${es_http_code}: ${es_err_code}). Retrying without definition."
                 [[ -n "${es_err_msg}" ]] && log_warn "  API message: ${es_err_msg}"
                 log_warn "  Full response: ${es_result}"
-                local retry_payload retry_code retry_resp retry_header
-                retry_resp=$(mktemp); retry_header=$(mktemp)
-                retry_payload=$(jq -n --arg n "${name}" --arg d "${desc}" '{displayName: $n, description: $d}')
-                retry_code=$(curl -sS -o "${retry_resp}" -D "${retry_header}" -w "%{http_code}" \
-                    -X POST \
-                    -H "Authorization: Bearer ${token}" \
-                    -H "Content-Type: application/json" \
-                    -d "${retry_payload}" \
-                    "${FABRIC_API_BASE}/workspaces/${ws_id}/eventstreams")
-                es_result=$(cat "${retry_resp}"); rm -f "${retry_resp}"
-                if [[ "${retry_code}" == "202" ]]; then
-                    local retry_loc
-                    retry_loc=$(grep -i "^location:" "${retry_header}" | head -1 | tr -d '\r' | sed 's/[Ll]ocation: *//')
-                    rm -f "${retry_header}"
-                    [[ -n "${retry_loc}" ]] && es_result=$(poll_operation "${retry_loc}" "${token}" "5") || true
-                    stream_id=$(echo "${es_result}" | jq -r '.createdItemId // .id // empty')
-                elif [[ "${retry_code}" -ge 200 && "${retry_code}" -lt 300 ]]; then
-                    stream_id=$(echo "${es_result}" | jq -r '.createdItemId // .id // empty')
-                    rm -f "${retry_header}"
-                else
-                    rm -f "${retry_header}"
-                    log_warn "  Retry also failed (HTTP ${retry_code}). Skipping Eventstream: ${name}."
+                if ! post_eventstream_shell "${ws_id}" "${token}" "${name}" "${desc}"; then
                     i=$((i+1)); continue
                 fi
+                stream_id="${SHELL_STREAM_ID}"
             else
                 log_warn "  Failed to create Eventstream: ${name} (HTTP ${es_http_code}: ${es_err_code})"
                 i=$((i+1)); continue
@@ -964,8 +948,7 @@ create_eventstreams() {
         # Fallback: if polling failed but Fabric still created the item, find it by name
         if [[ -z "${stream_id}" ]]; then
             local fallback_es
-            fallback_es=$(curl -sS -H "Authorization: Bearer ${token}" \
-                "${FABRIC_API_BASE}/workspaces/${ws_id}/eventstreams")
+            fallback_es=$(fabric_get "/workspaces/${ws_id}/eventstreams" "${token}")
             stream_id=$(echo "${fallback_es}" | jq -r \
                 --arg n "${name}" '.value[] | select(.displayName == $n) | .id' | head -1)
             [[ -n "${stream_id}" ]] && log_warn "  Async provisioning incomplete for '${name}' — found item anyway (${stream_id})"
@@ -994,21 +977,15 @@ create_dashboards() {
     local count; count=$(echo "${snapshot}" | jq '.realtime_dashboards | length')
     log_info "Creating ${count} Real-Time Dashboard(s)..."
 
-    # Build old→new ID pairs for patching definitions (same logic as create_eventstreams)
-    local old_ws_id
-    old_ws_id=$(echo "${snapshot}" | jq -r '.workspace.id')
-    local id_pairs=()
-    [[ -n "${ORIG_EH_ID}" && -n "${CREATED_EH_ID}" ]] && id_pairs+=("${ORIG_EH_ID}" "${CREATED_EH_ID}")
-    local old_db_id new_db_id
-    old_db_id=$(echo "${snapshot}" | jq -r '.kql_databases[0].id // empty')
-    new_db_id="${CREATED_KQL_DATABASES["contoso-qs-db"]:-}"
-    [[ -n "${old_db_id}" && -n "${new_db_id}" ]] && id_pairs+=("${old_db_id}" "${new_db_id}")
+    # Build old→new ID pairs for patching definitions
+    build_id_pairs "${snapshot}"
+    local old_ws_id="${GLOBAL_OLD_WS_ID}"
+    local id_pairs=("${GLOBAL_ID_PAIRS[@]+"${GLOBAL_ID_PAIRS[@]}"}")
 
     # The dashboard also embeds the Eventhouse clusterUri (a hostname, not a GUID).
     # Extract the old URI from the snapshot definition and replace with the new one.
-    local new_eh_id new_cluster_uri old_cluster_uri
-    new_eh_id="${CREATED_EH_ID:-}"
-    new_cluster_uri="${CREATED_KQL_CLUSTERS["${new_eh_id}"]:-}"
+    local new_cluster_uri old_cluster_uri
+    new_cluster_uri="${CREATED_KQL_CLUSTER_URI:-}"
     old_cluster_uri=""
     if [[ -n "${new_cluster_uri}" && ${count} -gt 0 ]]; then
         local _snap_def
@@ -1104,12 +1081,10 @@ print_summary() {
         echo -e "    contoso-qs-eh: ${CYAN}${CREATED_EH_ID}${NC}"
     fi
 
-    if [[ ${#CREATED_KQL_DATABASES[@]} -gt 0 ]]; then
+    if [[ -n "${CREATED_KQL_DB_ID}" ]]; then
         echo ""
         echo "  KQL Databases:"
-        for name in "${!CREATED_KQL_DATABASES[@]}"; do
-            echo -e "    ${name}: ${CYAN}${CREATED_KQL_DATABASES[${name}]}${NC}"
-        done
+        echo -e "    contoso-qs-db: ${CYAN}${CREATED_KQL_DB_ID}${NC}"
     fi
 
     if [[ ${#CREATED_EVENTSTREAMS[@]} -gt 0 ]]; then
