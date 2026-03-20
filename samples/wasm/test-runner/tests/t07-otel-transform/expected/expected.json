@@ -1,0 +1,3 @@
+{
+  "payload": "{\"metrics\":[{\"name\":\"wasm-placeholder\",\"value\":0.0,\"metric_type\":\"type-placeholder\",\"unit\":null,\"timestamp\":null,\"attributes\":null}]}"
+}

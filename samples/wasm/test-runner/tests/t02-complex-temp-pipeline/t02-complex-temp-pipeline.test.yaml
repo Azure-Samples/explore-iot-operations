@@ -1,0 +1,9 @@
+name: "Complex pipeline - temperature only accumulation"
+graph: "../../../graph-complex.yaml"
+input: "../../../data"
+expected: "./expected/expected.json"
+timeout: 120000
+select: ["payload"]
+ignores:
+  - "payload.humidity"
+  - "payload.object"

@@ -1,0 +1,6 @@
+name: "Temperature F to C conversion (3 payloads)"
+graph: "../../../graph-simple.yaml"
+input: "../../../data"
+expected: "./expected/expected.json"
+timeout: 90000
+select: ["payload"]

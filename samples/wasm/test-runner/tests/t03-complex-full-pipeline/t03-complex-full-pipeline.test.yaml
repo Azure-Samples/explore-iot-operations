@@ -1,0 +1,6 @@
+name: "Full pipeline - temperature, humidity, and snapshot images"
+graph: "../../../graph.dataflow.yaml"
+input: "../../../data-and-images"
+expected: "./expected/expected.json"
+timeout: 180000
+select: ["payload"]

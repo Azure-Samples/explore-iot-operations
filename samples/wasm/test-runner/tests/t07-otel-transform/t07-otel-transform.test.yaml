@@ -1,0 +1,6 @@
+name: "OTel transform - JSON to OTel metric format"
+graph: "../../../graph-otel-transform.yaml"
+input: "./input"
+expected: "./expected/expected.json"
+timeout: 90000
+select: ["payload"]

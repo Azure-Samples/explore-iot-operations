@@ -1,0 +1,6 @@
+name: "Schema validation - mixed valid and invalid payloads"
+graph: "../../../schema-registry-scenario/graph.dataflow.yaml"
+input: "../../../schema-registry-scenario/data"
+expected: "./expected/expected.json"
+timeout: 60000
+select: ["topic", "payload"]

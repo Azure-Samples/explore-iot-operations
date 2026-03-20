@@ -1,0 +1,3 @@
+{
+  "payload": "{\"temperature\":[{\"count\":3,\"max\":1695.0,\"min\":204.44444444444446,\"average\":851.1111111111112,\"last\":1695.0,\"unit\":\"C\",\"overtemp\":true}],\"humidity\":[{\"count\":3,\"max\":85.0,\"min\":45.0,\"average\":69.66666666666667,\"last\":79.0}],\"object\":[{\"result\":\"notebook, notebook computer\"},{\"result\":\"sliding door, sliding door\"},{\"result\":\"tripod\"}]}"
+}
