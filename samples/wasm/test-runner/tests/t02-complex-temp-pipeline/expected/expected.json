@@ -1,3 +1,3 @@
 {
-  "payload": "{\"temperature\":[{\"count\":3,\"max\":1695.0,\"min\":204.44444444444446,\"average\":851.1111111111112,\"last\":1695.0,\"unit\":\"C\",\"overtemp\":true}]}"
+  "payload": "{\"temperature\":[{\"count\":1,\"max\":653.8888888888889,\"min\":653.8888888888889,\"average\":653.8888888888889,\"last\":653.8888888888889,\"unit\":\"C\",\"overtemp\":true}]}"
 }

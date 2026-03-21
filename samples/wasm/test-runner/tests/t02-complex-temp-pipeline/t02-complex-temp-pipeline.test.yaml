@@ -1,6 +1,6 @@
-name: "Complex pipeline - temperature only accumulation"
+name: "Complex pipeline - temperature accumulation"
 graph: "../../../graph-complex.yaml"
-input: "../../../data"
+input: "./input"
 expected: "./expected/expected.json"
 timeout: 120000
 select: ["payload"]
