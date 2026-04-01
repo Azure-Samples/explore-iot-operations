@@ -1,0 +1,9 @@
+name: "State store enrichment with factoryId and machineId"
+graph: "../../../statestore-scenario/graph.dataflow.yaml"
+input: "../../../statestore-scenario/data"
+expected: "./expected/expected.json"
+timeout: 90000
+select:
+  - "payload"
+  - "properties.user-properties.otel/factoryId"
+  - "properties.user-properties.otel/machineId"

@@ -1,0 +1,6 @@
+name: "Schema validation passes valid data"
+graph: "../../../schema-registry-scenario/graph.dataflow.yaml"
+input: "./input"
+expected: "./expected/expected.json"
+timeout: 60000
+select: ["topic", "payload"]
