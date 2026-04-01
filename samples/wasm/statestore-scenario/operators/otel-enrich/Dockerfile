@@ -7,7 +7,7 @@ ARG BUILD_MODE="release"
 ENV CARGO_REGISTRIES_AIO_WG_INDEX="sparse+https://pkgs.dev.azure.com/azure-iot-sdks/iot-operations/_packaging/preview/Cargo/index/"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-WORKDIR /src
+WORKDIR /src/${APP_NAME}
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./src ./src
 
@@ -20,5 +20,5 @@ RUN if [ "${BUILD_MODE}" = "release" ]; then \
 FROM scratch
 ARG BUILD_MODE
 ARG APP_NAME
-COPY --from=operator-build "/src/target/wasm32-wasip2/${BUILD_MODE}/${APP_NAME/-/_}.wasm" "${APP_NAME//_/-}.wasm"
+COPY --from=operator-build "/src/${APP_NAME}/target/wasm32-wasip2/${BUILD_MODE}/${APP_NAME//-/_}.wasm" "${APP_NAME}.wasm"
 ENTRYPOINT [ "${APP_NAME}.wasm" ]

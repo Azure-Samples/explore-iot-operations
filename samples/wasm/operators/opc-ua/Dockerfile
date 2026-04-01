@@ -21,5 +21,5 @@ RUN if [ "${BUILD_MODE}" = "release" ]; then \
 FROM scratch
 ARG BUILD_MODE
 ARG APP_NAME
-COPY --from=operator-build "/src/${APP_NAME}/target/wasm32-wasip2/${BUILD_MODE}/${APP_NAME/-/_}.wasm" "${APP_NAME//_/-}.wasm"
+COPY --from=operator-build "/src/${APP_NAME}/target/wasm32-wasip2/${BUILD_MODE}/${APP_NAME//-/_}.wasm" "${APP_NAME}.wasm"
 ENTRYPOINT [ "${APP_NAME}.wasm" ]
