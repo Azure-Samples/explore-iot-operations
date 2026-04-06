@@ -21,15 +21,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: azure-arc-containerstorage
-  labels:
-    pod-security.kubernetes.io/audit: privileged
-    pod-security.kubernetes.io/enforce: privileged
---- 
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: azure-arc-acstor
+  name: cert-manager
   labels:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/enforce: privileged
