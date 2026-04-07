@@ -1,6 +1,6 @@
 name: "State store enrichment with factoryId and machineId"
-graph: "../../../statestore-scenario/graph.dataflow.yaml"
-input: "../../../statestore-scenario/data"
+graph: "../../statestore-scenario/graph.dataflow.yaml"
+input: "../../statestore-scenario/data"
 expected: "./expected/expected.json"
 timeout: 90000
 select:

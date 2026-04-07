@@ -9,6 +9,7 @@ This workspace is structured for the Azure IoT Operations VS Code extension so t
 - `graph-complex.yaml`, `graph-otel.yaml`, `graph-otel-transform.yaml`, `graph-simple.yaml` – additional graphs
 - `data/`, `data-and-images/`, `images/` – sample inputs; extension runs write output to `data-and-images/output`
 - `schema-registry-scenario/`, `statestore-scenario/` – scenario source code YAMLs for schema registry and state store usage
+- `tests/` – automated test cases for the CLI test runner and VS Code Test Explorer (auto-discovered when `wasm/` is opened as a workspace)
 - `Dockerfile`, `Makefile`, `.cargo/` – Rust builder assets co-located here (see **Rust builds**)
 - [`../wasm-python`](../wasm-python/README.md) – Python operator workspace; see its README for language-specific guidance
 

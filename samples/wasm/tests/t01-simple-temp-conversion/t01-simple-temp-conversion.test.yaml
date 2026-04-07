@@ -1,5 +1,5 @@
-name: "OPC UA basic flattening"
-graph: "../../../graph-opc-ua.yaml"
+name: "Temperature F to C conversion"
+graph: "../../graph-simple.yaml"
 input: "./input"
 expected: "./expected/expected.json"
 timeout: 90000
