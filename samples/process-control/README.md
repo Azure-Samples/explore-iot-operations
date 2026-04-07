@@ -8,7 +8,7 @@ The OPC-UA commander:
   MQTT messages include some system and user properties to define [metadata](https://github.com/Azure/iot-operations-sdks/blob/main/doc/reference/message-metadata.md) values that help with flow control.
 - Subscribes to MQTT topic `{AioNamespace}/asset-operations/{AssetId}/{DatasetName}/` for data-set write operations.
 - Subscribes to MQTT topic `{AioNamespace}/asset-operations/{AssetId}/{ManagementGroupName}/` for call operations and explicit write.
-- Subscribes to MQTT topic `{AioNamespace}/endpoint-operations/{InboundEndpointProfileName}/{ActionName}/` for endpoint operations.
+- Subscribes to MQTT topic `{AioNamespace}/endpoint-operations/{DeviceName}/{EndpointName}/{ActionName}/` for endpoint operations.
 - On MQTT request/response create ad-hoc session based on the device associated with the namespace asset.
 - Validates write requests against the generated request schema.
 - Validates that the write request only contains data points that exist within the dataset.
