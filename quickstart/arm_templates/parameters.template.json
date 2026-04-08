@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Parameters template for Azure IoT Operations deployment. Copy to parameters.json and fill in values."
+  },
+  "parameters": {
+    "clusterName": {
+      "value": "YOUR_CLUSTER_NAME"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "resourceGroupName": {
+      "value": "rg-iot-operations"
+    },
+    "namespaceName": {
+      "value": "iot-operations-ns"
+    },
+    "keyVaultName": {
+      "value": ""
+    },
+    "storageAccountName": {
+      "value": ""
+    },
+    "schemaRegistryName": {
+      "value": ""
+    },
+    "tags": {
+      "value": {
+        "project": "azure-iot-operations",
+        "environment": "development",
+        "deployedBy": "External-Configurator"
+      }
+    }
+  }
+}

@@ -1,0 +1,180 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: historian-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demohistorian
+  namespace: default
+  labels:
+    app: demohistorian
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demohistorian
+  template:
+    metadata:
+      labels:
+        app: demohistorian
+    spec:
+      serviceAccountName: mqtt-client
+      imagePullSecrets:
+      - name: acr-pull-secret  # Created by Deploy-EdgeModules.ps1 for ACR authentication
+      containers:
+      # PostgreSQL Database Container
+      - name: postgres
+        image: postgres:16-alpine
+        env:
+          - name: POSTGRES_DB
+            value: mqtt_historian
+          - name: POSTGRES_USER
+            value: historian
+          - name: POSTGRES_PASSWORD
+            value: historian_password  # Demo only - use K8s secrets in production
+          - name: PGDATA
+            value: /var/lib/postgresql/data/pgdata
+        ports:
+          - containerPort: 5432
+            name: postgres
+        volumeMounts:
+          - name: postgres-storage
+            mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - historian
+              - -d
+              - mqtt_historian
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - historian
+              - -d
+              - mqtt_historian
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      
+      # Edge Historian Application Container
+      - name: historian
+        image: <YOUR_REGISTRY>/demohistorian:latest
+        env:
+          # Database Configuration
+          - name: POSTGRES_HOST
+            value: localhost
+          - name: POSTGRES_PORT
+            value: "5432"
+          - name: POSTGRES_DB
+            value: mqtt_historian
+          - name: POSTGRES_USER
+            value: historian
+          - name: POSTGRES_PASSWORD
+            value: historian_password  # Demo only
+          
+          # MQTT Broker Configuration (Azure IoT Operations)
+          - name: MQTT_BROKER
+            value: aio-broker.azure-iot-operations.svc.cluster.local
+          - name: MQTT_PORT
+            value: "18883"
+          - name: MQTT_CLIENT_ID
+            value: historian-001
+          - name: MQTT_AUTH_METHOD
+            value: K8S-SAT
+          - name: SAT_TOKEN_PATH
+            value: /var/run/secrets/tokens/broker-sat
+          - name: MQTT_TOPIC_PREFIX
+            value: factory
+          
+          # Application Configuration
+          - name: LOG_LEVEL
+            value: INFO
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        
+        ports:
+          - containerPort: 8080
+            name: http
+        
+        volumeMounts:
+          # ServiceAccountToken for MQTT authentication
+          - name: broker-sat
+            mountPath: /var/run/secrets/tokens
+            readOnly: true
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 30
+          timeoutSeconds: 5
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      
+      volumes:
+        # Persistent storage for PostgreSQL data
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: historian-pvc
+        
+        # ServiceAccountToken for AIO MQTT authentication
+        - name: broker-sat
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: broker-sat
+                  expirationSeconds: 86400  # 24 hours
+                  audience: aio-internal
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demohistorian
+  namespace: default
+  labels:
+    app: demohistorian
+spec:
+  selector:
+    app: demohistorian
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+      protocol: TCP
+  type: ClusterIP

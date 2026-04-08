@@ -1,0 +1,40 @@
+{
+  "config_type": "quickstart",
+  "azure": {
+    "subscription_id": "",
+    "resource_group": "rg-iot-quickstart",
+    "location": "eastus",
+    "cluster_name": "iot-ops-cluster",
+    "storage_account_name": "",
+    "key_vault_name": "",
+    "enable_arc_on_install": false,
+    "deploy_iot_operations": false
+  },
+  "deployment": {
+    "skip_system_update": false,
+    "deployment_mode": "test"
+  },
+  "optional_tools": {
+    "k9s": true,
+    "mqtt-viewer": true,
+    "ssh": false
+  },
+  "comments": {
+    "config_type": "Quickstart mode: automated setup with Arc enablement and IoT Operations deployment using sensible defaults; Advanced mode: manual control with selective automation and skip flags.",
+    "subscription_id": "Leave empty to use current logged-in subscription, or provide your Azure subscription GUID",
+    "resource_group": "Name of Azure resource group (will be created if it doesn't exist)",
+    "location": "Azure region (e.g., eastus, westus2, westeurope, northeurope)",
+    "cluster_name": "Name for your Arc-enabled Kubernetes cluster",
+    "storage_account_name": "OPTIONAL: Custom name for Azure Storage Account (must be globally unique, 3-24 chars, lowercase alphanumeric only). Leave empty to auto-generate.",
+    "key_vault_name": "Name for your Azure Key Vault (3-24 chars, alphanumeric and hyphens only, must be globally unique). Used for AIO secret sync.",
+    "enable_arc_on_install": "Set to true to Arc-enable cluster during installation (requires Azure CLI and login)",
+    "deploy_iot_operations": "Set to true to deploy Azure IoT Operations automatically with default settings",
+    "deployment_mode": "Options: 'test' for development, 'secure' for production (future)",
+    "skip_system_update": "Set to true to skip apt update/upgrade for faster runs",
+    "optional_tools": {
+      "k9s": "Terminal UI for Kubernetes cluster management. Recommended for quickstart.",
+      "mqtt-viewer": "Installs mosquitto-clients (mosquitto_sub, mosquitto_pub) for MQTT debugging.",
+      "ssh": "Secure remote shell access. Set to true if you need remote management."
+    }
+  }
+}
