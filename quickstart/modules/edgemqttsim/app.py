@@ -359,13 +359,38 @@ def main():
     print(f"{'=' * 70}\n")
     
     message_batch = 0
+    last_connect_attempt = time.time()  # Initial connect was just made
+    reconnect_backoff = 30  # Seconds before first reconnect retry
     try:
         while True:
             # Wait for connection
             if not is_connected.is_set():
-                print("⏳ Waiting for connection before generating messages...")
+                now = time.time()
+                if now - last_connect_attempt >= reconnect_backoff:
+                    last_connect_attempt = now
+                    print(f"🔄 Connection lost — reconnecting with fresh SAT token...")
+                    try:
+                        if AUTH_METHOD == 'K8S-SAT':
+                            token = get_sat_token()
+                            if token:
+                                fresh_props = mqtt.Properties(mqtt.PacketTypes.CONNECT)
+                                fresh_props.AuthenticationMethod = 'K8S-SAT'
+                                fresh_props.AuthenticationData = token.encode('utf-8')
+                                client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60, properties=fresh_props)
+                            else:
+                                print("✗ SAT token unavailable, will retry...")
+                        else:
+                            client.reconnect()
+                    except Exception as e:
+                        print(f"✗ Reconnect attempt failed: {e}")
+                    reconnect_backoff = min(reconnect_backoff * 2, 120)
+                else:
+                    print("⏳ Waiting for connection before generating messages...")
                 time.sleep(1)
                 continue
+
+            # Successful connection — reset backoff
+            reconnect_backoff = 30
             
             message_batch += 1
             
