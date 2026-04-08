@@ -47,7 +47,7 @@ docker pull eclipse-mosquitto
 ### Install the CLI
 
 ```bash
-npm install -g azure-iot-operations-data-flow-cli
+npm install -g @azure-tools/dataflow-dev
 ```
 
 Or run directly via Node.js:
@@ -260,7 +260,6 @@ dataflow-dev test --app . tests/t03-complex-full-pipeline
 | **View container logs** | `docker logs -f devx` or check `<test>/output/` after a run |
 | **Change state store values** | Edit `statestore-scenario/statestore.json`, rebuild, re-run |
 | **Try different images** | Replace `bear.raw` in t03 input with any image from `images/` |
-| **Debug mode** | `dataflow-dev run stop && dataflow-dev run start --mode debug` |
 
 ---
 
