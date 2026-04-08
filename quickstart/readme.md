@@ -141,7 +141,7 @@ cd explore-iot-operations/quickstart
 
 ```bash
 cd config
-cp quikstart_config.template aio_config.json
+cp quickstart_config.template aio_config.json
 ```
 
 Edit `aio_config.json` with your settings:
@@ -481,7 +481,7 @@ To deploy all modules configured in `aio_config.json` at once, omit `-ModuleName
 
 ## Configuration
 
-Customize edge deployment via `arc_build_linux/aio_config.json`:
+Customize edge deployment via `config/aio_config.json`:
 - Cluster name for your edge device
 - Optional tools (k9s, MQTT viewers, SSH)
 - Azure AD principal for Arc proxy access
