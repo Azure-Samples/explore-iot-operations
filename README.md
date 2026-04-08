@@ -21,6 +21,8 @@ This project provides the following:
 
 ### Option A: GitHub Codespaces (browser-based, no local install)
 
+> **Note:** Codespaces are ephemeral — they are automatically stopped after a period of inactivity and deleted after a retention period. They are great for exploration and learning, but not suitable for persistent environments. For a lasting deployment, use [Option B](#option-b-aio-quickstart-deploy-on-your-own-hardware-or-vm).
+
 1. Use this GitHub codespace to explore Azure IoT Operations in your browser without installing anything on your local machine.
 
    [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/explore-iot-operations?quickstart=1)
@@ -41,9 +43,9 @@ This project provides the following:
 
 3. Explore!
 
-### Option B: AIO Quickstart (real hardware or AKS Edge Essentials)
+### Option B: AIO Quickstart (deploy on your own hardware or VM)
 
-For production-oriented deployments on actual edge devices — or a single Windows laptop — use the **[AIO Quickstart](./quickstart/readme.md)**. It provides:
+For persistent deployments on machines you control — Ubuntu devices, Windows PCs, or VMs — use the **[AIO Quickstart](./quickstart/readme.md)**. It provides:
 
 - One-command edge setup on Ubuntu with K3s
 - Automated Azure configuration from a Windows management machine
@@ -54,8 +56,8 @@ Two paths are supported:
 
 | Path | Target | Guide |
 |------|--------|-------|
-| **Ubuntu / K3s** | Dedicated edge device (NUC, PC, VM) | [Quickstart README](./quickstart/readme.md) |
-| **AKS Edge Essentials** | Single Windows machine | [Quickstart README — Path B](./quickstart/readme.md#path-b-single-windows-machine-aks-ee) |
+| **Ubuntu / K3s** | Ubuntu device, NUC, PC, or VM | [Quickstart README](./quickstart/readme.md) |
+| **AKS Edge Essentials** | Windows device, PC, or VM | [Quickstart README — Path B](./quickstart/readme.md#path-b-single-windows-machine-aks-ee) |
 
 See the [Advanced Guide](./quickstart/README_ADVANCED.md) for detailed technical reference, troubleshooting, and operations documentation.
 
