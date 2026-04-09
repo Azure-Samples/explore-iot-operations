@@ -183,6 +183,31 @@ Restart with: sudo systemctl restart k3s" -Fatal
     }
     Write-Success "Kubernetes cluster is accessible"
     
+    # Check if helm is available and warn about version
+    if (-not (Get-Command helm -ErrorAction SilentlyContinue)) {
+        Write-WarnLog "helm not found. Custom-locations enablement will require manual steps."
+    } else {
+        Write-Success "helm is available"
+        try {
+            $helmVersionOutput = helm version --short 2>$null
+            if ($helmVersionOutput -match 'v(\d+)\.(\d+)\.(\d+)') {
+                $helmMajor = [int]$Matches[1]
+                $helmMinor = [int]$Matches[2]
+                $helmPatch = [int]$Matches[3]
+                Write-InfoLog "Helm version: $helmMajor.$helmMinor.$helmPatch"
+                if ($helmMajor -lt 3) {
+                    Write-ErrorLog "Helm 2.x is not supported. Please upgrade to Helm 3.x or later." -Fatal
+                } elseif ($helmMajor -eq 3 -and $helmMinor -lt 14) {
+                    Write-WarnLog "Helm < 3.14 detected. OCI chart pulls may fail due to media-type changes."
+                    Write-InfoLog "The script will fall back to direct HTTP chart download if needed."
+                    Write-InfoLog "To avoid this, upgrade Helm: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash"
+                }
+            }
+        } catch {
+            Write-WarnLog "Could not determine Helm version"
+        }
+    }
+    
     # Check for required PowerShell modules
     $requiredModules = @("Az.Accounts", "Az.Resources", "Az.ConnectedKubernetes")
     
