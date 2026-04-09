@@ -930,21 +930,22 @@ kube-apiserver-arg:
     sudo systemctl restart k3s
     
     Write-Host ""
-    Write-Host "============================================================================" -ForegroundColor Green
-    Write-Host "K3S OIDC ISSUER CONFIGURED" -ForegroundColor Green
-    Write-Host "============================================================================" -ForegroundColor Green
+    Write-Host "============================================================================" -ForegroundColor Yellow
+    Write-Host "ACTION REQUIRED: Re-run this script after 90 seconds" -ForegroundColor Yellow
+    Write-Host "============================================================================" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "K3s is restarting with the Arc OIDC issuer. This takes 60-90 seconds." -ForegroundColor Cyan
+    Write-Host "K3s is restarting to apply the OIDC issuer configuration." -ForegroundColor Cyan
+    Write-Host "This is EXPECTED and NORMAL -- the script will finish on the next run." -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "Run this script again to verify the configuration is complete." -ForegroundColor Yellow
+    Write-Host "  >>> Wait 90 seconds, then run:  ./arc_enable.ps1  <<<" -ForegroundColor Green
     Write-Host ""
-    Write-Host "To check K3s status manually:" -ForegroundColor Gray
-    Write-Host "  kubectl get nodes"
-    Write-Host "  kubectl cluster-info dump | grep service-account-issuer"
+    Write-Host "The second run will complete the remaining steps:" -ForegroundColor Gray
+    Write-Host "  - Create Fabric Event Streams secret placeholders" -ForegroundColor Gray
+    Write-Host "  - Verify custom-locations enablement" -ForegroundColor Gray
+    Write-Host "  - Final Arc connection verification" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "Once K3s is ready, secret sync will work correctly for:" -ForegroundColor Gray
-    Write-Host "  - Azure Key Vault secrets to Kubernetes"
-    Write-Host "  - Dataflow endpoints with Managed Identity authentication"
+    Write-Host "To check if K3s is ready before re-running:" -ForegroundColor Gray
+    Write-Host "  kubectl get nodes" -ForegroundColor Gray
     Write-Host ""
     
     # Exit script - user should re-run after K3s restarts
@@ -1456,7 +1457,10 @@ function Main {
     # This may exit early if K3s needs to restart - user should re-run
     $oidcConfigured = Configure-K3sOidcIssuer
     if (-not $oidcConfigured) {
-        Write-Log "Script exiting - re-run after K3s restarts to complete configuration"
+        Write-Host ""
+        Write-Host ">>> Wait 90 seconds, then re-run:  ./arc_enable.ps1  <<<" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Log "Script paused - re-run after K3s restarts to complete remaining steps"
         exit 0
     }
     
