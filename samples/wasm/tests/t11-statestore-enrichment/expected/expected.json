@@ -1,0 +1,9 @@
+{
+  "payload": "{\"temperature\":{\"value\":360,\"unit\":\"F\"}}",
+  "properties": {
+    "user-properties": {
+      "otel/factoryId": "factoryA",
+      "otel/machineId": "machineA"
+    }
+  }
+}

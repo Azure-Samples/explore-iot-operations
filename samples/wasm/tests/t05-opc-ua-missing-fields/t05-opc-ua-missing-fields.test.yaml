@@ -1,0 +1,6 @@
+name: "OPC UA missing fields filtered out"
+graph: "../../graph-opc-ua.yaml"
+input: "./input"
+expected: "./expected/expected.json"
+timeout: 90000
+select: ["payload"]

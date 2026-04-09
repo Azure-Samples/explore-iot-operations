@@ -1,0 +1,14 @@
+{
+    "MotorSpeed": {
+        "Value": 1500,
+        "SourceTimestamp": "2026-03-15T10:30:00Z"
+    },
+    "Vibration": {
+        "Value": 0.45,
+        "SourceTimestamp": "2026-03-15T10:30:00Z"
+    },
+    "AmbientTemp": {
+        "Value": 22.1,
+        "SourceTimestamp": "2026-03-15T10:30:00Z"
+    }
+}
