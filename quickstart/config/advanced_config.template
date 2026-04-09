@@ -13,8 +13,6 @@
     "custom_asset_endpoint": "",
     "manage_principal": "",
     "container_registry": "",
-    "enable_arc_on_install": false,
-    "deploy_iot_operations": false,
     "skip_kubeconfig_setup": false,
     "skip_container_registry_setup": false,
     "skip_certificate_setup": false,
@@ -54,8 +52,6 @@
     "custom_asset_endpoint": "OPTIONAL: Name of existing asset endpoint to use as namespace resource (create this manually first)",
     "manage_principal": "OPTIONAL: Azure AD Object ID (GUID) to grant cluster-admin permissions for remote cluster management via Azure Arc. Get with: az ad signed-in-user show --query id -o tsv. Leave empty to skip RBAC binding.",
     "container_registry": "OPTIONAL: Container registry for edge modules (e.g., 'yourusername' for Docker Hub or 'yourregistry.azurecr.io' for ACR). Leave empty to use GitHub Container Registry (ghcr.io/yourusername). Used to replace <YOUR_REGISTRY> in deployment.yaml files.",
-    "enable_arc_on_install": "Set to true to Arc-enable cluster during installation. For advanced users, set to false and Arc-enable manually later with External-Configurator.ps1",
-    "deploy_iot_operations": "Set to true to deploy Azure IoT Operations (only applies if enable_arc_on_install=true). For manual control, set to false.",
     "skip_kubeconfig_setup": "Set to true to skip automatic kubeconfig setup (if you want to manage kubectl configuration manually)",
     "skip_container_registry_setup": "Set to true to skip container registry login and setup (if you handle this separately)",
     "skip_certificate_setup": "Set to true to skip automatic certificate generation and management (if you provide your own certs)",
@@ -81,9 +77,7 @@
       "2. CSI Secret Store driver installed if enable_keyvault_sync=true (RECOMMENDED)",
       "3. Container registry setup skipped if skip_container_registry_setup=true",
       "4. Certificate generation skipped if skip_certificate_setup=true",
-      "5. Azure Arc connection skipped if enable_arc_on_install=false",
-      "6. Azure IoT Operations deployment skipped if deploy_iot_operations=false",
-      "7. Use External-Configurator.ps1 for manual Azure resource creation and configuration"
+      "5. Use External-Configurator.ps1 for manual Azure resource creation and configuration"
     ],
     "use_cases": [
       "Existing Kubernetes cluster that needs IoT Operations",
@@ -97,8 +91,6 @@
   "examples": {
     "minimal_local_cluster": {
       "comment": "Just set up K3s with Key Vault sync, do everything else manually",
-      "enable_arc_on_install": false,
-      "deploy_iot_operations": false,
       "skip_kubeconfig_setup": false,
       "skip_container_registry_setup": true,
       "skip_certificate_setup": true,
@@ -106,8 +98,6 @@
     },
     "bring_your_own_certs": {
       "comment": "Set up cluster but use existing certificates and registry",
-      "enable_arc_on_install": true,
-      "deploy_iot_operations": false,
       "skip_kubeconfig_setup": false,
       "skip_container_registry_setup": true,
       "skip_certificate_setup": true,
@@ -115,8 +105,6 @@
     },
     "staged_deployment": {
       "comment": "First run: set up infrastructure only",
-      "enable_arc_on_install": false,
-      "deploy_iot_operations": false,
       "skip_kubeconfig_setup": false,
       "skip_container_registry_setup": false,
       "skip_certificate_setup": false,

@@ -6,9 +6,7 @@
     "location": "eastus",
     "cluster_name": "iot-ops-cluster",
     "storage_account_name": "",
-    "key_vault_name": "",
-    "enable_arc_on_install": false,
-    "deploy_iot_operations": false
+    "key_vault_name": ""
   },
   "deployment": {
     "skip_system_update": false,
@@ -27,8 +25,6 @@
     "cluster_name": "Name for your Arc-enabled Kubernetes cluster",
     "storage_account_name": "OPTIONAL: Custom name for Azure Storage Account (must be globally unique, 3-24 chars, lowercase alphanumeric only). Leave empty to auto-generate.",
     "key_vault_name": "Name for your Azure Key Vault (3-24 chars, alphanumeric and hyphens only, must be globally unique). Used for AIO secret sync.",
-    "enable_arc_on_install": "Set to true to Arc-enable cluster during installation (requires Azure CLI and login)",
-    "deploy_iot_operations": "Set to true to deploy Azure IoT Operations automatically with default settings",
     "deployment_mode": "Options: 'test' for development, 'secure' for production (future)",
     "skip_system_update": "Set to true to skip apt update/upgrade for faster runs",
     "optional_tools": {
