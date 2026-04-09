@@ -215,7 +215,7 @@ The dashboard includes integrated log panels using Azure Log Analytics (KQL):
 | OPC-UA Connector Logs | `ContainerLogV2` | `PodName startswith "aio-opc"` |
 | Kubernetes Events | `KubeEvents` | `Namespace startswith "azure-iot-operations"` |
 | Error & Warning Logs | `ContainerLogV2` | `LogLevel in ("error", "warning", ...)` |
-| All AIO Logs | `ContainerLogV2` | `PodNamespace startswith "azure-iot-operations"` |
+| All IoT Operations Logs | `ContainerLogV2` | `PodNamespace startswith "azure-iot-operations"` |
 
 ## Troubleshooting
 
