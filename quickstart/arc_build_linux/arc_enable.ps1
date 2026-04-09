@@ -999,6 +999,64 @@ function Test-ArcConnection {
 }
 
 # ============================================================================
+# CHART DOWNLOAD HELPER
+# ============================================================================
+
+function Get-ChartFromRegistry {
+    <#
+    .SYNOPSIS
+        Downloads a Helm chart tarball directly from MCR's HTTP registry API.
+    
+    .DESCRIPTION
+        Bypasses the Helm OCI client entirely. This avoids the media-type
+        incompatibility error that occurs when the system Helm is older than
+        v3.14 and the chart was pushed with newer OCI conventions.
+        
+        Flow: anonymous token → OCI manifest → chart layer blob → local .tgz
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Repo,
+        [Parameter(Mandatory)][string]$Version
+    )
+    
+    $registry = "mcr.microsoft.com"
+    $baseUrl  = "https://$registry/v2/$Repo"
+    
+    # Step 1: Obtain anonymous bearer token
+    Write-InfoLog "Fetching anonymous token from MCR for $Repo..."
+    $tokenUrl = "https://$registry/oauth2/token?service=$registry&scope=repository:${Repo}:pull"
+    $tokenResp = Invoke-RestMethod -Uri $tokenUrl -ErrorAction Stop
+    $authHeaders = @{ Authorization = "Bearer $($tokenResp.access_token)" }
+    
+    # Step 2: Get OCI manifest
+    Write-InfoLog "Fetching OCI manifest for version $Version..."
+    $manifestHeaders = $authHeaders.Clone()
+    $manifestHeaders['Accept'] = 'application/vnd.oci.image.manifest.v1+json'
+    $manifest = Invoke-RestMethod -Uri "$baseUrl/manifests/$Version" -Headers $manifestHeaders -ErrorAction Stop
+    
+    # Step 3: Find the chart layer (tar+gzip)
+    $chartLayer = $manifest.layers | Where-Object {
+        $_.mediaType -match 'tar\+gzip|tar\.gzip|chart\.content'
+    } | Select-Object -First 1
+    
+    if (-not $chartLayer) {
+        throw "No chart tarball layer found in OCI manifest (layers: $($manifest.layers | ForEach-Object { $_.mediaType }))"
+    }
+    
+    # Step 4: Download the blob
+    $tempFile = Join-Path ([System.IO.Path]::GetTempPath()) "azure-arc-k8sagents-${Version}.tgz"
+    Write-InfoLog "Downloading chart blob ($($chartLayer.digest)) to $tempFile..."
+    Invoke-WebRequest -Uri "$baseUrl/blobs/$($chartLayer.digest)" -Headers $authHeaders -OutFile $tempFile -ErrorAction Stop
+    
+    if (-not (Test-Path $tempFile) -or (Get-Item $tempFile).Length -eq 0) {
+        throw "Downloaded chart file is empty or missing"
+    }
+    
+    Write-InfoLog "Chart downloaded: $('{0:N0}' -f (Get-Item $tempFile).Length) bytes"
+    return $tempFile
+}
+
+# ============================================================================
 # COMPLETION
 # ============================================================================
 
@@ -1101,52 +1159,89 @@ function Enable-CustomLocations {
     # Step 2: Helm upgrade to actually enable the feature in the cluster
     # This is the step the PS module skips - we do it explicitly.
     # The azure-arc chart is installed by the Arc agent from an internal OCI registry.
-    # We must extract the chart version from the installed release and pull from MCR.
+    # Strategy:
+    #   A) Try OCI reference directly (works with Helm >= 3.14)
+    #   B) If OCI fails due to media-type incompatibility, download the chart
+    #      tarball via MCR's HTTP registry API and use the local .tgz file
     Write-InfoLog "Step 2: Enabling custom-locations in cluster via Helm..."
+    
+    # Extract chart version from the installed release
+    $chartVersion = $null
     try {
-        # Extract chart version from the installed release
-        $chartVersion = $null
+        $releaseJson = helm list -n azure-arc-release -f '^azure-arc$' -o json 2>$null | ConvertFrom-Json
+        if ($releaseJson -and $releaseJson.Count -gt 0) {
+            $chartString = $releaseJson[0].chart
+            if ($chartString -match '-([\d]+\.[\d]+\.[\d]+.*)$') {
+                $chartVersion = $Matches[1]
+                Write-InfoLog "Installed chart: $chartString (version: $chartVersion)"
+            }
+        }
+    } catch {
+        Write-WarnLog "Could not determine installed chart version: $_"
+    }
+    
+    $helmSetArgs = @(
+        "--namespace", "azure-arc-release",
+        "--reuse-values",
+        "--set", "systemDefaultValues.customLocations.enabled=true",
+        "--set", "systemDefaultValues.customLocations.oid=$customLocationsOid"
+    )
+    
+    $helmUpgradeSuccess = $false
+    
+    # Attempt A: OCI reference (fast path — works if Helm supports the media type)
+    $ociRef = "oci://mcr.microsoft.com/azurearck8s/batch1/stable/azure-arc-k8sagents"
+    $helmArgs = @("upgrade", "azure-arc", $ociRef) + $helmSetArgs
+    if ($chartVersion) { $helmArgs += @("--version", $chartVersion) }
+    
+    Write-InfoLog "Attempt A - OCI pull: helm $($helmArgs -join ' ')"
+    $helmResult = & helm @helmArgs 2>&1
+    
+    if ($LASTEXITCODE -eq 0) {
+        $helmUpgradeSuccess = $true
+        Write-Success "Helm upgrade completed (OCI)"
+    } else {
+        Write-WarnLog "OCI-based upgrade failed: $helmResult"
+        Write-InfoLog "Falling back to direct HTTP chart download..."
+        
+        # Attempt B: Download chart tarball via MCR HTTP API (bypasses Helm OCI client)
+        $localChart = $null
         try {
-            $releaseJson = helm list -n azure-arc-release -f '^azure-arc$' -o json 2>$null | ConvertFrom-Json
-            if ($releaseJson -and $releaseJson.Count -gt 0) {
-                $chartString = $releaseJson[0].chart
-                if ($chartString -match '-([\d]+\.[\d]+\.[\d]+.*)$') {
-                    $chartVersion = $Matches[1]
-                    Write-InfoLog "Installed chart: $chartString (version: $chartVersion)"
-                }
+            if (-not $chartVersion) {
+                throw "Cannot download chart — installed version unknown"
+            }
+            $localChart = Get-ChartFromRegistry `
+                -Repo "azurearck8s/batch1/stable/azure-arc-k8sagents" `
+                -Version $chartVersion
+            
+            $helmArgs = @("upgrade", "azure-arc", $localChart) + $helmSetArgs
+            Write-InfoLog "Attempt B - Local tgz: helm $($helmArgs -join ' ')"
+            $helmResult = & helm @helmArgs 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+                $helmUpgradeSuccess = $true
+                Write-Success "Helm upgrade completed (direct download)"
+            } else {
+                Write-ErrorLog "Helm upgrade failed with local chart: $helmResult"
             }
         } catch {
-            Write-WarnLog "Could not determine installed chart version: $_"
+            Write-ErrorLog "Direct chart download failed: $_"
+        } finally {
+            if ($localChart -and (Test-Path $localChart)) {
+                Remove-Item $localChart -Force -ErrorAction SilentlyContinue
+            }
         }
-
-        # Use OCI reference to MCR (same source az connectedk8s uses internally)
-        $ociRef = "oci://mcr.microsoft.com/azurearck8s/batch1/stable/azure-arc-k8sagents"
-        $helmArgs = @(
-            "upgrade", "azure-arc", $ociRef,
-            "--namespace", "azure-arc-release",
-            "--reuse-values",
-            "--set", "systemDefaultValues.customLocations.enabled=true",
-            "--set", "systemDefaultValues.customLocations.oid=$customLocationsOid"
-        )
-        if ($chartVersion) {
-            $helmArgs += @("--version", $chartVersion)
-        }
-
-        Write-InfoLog "Running: helm $($helmArgs -join ' ')"
-        $helmResult = & helm @helmArgs 2>&1
-        
-        if ($LASTEXITCODE -ne 0) {
-            Write-ErrorLog "helm upgrade failed: $helmResult"
-            Write-Host ""
-            Write-Host "To enable manually from a machine with az CLI, run:" -ForegroundColor Yellow
-            Write-Host "  az connectedk8s enable-features --name $script:ClusterName --resource-group $script:ResourceGroup --features cluster-connect custom-locations" -ForegroundColor Cyan
-            Write-Host ""
-            return
-        }
-        
-        Write-Success "Helm upgrade completed"
-    } catch {
-        Write-ErrorLog "helm upgrade threw an exception: $_"
+    }
+    
+    if (-not $helmUpgradeSuccess) {
+        Write-Host ""
+        Write-Host "Custom-locations could not be enabled automatically." -ForegroundColor Yellow
+        Write-Host "To enable manually from a machine with az CLI, run:" -ForegroundColor Yellow
+        Write-Host "  az connectedk8s enable-features --name $script:ClusterName --resource-group $script:ResourceGroup --features cluster-connect custom-locations" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "Or upgrade Helm to >= 3.14 on this machine and re-run this script:" -ForegroundColor Yellow
+        Write-Host "  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash" -ForegroundColor Cyan
+        Write-Host ""
         return
     }
     
