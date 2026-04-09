@@ -1098,7 +1098,7 @@ configure_system_settings() {
         return 0
     fi
     
-    # Set sysctl parameters for AIO
+    # Set sysctl parameters for IoT Operations
     local sysctl_file="/etc/sysctl.d/99-azure-iot-operations.conf"
     
     sudo tee "$sysctl_file" > /dev/null << 'EOF'

@@ -18,7 +18,7 @@ An Event Hubs namespace is created with these configurations:
 - The Event Hub status is enabled
 
 
-## Add the AIO deployments to a single site
+## Add the IoT Operations deployments to a single site
 
 This article focuses on techniques to set up a layered network. The examples use clusters in a single factory called site-1. For this article, the admin already created a site named site-1, scoped to the entire subscription. All clusters deployed in the same subscription are part of that site, as shown here.
 

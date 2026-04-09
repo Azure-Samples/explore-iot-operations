@@ -13,7 +13,7 @@ az group create --name rg-test-vm --location eastus
 ```
 
 ## 2. Create the VM
-This is the most basic VM that can run AIO. 
+This is the most basic VM that can run IoT Operations. 
 ```bash
 az vm create --resource-group rg-test-vm --name test-vm-01 --image Ubuntu2204 --size Standard_D4s_v3 --admin-username azureuser --generate-ssh-keys --output table
 ```
@@ -72,4 +72,4 @@ az group show --name rg-test-vm
 
 ---
 
-**Cost note**: `Standard_D4s_v3` (~$0.19/hr) has 4 vCPUs and 16 GB RAM, meeting the [AIO minimum requirements](https://learn.microsoft.com/en-us/azure/iot-operations/deploy-iot-ops/overview-deploy#supported-environments) (4 CPU cores, 16 GB RAM). Remember to delete the resource group when done — the resource group approach guarantees no orphaned resources (disks, NICs, IPs) are left behind billed.
+**Cost note**: `Standard_D4s_v3` (~$0.19/hr) has 4 vCPUs and 16 GB RAM, meeting the [IoT Operations minimum requirements](https://learn.microsoft.com/en-us/azure/iot-operations/deploy-iot-ops/overview-deploy#supported-environments) (4 CPU cores, 16 GB RAM). Remember to delete the resource group when done — the resource group approach guarantees no orphaned resources (disks, NICs, IPs) are left behind billed.

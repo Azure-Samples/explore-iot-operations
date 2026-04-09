@@ -1,6 +1,6 @@
-# Azure IoT Operations (AIO) MQTT Username/Password Auth
+# Azure IoT Operations MQTT Username/Password Auth
 
-This module provides a custom username password based authentication for MQTT service in AIO.
+This module provides a custom username password based authentication for MQTT service in IoT Operations.
 
 > **Caveat:** currently, credentials are stored in a K8s secret without any encryption, this must be addressed if this sample is used in production.
 
@@ -8,7 +8,7 @@ This module provides a custom username password based authentication for MQTT se
 
 The authentication module provides the following top level features:
 
-* Multiple usernames for AIO MQTT service and associated properties.
+* Multiple usernames for IoT Operations MQTT service and associated properties.
 * Enforced TLS encryption between MQTT broker and the authentication module.
 * PBKDF2 based password hashing and K8s secrets for secure storage.
 
@@ -16,13 +16,13 @@ The authentication module provides the following top level features:
 
 ### Prerequisites
 
-* AIO Installation
+* IoT Operations Installation
 
-### Deploy in AIO Environment
+### Deploy in IoT Operations Environment
 
 A pre-built image of the module is available with the tag `ghcr.io/azure-samples/explore-iot-operations/auth-server-user-pass-mqtt:v0.1`.
 
-You can deploy this module by running the following cmds in your AIO/K8s environment:
+You can deploy this module by running the following cmds in your IoT Operations/K8s environment:
 
 1. Create a sample credential database:
     > **WARNING** DO NOT USE THESE CREDENTIALS IN PRODUCTION, THESE CREDENTIALS ARE FOR TESTING PURPOSES ONLY IN LOCAL ENVIRONMENTS
@@ -57,7 +57,7 @@ You can deploy this module by running the following cmds in your AIO/K8s environ
 
     ```kubectl apply -f ./deploy/custom-user-pass-auth-server.yaml```
 
-3. Configure AIO MQTT Authentication
+3. Configure IoT Operations MQTT Authentication
 
     Use the instructions [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication) for custom authentication method and configure the settings as below:
 
@@ -84,5 +84,5 @@ Please refer to [this](./docs/develoop.md) document for details.
 
 ## Resources
 
-* [Custom Authentication in AIO](https://github.com/Azure-Samples/explore-iot-operations/tree/main/samples/auth-server-template)
-* [AIO MQTT Broker Authentication](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal)
+* [Custom Authentication in IoT Operations](https://github.com/Azure-Samples/explore-iot-operations/tree/main/samples/auth-server-template)
+* [IoT Operations MQTT Broker Authentication](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal)

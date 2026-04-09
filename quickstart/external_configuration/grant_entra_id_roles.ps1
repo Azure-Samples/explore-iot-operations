@@ -407,21 +407,21 @@ if ($arcCluster) {
     Write-Warning "Arc cluster not found: $script:ClusterName"
 }
 
-# Get AIO instance
+# Get IoT Operations instance
 Write-SubHeader "Azure IoT Operations Instance"
 $aioInstanceName = "$script:ClusterName-aio"
 $aioInstance = az iot ops show --name $aioInstanceName --resource-group $script:ResourceGroup 2>$null | ConvertFrom-Json
 
 if ($aioInstance) {
-    Write-Success "Found AIO instance: $aioInstanceName"
+    Write-Success "Found IoT Operations instance: $aioInstanceName"
     Write-Info "  Resource ID: $($aioInstance.id)"
     $aioIdentity = $aioInstance.identity
     if ($aioIdentity.principalId) {
-        Write-Success "AIO instance has managed identity"
+        Write-Success "IoT Operations instance has managed identity"
         Write-Info "  Principal ID: $($aioIdentity.principalId)"
     }
 } else {
-    Write-Warning "AIO instance not found: $aioInstanceName"
+    Write-Warning "IoT Operations instance not found: $aioInstanceName"
 }
 
 # Get or find Key Vault
@@ -630,27 +630,27 @@ if ($keyVault) {
         }
     }
     
-    # Grant to AIO instance identity - secrets read access
+    # Grant to IoT Operations instance identity - secrets read access
     if ($aioIdentity.principalId) {
-        Write-SubHeader "AIO Instance Identity"
+        Write-SubHeader "IoT Operations Instance Identity"
         
         if ($keyVaultUsesRbac) {
-            Write-Info "Assigning Key Vault Secrets User role to AIO instance..."
+            Write-Info "Assigning Key Vault Secrets User role to IoT Operations instance..."
             az role assignment create `
                 --role $kvSecretsUserRoleId `
                 --assignee-object-id $aioIdentity.principalId `
                 --assignee-principal-type ServicePrincipal `
                 --scope $kvResourceId `
                 --output none 2>$null
-            Write-Success "Granted Key Vault Secrets User role to AIO instance"
+            Write-Success "Granted Key Vault Secrets User role to IoT Operations instance"
         } else {
-            Write-Info "Setting Key Vault access policy for AIO instance (get, list secrets)..."
+            Write-Info "Setting Key Vault access policy for IoT Operations instance (get, list secrets)..."
             az keyvault set-policy `
                 --name $kvName `
                 --object-id $aioIdentity.principalId `
                 --secret-permissions get list `
                 --output none 2>$null
-            Write-Success "Granted Key Vault secrets access to AIO instance"
+            Write-Success "Granted Key Vault secrets access to IoT Operations instance"
         }
     }
     
@@ -770,7 +770,7 @@ Write-Header "Granting Microsoft Fabric Integration Permissions"
 
 Write-SubHeader "Service Principal Roles for Fabric"
 
-# These roles allow AIO to communicate with Fabric Event Hubs (Kafka)
+# These roles allow IoT Operations to communicate with Fabric Event Hubs (Kafka)
 $fabricRoles = @(
     "Azure Event Hubs Data Sender",
     "Azure Event Hubs Data Receiver",
@@ -778,15 +778,15 @@ $fabricRoles = @(
 )
 
 foreach ($role in $fabricRoles) {
-    # Grant to AIO instance identity
+    # Grant to IoT Operations instance identity
     if ($aioIdentity.principalId) {
-        Write-Info "Granting '$role' to AIO instance..."
+        Write-Info "Granting '$role' to IoT Operations instance..."
         az role assignment create `
             --role $role `
             --assignee $aioIdentity.principalId `
             --scope $rgScope `
             --output none 2>$null
-        Write-Success "  Granted to AIO instance"
+        Write-Success "  Granted to IoT Operations instance"
     }
     
     # Grant to Arc cluster identity
@@ -910,14 +910,14 @@ Write-Success "Granted Device Registry access via Contributor"
 
 Write-Header "Granting Custom Location Permissions (for Discovered Asset Sync)"
 
-# The AIO ARM bridge needs Microsoft.ExtendedLocation/customLocations/deploy/action
+# The IoT Operations ARM bridge needs Microsoft.ExtendedLocation/customLocations/deploy/action
 # on the custom location in order to sync discovered assets (discoveredAssets CRD)
 # up to Azure Resource Manager. Without this, discovered assets appear in kubectl
-# but never show up in the AIO portal.
+# but never show up in the IoT Operations portal.
 #
 # The Device Registry service principal (app ID 319f651f-7ddb-4fc6-9857-7aef9250bd05)
 # is the identity that performs the sync. We grant Contributor to the custom location
-# scope for this SP as well as the AIO and Arc identities.
+# scope for this SP as well as the IoT Operations and Arc identities.
 
 $customLocation = $null
 $customLocationScope = $null
@@ -934,16 +934,16 @@ if ($customLocations -and $customLocations.Count -gt 0) {
     Write-Success "Found custom location: $($customLocation.name)"
     Write-Info "  Resource ID: $customLocationScope"
 
-    # Grant Contributor to AIO instance identity
+    # Grant Contributor to IoT Operations instance identity
     if ($aioIdentity.principalId) {
-        Write-Info "Granting 'Contributor' to AIO instance on custom location..."
+        Write-Info "Granting 'Contributor' to IoT Operations instance on custom location..."
         az role assignment create `
             --role "Contributor" `
             --assignee-object-id $aioIdentity.principalId `
             --assignee-principal-type ServicePrincipal `
             --scope $customLocationScope `
             --output none 2>$null
-        Write-Success "Granted Contributor on custom location to AIO instance"
+        Write-Success "Granted Contributor on custom location to IoT Operations instance"
     }
 
     # Grant Contributor to Arc cluster identity
@@ -983,7 +983,7 @@ if ($customLocations -and $customLocations.Count -gt 0) {
 
 } else {
     Write-Warning "No custom location found in resource group - skipping custom location permissions"
-    Write-Info "  Custom location is created during AIO deployment. Re-run this script after"
+    Write-Info "  Custom location is created during IoT Operations deployment. Re-run this script after"
     Write-Info "  External-Configurator.ps1 completes if discovered assets don't appear in the portal."
 }
 
@@ -1012,12 +1012,12 @@ if ($containerRegistry) {
         }
     }
 
-    # AIO instance system-assigned MI: AcrPull (for pulling edge module images)
+    # IoT Operations instance system-assigned MI: AcrPull (for pulling edge module images)
     if ($aioInstance) {
-        Write-SubHeader "AIO Instance (AcrPull for edge module pulls)"
+        Write-SubHeader "IoT Operations Instance (AcrPull for edge module pulls)"
         $aioMiId = $aioInstance.identity.principalId
         if ($aioMiId) {
-            Write-Info "Granting 'AcrPull' on $script:ContainerRegistryName to AIO MI..."
+            Write-Info "Granting 'AcrPull' on $script:ContainerRegistryName to IoT Operations MI..."
             az role assignment create `
                 --role "AcrPull" `
                 --assignee-object-id $aioMiId `
@@ -1025,12 +1025,12 @@ if ($containerRegistry) {
                 --scope $acrScope `
                 --output none 2>$null
             if ($LASTEXITCODE -eq 0) {
-                Write-Success "Granted AcrPull to AIO instance managed identity"
+                Write-Success "Granted AcrPull to IoT Operations instance managed identity"
             } else {
-                Write-Warning "Could not grant AcrPull to AIO MI (may already exist)"
+                Write-Warning "Could not grant AcrPull to IoT Operations MI (may already exist)"
             }
         } else {
-            Write-Warning "AIO instance does not have a system-assigned managed identity"
+            Write-Warning "IoT Operations instance does not have a system-assigned managed identity"
         }
     }
 
@@ -1062,7 +1062,7 @@ Write-Success "Key Vault Permissions (Access Policies):"
 if ($keyVault) {
     Write-Info "  [OK] User '$AddUser': Full access (get, list, set, delete secrets/keys/certs)"
     Write-Info "  [OK] Arc Cluster: Secrets read access (get, list)"
-    Write-Info "  [OK] AIO Instance: Secrets read access (get, list)"
+    Write-Info "  [OK] IoT Operations Instance: Secrets read access (get, list)"
     Write-Info "  [OK] All Managed Identities: Secrets read access (get, list)"
 } else {
     Write-Warning "  (No Key Vault found - permissions skipped)"
@@ -1072,7 +1072,7 @@ Write-Host ""
 Write-Success "Container Registry Permissions:"
 if ($containerRegistry) {
     Write-Info "  [OK] User '$userObjectId': AcrPush + AcrPull on $script:ContainerRegistryName"
-    Write-Info "  [OK] AIO Instance: AcrPull on $script:ContainerRegistryName"
+    Write-Info "  [OK] IoT Operations Instance: AcrPull on $script:ContainerRegistryName"
     Write-Info "  [OK] Arc Cluster: AcrPull on $script:ContainerRegistryName"
 } else {
     Write-Warning "  (No container registry found - re-run after ACR is created by External-Configurator.ps1)"
@@ -1087,8 +1087,8 @@ Write-Info "  [OK] User '$AddUser': Arc Kubernetes Viewer"
 
 Write-Host ""
 Write-Success "Microsoft Fabric Integration Permissions:"
-Write-Info "  [OK] AIO Instance: Event Hubs Data Sender/Receiver"
-Write-Info "  [OK] AIO Instance: Storage Blob Data Contributor"
+Write-Info "  [OK] IoT Operations Instance: Event Hubs Data Sender/Receiver"
+Write-Info "  [OK] IoT Operations Instance: Storage Blob Data Contributor"
 Write-Info "  [OK] Arc Cluster: Event Hubs Data Sender/Receiver"
 Write-Info "  [OK] Arc Cluster: Storage Blob Data Contributor"
 Write-Info "  [OK] User '$AddUser': Event Hubs Data Sender/Receiver"
@@ -1097,11 +1097,11 @@ Write-Info "  [OK] User '$AddUser': Storage Blob Data Contributor"
 Write-Host ""
 Write-Success "Custom Location Permissions (for Discovered Asset Sync):"
 if ($customLocation) {
-    Write-Info "  [OK] AIO Instance: Contributor on custom location"
+    Write-Info "  [OK] IoT Operations Instance: Contributor on custom location"
     Write-Info "  [OK] Arc Cluster: Contributor on custom location"
     Write-Info "  [OK] Device Registry bridge SP: Contributor on custom location"
 } else {
-    Write-Warning "  (No custom location found - re-run after AIO deployment)"
+    Write-Warning "  (No custom location found - re-run after IoT Operations deployment)"
 }
 
 Write-Host ""
@@ -1112,7 +1112,7 @@ Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Green
 Write-Host "  1. User can now access Key Vault secrets" -ForegroundColor Gray
 Write-Host "  2. User can manage IoT Operations resources" -ForegroundColor Gray
-Write-Host "  3. AIO can send data to Fabric Real-Time Intelligence" -ForegroundColor Gray
+Write-Host "  3. IoT Operations can send data to Fabric Real-Time Intelligence" -ForegroundColor Gray
 Write-Host "  4. User can create and manage dataflows" -ForegroundColor Gray
 Write-Host "  5. Test access in Azure Portal" -ForegroundColor Gray
 

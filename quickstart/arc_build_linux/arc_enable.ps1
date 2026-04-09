@@ -571,9 +571,9 @@ function Enable-AzureRbac {
     
     # Azure RBAC cannot be set via the ARM REST API from the edge device context.
     # The Azure RP rejects PUT/PATCH with aadProfile from all tested API versions.
-    # This feature is OPTIONAL - AIO does not require it.
+    # This feature is OPTIONAL - IoT Operations does not require it.
     # Enable it from Windows after deployment using the Azure CLI:
-    Write-WarnLog "Azure RBAC is not enabled (optional - AIO does not require this)"
+    Write-WarnLog "Azure RBAC is not enabled (optional - IoT Operations does not require this)"
     Write-Host ""
     Write-Host "  Azure RBAC enables 'az connectedk8s proxy' for kubectl via Azure identities." -ForegroundColor DarkGray
     Write-Host "  To enable it, run from Windows:" -ForegroundColor Yellow

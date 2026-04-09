@@ -41,7 +41,7 @@ Important: These configurations aren't secure and are only suitable in test and 
 
 Start the application by running `dotnet run --project Aio.Onvif.Connector.Ptz.Demo --mqtt-host localhost --mqtt-port 1883 --namespace azure-iot-operations --asset <your ONVIF asset name> --mode relative`
 
-After entering this information, the application connects to the AIO Broker and the camera can be moved with keyboard input. Press 'q' to exit the application.
+After entering this information, the application connects to the IoT Operations Broker and the camera can be moved with keyboard input. Press 'q' to exit the application.
 
 This example uses `RelativeMove` by default. Depending on the camera, you may need to use `ContinuousMove` instead. To do this, add the `--mode continuous` option when starting the application.
 

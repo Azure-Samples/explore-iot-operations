@@ -40,12 +40,12 @@ The following diagram shows how to redirect traffic from a layered network to Az
 
 ### Event Hubs bound data flow
 
-1. Level 2 AIO Data Flow receives a new message based on its "filters"
-1. Level 2 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQTT Broker service running on level 3
-1. Level 3 AIO Data Flow receives a new message based on its "filters"
-1. Level 3 AIO Data Flow sends the MQTT message, potentially after transforming, to AIO MQTT Broker service running on level 4
-1. Level 4 AIO Data Flow receives a new message based on its "filters"
-1. Level 4 AIO Data Flow sends the MQTT message, potentially after transformation, to Event Hubs
+1. Level 2 IoT Operations data flow receives a new message based on its "filters"
+1. Level 2 IoT Operations data flow sends the MQTT message, potentially after transforming, to IoT Operations MQTT Broker service running on level 3
+1. Level 3 IoT Operations data flow receives a new message based on its "filters"
+1. Level 3 IoT Operations data flow sends the MQTT message, potentially after transforming, to IoT Operations MQTT Broker service running on level 4
+1. Level 4 IoT Operations data flow receives a new message based on its "filters"
+1. Level 4 IoT Operations data flow sends the MQTT message, potentially after transformation, to Event Hubs
 
 
 > [!NOTE]

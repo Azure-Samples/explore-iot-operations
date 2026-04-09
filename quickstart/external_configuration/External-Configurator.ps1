@@ -982,7 +982,7 @@ function Deploy-Infrastructure {
     
     # Configure Key Vault RBAC role assignments for managed identities
     # Using RBAC instead of access policies for better security and management
-    Write-Log "Configuring Key Vault RBAC role assignments for AIO dataflows..."
+    Write-Log "Configuring Key Vault RBAC role assignments for IoT Operations dataflows..."
     
     # Key Vault Secrets User role ID (built-in role for reading secrets)
     $kvSecretsUserRoleId = "4633458b-17de-408a-b874-0445c86b69e6"
@@ -1018,7 +1018,7 @@ function Deploy-Infrastructure {
                 # Skip the one we just configured
                 if ($identity.name -eq $miName) { continue }
                 
-                # Only configure identities that look like they're for secret sync or AIO
+                # Only configure identities that look like they're for secret sync or IoT Operations
                 if ($identity.name -match "secretsync|aio|iot") {
                     Write-InfoLog "Assigning Key Vault Secrets User role to $($identity.name)..."
                     az role assignment create `
@@ -1093,8 +1093,8 @@ function Deploy-Infrastructure {
     Write-Host "This grants permissions like:" -ForegroundColor Gray
     Write-Host "  - Schema Registry -> Storage Blob Data Contributor" -ForegroundColor Gray
     Write-Host "  - Managed Identity -> Key Vault Secrets User" -ForegroundColor Gray
-    Write-Host "  - AIO Instance -> Event Hubs permissions for Fabric" -ForegroundColor Gray
-    Write-Host "  - AIO Instance -> AcrPull on Container Registry (via grant_entra_id_roles.ps1)" -ForegroundColor Gray
+    Write-Host "  - IoT Operations Instance -> Event Hubs permissions for Fabric" -ForegroundColor Gray
+    Write-Host "  - IoT Operations Instance -> AcrPull on Container Registry (via grant_entra_id_roles.ps1)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "============================================================================" -ForegroundColor Cyan
     Write-Host ""
@@ -1122,7 +1122,7 @@ function Register-AcrRegistryEndpoint {
         return
     }
 
-    Write-Log "Registering ACR as AIO registry endpoint: $script:ContainerRegistryLoginServer"
+    Write-Log "Registering ACR as IoT Operations registry endpoint: $script:ContainerRegistryLoginServer"
 
     if ($DryRun) {
         Write-InfoLog "[DRY-RUN] Would register registry endpoint for $script:ContainerRegistryLoginServer"
@@ -1132,10 +1132,10 @@ function Register-AcrRegistryEndpoint {
     # Derive a consistent endpoint name from the registry name
     $endpointName = "$($script:ContainerRegistryName)-endpoint"
 
-    # --- Step 1: Ensure AcrPull is granted to the AIO managed identity (safety net) ---
+    # --- Step 1: Ensure AcrPull is granted to the IoT Operations managed identity (safety net) ---
     # grant_entra_id_roles.ps1 handles this in the normal flow; this is a fallback
-    # for cases where it hasn't been run yet or ran before AIO was deployed.
-    Write-InfoLog "Ensuring AcrPull role is assigned to AIO instance managed identity..."
+    # for cases where it hasn't been run yet or ran before IoT Operations was deployed.
+    Write-InfoLog "Ensuring AcrPull role is assigned to IoT Operations instance managed identity..."
     $aioIdentity = az iot ops show `
         --name $InstanceName `
         --resource-group $script:ResourceGroup `
@@ -1156,7 +1156,7 @@ function Register-AcrRegistryEndpoint {
         # Non-zero exit is expected when the assignment already exists - not fatal
         Write-InfoLog "AcrPull role assignment applied (idempotent)."
     } else {
-        Write-WarnLog "Could not resolve AIO identity or ACR resource ID - AcrPull may need to be set manually via grant_entra_id_roles.ps1."
+        Write-WarnLog "Could not resolve IoT Operations identity or ACR resource ID - AcrPull may need to be set manually via grant_entra_id_roles.ps1."
     }
 
     # --- Step 2: Check if the registry endpoint is already registered ---
@@ -1184,7 +1184,7 @@ function Register-AcrRegistryEndpoint {
         Write-Success "Registry endpoint created: $endpointName -> $script:ContainerRegistryLoginServer"
         $script:DeployedResources += "RegistryEndpoint:$endpointName"
     } else {
-        Write-WarnLog "Registry endpoint creation returned non-zero. It may already exist or the AIO instance is not yet ready."
+        Write-WarnLog "Registry endpoint creation returned non-zero. It may already exist or the IoT Operations instance is not yet ready."
         Write-WarnLog "You can register it manually with:"
         Write-WarnLog "  az iot ops registry create -n $endpointName --host $script:ContainerRegistryLoginServer -i $InstanceName -g $script:ResourceGroup"
     }
@@ -1519,15 +1519,15 @@ function Deploy-IoTOperations {
         
         Write-Success "Secret sync enabled"
         }
-    }  # End of else block (AIO deployment)
+    }  # End of else block (IoT Operations deployment)
 
-    # Register ACR as a named registry endpoint inside AIO
-    # (runs whether AIO was just created or already existed)
+    # Register ACR as a named registry endpoint inside IoT Operations
+    # (runs whether IoT Operations was just created or already existed)
     Register-AcrRegistryEndpoint -InstanceName $instanceName
 
-    # Configure Key Vault RBAC role assignments for Arc cluster and AIO instance
-    # This runs whether AIO was just deployed or already existed
-    Write-Log "Configuring Key Vault RBAC role assignments for AIO identities..."
+    # Configure Key Vault RBAC role assignments for Arc cluster and IoT Operations instance
+    # This runs whether IoT Operations was just deployed or already existed
+    Write-Log "Configuring Key Vault RBAC role assignments for IoT Operations identities..."
     
     # Key Vault Secrets User role ID
     $kvSecretsUserRoleId = "4633458b-17de-408a-b874-0445c86b69e6"
@@ -1551,10 +1551,10 @@ function Deploy-IoTOperations {
         }
     }
     
-    # Grant AIO instance identity access to Key Vault
+    # Grant IoT Operations instance identity access to Key Vault
     $aioIdentity = az iot ops show --name $instanceName --resource-group $script:ResourceGroup --query "identity.principalId" -o tsv 2>$null
     if ($aioIdentity) {
-        Write-InfoLog "Assigning Key Vault Secrets User role to AIO instance identity..."
+        Write-InfoLog "Assigning Key Vault Secrets User role to IoT Operations instance identity..."
         az role assignment create `
             --role $kvSecretsUserRoleId `
             --assignee-object-id $aioIdentity `
@@ -1563,9 +1563,9 @@ function Deploy-IoTOperations {
             --output none 2>$null
         
         if ($LASTEXITCODE -eq 0) {
-            Write-Success "Granted Key Vault Secrets User role to AIO instance identity"
+            Write-Success "Granted Key Vault Secrets User role to IoT Operations instance identity"
         } else {
-            Write-WarnLog "Failed to assign Key Vault role for AIO instance identity (may already exist)"
+            Write-WarnLog "Failed to assign Key Vault role for IoT Operations instance identity (may already exist)"
         }
     }
 }
@@ -1608,7 +1608,7 @@ function Test-Deployment {
     if ($kv) {
         Write-Success "Key Vault verified: $script:KeyVaultName"
         
-        # Check Key Vault configuration for AIO dataflows
+        # Check Key Vault configuration for IoT Operations dataflows
         $kvJson = if ($kv -is [array]) { $kv -join "`n" } else { $kv }
         $kvData = $kvJson | ConvertFrom-Json
         $kvIssues = @()
@@ -1621,7 +1621,7 @@ function Test-Deployment {
         if ($kvData.properties.enableRbacAuthorization -eq $true) {
             Write-InfoLog "Key Vault is using RBAC authorization"
             
-            # Verify role assignments for AIO identities
+            # Verify role assignments for IoT Operations identities
             Write-InfoLog "Checking Key Vault RBAC role assignments..."
             
             # Get Arc cluster identity
@@ -1635,15 +1635,15 @@ function Test-Deployment {
                 }
             }
             
-            # Get AIO instance identity
+            # Get IoT Operations instance identity
             $instanceName = "$($script:ClusterName)-aio"
             $aioIdentity = az iot ops show --name $instanceName --resource-group $script:ResourceGroup --query "identity.principalId" -o tsv 2>$null
             if ($aioIdentity) {
                 $aioRoleAssignment = az role assignment list --scope $kvResourceId --assignee $aioIdentity --query "[?roleDefinitionId contains '$kvSecretsUserRoleId']" 2>$null | ConvertFrom-Json
                 if ($aioRoleAssignment -and $aioRoleAssignment.Count -gt 0) {
-                    Write-Success "  AIO instance identity has Key Vault Secrets User role"
+                    Write-Success "  IoT Operations instance identity has Key Vault Secrets User role"
                 } else {
-                    $kvIssues += "AIO instance identity missing Key Vault Secrets User role"
+                    $kvIssues += "IoT Operations instance identity missing Key Vault Secrets User role"
                 }
             }
             
@@ -1680,14 +1680,14 @@ function Test-Deployment {
         # Report issues
         if ($kvIssues.Count -gt 0) {
             Write-Host ""
-            Write-WarnLog "Key Vault configuration issues found for AIO dataflows:"
+            Write-WarnLog "Key Vault configuration issues found for IoT Operations dataflows:"
             foreach ($issue in $kvIssues) {
                 Write-WarnLog "  - $issue"
             }
             Write-Host ""
             Write-InfoLog "Run grant_entra_id_roles.ps1 to fix access policy issues"
         } else {
-            Write-Success "Key Vault is properly configured for AIO dataflows"
+            Write-Success "Key Vault is properly configured for IoT Operations dataflows"
         }
     } else {
         Write-WarnLog "Key Vault not found: $script:KeyVaultName"
@@ -1715,7 +1715,7 @@ function Test-Deployment {
     }
     
     # Verify required extensions for asset sync
-    # NOTE: In AIO v1.2+, deviceregistry is bundled into microsoft.iotoperations extension
+    # NOTE: In IoT Operations v1.2+, deviceregistry is bundled into microsoft.iotoperations extension
     # The separate microsoft.deviceregistry.assets extension is no longer required
     Write-Log "Verifying required Kubernetes extensions..."
     $extensions = az k8s-extension list --cluster-name $script:ClusterName --resource-group $script:ResourceGroup --cluster-type connectedClusters -o json 2>$null
@@ -1823,7 +1823,7 @@ function Test-Deployment {
             Write-Host ""
             Write-Host "If upgrade doesn't work, you may need to fully reinstall:" -ForegroundColor Cyan
             Write-Host ""
-            Write-Host "  # 1. Delete the AIO instance:" -ForegroundColor Gray
+            Write-Host "  # 1. Delete the IoT Operations instance:" -ForegroundColor Gray
             Write-Host "  az iot ops delete --name $instanceName -g $script:ResourceGroup --yes" -ForegroundColor White
             Write-Host ""
             Write-Host "  # 2. Wait for deletion to complete, then from Windows:" -ForegroundColor Gray

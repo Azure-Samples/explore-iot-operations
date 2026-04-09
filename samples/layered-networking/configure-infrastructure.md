@@ -150,7 +150,7 @@ At this level, enterprise or public name servers provide DNS resolution, so you 
 
 This proxy configuration lets control plane traffic through. Data plane traffic usually targets local endpoints or upstream clusters, so it isn't proxied. Setting up the Envoy Proxy at this level lets the level 3 server use required internet services (URI) and uses the proxy's RBAC capabilities to restrict access to Kubernetes networks and level3 or level4 network hosts. Adjust these restrictions based on your implementation needs.
 
-Only port 443 and 8084 listeners are set up because AIO control plane traffic uses these ports. Not starting the port 80 HTTP listener improves security.
+Only port 443 and 8084 listeners are set up because IoT Operations control plane traffic uses these ports. Not starting the port 80 HTTP listener improves security.
 
 Levels without internet access use the previously downloaded envoy/envoy:v1.33.0 image on the jump box. This level pulls the image from the source because it has internet access.
 
@@ -202,7 +202,7 @@ At this level, there's no internet access, so first install the envoy/envoy:v1.3
 
 This proxy configuration enables control plane traffic. Data plane traffic usually targets local endpoints or upstream clusters, so it isn't considered proxied traffic. Setting up Envoy Proxy at this level lets the level2 server use required internet services (URIs) and leverages the proxy's RBAC capabilities to restrict access to Kubernetes networks and level2 or level3 network hosts. You can adjust these restrictions based on your implementation needs.
 
-Only port 443 and 8084 listeners will be setup as the control plane traffic of AIO will operate over these, not starting the level 80 http listener is a choice to improve the security posture. 
+Only port 443 and 8084 listeners will be setup as the control plane traffic of IoT Operations will operate over these, not starting the level 80 http listener is a choice to improve the security posture. 
 
 Copy the previously downloaded Envoy image from the jump box to the ~/ directory on the level3 machine, then upload it to the k3s image store. You can use a private repository if you want.
 

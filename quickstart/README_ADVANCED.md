@@ -144,7 +144,7 @@ The installer supports two configuration modes:
 
 ### Phase 2: Azure Configuration
 
-The `External-Configurator.ps1` script connects the edge cluster to Azure and deploys AIO:
+The `External-Configurator.ps1` script connects the edge cluster to Azure and deploys IoT Operations:
 
 ```powershell
 # From Windows machine with Azure CLI
@@ -178,7 +178,7 @@ Parameters:
    - Creates resource group, storage account, and Key Vault
    - Sets up Device Registry namespace and schema registry
    - Creates managed identity for secret sync
-   - Creates Azure Container Registry (ACR) and attaches it to the AIO instance
+   - Creates Azure Container Registry (ACR) and attaches it to the IoT Operations instance
    
    > **Note**: Azure Arc connection is handled by `arc_enable.ps1` on the edge device
 
@@ -188,10 +188,10 @@ Parameters:
    - Sets up RBAC permissions
 
 3. **Azure IoT Operations Deployment**
-   - Initializes cluster for AIO (`az iot ops init`)
+   - Initializes cluster for IoT Operations (`az iot ops init`)
    - Creates Schema Registry with storage account
    - Creates Device Registry namespace
-   - Deploys AIO instance with Key Vault integration
+   - Deploys IoT Operations instance with Key Vault integration
    - Enables Secret Sync and Resource Sync
 
 4. **Secret Management**
@@ -206,7 +206,7 @@ Parameters:
 
 #### Arc Cluster Authentication Notes
 
-Secret management uses AIO's native secret sync (`az iot ops secretsync enable`). Secrets stored in Azure Key Vault are automatically synced to Kubernetes secrets — no manual `kubectl create secret` commands are needed. Reference secrets in dataflow endpoint YAML by their plain Key Vault secret name (e.g. `secretRef: my-secret`).
+Secret management uses IoT Operations native secret sync (`az iot ops secretsync enable`). Secrets stored in Azure Key Vault are automatically synced to Kubernetes secrets — no manual `kubectl create secret` commands are needed. Reference secrets in dataflow endpoint YAML by their plain Key Vault secret name (e.g. `secretRef: my-secret`).
 
 
 ---
@@ -426,7 +426,7 @@ kubectl apply -f operations/fabric-factory-dataflows.yaml
 3. Copy the **Bootstrap server** and **Topic name** from the Fabric portal
 
 **Create in the Azure Portal**:
-1. Navigate to your AIO instance → **Dataflow endpoints** → **+ Create endpoint**
+1. Navigate to your IoT Operations instance → **Dataflow endpoints** → **+ Create endpoint**
 2. Select type **Kafka**, set the bootstrap server, and choose **System-assigned managed identity** for authentication
 3. No secrets or Key Vault setup are required
 
@@ -709,7 +709,7 @@ All configuration is done in the **Azure Portal** using **Managed Identity** —
    - Copy the **Bootstrap server** and **Topic name**
 
 2. **Create the Dataflow Endpoint in the Azure Portal**
-   - Navigate to your AIO instance → **Dataflow endpoints** → **+ Create endpoint**
+   - Navigate to your IoT Operations instance → **Dataflow endpoints** → **+ Create endpoint**
    - Type: **Kafka**, bootstrap server from step 1, authentication: **System-assigned managed identity**
 
 3. **Create the Dataflow in the Azure Portal**
@@ -832,7 +832,7 @@ az connectedk8s connect --name iot-ops-cluster \
   --enable-oidc-issuer --enable-workload-identity \
   --custom-locations-oid <service-principal-id>
 
-# Redeploy AIO extension
+# Redeploy IoT Operations extension
 az k8s-extension create --cluster-name iot-ops-cluster \
   --resource-group IoT-Operations \
   --cluster-type connectedClusters \
@@ -971,7 +971,7 @@ kubectl logs <pod-name> --previous
 # List secrets
 kubectl get secrets -n azure-iot-operations
 
-# Check AIO secret sync status
+# Check IoT Operations secret sync status
 kubectl get secretsync -n azure-iot-operations
 
 # Check if a specific secret was synced
@@ -994,7 +994,7 @@ cd arc_build_linux
 bash k3s_troubleshoot.sh
 bash diagnose-orchestrator.sh
 
-# Backup AIO configuration
+# Backup IoT Operations configuration
 bash backup_aio_configs.sh
 ```
 
@@ -1016,13 +1016,13 @@ Azure Arc Gateway simplifies network connectivity by reducing the number of endp
 - [Arc Gateway for Arc-enabled Kubernetes](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/arc-gateway-simplify-networking)
 - [Arc Gateway for Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/arc-gateway)
 
-For AIO deployments in restricted networks, using the Arc Gateway is recommended over per-endpoint firewall rules.
+For IoT Operations deployments in restricted networks, using the Arc Gateway is recommended over per-endpoint firewall rules.
 
 ---
 
 ### Multi-Cluster Management
 
-Deploy AIO to multiple edge clusters from single management machine:
+Deploy IoT Operations to multiple edge clusters from single management machine:
 
 ```powershell
 cd external_configuration
@@ -1146,7 +1146,7 @@ rules:
 
 ### Backup and Disaster Recovery
 
-#### Backup AIO Configuration
+#### Backup IoT Operations Configuration
 
 ```bash
 cd arc_build_linux
@@ -1162,7 +1162,7 @@ Backs up:
 #### Restore from Backup
 
 ```bash
-# Reinstall K3s and AIO on edge device
+# Reinstall K3s and IoT Operations on edge device
 cd arc_build_linux
 bash installer.sh
 

@@ -7,13 +7,13 @@ This repo is the source of tools, samples, quickstarts, tutorials, and other res
 This project provides the following:
 
 * Pre-configured codespace with [K3s](https://k3s.io/) cluster via [K3d](https://k3d.io/)
-* [AIO Quickstart](./quickstart/readme.md) — automated deployment on real edge hardware (Ubuntu/K3s) or a single Windows machine (AKS Edge Essentials)
+* [IoT Operations Quickstart](./quickstart/readme.md) — automated deployment on real edge hardware (Ubuntu/K3s) or a single Windows machine (AKS Edge Essentials)
 * MQTT Device Simulator
 * Edge modules: factory equipment simulator, MQTT historian
 * Samples for auth servers, WASM dataflow operators, custom RBAC, observability, and more
 
 > [!IMPORTANT]
-> Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use the [AIO Quickstart](./quickstart/readme.md) or a validated environment from the official documentation.
+> Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use the [IoT Operations Quickstart](./quickstart/readme.md) or a validated environment from the official documentation.
 >
 
 
@@ -21,7 +21,7 @@ This project provides the following:
 
 ### Option A: GitHub Codespaces (browser-based, no local install)
 
-> **Note:** Codespaces are ephemeral — they are automatically stopped after a period of inactivity and deleted after a retention period. They are great for exploration and learning, but not suitable for persistent environments. For a lasting deployment, use [Option B](#option-b-aio-quickstart-deploy-on-your-own-hardware-or-vm).
+> **Note:** Codespaces are ephemeral — they are automatically stopped after a period of inactivity and deleted after a retention period. They are great for exploration and learning, but not suitable for persistent environments. For a lasting deployment, use [Option B](#option-b-iot-operations-quickstart-deploy-on-your-own-hardware-or-vm).
 
 1. Use this GitHub codespace to explore Azure IoT Operations in your browser without installing anything on your local machine.
 
@@ -43,9 +43,9 @@ This project provides the following:
 
 3. Explore!
 
-### Option B: AIO Quickstart (deploy on your own hardware or VM)
+### Option B: IoT Operations Quickstart (deploy on your own hardware or VM)
 
-For persistent deployments on machines you control — Ubuntu devices, Windows PCs, or VMs — use the **[AIO Quickstart](./quickstart/readme.md)**. It provides:
+For persistent deployments on machines you control — Ubuntu devices, Windows PCs, or VMs — use the **[IoT Operations Quickstart](./quickstart/readme.md)**. It provides:
 
 - One-command edge setup on Ubuntu with K3s
 - Automated Azure configuration from a Windows management machine
@@ -64,7 +64,7 @@ See the [Advanced Guide](./quickstart/README_ADVANCED.md) for detailed technical
 ## Repository Structure
 
 ```
-├── quickstart/         Automated AIO deployment on edge hardware
+├── quickstart/         Automated IoT Operations deployment on edge hardware
 ├── samples/            Code samples and tools
 ├── tutorials/          Step-by-step walkthroughs
 ├── tools/              Utility tools (schema generator, etc.)

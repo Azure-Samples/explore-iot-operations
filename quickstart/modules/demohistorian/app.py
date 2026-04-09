@@ -447,7 +447,7 @@ class MQTTSubscriber:
         else:
             logger.info("MQTT authentication disabled (local testing mode)")
         
-        # Configure TLS (required for AIO broker, optional for local testing)
+        # Configure TLS (required for IoT Operations broker, optional for local testing)
         if mqtt_config['port'] == 18883 or mqtt_config.get('use_tls', False):
             self.client.tls_set(cert_reqs=ssl.CERT_NONE)
         

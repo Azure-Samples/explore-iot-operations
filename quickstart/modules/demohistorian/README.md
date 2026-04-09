@@ -16,7 +16,7 @@ The Edge Historian is a containerized service that:
 
 ```
 ┌─────────────────────────────────────┐
-│     AIO MQTT Broker                 │
+│     IoT Operations MQTT Broker        │
 │   (azure-iot-operations ns)         │
 └───────────┬─────────────────────────┘
             │ MQTT v5 (K8S-SAT auth)
@@ -40,7 +40,7 @@ The Edge Historian is a containerized service that:
 ### MQTT Subscription
 - Subscribes to `#` wildcard (all topics)
 - Supports factory topics: `factory/cnc`, `factory/3dprinter`, etc.
-- K8S-SAT authentication for secure AIO broker access
+- K8S-SAT authentication for secure IoT Operations broker access
 - Automatic reconnection on connection loss
 - QoS 0 (at-most-once) for minimal broker load
 - **Character sanitization** - Special/unicode characters replaced with underscores to prevent encoding errors
@@ -438,7 +438,7 @@ demohistorian/
 
 - Design Document: [edge_historian.md](edge_historian.md)
 - Project Pattern: [edgemqttsim](../edgemqttsim/README.md)
-- AIO Auth: [AUTH_COMPARISON.md](../AUTH_COMPARISON.md)
+- IoT Operations Auth: [AUTH_COMPARISON.md](../AUTH_COMPARISON.md)
 
 ## License
 

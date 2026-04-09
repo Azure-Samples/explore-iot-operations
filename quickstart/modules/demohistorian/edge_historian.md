@@ -27,7 +27,7 @@ The Edge Historian is a lightweight containerized service that provides historic
          │                          ▼
     ┌────┴────┐            ┌────────────────┐
     │ Clients │            │ MQTT Broker    │
-    │  (API)  │            │ (IoT Ops)      │
+    │  (API)  │            │ (IoT Operations) │
     └─────────┘            └────────────────┘
 ```
 
@@ -125,7 +125,7 @@ received_at: 2026-01-12T10:30:45.123Z
 
 ### MQTT Subscriber Component
 ```python
-# Pseudo-code structure for AIO MQTT broker
+# Pseudo-code structure for IoT Operations MQTT broker
 import paho.mqtt.client as mqtt
 import ssl
 from pathlib import Path
@@ -138,7 +138,7 @@ class MQTTSubscriber:
         self.config = config
         
     def setup_authentication(self):
-        """Configure ServiceAccountToken authentication for AIO broker."""
+        """Configure ServiceAccountToken authentication for IoT Operations broker."""
         # Read K8S ServiceAccountToken
         token_path = Path(self.config['mqtt']['sat_token_path'])
         token = token_path.read_text().strip()
@@ -154,7 +154,7 @@ class MQTTSubscriber:
         return auth_properties
         
     def on_connect(self, client, userdata, flags, reason_code, properties):
-        """Called when connected to AIO MQTT broker."""
+        """Called when connected to IoT Operations MQTT broker."""
         if reason_code == 0:
             # Subscribe to all topics (requires proper BrokerAuthorization)
             client.subscribe("#", qos=0)
@@ -238,9 +238,9 @@ The application uses a YAML configuration file for all settings, with optional e
 # config.yaml
 mqtt:
   broker: aio-broker.azure-iot-operations.svc.cluster.local
-  port: 18883  # AIO MQTTS port
+  port: 18883  # IoT Operations MQTTS port
   topic: "#"  # Subscribe to all topics (requires proper authorization)
-  auth_method: K8S-SAT  # Kubernetes ServiceAccountToken (AIO standard)
+  auth_method: K8S-SAT  # Kubernetes ServiceAccountToken (IoT Operations standard)
   qos: 0  # At-most-once delivery (lightest)
   keepalive: 60
   reconnect_delay: 5  # seconds
@@ -331,7 +331,7 @@ Windows Dev Machine                    Azure Arc                    Linux Edge S
 ┌─────────────────┐                ┌──────────┐                ┌──────────────────┐
 │                 │                │          │                │                  │
 │ Deploy-         │──az──────────▶│   Arc    │──kubectl─────▶│  K3s Cluster     │
-│ EdgeModules.ps1 │   connectedk8s │  Proxy   │   proxy       │  + AIO           │
+│ EdgeModules.ps1 │   connectedk8s │  Proxy   │   proxy       │  + IoT Operations│
 │                 │                │          │                │  + demohistorian │
 └─────────────────┘                └──────────┘                └──────────────────┘
 ```
@@ -487,7 +487,7 @@ spec:
       labels:
         app: demohistorian
     spec:
-      serviceAccountName: historian-sa  # For AIO MQTT K8S-SAT auth
+      serviceAccountName: historian-sa  # For IoT Operations MQTT K8S-SAT auth
       containers:
       - name: postgres
         image: postgres:16-alpine
@@ -534,7 +534,7 @@ spec:
                 name: historian-secret
                 key: db-password
           
-          # AIO MQTT broker configuration
+          # IoT Operations MQTT broker configuration
           - name: MQTT_BROKER
             value: aio-broker.azure-iot-operations.svc.cluster.local
           - name: MQTT_PORT
@@ -588,7 +588,7 @@ spec:
           persistentVolumeClaim:
             claimName: historian-pvc
         
-        # ServiceAccountToken for AIO MQTT authentication
+        # ServiceAccountToken for IoT Operations MQTT authentication
         - name: broker-sat
           projected:
             sources:
@@ -708,7 +708,7 @@ kubectl get svc -n default demohistorian
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
   curl http://demohistorian:8080/health
 
-# FQDN (use this format for cross-namespace access like AIO UI):
+# FQDN (use this format for cross-namespace access like IoT Operations UI):
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
   curl http://demohistorian.default.svc.cluster.local:8080/health
 ```
@@ -812,7 +812,7 @@ Assuming factory simulation scenario:
 # Short form (same namespace):
 GET http://demohistorian:8080/api/v1/last-value/factory/cnc
 
-# FQDN (cross-namespace, use this for AIO UI):
+# FQDN (cross-namespace, use this for IoT Operations UI):
 GET http://demohistorian.default.svc.cluster.local:8080/api/v1/last-value/factory/cnc
 
 # Response - Actual edgemqttsim CNC message format
@@ -874,7 +874,7 @@ GET http://edge-historian:8080/api/v1/query?machine_id=CNC-01&limit=10
 
 ### Health Check
 ```bash
-# Request (use FQDN for AIO UI)
+# Request (use FQDN for IoT Operations UI)
 GET http://demohistorian.default.svc.cluster.local:8080/health
 
 # Or short form (same namespace only):
@@ -993,7 +993,7 @@ spec:
 
 **Why this is critical:** 
 - Without proper BrokerAuthorization, the historian will connect but fail to subscribe to `#` wildcard
-- AIO broker enforces authorization policies - authentication alone is not sufficient
+- IoT Operations broker enforces authorization policies - authentication alone is not sufficient
 - The wildcard subscription `#` requires explicit permission in authorization policy
 - Default policies may only allow specific topic patterns
 
@@ -1028,12 +1028,12 @@ spec:
 ### MQTT (Azure IoT Operations Specific)
 - **Authentication**: K8S-SAT (ServiceAccountToken) via MQTT v5 enhanced auth
 - **Authorization**: BrokerAuthorization policy with wildcard (`#`) subscribe permission
-- **TLS**: Automatic TLS via AIO broker listener (port 18883)
+- **TLS**: Automatic TLS via IoT Operations broker listener (port 18883)
 - **Token Lifecycle**: 24-hour token automatically renewed by Kubernetes
 - **Subscribe QoS**: 0 (at-most-once, lightest load on broker)
 - **Client ID**: Include `historian-` prefix to match authorization policy
 
-### AIO Broker Access Pattern
+### IoT Operations Broker Access Pattern
 ```
 1. Historian pod starts with serviceAccountName: historian-sa
 2. Kubernetes projects SAT token to /var/run/secrets/tokens/broker-sat

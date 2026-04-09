@@ -153,7 +153,7 @@ spec:
           persistentVolumeClaim:
             claimName: historian-pvc
         
-        # ServiceAccountToken for AIO MQTT authentication
+        # ServiceAccountToken for IoT Operations MQTT authentication
         - name: broker-sat
           projected:
             sources:

@@ -17,7 +17,7 @@ from messages import FactoryMessageGenerator
 
 # MQTT Configuration from environment variables
 MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
-MQTT_PORT = int(os.environ.get('MQTT_PORT', '18883'))  # Default AIO MQTT port
+MQTT_PORT = int(os.environ.get('MQTT_PORT', '18883'))  # Default IoT Operations MQTT port
 MQTT_TOPIC_PREFIX = os.environ.get('MQTT_TOPIC_PREFIX', 'factory')
 MQTT_CLIENT_ID = os.environ.get('MQTT_CLIENT_ID', f'factory-sim-{os.getpid()}')
 

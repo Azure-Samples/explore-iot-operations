@@ -1,6 +1,6 @@
 # Azure IoT Operations - Quick Start
 
-Automated deployment of Azure IoT Operations (AIO) on edge devices with industrial IoT applications.
+Automated deployment of Azure IoT Operations on edge devices with industrial IoT applications.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ Automated deployment of Azure IoT Operations (AIO) on edge devices with industri
 ## Why not use codespaces from the docs? 
 The docs have a very clean "one click" deployment in the MSFT docs. It's a great first step, especially if you just want to see the tools. 
 * That will live in its own environment and you won't be able to connect it to your signals or your devices. 
-* This version will help you set up AIO in the actual environment where you do your IoT operations.
+* This version will help you set up IoT Operations in the actual environment where you do your IoT operations.
 * This is much closer to a production-level deployment.
 * This instance will last as long as you want to keep it.
 
@@ -46,14 +46,14 @@ As the end-goal is an IoT solution, this repo has a preference for installing on
 
 
 # Quick Start
-The goal here is to install AIO on an Ubuntu machine (like a local NUC, PC, or a VM) so that you can get working quickly on your dataflow pipelines and get data into Fabric quickly. 
+The goal here is to install IoT Operations on an Ubuntu machine (like a local NUC, PC, or a VM) so that you can get working quickly on your dataflow pipelines and get data into Fabric quickly. 
 * _if you are in a purely testing or validation phase you can create a quick VM using [this process](quick_vm_build.md)_
 * _if you are building on a Windows machine using AKS Edge Essentials, see the [Single Windows Machine (AKS-EE)](#path-b-single-windows-machine-aks-ee) section below._
 
 > **Using AKS Edge Essentials (Windows-based edge)?**  
-> Follow the [Deploy AIO on AKS Edge Essentials](https://learn.microsoft.com/en-us/azure/aks/aksarc/aks-edge-howto-deploy-azure-iot) guide to set up your edge cluster, then **skip to step 4** (Azure Configuration from Windows Machine) below. Steps 1–3b do not apply to AKS-EE.
+> Follow the [Deploy IoT Operations on AKS Edge Essentials](https://learn.microsoft.com/en-us/azure/aks/aksarc/aks-edge-howto-deploy-azure-iot) guide to set up your edge cluster, then **skip to step 4** (Azure Configuration from Windows Machine) below. Steps 1–3b do not apply to AKS-EE.
 
-Once you have setup AIO via this process, you should be able to do everything that you want in the cloud without touching the Ubuntu machine again.
+Once you have setup IoT Operations via this process, you should be able to do everything that you want in the cloud without touching the Ubuntu machine again.
 
 
 ### The process (high level)
@@ -67,7 +67,7 @@ There are two supported paths. Choose the one that matches your setup:
 | [1. Edge Setup](#3-edge-setup-on-ubuntu-device) | Edge machine (Ubuntu) | `arc_build_linux/installer.sh` |
 | [2. Arc-Enable Cluster](#3b-arc-enable-cluster-on-ubuntu-device) | Edge machine (Ubuntu) | `arc_build_linux/arc_enable.ps1` |
 | [3. Grant Roles](#4-azure-configuration-from-windows-machine) | Windows machine | `external_configuration/grant_entra_id_roles.ps1` |
-| [4. Deploy AIO](#4-azure-configuration-from-windows-machine) | Windows machine | `external_configuration/External-Configurator.ps1` |
+| [4. Deploy IoT Operations](#4-azure-configuration-from-windows-machine) | Windows machine | `external_configuration/External-Configurator.ps1` |
 
 **Path B — AKS Edge Essentials** (single Windows machine):
 
@@ -75,11 +75,11 @@ There are two supported paths. Choose the one that matches your setup:
 |------|-------|--------|
 | [1. Set up AKS-EE cluster](#path-b-single-windows-machine-aks-ee) | Windows machine | [Microsoft AKS-EE quickstart](https://learn.microsoft.com/en-us/azure/aks/aksarc/aks-edge-howto-deploy-azure-iot) |
 | [2. Grant Roles](#path-b-single-windows-machine-aks-ee) | Windows machine | `external_configuration/grant_entra_id_roles.ps1` |
-| [3. Deploy AIO](#path-b-single-windows-machine-aks-ee) | Windows machine | `external_configuration/External-Configurator.ps1` |
+| [3. Deploy IoT Operations](#path-b-single-windows-machine-aks-ee) | Windows machine | `external_configuration/External-Configurator.ps1` |
 
 Specific commands for each path are in the [Installation](#installation) section below.
 
-> **Note**: Installing AIO can vary depending on your setup. You may need to run scripts more than once or in a different order. The log messages in each script will tell you what to do next.
+> **Note**: Installing IoT Operations can vary depending on your setup. You may need to run scripts more than once or in a different order. The log messages in each script will tell you what to do next.
 
 ## Prerequisites
 
@@ -286,7 +286,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
 **WARNING** the field `kubeconfig_base64` in cluster_info.json contains a secret. Be careful with that. 
 
-**What it does**: Deploys AIO infrastructure (storage, Key Vault, schema registry) and IoT Operations  
+**What it does**: Deploys IoT Operations infrastructure (storage, Key Vault, schema registry) and IoT Operations  
 **Time**: ~15-20 minutes  
 **Note**: Arc enablement was already done on the edge device in step 3b
 
@@ -300,14 +300,14 @@ SSH into your Linux edge device and run:
 kubectl get pods -n azure-iot-operations
 ```
 
-Once AIO is running, subscribe to all MQTT topics to confirm messages are flowing:
+Once IoT Operations is running, subscribe to all MQTT topics to confirm messages are flowing:
 
 ```bash
 kubectl exec -it -n azure-iot-operations deploy/aio-broker-frontend -- \
   mosquitto_sub -h localhost -p 18883 -t '#' -v
 ```
 
-Press `Ctrl+C` to stop. If you see messages arriving, AIO is working end-to-end.
+Press `Ctrl+C` to stop. If you see messages arriving, IoT Operations is working end-to-end.
 
 ---
 
@@ -383,7 +383,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
 **Step 2 — Set up your AKS-EE edge cluster**
 
-Download the AKS-EE quickstart files, then follow the [Deploy AIO on AKS Edge Essentials](https://learn.microsoft.com/en-us/azure/aks/aksarc/aks-edge-howto-deploy-azure-iot) guide:
+Download the AKS-EE quickstart files, then follow the [Deploy IoT Operations on AKS Edge Essentials](https://learn.microsoft.com/en-us/azure/aks/aksarc/aks-edge-howto-deploy-azure-iot) guide:
 
 ```powershell
 $giturl = "https://raw.githubusercontent.com/Azure/AKS-Edge/main/tools"
@@ -398,7 +398,7 @@ Unblock-File .\AksEdgeQuickStartForAio.ps1
 
 > **Note**: The AKS-EE quickstart script does **not** read environment variables. You must fill in `aio-aide-userconfig.json` and `aio-aksedge-config.json` manually before running it, even if you have set `$env:AKSEDGE_CLUSTER_NAME` etc. in your session. If you used Option B (`session-bootstrap.ps1`), the `$global:*` variables it sets are picked up automatically by the quickstart.
 
-**Step 3 — Grant permissions and deploy AIO**
+**Step 3 — Grant permissions and deploy IoT Operations**
 
 After either option above, run:
 ```powershell
@@ -413,9 +413,9 @@ After either option above, run:
 
 **Step 4 (Optional) — Deploy an edge module**
 
-> **These modules are not part of AIO itself.** They are demo applications that generate simulated data or mimic industrial processes so you can see AIO working end-to-end without needing real hardware or live signals. They would not belong in a production system — replace them with your own data sources when you're ready.
+> **These modules are not part of IoT Operations itself.** They are demo applications that generate simulated data or mimic industrial processes so you can see IoT Operations working end-to-end without needing real hardware or live signals. They would not belong in a production system — replace them with your own data sources when you're ready.
 
-Once AIO is running, you can push containerized applications to the edge cluster from your Windows machine. This step requires **Docker Desktop** running locally to build the image before pushing to ACR. 
+Once IoT Operations is running, you can push containerized applications to the edge cluster from your Windows machine. This step requires **Docker Desktop** running locally to build the image before pushing to ACR. 
 
 Deploy the factory MQTT simulator (`edgemqttsim`) as a first module:
 
@@ -444,7 +444,7 @@ To deploy all modules configured in `aio_config.json` at once, omit `-ModuleName
 
 **What it does**: Builds the container image on your Windows machine, pushes it to the Azure Container Registry created by `External-Configurator.ps1`, then applies the Kubernetes deployment manifest to the edge cluster via Azure Arc proxy — no direct network access to the edge device required.  
 **Available modules**: `edgemqttsim`, `hello-flask`, `sputnik`, `demohistorian`  
-**Note**: The ACR registry endpoint must be registered in AIO before image pulls will succeed — this is done automatically by `External-Configurator.ps1`.
+**Note**: The ACR registry endpoint must be registered in IoT Operations before image pulls will succeed — this is done automatically by `External-Configurator.ps1`.
 
 
 
@@ -462,7 +462,7 @@ To deploy all modules configured in `aio_config.json` at once, omit `-ModuleName
 
 - **[Edge MQTT Simulator](./modules/edgemqttsim/README.md)** - Comprehensive factory telemetry simulator
 - **[Edge Historian](./modules/demohistorian/README.md)** - SQL-based historian with HTTP API for querying historical MQTT data
-- **Fabric Integration** - See [README_ADVANCED.md](README_ADVANCED.md#fabric-integration) for connecting AIO to Microsoft Fabric
+- **Fabric Integration** - See [README_ADVANCED.md](README_ADVANCED.md#fabric-integration) for connecting IoT Operations to Microsoft Fabric
 
 ## What's Included
 
