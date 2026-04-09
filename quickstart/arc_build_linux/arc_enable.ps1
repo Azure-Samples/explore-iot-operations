@@ -290,6 +290,90 @@ function Test-ResourceGroup {
 # ARC ENABLE
 # ============================================================================
 
+function Test-CustomLocationsPrerequisites {
+    <#
+    .SYNOPSIS
+        Diagnoses why the Custom Locations RP object ID lookup failed.
+        Checks provider registration, Entra ID permissions, and user context.
+    #>
+    
+    Write-InfoLog "Running diagnostics to determine the cause..."
+    Write-Host ""
+    
+    # Check 1: Who is logged in?
+    $context = Get-AzContext -ErrorAction SilentlyContinue
+    if ($context) {
+        Write-Host "  Signed-in account:  $($context.Account.Id)" -ForegroundColor Cyan
+        Write-Host "  Tenant ID:          $($context.Tenant.Id)" -ForegroundColor Cyan
+    }
+    
+    # Check 2: Is Microsoft.ExtendedLocation registered?
+    $providerOk = $false
+    try {
+        $provider = Get-AzResourceProvider -ProviderNamespace "Microsoft.ExtendedLocation" -ErrorAction Stop
+        $regState = ($provider.RegistrationState | Select-Object -First 1)
+        if ($regState -eq "Registered") {
+            Write-Host "  [PASS] Microsoft.ExtendedLocation provider: Registered" -ForegroundColor Green
+            $providerOk = $true
+        } else {
+            Write-Host "  [FAIL] Microsoft.ExtendedLocation provider: $regState" -ForegroundColor Red
+            Write-Host "         Fix: Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "  [FAIL] Could not check Microsoft.ExtendedLocation provider: $_" -ForegroundColor Red
+        Write-Host "         Fix: Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation" -ForegroundColor Yellow
+    }
+    
+    # Check 3: Can we read ANY service principal? (tests Entra ID read permission)
+    $canReadSPs = $false
+    try {
+        $null = Get-AzADServicePrincipal -First 1 -ErrorAction Stop
+        $canReadSPs = $true
+        Write-Host "  [PASS] Entra ID service principal read access: OK" -ForegroundColor Green
+    } catch {
+        Write-Host "  [FAIL] Cannot read Entra ID service principals" -ForegroundColor Red
+        Write-Host "         Your account lacks Directory.Read.All or equivalent permission." -ForegroundColor Yellow
+        Write-Host "         Ask a tenant admin to grant you Directory Reader role, or" -ForegroundColor Yellow
+        Write-Host "         run grant_entra_id_roles.ps1 from a privileged account." -ForegroundColor Yellow
+    }
+    
+    # Check 4: Is Microsoft.Kubernetes registered? (needed for Arc)
+    try {
+        $k8sProvider = Get-AzResourceProvider -ProviderNamespace "Microsoft.Kubernetes" -ErrorAction Stop
+        $k8sState = ($k8sProvider.RegistrationState | Select-Object -First 1)
+        if ($k8sState -eq "Registered") {
+            Write-Host "  [PASS] Microsoft.Kubernetes provider: Registered" -ForegroundColor Green
+        } else {
+            Write-Host "  [WARN] Microsoft.Kubernetes provider: $k8sState" -ForegroundColor Yellow
+            Write-Host "         Fix: Register-AzResourceProvider -ProviderNamespace Microsoft.Kubernetes" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "  [WARN] Could not check Microsoft.Kubernetes provider" -ForegroundColor Yellow
+    }
+    
+    Write-Host ""
+    
+    # Summary
+    if (-not $providerOk -and -not $canReadSPs) {
+        Write-Host "  DIAGNOSIS: Multiple issues found. Fix the provider registration first," -ForegroundColor Red
+        Write-Host "  then address the Entra ID permissions." -ForegroundColor Red
+    } elseif (-not $providerOk) {
+        Write-Host "  DIAGNOSIS: The Custom Locations resource provider is not registered." -ForegroundColor Red
+        Write-Host "  Run: Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation" -ForegroundColor Cyan
+        Write-Host "  Then re-run this script." -ForegroundColor Cyan
+    } elseif (-not $canReadSPs) {
+        Write-Host "  DIAGNOSIS: Your account cannot read service principals in Entra ID." -ForegroundColor Red
+        Write-Host "  Ask a tenant admin to run grant_entra_id_roles.ps1, or grant you" -ForegroundColor Cyan
+        Write-Host "  the 'Directory Readers' role in Entra ID." -ForegroundColor Cyan
+    } else {
+        Write-Host "  DIAGNOSIS: Provider and permissions look OK. The service principal may" -ForegroundColor Yellow
+        Write-Host "  not exist yet. Try: Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation" -ForegroundColor Cyan
+        Write-Host "  Wait 1-2 minutes, then re-run this script." -ForegroundColor Cyan
+    }
+    
+    Write-Host ""
+}
+
 function Enable-ArcForCluster {
     Write-Log "Connecting cluster to Azure Arc..."
     
@@ -315,22 +399,17 @@ function Enable-ArcForCluster {
         Write-Host "The Custom Locations Resource Provider object ID could not be retrieved."
         Write-Host "This is required for Azure IoT Operations to work properly."
         Write-Host ""
-        Write-Host "Possible causes:" -ForegroundColor Cyan
-        Write-Host "  - Your account doesn't have permission to read service principals"
-        Write-Host "  - The Custom Locations RP is not registered in your tenant"
-        Write-Host "  - grant_entra_id_roles.ps1 hasn't been run yet"
-        Write-Host ""
+        
+        # Run diagnostics to tell the user exactly what's wrong
+        Test-CustomLocationsPrerequisites
+        
         Write-Host "What happens next:" -ForegroundColor Cyan
         Write-Host "  - The cluster will be Arc-connected WITHOUT custom-locations enabled"
         Write-Host "  - IoT Operations deployment will FAIL until this is fixed"
         Write-Host ""
-        Write-Host "To fix:" -ForegroundColor Green
-        Write-Host "  1. Run grant_entra_id_roles.ps1 from Windows (or get elevated permissions)"
-        Write-Host "  2. Delete the Arc connection:"
-        Write-Host "       kubectl delete ns azure-arc"
-        Write-Host "       (NOTE: 'namespace not found' error is OK - means it's already deleted)" -ForegroundColor DarkGray
-        Write-Host "       Remove-AzResource -ResourceGroupName $script:ResourceGroup -ResourceName $script:ClusterName -ResourceType 'Microsoft.Kubernetes/connectedClusters' -Force"
-        Write-Host "  3. Re-run this script (it's safe to run multiple times)"
+        Write-Host "After fixing the issue above:" -ForegroundColor Green
+        Write-Host "  1. Re-run this script (it's safe to run multiple times)"
+        Write-Host "  2. If already Arc-connected, the script will enable custom-locations on the existing connection"
         Write-Host ""
         Write-Host "This script is IDEMPOTENT - you can safely run it again after fixing permissions." -ForegroundColor Green
         Write-Host ""
