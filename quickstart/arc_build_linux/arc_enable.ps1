@@ -301,6 +301,9 @@ function Enable-ArcForCluster {
     Write-InfoLog "Retrieving Custom Locations Resource Provider object ID..."
     try {
         $customLocationsOid = (Get-AzADServicePrincipal -ApplicationId $customLocationsAppId -ErrorAction Stop).Id
+        if ([string]::IsNullOrEmpty($customLocationsOid)) {
+            throw "Get-AzADServicePrincipal returned no object ID. The Custom Locations RP may not be registered in this tenant. Run: Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation"
+        }
         Write-InfoLog "Custom Locations RP Object ID: $customLocationsOid"
     } catch {
         Write-WarnLog "Could not retrieve Custom Locations RP object ID: $_"
@@ -491,6 +494,9 @@ function Enable-ArcFeatures {
         $customLocationsAppId = "bc313c14-388c-4e7d-a58e-70017303ee3b"
         try {
             $customLocationsOid = (Get-AzADServicePrincipal -ApplicationId $customLocationsAppId -ErrorAction Stop).Id
+            if ([string]::IsNullOrEmpty($customLocationsOid)) {
+                throw "Service principal returned empty object ID"
+            }
         } catch {
             Write-WarnLog "Could not retrieve Custom Locations RP object ID"
         }
@@ -1024,8 +1030,18 @@ function Enable-CustomLocations {
         $customLocationsAppId = "bc313c14-388c-4e7d-a58e-70017303ee3b"
         try {
             $customLocationsOid = (Get-AzADServicePrincipal -ApplicationId $customLocationsAppId -ErrorAction Stop).Id
+            if ([string]::IsNullOrEmpty($customLocationsOid)) {
+                throw "Service principal returned empty object ID"
+            }
         } catch {
-            Write-WarnLog "Could not retrieve Custom Locations RP object ID"
+            Write-WarnLog "Could not retrieve Custom Locations RP object ID: $_"
+            Write-WarnLog "Custom-locations CANNOT be enabled without a valid OID"
+            Write-Host ""
+            Write-Host "To fix:" -ForegroundColor Yellow
+            Write-Host "  1. Register the provider:  Register-AzResourceProvider -ProviderNamespace Microsoft.ExtendedLocation" -ForegroundColor Cyan
+            Write-Host "  2. Run grant_entra_id_roles.ps1 from Windows" -ForegroundColor Cyan
+            Write-Host "  3. Re-run this script" -ForegroundColor Cyan
+            Write-Host ""
             return
         }
     }
@@ -1083,22 +1099,47 @@ function Enable-CustomLocations {
     }
     
     # Step 2: Helm upgrade to actually enable the feature in the cluster
-    # This is the step the PS module skips - we do it explicitly
+    # This is the step the PS module skips - we do it explicitly.
+    # The azure-arc chart is installed by the Arc agent from an internal OCI registry.
+    # We must extract the chart version from the installed release and pull from MCR.
     Write-InfoLog "Step 2: Enabling custom-locations in cluster via Helm..."
     try {
-        $helmResult = helm upgrade azure-arc azure-arc `
-            --namespace azure-arc-release `
-            --reuse-values `
-            --set "systemDefaultValues.customLocations.enabled=true" `
-            --set "systemDefaultValues.customLocations.oid=$customLocationsOid" 2>&1
+        # Extract chart version from the installed release
+        $chartVersion = $null
+        try {
+            $releaseJson = helm list -n azure-arc-release -f '^azure-arc$' -o json 2>$null | ConvertFrom-Json
+            if ($releaseJson -and $releaseJson.Count -gt 0) {
+                $chartString = $releaseJson[0].chart
+                if ($chartString -match '-([\d]+\.[\d]+\.[\d]+.*)$') {
+                    $chartVersion = $Matches[1]
+                    Write-InfoLog "Installed chart: $chartString (version: $chartVersion)"
+                }
+            }
+        } catch {
+            Write-WarnLog "Could not determine installed chart version: $_"
+        }
+
+        # Use OCI reference to MCR (same source az connectedk8s uses internally)
+        $ociRef = "oci://mcr.microsoft.com/azurearck8s/batch1/stable/azure-arc-k8sagents"
+        $helmArgs = @(
+            "upgrade", "azure-arc", $ociRef,
+            "--namespace", "azure-arc-release",
+            "--reuse-values",
+            "--set", "systemDefaultValues.customLocations.enabled=true",
+            "--set", "systemDefaultValues.customLocations.oid=$customLocationsOid"
+        )
+        if ($chartVersion) {
+            $helmArgs += @("--version", $chartVersion)
+        }
+
+        Write-InfoLog "Running: helm $($helmArgs -join ' ')"
+        $helmResult = & helm @helmArgs 2>&1
         
         if ($LASTEXITCODE -ne 0) {
             Write-ErrorLog "helm upgrade failed: $helmResult"
             Write-Host ""
-            Write-Host "To enable manually, run:" -ForegroundColor Yellow
-            Write-Host "  helm upgrade azure-arc azure-arc --namespace azure-arc-release --reuse-values \\" -ForegroundColor Cyan
-            Write-Host "    --set systemDefaultValues.customLocations.enabled=true \\" -ForegroundColor Cyan
-            Write-Host "    --set systemDefaultValues.customLocations.oid=$customLocationsOid" -ForegroundColor Cyan
+            Write-Host "To enable manually from a machine with az CLI, run:" -ForegroundColor Yellow
+            Write-Host "  az connectedk8s enable-features --name $script:ClusterName --resource-group $script:ResourceGroup --features cluster-connect custom-locations" -ForegroundColor Cyan
             Write-Host ""
             return
         }
