@@ -262,7 +262,7 @@
                     "refId": "Ping"
                 }
             ],
-            "title": "🔌 AIO Broker Health",
+            "title": "🔌 IoT Operations Broker Health",
             "transparent": true,
             "type": "state-timeline"
         },
@@ -405,7 +405,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "AIO Dataflow Health",
+            "title": "IoT Operations Dataflow Health",
             "type": "state-timeline"
         },
         {
@@ -4253,7 +4253,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "AIO Pods",
+            "title": "IoT Operations Pods",
             "type": "stat"
         },
         {
@@ -4700,7 +4700,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "📋 Kubernetes Events (AIO Namespaces)",
+            "title": "📋 Kubernetes Events (IoT Operations Namespaces)",
             "type": "table"
         },
         {
@@ -4826,7 +4826,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "⚠️ Error & Warning Logs (All AIO Components)",
+            "title": "⚠️ Error & Warning Logs (All IoT Operations Components)",
             "type": "table"
         },
         {
@@ -4939,7 +4939,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "📋 All Logs (AIO Components)",
+            "title": "📋 All Logs (IoT Operations Components)",
             "type": "table"
         }
     ],
@@ -5035,7 +5035,7 @@
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "AIO Unified Observability Dashboard",
+    "title": "IoT Operations Unified Observability Dashboard",
     "uid": "aio-unified-observability",
     "version": 1,
     "weekStart": ""
