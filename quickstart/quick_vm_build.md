@@ -31,6 +31,7 @@ az ssh vm --resource-group rg-test-vm --name test-vm-01 --local-user azureuser
 > Uses the SSH key generated during VM creation (`~/.ssh/id_rsa`).
 
 **Option B — Entra ID login (no key needed, but requires extra setup first):**
+If you are fine connecting as above, you are now done with setting up the VM and can move on to installing AKS. These instructions below are for more specific connection requirements. 
 
 Install the AAD SSH extension on the VM:
 ```bash
