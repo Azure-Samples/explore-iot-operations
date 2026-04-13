@@ -1060,7 +1060,7 @@ Write-Header "Summary - Permissions Granted"
 Write-Host ""
 Write-Success "Key Vault Permissions (Access Policies):"
 if ($keyVault) {
-    Write-Info "  [OK] User '$AddUser': Full access (get, list, set, delete secrets/keys/certs)"
+    Write-Info "  [OK] User '$userObjectId': Full access (get, list, set, delete secrets/keys/certs)"
     Write-Info "  [OK] Arc Cluster: Secrets read access (get, list)"
     Write-Info "  [OK] IoT Operations Instance: Secrets read access (get, list)"
     Write-Info "  [OK] All Managed Identities: Secrets read access (get, list)"
@@ -1080,10 +1080,10 @@ if ($containerRegistry) {
 
 Write-Host ""
 Write-Success "Azure IoT Operations Permissions:"
-Write-Info "  [OK] User '$AddUser': Contributor (resource group)"
-Write-Info "  [OK] User '$AddUser': IoT Hub Data Contributor"
-Write-Info "  [OK] User '$AddUser': Arc Kubernetes Cluster User"
-Write-Info "  [OK] User '$AddUser': Arc Kubernetes Viewer"
+Write-Info "  [OK] User '$userObjectId': Contributor (resource group)"
+Write-Info "  [OK] User '$userObjectId': IoT Hub Data Contributor"
+Write-Info "  [OK] User '$userObjectId': Arc Kubernetes Cluster User"
+Write-Info "  [OK] User '$userObjectId': Arc Kubernetes Viewer"
 
 Write-Host ""
 Write-Success "Microsoft Fabric Integration Permissions:"
@@ -1091,8 +1091,8 @@ Write-Info "  [OK] IoT Operations Instance: Event Hubs Data Sender/Receiver"
 Write-Info "  [OK] IoT Operations Instance: Storage Blob Data Contributor"
 Write-Info "  [OK] Arc Cluster: Event Hubs Data Sender/Receiver"
 Write-Info "  [OK] Arc Cluster: Storage Blob Data Contributor"
-Write-Info "  [OK] User '$AddUser': Event Hubs Data Sender/Receiver"
-Write-Info "  [OK] User '$AddUser': Storage Blob Data Contributor"
+Write-Info "  [OK] User '$userObjectId': Event Hubs Data Sender/Receiver"
+Write-Info "  [OK] User '$userObjectId': Storage Blob Data Contributor"
 
 Write-Host ""
 Write-Success "Custom Location Permissions (for Discovered Asset Sync):"
@@ -1106,7 +1106,7 @@ if ($customLocation) {
 
 Write-Host ""
 Write-Success "Subscription-Level Permissions:"
-Write-Info "  [OK] User '$AddUser': Reader (subscription)"
+Write-Info "  [OK] User '$userObjectId': Reader (subscription)"
 
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Green
