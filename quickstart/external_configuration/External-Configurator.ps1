@@ -1680,12 +1680,25 @@ function Test-Deployment {
         # Report issues
         if ($kvIssues.Count -gt 0) {
             Write-Host ""
-            Write-WarnLog "Key Vault configuration issues found for IoT Operations dataflows:"
+            Write-WarnLog "Key Vault configuration issues found:"
             foreach ($issue in $kvIssues) {
                 Write-WarnLog "  - $issue"
             }
             Write-Host ""
-            Write-InfoLog "Run grant_entra_id_roles.ps1 to fix access policy issues"
+            Write-InfoLog "NOTE: These missing role assignments do NOT prevent Azure IoT Operations from"
+            Write-InfoLog "running. IoT Operations core messaging and device connectivity work independently"
+            Write-InfoLog "of Key Vault access. Key Vault is only required if you use the Secret Store"
+            Write-InfoLog "extension to sync secrets into the cluster (e.g. for MQTT broker TLS or"
+            Write-InfoLog "dataflow credentials)."
+            Write-Host ""
+            Write-InfoLog "To fix: run grant_entra_id_roles.ps1 from this directory:"
+            Write-InfoLog "  .\grant_entra_id_roles.ps1"
+            Write-Host ""
+            Write-InfoLog "Documentation:"
+            Write-InfoLog "  Secret Store extension:"
+            Write-InfoLog "    https://learn.microsoft.com/azure/iot-operations/secure-iot-ops/howto-manage-secrets"
+            Write-InfoLog "  Key Vault RBAC roles:"
+            Write-InfoLog "    https://learn.microsoft.com/azure/key-vault/general/rbac-guide"
         } else {
             Write-Success "Key Vault is properly configured for IoT Operations dataflows"
         }
