@@ -262,7 +262,7 @@
                     "refId": "Ping"
                 }
             ],
-            "title": "🔌 AIO Broker Health",
+            "title": "🔌 IoT Operations Broker Health",
             "transparent": true,
             "type": "state-timeline"
         },
@@ -405,7 +405,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "AIO Dataflow Health",
+            "title": "IoT Operations Dataflow Health",
             "type": "state-timeline"
         },
         {
@@ -491,7 +491,7 @@
                         "uid": "${DS_PROMETHEUS}"
                     },
                     "editorMode": "code",
-                    "expr": "## Workload Readiness health\r\n############################\r\nlabel_replace(min(\r\navg(label_join( # Workload ready percents (for deployment, daemonset, and statefulset)\r\n    label_replace(label_join(\r\n        kube_deployment_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_daemonset_status_number_ready{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_statefulset_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_status_.*\")\r\n  / label_replace(label_join(\r\n        kube_daemonset_status_desired_number_scheduled{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_deployment_spec_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_statefulset_status_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_(status|spec)_.*\")\r\n  ,\"workload\", \":\", \"workloadType\", \"workloadName\")\r\n) by (workload) >=0 \r\n) or vector(404),\"_\",\"AIO Workload Readiness\",\"\",\"\")",
+                    "expr": "## Workload Readiness health\r\n############################\r\nlabel_replace(min(\r\navg(label_join( # Workload ready percents (for deployment, daemonset, and statefulset)\r\n    label_replace(label_join(\r\n        kube_deployment_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_daemonset_status_number_ready{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_statefulset_status_replicas_ready{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_status_.*\")\r\n  / label_replace(label_join(\r\n        kube_daemonset_status_desired_number_scheduled{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_deployment_spec_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"} or\r\n        kube_statefulset_status_replicas{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n        ,\"workloadName\", \"\", \"deployment\", \"daemonset\", \"statefulset\")\r\n        ,\"workloadType\", \"$1\", \"__name__\", \"kube_(.*)_(status|spec)_.*\")\r\n  ,\"workload\", \":\", \"workloadType\", \"workloadName\")\r\n) by (workload) >=0 \r\n) or vector(404),\"_\",\"IoT Operations Workload Readiness\",\"\",\"\")",
                     "hide": false,
                     "legendFormat": "__auto",
                     "range": true,
@@ -503,7 +503,7 @@
                         "uid": "${DS_PROMETHEUS}"
                     },
                     "editorMode": "code",
-                    "expr": "## Container Restart Health:\r\n############################\r\nlabel_replace(\r\n  sgn(sum_over_time(sum(rate(\r\n    kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[10m:1m]\r\n    )*60)[1h:]) > 5) * 0.0 # RED: Cumulative restarts over X(5) time greater than Y(1h)\r\n  or sgn(max(\r\n    kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n    + 1 >= 0))\r\n  ,\"_\",\"AIO Container Restarts\",\"\",\"\")\r\n",
+                    "expr": "## Container Restart Health:\r\n############################\r\nlabel_replace(\r\n  sgn(sum_over_time(sum(rate(\r\n    kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[10m:1m]\r\n    )*60)[1h:]) > 5) * 0.0 # RED: Cumulative restarts over X(5) time greater than Y(1h)\r\n  or sgn(max(\r\n    kube_pod_container_status_restarts_total{cluster=\"$cluster\",namespace=~\"$namespace\"}\r\n    + 1 >= 0))\r\n  ,\"_\",\"IoT Operations Container Restarts\",\"\",\"\")\r\n",
                     "hide": false,
                     "legendFormat": "__auto",
                     "range": true,
@@ -515,7 +515,7 @@
                         "uid": "${DS_PROMETHEUS}"
                     },
                     "editorMode": "code",
-                    "expr": "## Container CPU top-level health\r\n################################\r\nlabel_replace(\r\nmin(sgn( # Check for throttling > N indicating container is exceeding its CPU limits\r\n      rate(container_cpu_cfs_throttled_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m]) \r\n    / rate(container_cpu_cfs_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m])\r\n    >= 0.80)\r\n    ) \r\n    * 0.0\r\nor\r\nmin(\r\n    sgn(min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"cpu\"}) by (namespace,container))\r\n    )\r\n,\"_\",\"AIO Container CPU\",\"\",\"\")",
+                    "expr": "## Container CPU top-level health\r\n################################\r\nlabel_replace(\r\nmin(sgn( # Check for throttling > N indicating container is exceeding its CPU limits\r\n      rate(container_cpu_cfs_throttled_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m]) \r\n    / rate(container_cpu_cfs_periods_total{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}[10m])\r\n    >= 0.80)\r\n    ) \r\n    * 0.0\r\nor\r\nmin(\r\n    sgn(min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"cpu\"}) by (namespace,container))\r\n    )\r\n,\"_\",\"IoT Operations Container CPU\",\"\",\"\")",
                     "hide": false,
                     "legendFormat": "__auto",
                     "range": true,
@@ -527,7 +527,7 @@
                         "uid": "${DS_PROMETHEUS}"
                     },
                     "editorMode": "code",
-                    "expr": "## Container Memory Health:\r\n###########################\r\nlabel_replace(\r\nmin( # Look for high memory utilization\r\n    0.0 * sgn((\r\n        max(container_memory_working_set_bytes{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}) by (namespace,container)\r\n      / min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"memory\"}) by (namespace, container)\r\n    ) >= .95) or # show health state of 0 if container memory utilization >= 95%\r\n    vector(0)>0\r\n)\r\nor\r\nmin(\r\n    sgn(min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"memory\"}) by (namespace,container))\r\n)\r\n,\"_\",\"AIO Container Memory\",\"\",\"\")",
+                    "expr": "## Container Memory Health:\r\n###########################\r\nlabel_replace(\r\nmin( # Look for high memory utilization\r\n    0.0 * sgn((\r\n        max(container_memory_working_set_bytes{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\"}) by (namespace,container)\r\n      / min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"memory\"}) by (namespace, container)\r\n    ) >= .95) or # show health state of 0 if container memory utilization >= 95%\r\n    vector(0)>0\r\n)\r\nor\r\nmin(\r\n    sgn(min(kube_pod_container_resource_limits{cluster=\"$cluster\",namespace=~\"$namespace\",container!=\"\",resource=\"memory\"}) by (namespace,container))\r\n)\r\n,\"_\",\"IoT Operations Container Memory\",\"\",\"\")",
                     "hide": false,
                     "legendFormat": "__auto",
                     "range": true,
@@ -4253,7 +4253,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "AIO Pods",
+            "title": "IoT Operations Pods",
             "type": "stat"
         },
         {
@@ -4700,7 +4700,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "📋 Kubernetes Events (AIO Namespaces)",
+            "title": "📋 Kubernetes Events (IoT Operations Namespaces)",
             "type": "table"
         },
         {
@@ -4826,7 +4826,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "⚠️ Error & Warning Logs (All AIO Components)",
+            "title": "⚠️ Error & Warning Logs (All IoT Operations Components)",
             "type": "table"
         },
         {
@@ -4939,7 +4939,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "📋 All Logs (AIO Components)",
+            "title": "📋 All Logs (IoT Operations Components)",
             "type": "table"
         }
     ],
@@ -5035,7 +5035,7 @@
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "AIO Unified Observability Dashboard",
+    "title": "IoT Operations Unified Observability Dashboard",
     "uid": "aio-unified-observability",
     "version": 1,
     "weekStart": ""

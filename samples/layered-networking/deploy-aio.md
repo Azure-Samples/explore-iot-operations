@@ -16,7 +16,7 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
 >
 > Because deployment at some lower levels can take time, the Azure CLI can require you to sign in again during the process. In some cases, after the second deployment, the `az iot ops create` command appears to sit idle and doesn't show the "Azure IoT Operations with Workflow Id". If this happens, cancel the operation, sign in again (`az login --use-device-code`), and check that the subscription is correct before retrying.
 
-## Deploy AIO to level4
+## Deploy IoT Operations to level4
 
 1. Set the environment variables for level4.
 
@@ -37,7 +37,7 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
     SCHEMA_REGISTRY_NAME="<Schema_Registry_Name>"
     SCHEMA_NAMESPACE="<Schema_Registry_Namespace>"
     
-    # AIO Instance Deployment
+    # IoT Operations Instance Deployment
     CUSTOM_LOCATION="<Custom_Location_Name>"
     AIO_INSTANCE="<AIO_Instance_Name>"
     ```
@@ -71,23 +71,23 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
 1. Initialize the cluster for Azure IoT Operations
 
     ```bash
-    # Initialize the cluster for AIO
+    # Initialize the cluster for IoT Operations
     az iot ops init  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"
     
     ```
 
-    ![Screenshot of Azure CLI output that shows AIO cluster initialization at level4.](./images/azure-cli-init-level4.png)
+    ![Screenshot of Azure CLI output that shows IoT Operations cluster initialization at level4.](./images/azure-cli-init-level4.png)
 
 1. Deploy Azure IoT Operations to the cluster.
 
     ```bash
-    # Deploy AIO
+    # Deploy IoT Operations
     az iot ops create  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"  --custom-location ${CUSTOM_LOCATION}  -n ${AIO_INSTANCE}  --sr-resource-id /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.DeviceRegistry/schemaRegistries/${SCHEMA_REGISTRY_NAME}  --broker-frontend-replicas 1  --broker-frontend-workers 1  --broker-backend-part 1  --broker-backend-workers 1  --broker-backend-rf 2  --broker-mem-profile Low
     ```
 
-    ![Screenshot of Azure CLI output that shows AIO deployment at level4.](./images/azure-cli-deploy-level4.png)
+    ![Screenshot of Azure CLI output that shows IoT Operations deployment at level4.](./images/azure-cli-deploy-level4.png)
 
-## Deploy AIO to level3
+## Deploy IoT Operations to level3
 
 1. Set the environment variables for the level3
 
@@ -108,7 +108,7 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
     SCHEMA_REGISTRY_NAME="<Schema_Registry_Name>"
     SCHEMA_NAMESPACE="<Schema_Registry_Namespace>"
     
-    # AIO Instance Deployment
+    # IoT Operations Instance Deployment
     CUSTOM_LOCATION="<Custom_Location_Name>"
     AIO_INSTANCE="<AIO_Instance_Name>"
     ```
@@ -141,22 +141,22 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
 1. Initialize the cluster for Azure IoT Operations.
 
     ```bash
-    # Initialize the cluster for AIO
+    # Initialize the cluster for IoT Operations
     az iot ops init  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"
     ```
 
-    ![Screenshot of Azure CLI output for AIO cluster initialization.](./images/azure-cli-init-level3.png)
+    ![Screenshot of Azure CLI output for IoT Operations cluster initialization.](./images/azure-cli-init-level3.png)
 
 1. Deploy Azure IoT Operations to the cluster.
 
     ```bash
-    # Deploy AIO
+    # Deploy IoT Operations
     az iot ops create  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"  --custom-location ${CUSTOM_LOCATION}  -n ${AIO_INSTANCE}  --sr-resource-id /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.DeviceRegistry/schemaRegistries/${SCHEMA_REGISTRY_NAME}  --broker-frontend-replicas 1  --broker-frontend-workers 1  --broker-backend-part 1  --broker-backend-workers 1  --broker-backend-rf 2  --broker-mem-profile Low  
     ```
 
-    ![Screenshot of Azure CLI output for AIO deployment.](./images/azure-cli-deploy-level3.png)
+    ![Screenshot of Azure CLI output for IoT Operations deployment.](./images/azure-cli-deploy-level3.png)
 
-## Deploy AIO to level2
+## Deploy IoT Operations to level2
 
 1. Set the environment variables for level2.
 
@@ -177,7 +177,7 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
     SCHEMA_REGISTRY_NAME="<Schema_Registry_Name>"
     SCHEMA_NAMESPACE="<Schema_Registry_Namespace>"
     
-    # AIO Instance Deployment
+    # IoT Operations Instance Deployment
     CUSTOM_LOCATION="<Custom_Location_Name>"
     AIO_INSTANCE="<AIO_Instance_Name>"
     ```
@@ -210,21 +210,21 @@ In this section, you deploy a basic development Azure IoT Operations cluster to 
 
     ```bash
     
-    # Initialize the cluster for AIO
+    # Initialize the cluster for IoT Operations
     az iot ops init  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"
     
     ```
     
-    ![Screenshot of Azure CLI output that shows AIO cluster initialization.](./images/azure-cli-init-level2.png)
+    ![Screenshot of Azure CLI output that shows IoT Operations cluster initialization.](./images/azure-cli-init-level2.png)
   
 1. Deploy Azure IoT Operations to the cluster.
 
     ```bash
-    # Deploy AIO
+    # Deploy IoT Operations
     az iot ops create  --subscription "${SUBSCRIPTION_ID}"  -g "${RESOURCE_GROUP}"  --cluster "${CLUSTER_NAME}"  --custom-location ${CUSTOM_LOCATION}  -n ${AIO_INSTANCE}  --sr-resource-id /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.DeviceRegistry/schemaRegistries/${SCHEMA_REGISTRY_NAME}  --broker-frontend-replicas 1  --broker-frontend-workers 1  --broker-backend-part 1  --broker-backend-workers 1  --broker-backend-rf 2  --broker-mem-profile Low  
     ```
     
-    ![Screenshot of Azure CLI output that shows AIO deployment.](./images/azure-cli-deploy-level2.png)
+    ![Screenshot of Azure CLI output that shows IoT Operations deployment.](./images/azure-cli-deploy-level2.png)
   
 ## Next steps
 

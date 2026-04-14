@@ -55,7 +55,7 @@ public class Program
 
         var mqttConnectionSettings = MqttConnectionSettings.FromConnectionString(connectionString);
         
-        // Read AIO settings from configuration
+        // Read IoT Operations settings from configuration
         var aioNamespace = configuration["AioSettings:Namespace"];
         var assetName = configuration["AioSettings:AssetName"];
         var datasetName = configuration["AioSettings:DatasetName"];

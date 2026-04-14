@@ -1,0 +1,115 @@
+{
+  "config_type": "advanced",
+  "azure": {
+    "subscription_id": "",
+    "resource_group": "rg-iot-operations",
+    "location": "eastus",
+    "cluster_name": "iot-ops-cluster",
+    "namespace_name": "iot-operations-ns",
+    "storage_account_name": "",
+    "key_vault_name": "",
+    "custom_location_name": "",
+    "aio_instance_name": "",
+    "custom_asset_endpoint": "",
+    "manage_principal": "",
+    "container_registry": "",
+    "skip_kubeconfig_setup": false,
+    "skip_container_registry_setup": false,
+    "skip_certificate_setup": false,
+    "enable_keyvault_sync": true
+  },
+  "fabric": {
+    "eventstream_topic_id": "es_YOUR_FABRIC_TOPIC_ID",
+    "eventstream_alerts_topic_id": "es_YOUR_FABRIC_ALERTS_TOPIC"
+  },
+  "deployment": {
+    "skip_system_update": false,
+    "deployment_mode": "test",
+    "deploy_opc_ua_bridge": false
+  },
+  "optional_tools": {
+    "k9s": true,
+    "mqtt-viewer": false,
+    "ssh": false
+  },
+  "modules": {
+    "edgemqttsim": false,
+    "hello-flask": false,
+    "sputnik": false,
+    "wasm-quality-filter-python": false
+  },
+  "comments": {
+    "config_type": "Advanced mode: manual control with skip flags for kubeconfig, container registry, and certificates; Quickstart mode: fully automated setup with Arc and IoT Operations.",
+    "subscription_id": "Leave empty to use current logged-in subscription, or provide your Azure subscription GUID",
+    "resource_group": "Name of Azure resource group (will be created if it doesn't exist)",
+    "location": "Azure region (e.g., eastus, westus2, westeurope, northeurope)",
+    "cluster_name": "Name for your Arc-enabled Kubernetes cluster",
+    "namespace_name": "Name for Azure Device Registry namespace",
+    "storage_account_name": "OPTIONAL: Custom name for Azure Storage Account (must be globally unique, 3-24 chars, lowercase alphanumeric only). Leave empty to auto-generate from cluster name.",
+    "key_vault_name": "OPTIONAL: Custom name for Azure Key Vault (must be globally unique, 3-24 chars). Leave empty to auto-generate: aio-<cluster-name>-<random-suffix>",
+    "custom_location_name": "Custom location name created during AIO installation (usually auto-generated like 'location-xxxxx'). Find with: az customlocation list -g <resource-group> -o table",
+    "aio_instance_name": "Azure IoT Operations instance name (usually '<cluster-name>-aio'). Find with: az iot ops list -g <resource-group> -o table",
+    "custom_asset_endpoint": "OPTIONAL: Name of existing asset endpoint to use as namespace resource (create this manually first)",
+    "manage_principal": "OPTIONAL: Azure AD Object ID (GUID) to grant cluster-admin permissions for remote cluster management via Azure Arc. Get with: az ad signed-in-user show --query id -o tsv. Leave empty to skip RBAC binding.",
+    "container_registry": "OPTIONAL: Container registry for edge modules (e.g., 'yourusername' for Docker Hub or 'yourregistry.azurecr.io' for ACR). Leave empty to use GitHub Container Registry (ghcr.io/yourusername). Used to replace <YOUR_REGISTRY> in deployment.yaml files.",
+    "skip_kubeconfig_setup": "Set to true to skip automatic kubeconfig setup (if you want to manage kubectl configuration manually)",
+    "skip_container_registry_setup": "Set to true to skip container registry login and setup (if you handle this separately)",
+    "skip_certificate_setup": "Set to true to skip automatic certificate generation and management (if you provide your own certs)",
+    "enable_keyvault_sync": "Set to true to enable Azure Key Vault secret sync via CSI Secret Store driver. RECOMMENDED even in advanced mode.",
+    "eventstream_topic_id": "Get from Fabric portal: https://app.fabric.microsoft.com → Eventstream → Copy topic ID (format: es_aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb)",
+    "eventstream_alerts_topic_id": "OPTIONAL: Separate Eventstream topic for critical alerts. Use same as eventstream_topic_id if not needed",
+    "deployment_mode": "Options: 'test' for development, 'secure' for production (future)",
+    "deploy_opc_ua_bridge": "Set to true to automatically deploy OPC UA bridge for factory integration",
+    "skip_system_update": "Set to true to skip apt update/upgrade for faster runs",
+    "optional_tools": {
+      "k9s": "Terminal UI for Kubernetes cluster management. Enable for development/debugging.",
+      "mqtt-viewer": "Installs mosquitto-clients (mosquitto_sub, mosquitto_pub). Enable for MQTT debugging and testing.",
+      "ssh": "Secure remote shell access with key-based authentication. Enable for remote management."
+    },
+    "modules": {
+      "edgemqttsim": "Factory telemetry simulator. Enable for testing MQTT connectivity and data pipelines.",
+      "hello-flask": "Simple Flask web app. Enable for basic cluster validation.",
+      "sputnik": "Advanced application. Enable for comprehensive testing.",
+      "wasm-quality-filter-python": "WebAssembly edge filter. Enable for production edge processing."
+    },
+    "advanced_workflow": [
+      "1. Installer sets up K3s cluster (kubeconfig optional based on skip_kubeconfig_setup)",
+      "2. CSI Secret Store driver installed if enable_keyvault_sync=true (RECOMMENDED)",
+      "3. Container registry setup skipped if skip_container_registry_setup=true",
+      "4. Certificate generation skipped if skip_certificate_setup=true",
+      "5. Use External-Configurator.ps1 for manual Azure resource creation and configuration"
+    ],
+    "use_cases": [
+      "Existing Kubernetes cluster that needs IoT Operations",
+      "Custom certificate management requirements",
+      "Pre-configured container registries",
+      "Staged deployment (infra first, Azure later)",
+      "Custom RBAC and security policies",
+      "Multi-cluster deployments with shared configuration"
+    ]
+  },
+  "examples": {
+    "minimal_local_cluster": {
+      "comment": "Just set up K3s with Key Vault sync, do everything else manually",
+      "skip_kubeconfig_setup": false,
+      "skip_container_registry_setup": true,
+      "skip_certificate_setup": true,
+      "enable_keyvault_sync": true
+    },
+    "bring_your_own_certs": {
+      "comment": "Set up cluster but use existing certificates and registry",
+      "skip_kubeconfig_setup": false,
+      "skip_container_registry_setup": true,
+      "skip_certificate_setup": true,
+      "enable_keyvault_sync": true
+    },
+    "staged_deployment": {
+      "comment": "First run: set up infrastructure only",
+      "skip_kubeconfig_setup": false,
+      "skip_container_registry_setup": false,
+      "skip_certificate_setup": false,
+      "enable_keyvault_sync": true,
+      "note": "After validation, run External-Configurator.ps1 to Arc-enable and deploy IoT Operations"
+    }
+  }
+}

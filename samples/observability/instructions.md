@@ -1,12 +1,12 @@
 # Azure IoT Operations Unified Observability Dashboard
 
-A comprehensive Grafana dashboard for monitoring Azure IoT Operations (AIO) deployments, combining Prometheus metrics with Azure Log Analytics logs in a single unified view.
+A comprehensive Grafana dashboard for monitoring Azure IoT Operations deployments, combining Prometheus metrics with Azure Log Analytics logs in a single unified view.
 
 ## Overview
 
-This dashboard provides end-to-end observability for Azure IoT Operations running on Arc-enabled Kubernetes clusters. It consolidates metrics and logs from all AIO components into a single pane of glass, enabling operators to:
+This dashboard provides end-to-end observability for Azure IoT Operations running on Arc-enabled Kubernetes clusters. It consolidates metrics and logs from all IoT Operations components into a single pane of glass, enabling operators to:
 
-- **Monitor health** of all AIO services at a glance
+- **Monitor health** of all IoT Operations services at a glance
 - **Troubleshoot issues** with integrated logs alongside metrics
 - **Track performance** of brokers, dataflows, and connectors
 - **Observe Kubernetes infrastructure** health and resource usage
@@ -22,7 +22,7 @@ This dashboard provides end-to-end observability for Azure IoT Operations runnin
 | **📚 Schema Registry** | Schema registry request rates and errors |
 | **📊 Observability Pipeline (OTel)** | OpenTelemetry collector metrics for export rates and failures |
 | **☸️ Kubernetes Infrastructure** | Node resources (CPU, memory, disk), pod health, restarts, and Kubernetes events |
-| **🚨 Troubleshooting** | Full log tables for error/warning logs and all AIO component logs |
+| **🚨 Troubleshooting** | Full log tables for error/warning logs and all IoT Operations component logs |
 
 ## Prerequisites
 
@@ -38,11 +38,11 @@ This dashboard provides end-to-end observability for Azure IoT Operations runnin
 ### Data Sources Required
 
 1. **Prometheus / Azure Managed Prometheus**
-   - Must be scraping AIO metrics from your cluster
+   - Must be scraping IoT Operations metrics from your cluster
    - Configure the datasource during import
 
 2. **Azure Monitor (Log Analytics)**
-   - Workspace must be receiving container logs from your AIO cluster
+   - Workspace must be receiving container logs from your IoT Operations cluster
    - Configure the datasource during import
    - **Important**: You must provide your Azure Subscription ID in the dashboard's `subscriptionId` variable for log queries to work
 
@@ -51,7 +51,7 @@ This dashboard provides end-to-end observability for Azure IoT Operations runnin
 Ensure your cluster has metrics collection enabled:
 
 ```bash
-# Verify AIO metrics are being scraped
+# Verify IoT Operations metrics are being scraped
 kubectl get pods -n azure-iot-operations -l app.kubernetes.io/component=prometheus
 ```
 
@@ -87,8 +87,8 @@ After importing, configure these variables at the top of the dashboard:
 |----------|------|-------------|
 | `DS_PROMETHEUS` | Datasource | Select your Prometheus or Azure Managed Prometheus datasource |
 | `DS_AZURE_MONITOR` | Datasource | Select your Azure Monitor datasource |
-| `cluster` | Query | Auto-populated from Prometheus - select your AIO cluster |
-| `namespace` | Query | Auto-populated - filter by namespace (default: all AIO namespaces) |
+| `cluster` | Query | Auto-populated from Prometheus - select your IoT Operations cluster |
+| `namespace` | Query | Auto-populated - filter by namespace (default: all IoT Operations namespaces) |
 | `subscriptionId` | Text | **Manual entry required** - Your Azure subscription ID for Log Analytics queries |
 
 
@@ -118,8 +118,8 @@ The top section shows color-coded health status:
 
 ### Filtering
 
-- Use the `cluster` variable to select your AIO cluster
-- Use the `namespace` variable to focus on specific AIO namespaces
+- Use the `cluster` variable to select your IoT Operations cluster
+- Use the `namespace` variable to focus on specific IoT Operations namespaces
 - Logs automatically filter to the selected cluster and time range
 
 ## Metrics Reference
@@ -198,7 +198,7 @@ The top section shows color-coded health status:
 | Node CPU % | `node_cpu_seconds_total` | Average node CPU utilization |
 | Node Memory % | `node_memory_MemAvailable_bytes`, `node_memory_MemTotal_bytes` | Average node memory utilization |
 | Node Disk % | `node_filesystem_avail_bytes`, `node_filesystem_size_bytes` | Average node disk utilization (root mount) |
-| AIO Pods | `kube_pod_info` | Count of pods in AIO namespaces |
+| IoT Operations Pods | `kube_pod_info` | Count of pods in IoT Operations namespaces |
 | Pod Restarts (1h) | `kube_pod_container_status_restarts_total` | Total container restarts in last hour |
 | Unhealthy Pods | `kube_pod_status_phase` | Pods not in Running/Succeeded state |
 | Node Resource Usage | `node_cpu_seconds_total`, `node_memory_*`, `node_filesystem_*` | CPU, memory, disk over time |
@@ -215,7 +215,7 @@ The dashboard includes integrated log panels using Azure Log Analytics (KQL):
 | OPC-UA Connector Logs | `ContainerLogV2` | `PodName startswith "aio-opc"` |
 | Kubernetes Events | `KubeEvents` | `Namespace startswith "azure-iot-operations"` |
 | Error & Warning Logs | `ContainerLogV2` | `LogLevel in ("error", "warning", ...)` |
-| All AIO Logs | `ContainerLogV2` | `PodNamespace startswith "azure-iot-operations"` |
+| All IoT Operations Logs | `ContainerLogV2` | `PodNamespace startswith "azure-iot-operations"` |
 
 ## Troubleshooting
 
@@ -245,7 +245,7 @@ Contributions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test with a real AIO cluster
+4. Test with a real IoT Operations cluster
 5. Submit a pull request
 
 

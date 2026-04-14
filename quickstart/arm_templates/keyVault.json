@@ -1,0 +1,134 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Creates an Azure Key Vault for Azure IoT Operations secret management"
+  },
+  "parameters": {
+    "keyVaultName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 24,
+      "metadata": {
+        "description": "Name of the Key Vault (must be globally unique)"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for the Key Vault"
+      }
+    },
+    "tenantId": {
+      "type": "string",
+      "defaultValue": "[subscription().tenantId]",
+      "metadata": {
+        "description": "Azure AD tenant ID"
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "standard",
+      "allowedValues": [
+        "standard",
+        "premium"
+      ],
+      "metadata": {
+        "description": "Key Vault SKU"
+      }
+    },
+    "enableRbacAuthorization": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Use RBAC for authorization instead of access policies (default: true - use RBAC)"
+      }
+    },
+    "userObjectId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Object ID of the user to grant full access to the Key Vault. Leave empty to skip user access policy."
+      }
+    },
+    "enableSoftDelete": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable soft delete for recovery"
+      }
+    },
+    "softDeleteRetentionInDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "minValue": 7,
+      "maxValue": 90,
+      "metadata": {
+        "description": "Number of days to retain soft-deleted items"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "purpose": "iot-operations-secrets"
+      }
+    }
+  },
+  "variables": {
+    "emptyAccessPolicies": [],
+    "userAccessPolicy": [
+      {
+        "tenantId": "[parameters('tenantId')]",
+        "objectId": "[parameters('userObjectId')]",
+        "permissions": {
+          "secrets": ["get", "list", "set", "delete", "backup", "restore", "recover", "purge"],
+          "keys": ["get", "list", "create", "delete", "backup", "restore", "recover", "purge"],
+          "certificates": ["get", "list", "create", "delete", "backup", "restore", "recover", "purge"]
+        }
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2024-04-01-preview",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "tenantId": "[parameters('tenantId')]",
+        "sku": {
+          "family": "A",
+          "name": "[parameters('skuName')]"
+        },
+        "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]",
+        "enableSoftDelete": "[parameters('enableSoftDelete')]",
+        "softDeleteRetentionInDays": "[parameters('softDeleteRetentionInDays')]",
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": true,
+        "enabledForDiskEncryption": false,
+        "accessPolicies": "[if(parameters('enableRbacAuthorization'), variables('emptyAccessPolicies'), if(empty(parameters('userObjectId')), variables('emptyAccessPolicies'), variables('userAccessPolicy')))]",
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+          "defaultAction": "Allow",
+          "bypass": "AzureServices"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "keyVaultId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[parameters('keyVaultName')]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))).vaultUri]"
+    }
+  }
+}

@@ -8,11 +8,11 @@ using PtzClient.Ptz;
 
 var hostOption = new Option<string>("--mqtt-host", "-h") { Description = "The Hostname or IP of the MQTT Listener the demo connects to", DefaultValueFactory = _ => "localhost" };
 var portOption = new Option<int>("--mqtt-port", "-p") { Description = "The port of the MQTT Listener the demo connects to", DefaultValueFactory = _ => 1883 };
-var namespaceOption = new Option<string>("--namespace", "-n") { Description = "The Kubernetes namespace AIO is deployed to", DefaultValueFactory = _ => "azure-iot-operations" };
+var namespaceOption = new Option<string>("--namespace", "-n") { Description = "The Kubernetes namespace IoT Operations is deployed to", DefaultValueFactory = _ => "azure-iot-operations" };
 var assetOption = new Option<string>("--asset", "-a") { Description = "The name of the asset", Required = true };
 var modeOption = new Option<string>("--mode", "-m") { Description = "The method that should be used to move the camera", DefaultValueFactory = _ => "relative", }.AcceptOnlyFromAmong("relative", "continuous");
 
-var rootCommand = new RootCommand("AIO ONVIF Connector Demo")
+var rootCommand = new RootCommand("IoT Operations ONVIF Connector Demo")
 {
     hostOption,
     portOption,

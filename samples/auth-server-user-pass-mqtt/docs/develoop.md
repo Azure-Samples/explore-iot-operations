@@ -71,11 +71,11 @@
         kubectl create secret generic auth-server-user-pass-mqtt-server-credentials -n azure-iot-operations --from-file=passwords.toml=./clients.toml
         ```
 
-4. Configure custom authentication in AIO, use the instructions from [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication).
+4. Configure custom authentication in IoT Operations, use the instructions from [here](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication?tabs=portal#custom-authentication).
     Configure the settings as below:
 
     1. Endpoint: https://auth-server-user-pass-mqtt
     2. CA certificate config map: azure-iot-operations-aio-ca-trust-bundle
     3. Authentication X.509 secret reference: [leave blank]
 
-5. Optionally, test authentication module without AIO dependencies using instructions in [debug.md](debug.md).
+5. Optionally, test authentication module without IoT Operations dependencies using instructions in [debug.md](debug.md).
