@@ -1,0 +1,13 @@
+{
+  "foundry_local": {
+    "endpoint": "http://localhost:5272",
+    "model": "phi-4-mini",
+    "max_tokens": 1024,
+    "temperature": 0.3
+  },
+  "comments": {
+    "endpoint": "Default Foundry Local port. Change if running on a remote workstation.",
+    "model": "Run 'foundry model list' to see available models. phi-4-mini is recommended for this demo.",
+    "temperature": "Low temperature (0.2-0.4) gives more deterministic, factual responses for telemetry analysis."
+  }
+}

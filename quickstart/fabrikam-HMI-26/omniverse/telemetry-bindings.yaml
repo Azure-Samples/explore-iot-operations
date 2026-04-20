@@ -1,0 +1,109 @@
+# Telemetry Bindings — Fabrikam HMI-26
+# Maps MQTT topic fields to USD prim attributes
+
+# How bindings work:
+#   topic:      MQTT topic pattern (supports + and # wildcards)
+#   id_field:   JSON field used to resolve the machine's prim path
+#   prim_root:  USD prim path prefix (machine_id appended)
+#   attributes: list of { source: JSON path, target: USD attribute, type: USD type }
+
+bindings:
+
+  - name: cnc_telemetry
+    topic: factory/cnc
+    id_field: machine_id
+    prim_root: /World/Factory/CNC
+    attributes:
+      - source: $.status
+        target: state:status
+        type: token
+      - source: $.cycle_time
+        target: metrics:cycleTime
+        type: float
+      - source: $.quality
+        target: metrics:quality
+        type: token
+      - source: $.part_type
+        target: metrics:partType
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: printer_3d_telemetry
+    topic: factory/3dprinter
+    id_field: machine_id
+    prim_root: /World/Factory/Printers3D
+    attributes:
+      - source: $.status
+        target: state:status
+        type: token
+      - source: $.layer_height_mm
+        target: metrics:layerHeight
+        type: float
+      - source: $.print_progress_pct
+        target: metrics:printProgress
+        type: float
+      - source: $.quality
+        target: metrics:quality
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: welding_telemetry
+    topic: factory/welding
+    id_field: machine_id
+    prim_root: /World/Factory/Welding
+    attributes:
+      - source: $.status
+        target: state:status
+        type: token
+      - source: $.weld_current_amps
+        target: metrics:weldCurrent
+        type: float
+      - source: $.weld_temp_celsius
+        target: metrics:weldTemp
+        type: float
+      - source: $.quality
+        target: metrics:quality
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: painting_telemetry
+    topic: factory/painting
+    id_field: machine_id
+    prim_root: /World/Factory/Painting
+    attributes:
+      - source: $.status
+        target: state:status
+        type: token
+      - source: $.coat_thickness_um
+        target: metrics:coatThickness
+        type: float
+      - source: $.quality
+        target: metrics:quality
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: testing_telemetry
+    topic: factory/testing
+    id_field: machine_id
+    prim_root: /World/Factory/Testing
+    attributes:
+      - source: $.status
+        target: state:status
+        type: token
+      - source: $.test_result
+        target: metrics:testResult
+        type: token
+      - source: $.test_duration_sec
+        target: metrics:testDuration
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string

@@ -1,0 +1,116 @@
+# USD Stage Layout — Fabrikam HMI-26
+# Maps factory equipment to USD prim hierarchy
+
+stage:
+  root: /World
+  up_axis: Y
+  meters_per_unit: 0.01    # 1 unit = 1 cm
+
+hierarchy:
+  /World/Factory:
+    kind: assembly
+    purpose: default
+    children:
+
+      # CNC Machines — LINE-1-STATION-A through LINE-3-STATION-A
+      /World/Factory/CNC:
+        kind: group
+        machines:
+          - prim: CNC_01
+            machine_id: CNC-01
+            station_id: LINE-1-STATION-A
+            position: [0, 0, 0]
+          - prim: CNC_02
+            machine_id: CNC-02
+            station_id: LINE-1-STATION-A
+            position: [200, 0, 0]
+          - prim: CNC_03
+            machine_id: CNC-03
+            station_id: LINE-2-STATION-A
+            position: [400, 0, 0]
+          - prim: CNC_04
+            machine_id: CNC-04
+            station_id: LINE-2-STATION-A
+            position: [600, 0, 0]
+          - prim: CNC_05
+            machine_id: CNC-05
+            station_id: LINE-3-STATION-A
+            position: [800, 0, 0]
+
+      # 3D Printers
+      /World/Factory/Printers3D:
+        kind: group
+        machines:
+          - prim: 3DP_01
+            machine_id: 3DP-01
+            position: [0, 0, 400]
+          - prim: 3DP_02
+            machine_id: 3DP-02
+            position: [150, 0, 400]
+          - prim: 3DP_03
+            machine_id: 3DP-03
+            position: [300, 0, 400]
+          - prim: 3DP_04
+            machine_id: 3DP-04
+            position: [450, 0, 400]
+          - prim: 3DP_05
+            machine_id: 3DP-05
+            position: [600, 0, 400]
+          - prim: 3DP_06
+            machine_id: 3DP-06
+            position: [750, 0, 400]
+          - prim: 3DP_07
+            machine_id: 3DP-07
+            position: [900, 0, 400]
+          - prim: 3DP_08
+            machine_id: 3DP-08
+            position: [1050, 0, 400]
+
+      # Welding Stations
+      /World/Factory/Welding:
+        kind: group
+        machines:
+          - prim: WLD_01
+            machine_id: WLD-01
+            position: [0, 0, 800]
+          - prim: WLD_02
+            machine_id: WLD-02
+            position: [300, 0, 800]
+          - prim: WLD_03
+            machine_id: WLD-03
+            position: [600, 0, 800]
+          - prim: WLD_04
+            machine_id: WLD-04
+            position: [900, 0, 800]
+
+      # Painting Booths
+      /World/Factory/Painting:
+        kind: group
+        machines:
+          - prim: PNT_01
+            machine_id: PNT-01
+            position: [0, 0, 1200]
+          - prim: PNT_02
+            machine_id: PNT-02
+            position: [400, 0, 1200]
+          - prim: PNT_03
+            machine_id: PNT-03
+            position: [800, 0, 1200]
+
+      # Testing Rigs
+      /World/Factory/Testing:
+        kind: group
+        machines:
+          - prim: TST_01
+            machine_id: TST-01
+            position: [0, 0, 1600]
+          - prim: TST_02
+            machine_id: TST-02
+            position: [500, 0, 1600]
+
+# Status → material variant mapping
+status_variants:
+  running:    green
+  idle:       amber
+  maintenance: blue
+  faulted:    red
