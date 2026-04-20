@@ -67,11 +67,13 @@ The connector translates incoming MQTT JSON into USD attribute writes on the cor
 Example mapping (from `telemetry-bindings.yaml`):
 
 ```
-MQTT topic: factory/cnc
-  $.machine_id  → prim path  /World/Factory/CNC/${machine_id}
-  $.status      → attribute  state:status  (token)
-  $.cycle_time  → attribute  metrics:cycleTime  (float)
-  $.quality     → attribute  metrics:quality  (token)
+MQTT topic: fabrikam/packaging
+  $.machine_id          → prim path  /World/Plant/Packaging/${machine_id}
+  $.run_state           → attribute  state:status         (token)
+  $.colour_r            → attribute  metrics:colourR      (int)
+  $.colour_g            → attribute  metrics:colourG      (int)
+  $.colour_b            → attribute  metrics:colourB      (int)
+  $.quality_classification → attribute  state:colourQuality  (token)
 ```
 
 Status values drive material variant switching (green = running, amber = idle, red = faulted).
@@ -80,7 +82,18 @@ Status values drive material variant switching (green = running, amber = idle, r
 
 ## References
 
+### How to do this yourself
+
+#### NVIDIA Omniverse
+
 - [NVIDIA Omniverse documentation](https://docs.omniverse.nvidia.com/)
+- [Omniverse Launcher download](https://www.nvidia.com/en-us/omniverse/download/) — install Nucleus, USD Composer, and extensions
 - [Omniverse USD Composer](https://docs.omniverse.nvidia.com/composer/latest/index.html)
-- [OpenUSD reference](https://openusd.org/release/index.html)
-- [IoT Operations MQTT Broker docs](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/overview-broker)
+- [Omniverse IoT Connector extension](https://docs.omniverse.nvidia.com/extensions/latest/ext_iot-connector.html) — the bridge that reads MQTT and writes USD attributes
+- [OpenUSD reference](https://openusd.org/release/index.html) — USD prim and attribute concepts used in `stage-layout.yaml`
+- [USD Live sync overview](https://docs.omniverse.nvidia.com/usd/latest/usd_tutorials/usd_live_sync.html) — how attribute writes propagate to connected viewports
+
+#### Azure IoT Operations
+
+- [IoT Operations MQTT Broker overview](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/overview-broker)
+- [Expose MQTT broker outside the cluster](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-configure-brokerlistener) — NodePort/LoadBalancer config needed for the Omniverse connector on a Windows workstation

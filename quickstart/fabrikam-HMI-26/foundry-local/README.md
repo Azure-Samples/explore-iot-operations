@@ -124,5 +124,11 @@ For the Fabric side of the data flow, see [Fabric Connectors](../fabric-connecto
 
 ## References
 
-- [Foundry Local documentation](https://learn.microsoft.com/azure/ai-foundry/foundry-local/overview)
-- [Microsoft Agent Framework](https://learn.microsoft.com/azure/ai-foundry/agents/overview)
+### How to do this yourself
+
+- [Foundry Local overview](https://learn.microsoft.com/azure/ai-foundry/foundry-local/overview) — product docs and model catalog
+- [Microsoft Agent Framework](https://learn.microsoft.com/azure/ai-foundry/agents/overview) — build agents that consume Foundry Local endpoints
+- [Connect to an Arc-enabled cluster (proxy)](https://learn.microsoft.com/azure/azure-arc/kubernetes/cluster-connect) — `az connectedk8s proxy` for kubectl access to the edge cluster
+- [Installing Helm](https://helm.sh/docs/intro/install/) — required for the inference-operator Helm chart
+- [cert-manager trust-manager](https://cert-manager.io/docs/trust/trust-manager/) — background on the component that needs patching before Foundry Local installs
+- [IoT Operations MQTT Broker](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/overview-broker) — the broker that supplies telemetry to the agent

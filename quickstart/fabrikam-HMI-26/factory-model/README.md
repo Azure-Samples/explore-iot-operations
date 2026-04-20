@@ -138,8 +138,18 @@ HMI-26-specific asset YAML files should be added to this folder when created.
 
 ---
 
-## Related
+## References
+
+### In this repo
 
 - [HMI-fabrikam-data-spec.md](../../modules/edgemqttsim/HMI-fabrikam-data-spec.md) — full payload schema for all stages
 - [Foundry Local](../foundry-local/README.md) — on-cluster AI for quality ops and contamination detection
 - [Omniverse](../omniverse/README.md) — digital twin visualization of this plant
+
+### How to do this yourself
+
+- [IoT Operations MQTT Broker overview](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/overview-broker) — understand the broker that edgemqttsim publishes to
+- [Manage assets in IoT Operations](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/overview-manage-assets) — map MQTT streams to IoT Operations Asset resources
+- [Push a Docker image to Azure Container Registry](https://learn.microsoft.com/azure/container-registry/container-registry-get-started-docker-cli) — build and push the edgemqttsim image
+- [Pull from ACR in Kubernetes](https://learn.microsoft.com/azure/container-registry/container-registry-auth-kubernetes) — configure the ACR pull secret used by the deployment
+- [Configure MQTT broker authentication](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-configure-authentication) — SAT-based auth used by the simulator pod

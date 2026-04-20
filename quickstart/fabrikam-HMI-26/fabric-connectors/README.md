@@ -144,7 +144,13 @@ az role assignment list --assignee <cluster-managed-identity-object-id> --output
 
 ## References
 
-- [IoT Operations Dataflow documentation](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/overview-dataflow)
-- [Fabric Eventstream docs](https://learn.microsoft.com/fabric/real-time-intelligence/eventstream/overview)
+### How to do this yourself
+
+- [IoT Operations Dataflow overview](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/overview-dataflow) — how dataflow pipelines work
+- [Configure an Event Hubs dataflow destination](https://learn.microsoft.com/azure/iot-operations/connect-to-cloud/howto-configure-destination-event-hubs) — step-by-step for the MQTT → Event Hub pipeline
+- [Fabric Eventstream overview](https://learn.microsoft.com/fabric/real-time-intelligence/eventstream/overview)
+- [Add Azure Event Hubs as an Eventstream source](https://learn.microsoft.com/fabric/real-time-intelligence/eventstream/add-source-azure-event-hubs) — wire Event Hub output into Fabric
+- [Fabric Eventhouse overview](https://learn.microsoft.com/fabric/real-time-intelligence/eventhouse) — the KQL database that stores `plant_telemetry`
 - [Fabric Real-Time Intelligence overview](https://learn.microsoft.com/fabric/real-time-intelligence/overview)
 - [KQL quick reference](https://learn.microsoft.com/azure/data-explorer/kql-quick-reference)
+- [Grant managed identity RBAC for Event Hubs](https://learn.microsoft.com/azure/event-hubs/authenticate-managed-identity) — required for the dataflow managed identity auth
