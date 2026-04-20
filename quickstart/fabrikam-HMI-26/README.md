@@ -1,8 +1,6 @@
 # Fabrikam HMI-26 Demo
 
-This folder contains the documentation, configuration, and scripts specific to the **Fabrikam HMI-26** demo environment — a post-consumer plastics recycling plant (rHDPE) running Azure IoT Operations with Foundry Local, Microsoft Fabric, and NVIDIA Omniverse integration.
-
-This is a customized layer on top of the base `explore-iot-operations` quickstart. It does **not** duplicate the base solution; instead it records what is different, what was configured, and how the demo-specific components connect.
+This folder is a demo overlay on the base `explore-iot-operations` quickstart, showing an end-to-end industrial IoT solution for the Fabrikam rHDPE post-consumer plastics recycling facility — a 100 m × 40 m, 18-stage production line that uses Azure IoT Operations to stream live plant telemetry from the edge, Foundry Local (on-cluster) for real-time AI quality ops, Microsoft Fabric for analytics and dashboards, and NVIDIA Omniverse for a live digital twin of the plant floor.
 
 ## Architecture Overview
 
