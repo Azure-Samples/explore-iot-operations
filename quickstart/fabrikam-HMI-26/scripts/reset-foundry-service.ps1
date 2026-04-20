@@ -1,45 +1,31 @@
 <#
 .SYNOPSIS
-    Stop and restart the Foundry Local service.
+    Restart the Foundry Local inference operator on the edge cluster.
 
 .DESCRIPTION
     When Foundry Local becomes unresponsive (HTTP 503, timeouts from the agent),
-    a service restart is the fastest recovery path. This script gracefully stops
-    the service, waits for it to fully exit, then starts it again.
+    a pod restart is the fastest recovery path. This script force-restarts the
+    inference-operator deployment in the foundry-local-operator namespace.
 
-    Problem solved: Foundry Local can lock up after a model load failure or 
-    after the host machine resumes from sleep. Port 5272 stays occupied but
-    requests hang indefinitely.
+    Problem solved: The inference container can lock up after a model load
+    failure or OOM event. The pod stays Running but requests hang indefinitely.
+    A rollout restart triggers a clean pod replacement.
 
 .NOTES
-    Requires: Foundry Local installed (winget install Microsoft.FoundryLocal).
-    Run on the Windows machine hosting Foundry Local.
+    Requires: kubectl access to the edge cluster.
+    Connect first: az connectedk8s proxy -n <cluster-name> -g <resource-group>
 #>
 
 $ErrorActionPreference = "Stop"
-$Port = 5272
+$Namespace  = "foundry-local-operator"
+$Deployment = "inference-operator"
 
-Write-Host "Stopping Foundry Local service..."
-foundry service stop
+Write-Host "Restarting Foundry Local inference operator..."
+kubectl rollout restart deployment/$Deployment -n $Namespace
 
-# Wait for port to be released
-$MaxWait = 20
-$Waited  = 0
-while ($Waited -lt $MaxWait) {
-    $InUse = netstat -ano | Select-String ":$Port "
-    if (-not $InUse) { break }
-    Start-Sleep -Seconds 1
-    $Waited++
-}
-
-if ($Waited -ge $MaxWait) {
-    Write-Warning "Port $Port still in use after ${MaxWait}s. Attempting to kill the process..."
-    $Pid = (netstat -ano | Select-String ":$Port\s" | Select-Object -First 1) -replace '.*\s(\d+)$','$1'
-    if ($Pid) { Stop-Process -Id $Pid -Force }
-}
-
-Write-Host "Starting Foundry Local service..."
-foundry service start
+Write-Host "Waiting for rollout to complete..."
+kubectl rollout status deployment/$Deployment -n $Namespace --timeout=120s
 
 Write-Host ""
-foundry service status
+Write-Host "Current pod status:"
+kubectl get pods -n $Namespace

@@ -7,7 +7,7 @@
   "mqtt": {
     "broker": "<edge-device-ip-or-hostname>",
     "port": 18883,
-    "topic_prefix": "factory",
+    "topic_prefix": "fabrikam",
     "auth_method": "<tls-cert|username-password>",
     "tls_ca_cert": "<path-to-ca-cert>"
   },

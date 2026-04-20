@@ -1,6 +1,6 @@
 # Fabric Connectors — Fabrikam HMI-26
 
-This folder documents how Azure IoT Operations dataflow pipelines deliver factory telemetry into **Microsoft Fabric** for analytics, dashboards, and AI enrichment.
+This folder documents how Azure IoT Operations dataflow pipelines deliver recycling plant telemetry into **Microsoft Fabric** for analytics, dashboards, and AI enrichment.
 
 No ARM templates are stored here — those live in the base quickstart [`arm_templates/`](../../arm_templates/). This doc records the HMI-26-specific dataflow topology and what to configure in each Fabric service.
 
@@ -22,28 +22,28 @@ IoT Operations MQTT Broker (edge)
 
 ## Dataflow Pipelines
 
-### Pipeline 1 — Factory Telemetry → Event Hub
+### Pipeline 1 - Recycling Plant Telemetry -> Event Hub
 
-Forwards all `factory/#` MQTT messages to Azure Event Hubs in near-real-time.
+Forwards all `fabrikam/#` MQTT messages to Azure Event Hubs in near-real-time.
 
 | Setting | Value |
 |---------|-------|
-| Source | MQTT topic `factory/#` |
+| Source | MQTT topic `fabrikam/#` |
 | Destination | Event Hub namespace in `<your-resource-group>` |
 | Auth | Managed Identity (no secrets) |
 | Serialization | JSON passthrough |
 
 The Event Hub name and namespace are configured in `aio_config.json`. The dataflow is deployed by `External-Configurator.ps1`.
 
-### Pipeline 2 — OEE-enriched stream → Eventhouse
+### Pipeline 2 - Quality-enriched stream -> Eventhouse
 
-After Foundry Local enrichment (anomaly labels, OEE scores), a second dataflow writes enriched records to the Fabric Eventhouse.
+After Foundry Local enrichment (colour quality classification, contamination scores), a second dataflow writes enriched records to the Fabric Eventhouse.
 
 | Setting | Value |
 |---------|-------|
-| Source | Internal MQTT topic `factory/enriched/#` |
+| Source | Internal MQTT topic `fabrikam/enriched/#` |
 | Destination | Fabric Eventhouse via Eventstream |
-| KQL table | `factory_telemetry` |
+| KQL table | `plant_telemetry` |
 
 ---
 
@@ -61,39 +61,43 @@ In the Fabric portal, create a workspace named `fabrikam-hmi26` (or link to an e
 
 ### 3. KQL Database (Eventhouse)
 
-Suggested table schema for `factory_telemetry`:
+Suggested table schema for `plant_telemetry`:
 
 ```kusto
-.create table factory_telemetry (
+.create table plant_telemetry (
     timestamp: datetime,
     machine_id: string,
-    station_id: string,
-    equipment_type: string,
-    status: string,
-    part_type: string,
-    part_id: string,
-    cycle_time: real,
-    quality: string,
+    process_stage: string,
+    lot_id: string,
+    source_zone: string,
+    source_bin_id: string,
+    throughput_kg_hr: real,
     oee_availability: real,
     oee_performance: real,
-    oee_quality: real
+    oee_quality: real,
+    contamination_ppm: real,
+    separation_purity_pct: real,
+    pellet_size_p50_mm: real,
+    colour_r: int,
+    colour_g: int,
+    colour_b: int,
+    quality_classification: string
 )
 ```
 
-Ingestion mapping (JSON → columns):
+Ingestion mapping (JSON -> columns):
 
 ```kusto
-.create table factory_telemetry ingestion json mapping 'factory_telemetry_mapping'
+.create table plant_telemetry ingestion json mapping 'plant_telemetry_mapping'
 '['
 '  {"column":"timestamp","path":"$.timestamp","datatype":"datetime"},'
 '  {"column":"machine_id","path":"$.machine_id","datatype":"string"},'
-'  {"column":"station_id","path":"$.station_id","datatype":"string"},'
-'  {"column":"equipment_type","path":"$.equipment_type","datatype":"string"},'
-'  {"column":"status","path":"$.status","datatype":"string"},'
-'  {"column":"part_type","path":"$.part_type","datatype":"string"},'
-'  {"column":"part_id","path":"$.part_id","datatype":"string"},'
-'  {"column":"cycle_time","path":"$.cycle_time","datatype":"real"},'
-'  {"column":"quality","path":"$.quality","datatype":"string"}'
+'  {"column":"process_stage","path":"$.process_stage","datatype":"string"},'
+'  {"column":"lot_id","path":"$.lot_id","datatype":"string"},'
+'  {"column":"source_zone","path":"$.source_zone","datatype":"string"},'
+'  {"column":"throughput_kg_hr","path":"$.throughput_kg_hr","datatype":"real"},'
+'  {"column":"contamination_ppm","path":"$.contamination_ppm","datatype":"real"},'
+'  {"column":"quality_classification","path":"$.quality_classification","datatype":"string"}'
 ']'
 ```
 
@@ -101,10 +105,12 @@ Ingestion mapping (JSON → columns):
 
 Connect a Power BI report directly to the KQL database. Recommended visuals:
 
-- **OEE Gauge** — overall plant OEE (last 1 hour)
-- **Machine Status Grid** — color-coded by `status` field
-- **Scrap Rate Trend** — quality % over time per machine type
-- **Cycle Time Histogram** — per equipment type
+- **OEE Gauge** - overall plant OEE (last 1 hour)
+- **Machine Status Grid** - colour-coded by `process_stage` and machine status
+- **Throughput Trend** - kg/hr across the production line over time
+- **Contamination Rate** - contamination_ppm trend per sorting/wash stage
+- **Pellet Quality Trend** - colour scan RGB readings at PKG-01; highlight blue-tint events
+- **Lot Lineage View** - trace `lot_id` from source bin/zone through all 18 stages to packaged output
 
 ---
 

@@ -1,5 +1,6 @@
-# USD Stage Layout — Fabrikam HMI-26
-# Maps factory equipment to USD prim hierarchy
+# USD Stage Layout - Fabrikam HMI-26 rHDPE Recycling Plant
+# Maps recycling plant equipment to USD prim hierarchy
+# Plant footprint: 100 m x 40 m, single continuous production line
 
 stage:
   root: /World
@@ -7,110 +8,170 @@ stage:
   meters_per_unit: 0.01    # 1 unit = 1 cm
 
 hierarchy:
-  /World/Factory:
+  /World/Plant:
     kind: assembly
     purpose: default
     children:
 
-      # CNC Machines — LINE-1-STATION-A through LINE-3-STATION-A
-      /World/Factory/CNC:
+      # Feed conveyor
+      /World/Plant/Feeding:
         kind: group
         machines:
-          - prim: CNC_01
-            machine_id: CNC-01
-            station_id: LINE-1-STATION-A
+          - prim: FC_01
+            machine_id: FC-01
+            process_stage: feeding
             position: [0, 0, 0]
-          - prim: CNC_02
-            machine_id: CNC-02
-            station_id: LINE-1-STATION-A
-            position: [200, 0, 0]
-          - prim: CNC_03
-            machine_id: CNC-03
-            station_id: LINE-2-STATION-A
-            position: [400, 0, 0]
-          - prim: CNC_04
-            machine_id: CNC-04
-            station_id: LINE-2-STATION-A
-            position: [600, 0, 0]
-          - prim: CNC_05
-            machine_id: CNC-05
-            station_id: LINE-3-STATION-A
+
+      # NIR optical sorters
+      /World/Plant/Sorting:
+        kind: group
+        machines:
+          - prim: NIR_01
+            machine_id: NIR-01
+            process_stage: sorting
+            position: [300, 0, 0]
+          - prim: NIR_02
+            machine_id: NIR-02
+            process_stage: sorting
+            position: [500, 0, 0]
+
+      # Primary shredder
+      /World/Plant/PrimarySizeReduction:
+        kind: group
+        machines:
+          - prim: SHR_01
+            machine_id: SHR-01
+            process_stage: primary_size_reduction
             position: [800, 0, 0]
 
-      # 3D Printers
-      /World/Factory/Printers3D:
+      # Granulator
+      /World/Plant/SecondarySizeReduction:
         kind: group
         machines:
-          - prim: 3DP_01
-            machine_id: 3DP-01
-            position: [0, 0, 400]
-          - prim: 3DP_02
-            machine_id: 3DP-02
-            position: [150, 0, 400]
-          - prim: 3DP_03
-            machine_id: 3DP-03
-            position: [300, 0, 400]
-          - prim: 3DP_04
-            machine_id: 3DP-04
-            position: [450, 0, 400]
-          - prim: 3DP_05
-            machine_id: 3DP-05
-            position: [600, 0, 400]
-          - prim: 3DP_06
-            machine_id: 3DP-06
-            position: [750, 0, 400]
-          - prim: 3DP_07
-            machine_id: 3DP-07
-            position: [900, 0, 400]
-          - prim: 3DP_08
-            machine_id: 3DP-08
-            position: [1050, 0, 400]
+          - prim: GRN_01
+            machine_id: GRN-01
+            process_stage: secondary_size_reduction
+            position: [1100, 0, 0]
 
-      # Welding Stations
-      /World/Factory/Welding:
+      # Wash line: pre-wash, friction wash (x2), hot wash, rinse
+      /World/Plant/WashLine:
         kind: group
         machines:
-          - prim: WLD_01
-            machine_id: WLD-01
-            position: [0, 0, 800]
-          - prim: WLD_02
-            machine_id: WLD-02
-            position: [300, 0, 800]
-          - prim: WLD_03
-            machine_id: WLD-03
-            position: [600, 0, 800]
-          - prim: WLD_04
-            machine_id: WLD-04
-            position: [900, 0, 800]
+          - prim: PW_01
+            machine_id: PW-01
+            process_stage: pre_wash
+            position: [1400, 0, 0]
+          - prim: FW_01
+            machine_id: FW-01
+            process_stage: friction_wash
+            position: [1700, 0, 0]
+          - prim: FW_02
+            machine_id: FW-02
+            process_stage: friction_wash
+            position: [1900, 0, 0]
+          - prim: HW_01
+            machine_id: HW-01
+            process_stage: hot_wash
+            position: [2200, 0, 0]
+          - prim: RW_01
+            machine_id: RW-01
+            process_stage: rinsing
+            position: [2500, 0, 0]
 
-      # Painting Booths
-      /World/Factory/Painting:
+      # Float-sink density separator
+      /World/Plant/DensitySeparation:
         kind: group
         machines:
-          - prim: PNT_01
-            machine_id: PNT-01
-            position: [0, 0, 1200]
-          - prim: PNT_02
-            machine_id: PNT-02
-            position: [400, 0, 1200]
-          - prim: PNT_03
-            machine_id: PNT-03
-            position: [800, 0, 1200]
+          - prim: FS_01
+            machine_id: FS-01
+            process_stage: density_separation
+            position: [2800, 0, 0]
 
-      # Testing Rigs
-      /World/Factory/Testing:
+      # Drying: centrifugal then thermal
+      /World/Plant/Drying:
         kind: group
         machines:
-          - prim: TST_01
-            machine_id: TST-01
-            position: [0, 0, 1600]
-          - prim: TST_02
-            machine_id: TST-02
-            position: [500, 0, 1600]
+          - prim: CD_01
+            machine_id: CD-01
+            process_stage: mechanical_drying
+            position: [3100, 0, 0]
+          - prim: TD_01
+            machine_id: TD-01
+            process_stage: thermal_drying
+            position: [3400, 0, 0]
 
-# Status → material variant mapping
+      # Post-dry collection bin (pre-extrusion buffer)
+      /World/Plant/PostDryBuffer:
+        kind: group
+        machines:
+          - prim: CB_EXTR_01
+            machine_id: CB-EXTR-01
+            process_stage: post_dry_buffering
+            position: [3700, 0, 0]
+
+      # Extruders
+      /World/Plant/Extrusion:
+        kind: group
+        machines:
+          - prim: EXT_01
+            machine_id: EXT-01
+            process_stage: extrusion
+            position: [4000, 0, 0]
+          - prim: EXT_02
+            machine_id: EXT-02
+            process_stage: extrusion
+            position: [4300, 0, 0]
+
+      # Screen changers (melt filtration)
+      /World/Plant/MeltFiltration:
+        kind: group
+        machines:
+          - prim: SC_01
+            machine_id: SC-01
+            process_stage: melt_filtration
+            position: [4600, 0, 0]
+          - prim: SC_02
+            machine_id: SC-02
+            process_stage: melt_filtration
+            position: [4800, 0, 0]
+
+      # Pelletizer
+      /World/Plant/Pelletizing:
+        kind: group
+        machines:
+          - prim: PEL_01
+            machine_id: PEL-01
+            process_stage: pelletizing
+            position: [5100, 0, 0]
+
+      # Pellet screener
+      /World/Plant/PelletScreening:
+        kind: group
+        machines:
+          - prim: PS_01
+            machine_id: PS-01
+            process_stage: pellet_screening
+            position: [5400, 0, 0]
+
+      # Bagging / packaging station
+      /World/Plant/Packaging:
+        kind: group
+        machines:
+          - prim: PKG_01
+            machine_id: PKG-01
+            process_stage: packaging
+            position: [5700, 0, 0]
+
+# Status -> material variant mapping
 status_variants:
-  running:    green
-  idle:       amber
+  running:     green
+  idle:        amber
   maintenance: blue
-  faulted:    red
+  faulted:     red
+
+# Colour quality overlay (PKG-01 colour scan result)
+colour_quality_variants:
+  pass:         white     # R~252, G~251, B~252
+  blue_tint:    blue      # b > r+12 AND b > g+12
+  contaminated: yellow
+  critical:     red

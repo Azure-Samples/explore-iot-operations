@@ -1,8 +1,10 @@
-# Foundry Local — Fabrikam HMI-26
+﻿# Foundry Local - Fabrikam HMI-26
 
-This folder covers the **Foundry Local** setup used in the HMI-26 demo to run AI inference and agent orchestration on or near the edge device.
+This folder covers the **Foundry Local** setup used in the HMI-26 demo.
 
-Foundry Local allows models to run locally (on the edge machine or a nearby workstation) and be consumed by the same agent code that targets Azure AI Foundry — with no changes to the application.
+In this demo, Foundry Local is deployed **onto the K8s edge cluster** via Helm, not as a standalone desktop application. It provides an OpenAI-compatible inference endpoint directly on the edge, enabling sub-second LLM responses without cloud round-trips.
+
+This powers **"Trusted On-Prem AI at the Point of Action"** - a local model that consumes live recycling plant telemetry to provide real-time operator recommendations: contamination detection, sorter recalibration prompts, and quality ops triage.
 
 ---
 
@@ -10,122 +12,102 @@ Foundry Local allows models to run locally (on the edge machine or a nearby work
 
 | Role | Details |
 |------|---------|
-| **OEE Anomaly Detection** | Runs a language model over the `factory/` MQTT stream to flag anomalies |
-| **Maintenance Advisor** | Agent that answers natural-language questions about machine health |
-| **Dataflow Enrichment** | Enriches telemetry with AI-generated labels before forwarding to Fabric |
+| **Colour Quality Ops** | Triages out-of-tolerance RGB pellet colour scan readings from PKG-01 |
+| **Contamination Detection** | Processes NIR sorter and wash-stage telemetry to surface contamination risks |
+| **Operator Recommendations** | Produces prioritised machine check lists for shift operators in real time |
 
 ---
 
 ## Prerequisites
 
-- Windows 11 (24H2+) or Windows Server 2025 with WSL2, **or** Ubuntu 22.04+
-- At least 16 GB RAM; GPU optional but recommended for inference speed
-- `winget` (Windows) or `curl` (Linux) for install
-- Azure CLI with active login (`az login`)
-- Docker (for containerized model serving, optional)
+| Requirement | Details |
+|-------------|---------|
+| Arc-connected K8s cluster | The edge cluster must be Arc-enabled |
+| Azure IoT Operations installed | Installs `cert-manager` and `trust-manager` (required dependencies) |
+| Helm 3.x | `winget install Helm.Helm` on Windows |
+| kubectl access | Via `az connectedk8s proxy -n <cluster-name> -g <resource-group>` |
+| No GPU required | CPU-only models are used in this demo |
 
 ---
 
-## Installation
+## Deployment
 
-### Windows
+### Step 1 - Patch trust-manager
 
-```powershell
-winget install Microsoft.FoundryLocal
-```
-
-After install, open a new terminal and verify:
+Azure IoT Operations installs trust-manager without the `--secret-targets-enabled` flag that Foundry Local requires. Patch it before installing:
 
 ```powershell
-foundry --version
+# Add the --secret-targets-enabled arg
+kubectl patch deployment trust-manager -n cert-manager --type='json' -p='[
+  {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--secret-targets-enabled=true"}
+]'
+
+# Grant trust-manager RBAC for secrets
+kubectl patch clusterrole trust-manager -n cert-manager --type='json' -p='[
+  {"op":"add","path":"/rules/-","value":{
+    "apiGroups":[""],"resources":["secrets"],
+    "verbs":["get","list","create","patch","watch","delete"]
+  }}
+]'
+
+kubectl rollout status deployment/trust-manager -n cert-manager --timeout=60s
 ```
 
-### Linux (Ubuntu)
-
-See the [Foundry Local documentation](https://learn.microsoft.com/azure/ai-foundry/foundry-local/overview) for the current Linux install instructions.
-
----
-
-## Starting Foundry Local
+### Step 2 - Install the Foundry Local Inference Operator
 
 ```powershell
-# Start the local service (runs on http://localhost:5272 by default)
-foundry service start
+helm install inference-operator `
+  oci://mcr.microsoft.com/foundrylocalonazurelocal/helmcharts/helm/inference-operator `
+  --version 0.0.1-prp.5 `
+  --namespace foundry-local-operator `
+  --create-namespace
 ```
 
-Confirm it is running:
+Verify all pods are running:
 
 ```powershell
-foundry service status
+kubectl get pods -n foundry-local-operator
+# Expected: inference-operator (2/2), telemetry-collector (4/4)
 ```
 
----
+### Step 3 - Deploy the model
 
-## Model Configuration
-
-### Listing available models
+List available CPU models from the built-in catalog:
 
 ```powershell
-foundry model list
+kubectl get cm foundry-local-catalog -n foundry-local-operator -o yaml | Select-String "displayName"
 ```
 
-### Recommended models for HMI-26
+Recommended model for HMI-26 (CPU-only, fits constrained clusters):
 
-| Use case | Model | Alias |
-|----------|-------|-------|
-| Chat / agent reasoning | `phi-4-mini` | `phi4mini` |
-| Embeddings | `all-minilm-l6-v2` | `minilm` |
-
-### Downloading a model
-
-```powershell
-foundry model download phi-4-mini
-```
-
-### Running a model
-
-```powershell
-foundry model run phi-4-mini
-```
+| Model | Size | Notes |
+|-------|------|-------|
+| `qwen3-0.6b-generic-cpu` | 0.58 Gi | Used in HMI-26 demo |
+| `qwen2.5-1.5b-instruct-generic-cpu` | 1.40 Gi | Larger option if memory allows |
 
 ---
 
 ## Agent Configuration
 
-Agent prompts and tool definitions for the HMI-26 maintenance advisor are stored in this folder.
+Agent prompt and endpoint configuration for the HMI-26 Colour Quality Ops Agent are in this folder:
 
 | File | Purpose |
 |------|---------|
-| [`agent-system-prompt.md`](agent-system-prompt.md) | System prompt for the maintenance advisor agent |
+| [`agent-system-prompt.md`](agent-system-prompt.md) | System prompt for the Colour Quality Ops Agent |
 | [`foundry-config.json`](foundry-config.json) | Foundry Local endpoint and model configuration |
 
 ---
 
-## Connecting the Agent to IoT Operations Telemetry
-
-The agent reads telemetry from the MQTT broker or from Fabric via the Fabric connector. The typical flow:
+## How the Agent Connects to Plant Telemetry
 
 ```
-MQTT Broker
-  └── Dataflow (IoT Operations) → Event Hub / Fabric Eventhouse
-        └── Agent tool (HTTP call) → Foundry Local inference
-              └── Response → Dashboard / Omniverse HUD
+MQTT Broker (fabrikam/packaging)
+  └── Colour scan payload (RGB + lot_id)
+        └── Foundry Local inference (on-cluster)
+              └── Operator recommendation -> HMI dashboard / Omniverse HUD
 ```
 
-See the [Fabric Connectors](../fabric-connectors/README.md) doc for the dataflow side.
-
----
-
-## Environment Variables
-
-Set these before starting the agent application:
-
-```powershell
-$env:FOUNDRY_ENDPOINT = "http://localhost:5272"
-$env:FOUNDRY_MODEL    = "phi-4-mini"
-```
-
-> **Note:** If your agent code also calls Azure services (e.g., reads from Fabric or Event Hubs), you may also need `$env:AZURE_SUBSCRIPTION_ID = "<your-subscription-id>"` and an active `az login` session. That is not required for Foundry Local itself.
+For the Fabric side of the data flow, see [Fabric Connectors](../fabric-connectors/README.md).
 
 ---
 
@@ -133,15 +115,14 @@ $env:FOUNDRY_MODEL    = "phi-4-mini"
 
 | Symptom | Fix |
 |---------|-----|
-| `foundry service start` hangs | Check that no other process owns port 5272 (`netstat -ano | findstr 5272`) |
-| Model download fails | Re-run with `--verbose`; check proxy / firewall settings |
-| High memory usage | Switch to `phi-4-mini` (smaller footprint) or reduce context window |
-| Agent not reaching MQTT | Confirm broker SAT token is mounted; check pod logs |
+| Helm install fails with cert error | Check trust-manager patch was applied and pod restarted |
+| Pods stuck in `Pending` | Check node memory; use the 0.58 Gi `qwen3-0.6b` model |
+| Inference endpoint times out | Check `kubectl logs -n foundry-local-operator` for OOM or crash |
+| Agent prompt not triggering | Confirm `fabrikam/packaging` topic is receiving messages from edgemqttsim |
 
 ---
 
 ## References
 
 - [Foundry Local documentation](https://learn.microsoft.com/azure/ai-foundry/foundry-local/overview)
-- [Foundry Local GitHub](https://github.com/microsoft/Foundry-Local)
 - [Microsoft Agent Framework](https://learn.microsoft.com/azure/ai-foundry/agents/overview)

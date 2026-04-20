@@ -1,20 +1,20 @@
 # Fabrikam HMI-26 Demo
 
-This folder contains the documentation, configuration, and scripts specific to the **Fabrikam HMI-26** demo environment — a spaceship-parts manufacturing facility running Azure IoT Operations with Foundry Local, Microsoft Fabric, and NVIDIA Omniverse integration.
+This folder contains the documentation, configuration, and scripts specific to the **Fabrikam HMI-26** demo environment — a post-consumer plastics recycling plant (rHDPE) running Azure IoT Operations with Foundry Local, Microsoft Fabric, and NVIDIA Omniverse integration.
 
 This is a customized layer on top of the base `explore-iot-operations` quickstart. It does **not** duplicate the base solution; instead it records what is different, what was configured, and how the demo-specific components connect.
 
 ## Architecture Overview
 
 ```
-Edge Device (K3s / AKS-EE)
+Edge Device (K8s cluster)
   └── Azure IoT Operations
-        ├── edgemqttsim (factory telemetry → MQTT broker)
+        ├── edgemqttsim (recycling plant telemetry → MQTT broker)
         ├── MQTT Broker (aio-broker)
-        └── Dataflow pipelines → Azure
+        ├── Dataflow pipelines → Azure
+        └── Foundry Local (on-cluster AI inference, deployed via Helm)
 
-Local / Workstation
-  ├── Foundry Local  (AI inference + agent orchestration)
+Workstation
   └── NVIDIA Omniverse  (digital twin / visualization)
 
 Azure
@@ -25,7 +25,7 @@ Azure
 
 | Folder | Contents |
 |--------|----------|
-| [factory-model/](factory-model/) | Factory simulation spec and edgemqttsim customizations |
+| [factory-model/](factory-model/) | Recycling plant simulation spec and edgemqttsim customizations |
 | [foundry-local/](foundry-local/) | Foundry Local setup, model configuration, and agent prompts |
 | [fabric-connectors/](fabric-connectors/) | Fabric Real-Time Intelligence connector docs and dataflow references |
 | [omniverse/](omniverse/) | Omniverse USD stage spec, connector config, and setup scripts |

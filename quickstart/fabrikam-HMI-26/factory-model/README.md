@@ -1,40 +1,54 @@
-# Factory Model — Fabrikam HMI-26
+# Plant Simulation Model — Fabrikam HMI-26
 
-This folder documents the **factory simulation model** for the HMI-26 demo and the customizations applied to the `edgemqttsim` module.
+This folder documents the **recycling plant simulation model** for the HMI-26 demo and the customizations applied to the `edgemqttsim` module.
 
 The simulator itself lives in the [shared module](../../modules/edgemqttsim/).
 
 This folder does **not** copy those files. Instead it records:
-- What the factory model represents (Fabrikam spaceship parts)
+- What the plant model represents (Fabrikam rHDPE recycling)
 - What was changed from the default simulator configuration
 - How to build and deploy the module for this environment
 - The MQTT topic layout and asset definitions
 
 ---
 
-## Factory Model: Fabrikam Spaceship Parts Plant
+## Plant Model: Fabrikam rHDPE Recycling Facility
 
-The simulated factory represents a Fabrikam facility that manufactures and assembles spaceship components. It is modeled in the [`message_structure.yaml`](../../modules/edgemqttsim/message_structure.yaml) config and documented in [`Factory_Simulation_Spec.md`](../../modules/edgemqttsim/Factory_Simulation_Spec.md).
+The simulated plant represents the Fabrikam post-consumer plastics recycling facility — a 100 m × 40 m operation that processes collected plastic waste into production-ready recycled HDPE (rHDPE) pellets. It is modeled in the [`message_structure.yaml`](../../modules/edgemqttsim/message_structure.yaml) config and documented in [`HMI-fabrikam-data-spec.md`](../../modules/edgemqttsim/HMI-fabrikam-data-spec.md).
 
-### Factory Lines and Equipment
+### Production Line and Equipment
 
-| Equipment | Count | Topics |
-|-----------|-------|--------|
-| CNC Machines | 5 | `factory/cnc` |
-| 3D Printers | 8 | `factory/3dprinter` |
-| Welding Stations | 4 | `factory/welding` |
-| Painting Booths | 3 | `factory/painting` |
-| Testing Rigs | 2 | `factory/testing` |
-| Customer Orders | — | `factory/orders` |
-| Dispatch Events | — | `factory/dispatch` |
+Material flows through 18 stages from collection to finished pellet packaging:
+
+| Stage | Equipment | MQTT topic |
+|-------|-----------|------------|
+| Collection | Smart bins, trucks | `fabrikam/collection`, `fabrikam/collection_transport` |
+| Inbound identification | Feed scanner | `fabrikam/inbound_identification` |
+| Feeding | Feed conveyor (FC-01) | `fabrikam/feeding` |
+| Sorting | NIR optical sorters (NIR-01, NIR-02) | `fabrikam/sorting` |
+| Primary size reduction | Shredder (SHR-01) | `fabrikam/primary_size_reduction` |
+| Secondary size reduction | Granulator (GRN-01) | `fabrikam/secondary_size_reduction` |
+| Pre-wash | Pre-wash tank (PW-01) | `fabrikam/pre_wash` |
+| Friction wash | Friction washers (FW-01, FW-02) | `fabrikam/friction_wash` |
+| Hot wash | Hot wash tank (HW-01) | `fabrikam/hot_wash` |
+| Rinsing | Rinse tank (RW-01) | `fabrikam/rinsing` |
+| Density separation | Float-sink separator (FS-01) | `fabrikam/density_separation` |
+| Mechanical drying | Centrifugal dryer (CD-01) | `fabrikam/mechanical_drying` |
+| Thermal drying | Thermal dryer (TD-01) | `fabrikam/thermal_drying` |
+| Post-dry buffering | Collection bin (CB-EXTR-01) | `fabrikam/post_dry_buffering` |
+| Extrusion | Extruders (EXT-01, EXT-02) | `fabrikam/extrusion` |
+| Melt filtration | Screen changers (SC-01, SC-02) | `fabrikam/melt_filtration` |
+| Pelletizing | Pelletizer (PEL-01) | `fabrikam/pelletizing` |
+| Pellet screening | Pellet screener (PS-01) | `fabrikam/pellet_screening` |
+| Packaging | Bagging station (PKG-01) | `fabrikam/packaging` |
 
 ### Key Design Decisions
 
-- Messages are sent at ~1 msg/sec aggregate across all machines.
-- Machine IDs follow `<TYPE>-<NN>` (e.g., `CNC-01`, `3DP-03`).
-- Stations follow `LINE-{n}-STATION-A` pattern.
-- Quality distribution: 95 % `good`, 5 % `scrap` (tunable in `message_structure.yaml`).
-- OEE (Availability, Performance, Quality) is derivable from the raw telemetry — no pre-aggregation.
+- One simulated lot travels end-to-end in ~900 seconds (configurable in `message_structure.yaml`).
+- Machine IDs follow `<TYPE>-<NN>` (e.g., `NIR-02`, `EXT-01`).
+- All messages carry `lot_id` and `source_zone` to support full lineage tracing from collection bin to finished pellet.
+- OEE (Availability, Performance, Quality) is derivable from raw telemetry — no pre-aggregation.
+- The PKG station emits colour scan readings (RGB) used by the Colour Quality Ops Agent to detect blue-tint contamination.
 
 ---
 
@@ -55,7 +69,7 @@ Key files:
 | `mqtt-asset-example.yaml` | Example Azure IoT Operations Asset definition |
 | `arm_asset_creation.py` | Helper to create Azure IoT Operations assets via ARM API |
 | `deploy-mqtt-assets.sh` | Shell wrapper for asset creation |
-| `Factory_Simulation_Spec.md` | Full payload schema for all message types |
+| `HMI-fabrikam-data-spec.md` | Full payload schema for all machine types and stages |
 
 ---
 
@@ -65,11 +79,11 @@ Record changes made to the default `edgemqttsim` config for this environment bel
 
 ### `message_structure.yaml` changes
 
-<!-- 
-  Document any tweaks to machine counts, frequencies, or part types.
+<!--
+  Document any tweaks to stage weights, machine counts, lot duration, or anomaly seed.
   Example:
-  - Increased `cnc` machine count from 5 → 8 to match HMI-26 floor plan
-  - Added custom part_type `ThrusterNozzle` to cnc_machine section
+  - Reduced total_duration_sec from 900 to 600 for faster demo cycles
+  - Increased contamination probability at sorting stage to make blue-tint events more frequent
 -->
 
 _No customizations recorded yet. Update this section as changes are made._
@@ -126,6 +140,6 @@ HMI-26-specific asset YAML files should be added to this folder when created.
 
 ## Related
 
-- [Factory_Simulation_Spec.md](../../modules/edgemqttsim/Factory_Simulation_Spec.md) — full payload schema
-- [Foundry Local](../foundry-local/README.md) — AI inference layer on top of this telemetry
-- [Omniverse](../omniverse/README.md) — digital twin visualization of this factory
+- [HMI-fabrikam-data-spec.md](../../modules/edgemqttsim/HMI-fabrikam-data-spec.md) — full payload schema for all stages
+- [Foundry Local](../foundry-local/README.md) — on-cluster AI for quality ops and contamination detection
+- [Omniverse](../omniverse/README.md) — digital twin visualization of this plant
