@@ -1,0 +1,13 @@
+{
+    "GoodTag": {
+        "Value": 100,
+        "SourceTimestamp": "2026-01-01T00:00:00Z"
+    },
+    "MissingValue": {
+        "SourceTimestamp": "2026-01-01T00:00:00Z"
+    },
+    "MissingTimestamp": {
+        "Value": 42
+    },
+    "NotAnObject": 1234
+}

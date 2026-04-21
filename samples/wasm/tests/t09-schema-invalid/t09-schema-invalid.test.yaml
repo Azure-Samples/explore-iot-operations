@@ -1,0 +1,6 @@
+name: "Schema validation rejects float humidity (expects integer)"
+graph: "../../schema-registry-scenario/graph.dataflow.yaml"
+input: "./input"
+expected: "./expected/expected.json"
+timeout: 30000
+select: ["payload"]

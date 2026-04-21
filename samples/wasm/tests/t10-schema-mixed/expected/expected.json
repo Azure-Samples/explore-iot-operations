@@ -1,0 +1,6 @@
+[
+  {
+    "topic": "sensors",
+    "payload": "{\"humidity\":175,\"temperature\":12.5}"
+  }
+]
