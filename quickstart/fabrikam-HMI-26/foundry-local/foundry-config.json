@@ -1,0 +1,13 @@
+{
+  "foundry_local": {
+    "endpoint": "http://inference-operator.foundry-local-operator.svc.cluster.local:5272",
+    "model": "qwen3-0.6b-generic-cpu",
+    "max_tokens": 1024,
+    "temperature": 0.3
+  },
+  "comments": {
+    "endpoint": "In-cluster service endpoint. If calling from outside the cluster, expose via kubectl port-forward or a NodePort service.",
+    "model": "Run 'kubectl get inferencemodel -n foundry-local-operator' to see available models.",
+    "temperature": "Low temperature (0.2-0.4) gives more deterministic, factual responses for telemetry analysis."
+  }
+}
