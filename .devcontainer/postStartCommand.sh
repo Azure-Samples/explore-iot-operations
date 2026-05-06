@@ -9,7 +9,14 @@ touch "${BASHRC}"
 
 # Keep the helper environment exports idempotent across codespace restarts.
 grep -qxF 'export CODESPACES="FALSE"' "${BASHRC}" || echo 'export CODESPACES="FALSE"' >> "${BASHRC}"
-grep -qxF 'export CLUSTER_NAME=${CODESPACE_NAME%-*}-codespace' "${BASHRC}" || echo 'export CLUSTER_NAME=${CODESPACE_NAME%-*}-codespace' >> "${BASHRC}"
+if ! grep -qxF '# devcontainer-cluster-name' "${BASHRC}"; then
+  cat >> "${BASHRC}" <<'EOF'
+# devcontainer-cluster-name
+if [[ -n "${CODESPACE_NAME:-}" ]]; then
+  export CLUSTER_NAME="${CODESPACE_NAME%-*}-codespace"
+fi
+EOF
+fi
 
 export CODESPACES="FALSE"
 if [[ -n "${CODESPACE_NAME:-}" ]]; then
