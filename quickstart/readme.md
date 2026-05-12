@@ -46,8 +46,9 @@ As the end-goal is an IoT solution, this repo has a preference for installing on
 
 
 # Quick Start
-The goal here is to install IoT Operations on an Ubuntu machine (like a local NUC, PC, or a VM) so that you can get working quickly on your dataflow pipelines and get data into Fabric quickly. 
-* _if you are in a purely testing or validation phase you can create a quick VM using [this process](quick_vm_build.md)_
+The goal of this quickstart is to install IoT Operations on an Ubuntu or Windows machine (like a local NUC, PC, or a VM) so that you can get working quickly on your dataflow pipelines and get data into Fabric quickly. Additionaly there are optional modules that you can use to deploy data simulators in your project.
+* _if you are in a purely testing or validation phase you can create a quick VM using [this process]
+(quick_vm_build.md)_
 * _if you are building on a Windows machine using AKS Edge Essentials, see the [Single Windows Machine (AKS-EE)](#path-b-single-windows-machine-aks-ee) section below._
 
 > **Using AKS Edge Essentials (Windows-based edge)?**  
