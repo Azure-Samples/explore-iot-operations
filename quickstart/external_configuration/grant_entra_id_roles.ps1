@@ -357,6 +357,28 @@ try {
     exit 1
 }
 
+# Check for required CLI extensions — missing extensions cause az commands to hang indefinitely
+$extensions = az extension list --output json 2>$null | ConvertFrom-Json
+$requiredCliExtensions = @('azure-iot-ops', 'connectedk8s', 'k8s-extension')
+$missingExtensions = @()
+
+foreach ($extName in $requiredCliExtensions) {
+    $ext = $extensions | Where-Object { $_.name -eq $extName }
+    if ($ext) {
+        Write-Success "$extName extension version: $($ext.version)"
+    } else {
+        $missingExtensions += $extName
+    }
+}
+
+if ($missingExtensions.Count -gt 0) {
+    Write-Host "ERROR: The following required Azure CLI extensions are not installed:" -ForegroundColor Red
+    $missingExtensions | ForEach-Object { Write-Host "  az extension add --upgrade --name $_" -ForegroundColor Yellow }
+    Write-Host "Install the missing extensions above and re-run this script." -ForegroundColor Red
+    Stop-Transcript
+    exit 1
+}
+
 # ============================================================================
 # AZURE AUTHENTICATION
 # ============================================================================
