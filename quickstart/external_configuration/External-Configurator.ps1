@@ -205,17 +205,26 @@ function Test-Prerequisites {
         Write-ErrorLog "Azure CLI is not installed or not in PATH" -Fatal
     }
     
-    # Check for iot-ops extension
+    # Check for required CLI extensions — missing extensions cause az commands to hang indefinitely
     $extensions = az extension list --output json 2>$null | ConvertFrom-Json
-    $iotOpsExt = $extensions | Where-Object { $_.name -eq 'azure-iot-ops' }
-    
-    if (-not $iotOpsExt) {
-        Write-WarnLog "azure-iot-ops extension not found. Install it manually before continuing:"
-        Write-WarnLog "  az extension add --name azure-iot-ops --upgrade"
-        Write-WarnLog "Then re-run this script."
-        $allPassed = $false
-    } else {
-        Write-Success "azure-iot-ops extension version: $($iotOpsExt.version)"
+    $requiredCliExtensions = @('azure-iot-ops', 'connectedk8s', 'k8s-extension')
+    $missingExtensions = @()
+
+    foreach ($extName in $requiredCliExtensions) {
+        $ext = $extensions | Where-Object { $_.name -eq $extName }
+        if ($ext) {
+            Write-Success "$extName extension version: $($ext.version)"
+        } else {
+            $missingExtensions += $extName
+        }
+    }
+
+    if ($missingExtensions.Count -gt 0) {
+        Write-ErrorLog "The following required Azure CLI extensions are not installed:" -Fatal:$false
+        foreach ($extName in $missingExtensions) {
+            Write-ErrorLog "  az extension add --upgrade --name $extName" -Fatal:$false
+        }
+        Write-ErrorLog "Install the missing extensions above and re-run this script." -Fatal
     }
     
     # Check ARM templates directory
@@ -661,10 +670,18 @@ function Connect-ToAzure {
     }
 
     if (-not $script:ContainerRegistryName) {
-        # ACR names: 5-50 chars, alphanumeric only, globally unique
-        $script:ContainerRegistryName = ($clusterNameClean + "acr").Substring(0, [Math]::Min(50, ($clusterNameClean + "acr").Length))
+        # ACR names: 5-50 chars, alphanumeric only, globally unique.
+        # Append a 6-char suffix derived from the subscription ID to reduce global name collisions.
+        $suffix = ($script:SubscriptionId -replace '-', '').Substring(0, 6)
+        $baseName = $clusterNameClean + "acr" + $suffix
+        $script:ContainerRegistryName = $baseName.Substring(0, [Math]::Min(50, $baseName.Length))
         $script:ContainerRegistryLoginServer = "$($script:ContainerRegistryName).azurecr.io"
-        Write-InfoLog "Using auto-generated container registry name: $script:ContainerRegistryName"
+        Write-Host ""
+        Write-Host "  [ACR] No container_registry value was set — auto-generating a name." -ForegroundColor Yellow
+        Write-Host "  [ACR] Container Registry will be created as: $script:ContainerRegistryName" -ForegroundColor Yellow
+        Write-Host "  [ACR] To use your own name, set 'container_registry' in config/aio_config.json" -ForegroundColor Yellow
+        Write-Host "        or set `$env:AZURE_CONTAINER_REGISTRY before running this script." -ForegroundColor Yellow
+        Write-Host ""
     }
     
     if (-not $script:KeyVaultName) {
