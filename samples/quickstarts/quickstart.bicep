@@ -38,6 +38,7 @@ resource aioInstance 'Microsoft.IoTOperations/instances@2025-04-01' existing = {
 
 resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2025-04-01' existing = {
   name: defaultDataflowEndpointName
+  parent: aioIstance``
 }
 
 resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2025-04-01' existing = {
