@@ -45,7 +45,7 @@ resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfi
   parent: aioInstance
 }
 
-resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-10-01' existing = {
+resource namespace 'Microsoft.DeviceRegistry/namespaces@2026-04-01' existing = {
   name: aioNamespaceName
 }
 
@@ -57,7 +57,7 @@ var assetName = 'oven'
 var opcUaEndpointName = 'opc-ua-connector-0'
 var deviceName = 'opc-ua-connector'
 
-resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-10-01' = {
+resource device 'Microsoft.DeviceRegistry/namespaces/devices@2026-04-01' = {
   name: deviceName
   parent: namespace
   location: resourceGroup().location
@@ -66,6 +66,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-10-01' = {
     name: customLocation.id
   }
   properties: {
+    enabled: true
     endpoints: {
       outbound: {
         assigned: {}
@@ -83,7 +84,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-10-01' = {
   }
 }
 
-resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-10-01' = {
+resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2026-04-01' = {
   name: assetName
   parent: namespace
   location: resourceGroup().location
@@ -186,7 +187,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 /*                                    Data flow                              */
 /*****************************************************************************/
 
-resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2025-04-01' = {
+resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'quickstart-eh-endpoint'
   extendedLocation: {
@@ -217,7 +218,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   ]
 }
 
-resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2025-04-01' = {
+resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'quickstart-oven-data-flow'
   extendedLocation: {
