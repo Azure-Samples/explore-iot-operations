@@ -232,7 +232,7 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
         operationType: 'Source'
         sourceSettings: {
           endpointRef: defaultDataflowEndpoint.name
-          assetRef: asset.name
+          assetRef: '${namespace.name}/${asset.name}'
           serializationFormat: 'Json'
           dataSources: ['azure-iot-operations/data/${asset.name}']
         }
