@@ -1,8 +1,8 @@
 {
-    "$schema": "https://pbiadx.powerbi.com/static/d/schema/54/dashboard.json",
+    "$schema": "https://pbiadx.powerbi.com/static/d/schema/74/dashboard.json",
     "id": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
     "eTag": "\"A1bC2dE3fH4iJ5kL6mN7oP8qR9sT0u\"",
-    "schema_version": "54",
+    "schema_version": 74,
     "title": "AIOquickstart",
     "tiles": [
       {
@@ -46,7 +46,15 @@
           "crossFilterDisabled": false,
           "drillthroughDisabled": false,
           "crossFilter": [],
-          "drillthrough": []
+          "drillthrough": [],
+          "selectedDataOnLoad": {
+              "all": true,
+              "limit": 10
+          },
+          "dataPointsTooltip": {
+              "all": false,
+              "limit": 1
+          }
         }
       },
       {
@@ -69,7 +77,6 @@
           "multiStat__textSize": "auto",
           "multiStat__valueColumn": null,
           "colorRulesDisabled": false,
-          "colorStyle": "light",
           "colorRules": [
             {
               "id": "d3d3d3d3-eeee-ffff-aaaa-b4b4b4b4b4b4",
@@ -137,7 +144,15 @@
           "crossFilterDisabled": false,
           "drillthroughDisabled": false,
           "crossFilter": [],
-          "drillthrough": []
+          "drillthrough": [],
+          "selectedDataOnLoad": {
+              "all": true,
+              "limit": 10
+          },
+          "dataPointsTooltip": {
+              "all": false,
+              "limit": 1
+          }
         }
       },
       {
@@ -180,7 +195,15 @@
           "crossFilterDisabled": false,
           "drillthroughDisabled": false,
           "crossFilter": [],
-          "drillthrough": []
+          "drillthrough": [],
+          "selectedDataOnLoad": {
+              "all": true,
+              "limit": 10
+          },
+          "dataPointsTooltip": {
+              "all": false,
+              "limit": 1
+          }
         }
       },
       {
@@ -202,7 +225,6 @@
           "multiStat__textSize": "auto",
           "multiStat__valueColumn": null,
           "colorRulesDisabled": false,
-          "colorStyle": "light",
           "colorRules": []
         }
       },
@@ -225,7 +247,6 @@
           "multiStat__textSize": "auto",
           "multiStat__valueColumn": null,
           "colorRulesDisabled": false,
-          "colorStyle": "light",
           "colorRules": []
         }
       }
@@ -277,12 +298,12 @@
     "dataSources": [
       {
         "kind": "kusto-trident",
-        "scopeId": "kusto-trident",
         "clusterUri": "https://xxxx.z1.kusto.fabric.microsoft.com",
         "database": "Choose your database",
+        "databaseArtifactId": "00000000-0000-0000-0000-000000000000",
         "name": "AIOdata",
         "id": "a2a2a2a2-bbbb-cccc-dddd-e3e3e3e3e3e3",
-        "workspace": "b9b9b9b9-cccc-dddd-eeee-f0f0f0f0f0f0"
+        "workspace": "00000000-0000-0000-0000-000000000000"
       }
     ],
     "pages": [
