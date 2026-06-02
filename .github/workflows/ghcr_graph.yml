@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: "Login to GitHub Container Registry"
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{github.actor}}
@@ -62,18 +62,20 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          graphTag="${{ inputs.graph-tag }}"
+          graphTag="${graphTag:-1.0.0}"
 
           cd samples/wasm
 
           if [ -n "${{ inputs.graph-name }}" ]; then
-            echo "Pushing specific graph: ${{ inputs.graph-name }}"
-            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.graph-name }}:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./${{ inputs.graph-name }}.yaml:application/yaml --disable-path-validation
+            echo "Pushing specific graph: ${{ inputs.graph-name }} with tag: $graphTag"
+            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.graph-name }}:$graphTag --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./${{ inputs.graph-name }}.yaml:application/yaml --disable-path-validation
           else
-            echo "Pushing all graphs"
+            echo "Pushing all graphs with tag: $graphTag"
 
             for graphFile in *.yaml; do
               graphName=$(basename "$graphFile" .yaml)
               echo "Pushing graph: $graphName"
-              oras push ghcr.io/$owner/explore-iot-operations/$graphName:${{ inputs.graph-tag }} --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./$graphName.yaml:application/yaml --disable-path-validation
+              oras push ghcr.io/$owner/explore-iot-operations/$graphName:$graphTag --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./$graphName.yaml:application/yaml --disable-path-validation
             done
           fi
