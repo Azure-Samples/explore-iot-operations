@@ -34,43 +34,43 @@ operations:
 
   - operationType: delay
     name: module-window/delay
-    module: window:1.0.0
+    module: "azure-samples/explore-iot-operations/window:1.0.0"
   - operationType: "map"
     name: "module-format/map"
-    module: "format:1.0.0"
+    module: "azure-samples/explore-iot-operations/format:1.0.0"
   - operationType: map
     name: module-snapshot/map
-    module: snapshot:1.0.0
+    module: "azure-samples/explore-iot-operations/snapshot:1.0.0"
   - operationType: branch
     name: module-snapshot/branch
-    module: snapshot:1.0.0
+    module: "azure-samples/explore-iot-operations/snapshot:1.0.0"
   - operationType: accumulate
     name: module-snapshot/accumulate
-    module: snapshot:1.0.0
+    module: "azure-samples/explore-iot-operations/snapshot:1.0.0"
   - operationType: map
     name: module-temperature/map
-    module: temperature:1.0.0
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
   - operationType: branch
     name: module-temperature/branch
-    module: temperature:1.0.0
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
   - operationType: filter
     name: module-temperature/filter
-    module: temperature:1.0.0
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
   - operationType: accumulate
     name: module-temperature/accumulate
-    module: temperature:1.0.0
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
   - operationType: accumulate
     name: module-humidity/accumulate
-    module: humidity:1.0.0
+    module: "azure-samples/explore-iot-operations/humidity:1.0.0"
   - operationType: concatenate
     name: concatenate1
     module:
   - operationType: accumulate
     name: module-collection/accumulate
-    module: collection:1.0.0
+    module: "azure-samples/explore-iot-operations/collection:1.0.0"
   - operationType: map
     name: module-enrichment/map
-    module: enrichment:1.0.0
+    module: "azure-samples/explore-iot-operations/enrichment:1.0.0"
 
   - operationType: "sink"
     name: "sink"

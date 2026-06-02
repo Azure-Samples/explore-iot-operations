@@ -36,7 +36,7 @@ operations:
     name: "source"
   - operationType: "map"
     name: "module-otel-transform/map"
-    module: "otel-transform:1.0.0"
+    module: "azure-samples/explore-iot-operations/otel-transform:1.0.0"
   - operationType: "sink"
     name: "sink"
 
