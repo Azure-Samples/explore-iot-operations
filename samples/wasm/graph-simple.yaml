@@ -21,7 +21,7 @@ operations:
 
   - operationType: "map"
     name: "module-temperature/map"
-    module: "temperature:1.0.0"
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
 
   - operationType: "sink"
     name: "sink"

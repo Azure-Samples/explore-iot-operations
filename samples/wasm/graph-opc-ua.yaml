@@ -27,7 +27,7 @@ operations:
     name: "source"
   - operationType: "map"
     name: "module-opc/map"
-    module: "opc-ua:1.0.0"
+    module: "azure-samples/explore-iot-operations/opc-ua:1.0.0"
   - operationType: "sink"
     name: "sink"
 
