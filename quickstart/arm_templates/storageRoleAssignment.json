@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Assigns Storage Blob Data Contributor role to the schema registry managed identity"
+  },
+  "parameters": {
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the storage account"
+      }
+    },
+    "principalId": {
+      "type": "string",
+      "metadata": {
+        "description": "Principal ID of the schema registry managed identity"
+      }
+    },
+    "roleDefinitionId": {
+      "type": "string",
+      "defaultValue": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      "metadata": {
+        "description": "Role definition ID for Storage Blob Data Contributor"
+      }
+    }
+  },
+  "variables": {
+    "roleAssignmentName": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('principalId'), parameters('roleDefinitionId'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[variables('roleAssignmentName')]",
+      "scope": "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal"
+      }
+    }
+  ],
+  "outputs": {
+    "roleAssignmentId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]"
+    }
+  }
+}

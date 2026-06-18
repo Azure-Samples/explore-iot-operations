@@ -1,0 +1,42 @@
+# Edge Historian Configuration
+# Default configuration values (can be overridden by environment variables)
+
+mqtt:
+  broker: aio-broker.azure-iot-operations.svc.cluster.local
+  port: 18883
+  topic: "#"  # Subscribe to all topics
+  auth_method: K8S-SAT
+  qos: 0
+  keepalive: 60
+  reconnect_delay: 5
+  protocol_version: 5  # MQTT v5 required for K8S-SAT
+  sat_token_path: /var/run/secrets/tokens/broker-sat
+  sat_audience: aio-internal
+  client_id_prefix: historian
+
+database:
+  host: localhost
+  port: 5432
+  name: mqtt_historian
+  user: historian
+  password: ""  # Set via environment variable POSTGRES_PASSWORD
+  pool_size: 5
+  pool_max_overflow: 10
+  connection_timeout: 30
+
+http:
+  host: 0.0.0.0
+  port: 8080
+  cors_enabled: false
+
+retention:
+  hours: 24
+  cleanup_interval_seconds: 3600  # Run cleanup every hour
+
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  format: json  # json or text
+
+metrics:
+  enabled: false  # Future enhancement
+  port: 9090

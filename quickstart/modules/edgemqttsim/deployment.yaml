@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edgemqttsim
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edgemqttsim
+  template:
+    metadata:
+      labels:
+        app: edgemqttsim
+    spec:
+      serviceAccountName: mqtt-client  # Use the service account for SAT authentication
+      imagePullSecrets:
+      - name: acr-pull-secret  # Created by Deploy-EdgeModules.ps1 for ACR authentication
+      containers:
+      - name: edgemqttsim
+        image: <YOUR_REGISTRY>/edgemqttsim:latest
+        env:
+        # IMPORTANT: When accessing services across namespaces in Kubernetes,
+        # always use the fully qualified domain name (FQDN):
+        # format: service-name.namespace.svc.cluster.local
+        #
+        # VERIFIED SERVICE NAME: aio-broker (confirmed via kubectl get service -n azure-iot-operations)
+        # DO NOT CHANGE to aio-broker-frontend or aio-mq-dmqtt-frontend
+        # The correct service is: aio-broker.azure-iot-operations.svc.cluster.local
+        - name: MQTT_BROKER
+          value: "aio-broker.azure-iot-operations.svc.cluster.local"  # Azure IoT Operations MQTT broker
+        - name: MQTT_PORT
+          value: "18883"  # MQTTS port for Azure IoT Operations broker
+        - name: MQTT_TOPIC_PREFIX
+          value: "factory"  # Topic prefix for all factory messages
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        # ServiceAccountToken authentication settings
+        - name: MQTT_AUTH_METHOD
+          value: "K8S-SAT"  # Use Kubernetes ServiceAccountToken
+        - name: SAT_TOKEN_PATH
+          value: "/var/run/secrets/tokens/broker-sat"  # Token will be mounted here
+        # Message configuration path (optional, uses default if not specified)
+        - name: MESSAGE_CONFIG_PATH
+          value: "message_structure.yaml"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+        livenessProbe:
+          exec:
+            command:
+            - python3
+            - -c
+            - "import os; exit(0 if os.path.exists('/proc/1') else 1)"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        volumeMounts:
+        - name: broker-sat
+          mountPath: /var/run/secrets/tokens
+          readOnly: true
+      volumes:
+      - name: broker-sat
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: broker-sat
+              expirationSeconds: 86400  # 24 hours
+              audience: aio-internal  # Must match broker's audience configuration

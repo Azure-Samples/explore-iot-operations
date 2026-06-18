@@ -1,0 +1,33 @@
+{
+    "properties": {
+        "roleName": "Azure IoT Operations Viewer",
+        "description": "User can view all Azure IoT Operations resources.",
+        "assignableScopes": [
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        ],
+        "permissions": [
+            {
+                "actions": [
+                    "Microsoft.DeviceRegistry/Assets/read",
+                    "Microsoft.DeviceRegistry/AssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/read",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.IoTOperations/*/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ],
+                "notActions": [],
+                "dataActions": [],
+                "notDataActions": []
+            }
+        ]
+    }
+}

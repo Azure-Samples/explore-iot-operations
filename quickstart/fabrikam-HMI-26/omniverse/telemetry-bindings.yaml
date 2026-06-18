@@ -1,0 +1,287 @@
+# Telemetry Bindings - Fabrikam HMI-26 rHDPE Recycling Plant
+# Maps MQTT topic fields to USD prim attributes
+
+# How bindings work:
+#   topic:      MQTT topic pattern (supports + and # wildcards)
+#   id_field:   JSON field used to resolve the machine's prim path
+#   prim_root:  USD prim path prefix (machine_id appended)
+#   attributes: list of { source: JSON path, target: USD attribute, type: USD type }
+
+bindings:
+
+  - name: feed_conveyor
+    topic: fabrikam/feeding
+    id_field: machine_id
+    prim_root: /World/Plant/Feeding
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.belt_speed_mps
+        target: metrics:beltSpeed
+        type: float
+      - source: $.throughput_tph
+        target: metrics:throughput
+        type: float
+      - source: $.jam_alarm
+        target: state:jamAlarm
+        type: bool
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: nir_sorter
+    topic: fabrikam/sorting
+    id_field: machine_id
+    prim_root: /World/Plant/Sorting
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.classification_accuracy_pct
+        target: metrics:sortAccuracy
+        type: float
+      - source: $.contamination_ppm
+        target: metrics:contaminationPpm
+        type: float
+      - source: $.drift_score
+        target: metrics:driftScore
+        type: float
+      - source: $.camera_health
+        target: state:cameraHealth
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: shredder
+    topic: fabrikam/primary_size_reduction
+    id_field: machine_id
+    prim_root: /World/Plant/PrimarySizeReduction
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.motor_load_pct
+        target: metrics:motorLoad
+        type: float
+      - source: $.feed_rate_kg_min
+        target: metrics:feedRate
+        type: float
+      - source: $.jam_events
+        target: metrics:jamEvents
+        type: int
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: granulator
+    topic: fabrikam/secondary_size_reduction
+    id_field: machine_id
+    prim_root: /World/Plant/SecondarySizeReduction
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.flake_size_avg_mm
+        target: metrics:flakeSizeAvg
+        type: float
+      - source: $.throughput_kg_hr
+        target: metrics:throughput
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: wash_line
+    topic: fabrikam/pre_wash
+    id_field: machine_id
+    prim_root: /World/Plant/WashLine
+    attributes:
+      - source: $.pump_status
+        target: state:status
+        type: token
+      - source: $.turbidity_ntu
+        target: metrics:turbidity
+        type: float
+      - source: $.water_temp_c
+        target: metrics:waterTemp
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: friction_wash
+    topic: fabrikam/friction_wash
+    id_field: machine_id
+    prim_root: /World/Plant/WashLine
+    attributes:
+      - source: $.fault_state
+        target: state:status
+        type: token
+      - source: $.wash_effectiveness_pct
+        target: metrics:washEffectiveness
+        type: float
+      - source: $.motor_load_pct
+        target: metrics:motorLoad
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: hot_wash
+    topic: fabrikam/hot_wash
+    id_field: machine_id
+    prim_root: /World/Plant/WashLine
+    attributes:
+      - source: $.fault_state
+        target: state:status
+        type: token
+      - source: $.bath_temp_c
+        target: metrics:bathTemp
+        type: float
+      - source: $.pH
+        target: metrics:pH
+        type: float
+      - source: $.adhesive_removal_pct
+        target: metrics:adhesiveRemoval
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: density_separator
+    topic: fabrikam/density_separation
+    id_field: machine_id
+    prim_root: /World/Plant/DensitySeparation
+    attributes:
+      - source: $.circulation_pump_status
+        target: state:status
+        type: token
+      - source: $.separation_purity_pct
+        target: metrics:separationPurity
+        type: float
+      - source: $.hdpe_recovery_pct
+        target: metrics:hdpeRecovery
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: centrifugal_dryer
+    topic: fabrikam/mechanical_drying
+    id_field: machine_id
+    prim_root: /World/Plant/Drying
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.outlet_moisture_pct
+        target: metrics:outletMoisture
+        type: float
+      - source: $.throughput_kg_hr
+        target: metrics:throughput
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: extruder
+    topic: fabrikam/extrusion
+    id_field: machine_id
+    prim_root: /World/Plant/Extrusion
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.melt_temp_c
+        target: metrics:meltTemp
+        type: float
+      - source: $.melt_pressure_bar
+        target: metrics:meltPressure
+        type: float
+      - source: $.extrusion_stability_score
+        target: metrics:stabilityScore
+        type: float
+      - source: $.throughput_kg_hr
+        target: metrics:throughput
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: screen_changer
+    topic: fabrikam/melt_filtration
+    id_field: machine_id
+    prim_root: /World/Plant/MeltFiltration
+    attributes:
+      - source: $.alarm_state
+        target: state:status
+        type: token
+      - source: $.diff_pressure_bar
+        target: metrics:diffPressure
+        type: float
+      - source: $.clogging_pct
+        target: metrics:clogging
+        type: float
+      - source: $.melt_cleanliness_index
+        target: metrics:meltCleanliness
+        type: float
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: pelletizer
+    topic: fabrikam/pelletizing
+    id_field: machine_id
+    prim_root: /World/Plant/Pelletizing
+    attributes:
+      - source: $.fault_state
+        target: state:status
+        type: token
+      - source: $.pellet_size_avg_mm
+        target: metrics:pelletSizeAvg
+        type: float
+      - source: $.throughput_kg_hr
+        target: metrics:throughput
+        type: float
+      - source: $.strand_break_events
+        target: metrics:strandBreaks
+        type: int
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string
+
+  - name: packaging
+    topic: fabrikam/packaging
+    id_field: machine_id
+    prim_root: /World/Plant/Packaging
+    attributes:
+      - source: $.run_state
+        target: state:status
+        type: token
+      - source: $.bag_weight_kg
+        target: metrics:bagWeight
+        type: float
+      - source: $.bags_per_hr
+        target: metrics:bagsPerHr
+        type: float
+      - source: $.lot_id
+        target: metrics:currentLot
+        type: string
+      # Colour scan fields - drive colour_quality_variants overlay on the prim
+      - source: $.colour_r
+        target: metrics:colourR
+        type: int
+      - source: $.colour_g
+        target: metrics:colourG
+        type: int
+      - source: $.colour_b
+        target: metrics:colourB
+        type: int
+      - source: $.quality_classification
+        target: state:colourQuality
+        type: token
+      - source: $.timestamp
+        target: metrics:lastUpdate
+        type: string

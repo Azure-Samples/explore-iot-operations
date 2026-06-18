@@ -1,0 +1,34 @@
+{ 
+    "properties": { 
+        "roleName": "Azure IoT Operations Asset Administrator", 
+        "description": "View, create, edit and delete Azure IoT Operations Assets", 
+        "assignableScopes": [ 
+            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+        ], 
+        "permissions": [ 
+            { 
+                "actions": [ 
+                    "Microsoft.DeviceRegistry/Assets/*",
+                    "Microsoft.DeviceRegistry/AssetEndpointProfiles/read",
+                    "Microsoft.DeviceRegistry/Namespaces/Assets/*",
+                    "Microsoft.DeviceRegistry/Namespaces/Devices/read",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredAssets/*",
+                    "Microsoft.DeviceRegistry/Namespaces/DiscoveredDevices/read",
+                    "Microsoft.Edge/sites/read",
+                    "Microsoft.Edgeorder/addresses/read",
+                    "Microsoft.ExtendedLocation/customLocations/deploy/action",
+                    "Microsoft.ExtendedLocation/customLocations/enabledresourcetypes/read",
+                    "Microsoft.ExtendedLocation/customLocations/read",
+                    "Microsoft.Iotoperations/instances/read",
+                    "Microsoft.Kubernetes/connectedclusters/read",
+                    "Microsoft.KubernetesConfiguration/extensions/read",
+                    "Microsoft.Resources/subscriptions/read",
+                    "Microsoft.Resources/subscriptions/resourcegroups/resources/read"
+                ], 
+                "notActions": [], 
+                "dataActions": [], 
+                "notDataActions": [] 
+            } 
+        ] 
+    }
+}

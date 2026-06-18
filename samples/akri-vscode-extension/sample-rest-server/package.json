@@ -1,0 +1,18 @@
+{
+    "name": "rest-server",
+    "version": "1.0.0",
+    "description": "Test REST Service",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "auth": "^1.1.1",
+        "basic": "^2.0.3",
+        "basic-auth": "^2.0.1",
+        "express": "^4.19.2"
+    }
+}
