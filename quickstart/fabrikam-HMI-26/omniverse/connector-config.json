@@ -1,0 +1,22 @@
+{
+  "nucleus": {
+    "server": "localhost",
+    "port": 3009,
+    "stage_path": "/Projects/fabrikam-hmi26/factory_floor.usd"
+  },
+  "mqtt": {
+    "broker": "<edge-device-ip-or-hostname>",
+    "port": 18883,
+    "topic_prefix": "fabrikam",
+    "auth_method": "<tls-cert|username-password>",
+    "tls_ca_cert": "<path-to-ca-cert>"
+  },
+  "bindings_file": "telemetry-bindings.yaml",
+  "stage_layout_file": "stage-layout.yaml",
+  "update_interval_ms": 500,
+  "comments": {
+    "nucleus.server": "Use 'localhost' for local Nucleus, or the hostname/IP of your enterprise Nucleus server.",
+    "mqtt.broker": "Hostname or IP of the edge device running the IoT Operations MQTT broker, reachable from this Windows machine. Use the NodePort or LoadBalancer address exposed by the cluster.",
+    "update_interval_ms": "How often (ms) the connector flushes attribute writes to the USD stage."
+  }
+}

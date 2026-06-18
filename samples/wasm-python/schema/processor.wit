@@ -1,0 +1,123 @@
+package wasm-graph:processor@1.1.0;
+
+interface types {
+	use hybrid-logical-clock.{timespec};
+
+	// A handle to a byter buffer held by the WASM host.
+	resource buffer {
+		// Read the bytes of this buffer into the module memory.
+		read: func() -> list<u8>;
+	}
+
+	// A value that is either a host buffer handle or a module buffer.
+	variant buffer-or-bytes {
+		buffer(buffer),
+		bytes(list<u8>),
+	}
+
+	// A value that is either a host buffer handle or a module string.
+	variant buffer-or-string {
+		buffer(buffer),
+		%string(string),
+	}
+
+	// A hybrid logical clock for DataModel timestamp
+	record timestamp {
+		timestamp: timespec,
+		counter: u64,
+		node-id: buffer-or-string,
+	}
+
+	record message-properties
+	{
+		user-properties: list<tuple<buffer-or-string, buffer-or-string>>,
+	}
+
+	record inline-schema
+	{
+		name: buffer-or-string,
+		content: buffer-or-string
+	}
+
+	variant message-schema
+	{
+		registry-reference(buffer-or-string),
+		inline(inline-schema),
+	}
+
+	// A MQTT message
+	record message {
+		timestamp: timestamp,
+		topic: buffer-or-bytes,
+		content-type: option<buffer-or-string>,
+		payload: buffer-or-bytes,
+		properties: message-properties,
+		schema: option<message-schema>,
+	}
+
+	// A Snapshot
+	record snapshot {
+		timestamp: timestamp,
+		format: buffer-or-string,
+		width: u32,
+		height: u32,
+		frame: buffer-or-bytes,
+	}
+
+	// TODO: Add fusion record and fusion context support
+	// use fusion-types.{fusion-record, fusion-context};
+	// FUSION record
+	// record fusion-record-model {
+	// 	timestamp: timestamp;
+	// 	%record: fusion-record;
+	// }
+
+	// FUSION context information
+	// record fusion-context-model {
+	// 	timestamp: timestamp,
+	// 	topics: list<string>,
+	// 	context: fusion-context,
+	// }
+
+	// DataModel
+	variant data-model {
+		buffer-or-bytes(buffer-or-bytes),
+		message(message),
+		snapshot(snapshot),
+		// fusion-record(fusion-record-model),
+		// fusion-context(fusion-context-model),
+	}
+
+	record module-schema
+	{
+		name: string,
+		content-type: string,
+		content: string,
+	}
+
+	// Passed on initialization
+	record module-configuration {
+		properties: list<tuple<string, string>>,
+		module-schemas: list<module-schema>
+	}
+
+	record error
+	{
+		message: string,
+	}
+}
+
+world host {
+	use types.{data-model, module-configuration};
+
+	import hybrid-logical-clock;
+	import state-store;
+	import logger;
+	import metrics;
+	import command-invoker;
+	import schema-registry;
+}
+
+world test {
+	// import no interface so in test we can mock it
+}

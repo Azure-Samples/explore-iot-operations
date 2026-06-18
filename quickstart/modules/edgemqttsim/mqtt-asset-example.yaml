@@ -1,0 +1,22 @@
+apiVersion: deviceregistry.microsoft.com/v1
+kind: Asset
+metadata:
+  name: spaceship-assembly-line-1
+  namespace: azure-iot-operations
+spec:
+  assetEndpointProfileRef: spaceship-factory-mqtt
+  uuid: spaceship-assembly-line-1
+  displayName: "Spaceship Assembly Line 1"
+  description: "Main assembly line for spaceship manufacturing"
+  manufacturer: "SpaceShip Factory"
+  model: "Assembly-Line-v1"
+  productCode: "ASL-001"
+  hardwareRevision: "1.0"
+  softwareRevision: "2.1.0"
+  documentationUri: "https://github.com/BillmanH/learn-iot"
+  serialNumber: "ASL-001-2024"
+  attributes:
+    temperature: "factory/assembly-line-1/telemetry"
+    pressure: "factory/assembly-line-1/telemetry"
+    production_count: "factory/assembly-line-1/telemetry"
+    status: "factory/assembly-line-1/telemetry"
