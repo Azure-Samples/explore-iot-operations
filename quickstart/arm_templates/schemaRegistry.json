@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Creates a Schema Registry for Azure IoT Operations"
+  },
+  "parameters": {
+    "schemaRegistryName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the schema registry"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for the schema registry"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the storage account for schema storage"
+      }
+    },
+    "containerName": {
+      "type": "string",
+      "defaultValue": "schemas",
+      "metadata": {
+        "description": "Name of the blob container for schemas"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "purpose": "schema-registry"
+      }
+    }
+  },
+  "variables": {
+    "storageAccountResourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+    "containerResourceId": "[concat(variables('storageAccountResourceId'), '/blobServices/default/containers/', parameters('containerName'))]",
+    "blobEndpoint": "[concat('https://', parameters('storageAccountName'), '.blob.core.windows.net/', parameters('containerName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DeviceRegistry/schemaRegistries",
+      "apiVersion": "2025-10-01",
+      "name": "[parameters('schemaRegistryName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "namespace": "[take(parameters('schemaRegistryName'), 32)]",
+        "storageAccountContainerUrl": "[variables('blobEndpoint')]"
+      }
+    }
+  ],
+  "outputs": {
+    "schemaRegistryId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DeviceRegistry/schemaRegistries', parameters('schemaRegistryName'))]"
+    },
+    "schemaRegistryName": {
+      "type": "string",
+      "value": "[parameters('schemaRegistryName')]"
+    },
+    "schemaRegistryPrincipalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.DeviceRegistry/schemaRegistries', parameters('schemaRegistryName')), '2025-10-01', 'Full').identity.principalId]"
+    }
+  }
+}

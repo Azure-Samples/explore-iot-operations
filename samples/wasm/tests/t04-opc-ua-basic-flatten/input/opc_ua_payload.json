@@ -1,0 +1,10 @@
+{
+    "Temperature": {
+        "Value": 23.5,
+        "SourceTimestamp": "2026-01-01T00:00:00Z"
+    },
+    "Pressure": {
+        "Value": 101.3,
+        "SourceTimestamp": "2026-01-01T00:00:00Z"
+    }
+}

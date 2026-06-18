@@ -1,0 +1,16 @@
+👋 Welcome! Here you can explore Azure IoT Operations. 
+   - It includes tools for MQTT and Kubernetes.
+   - A k3d Kubernetes cluster is created automatically.
+
+🖥️ To login to Azure CLI, open this codespace in VS Code desktop
+
+   Ctrl/Cmd + Shift + P > Codespaces: Open in VS Code Desktop
+
+📎 Connect your new cluster to Azure Arc:
+   
+   az login
+   az account set -s $SUBSCRIPTION_ID
+   az connectedk8s connect -n $CLUSTER_NAME -g $RESOURCE_GROUP -l $LOCATION
+
+🚀 Follow docs at https://aka.ms/aio-quickstart-codespaces to finish deploying Azure IoT Operations.
+

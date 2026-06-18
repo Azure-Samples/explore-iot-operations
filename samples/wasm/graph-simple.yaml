@@ -1,0 +1,38 @@
+metadata:
+  name: "Simple graph"
+  description: "A graph that transforms temperature from Fahrenheit to Celsius"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+
+moduleConfigurations:
+  - name: module-temperature/map
+    parameters:
+      key1:
+        name: key2
+        description: key2
+operations:
+  - operationType: "source"
+    name: "source"
+
+  - operationType: "map"
+    name: "module-temperature/map"
+    module: "azure-samples/explore-iot-operations/temperature:1.0.0"
+
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-temperature/map"
+
+  - from:
+      name: "module-temperature/map"
+    to:
+      name: "sink"
