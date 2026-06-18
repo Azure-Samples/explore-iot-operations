@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: media-server
+   namespace: media-server
+spec:
+   replicas: 1
+   selector:
+      matchLabels:
+         app: media-server
+   template:
+      metadata:
+         labels:
+            app: media-server
+      spec:
+         containers:
+            - name: mediamtx
+              image: bluenviron/mediamtx
+              imagePullPolicy: Always
+              env:
+                 - name: MTX_PROTOCOLS
+                   value: "tcp,udp"
+              ports:
+                 - containerPort: 8554
+                   protocol: TCP
+                 - containerPort: 8000
+                   protocol: UDP
+                 - containerPort: 8001
+                   protocol: UDP
+                 - containerPort: 1935
+                   protocol: TCP
+                 - containerPort: 8888
+                   protocol: TCP
+                 - containerPort: 8890
+                   protocol: UDP

@@ -1,21 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+};
+
+use http_body_util::{BodyExt, Full};
+use hyper::{body::Bytes, header, Method, StatusCode};
+
+pub(crate) type HttpRequest = hyper::Request<hyper::body::Incoming>;
+pub(crate) type HttpResponse = hyper::Response<Full<Bytes>>;
+
 pub(crate) struct ParsedRequest {
-    pub method: hyper::Method,
+    pub method: Method,
     pub version: String,
-    pub uri: String,
-    pub headers: std::collections::HashMap<String, String>,
+    pub path: String,
+    pub query: HashMap<String, String>,
+    pub headers: HashMap<String, String>,
     pub body: Option<String>,
 }
 
 impl ParsedRequest {
-    pub(crate) async fn from_http(req: hyper::Request<hyper::Body>) -> Result<Self, Response> {
+    pub(crate) async fn from_http(req: HttpRequest) -> Result<Self, Response> {
         let method = req.method().clone();
-        let uri = req.uri().to_string();
+        let uri = req.uri();
+        let path = uri.path().to_string();
         let version = format!("{:?}", req.version());
 
-        let mut headers = std::collections::HashMap::with_capacity(req.headers().len());
+        let mut query = HashMap::new();
+        if let Some(q) = uri.query() {
+            let parts: Vec<&str> = q.split('&').collect();
+
+            for p in parts {
+                if let Some((key, value)) = p.split_once('=') {
+                    query.insert(key.to_lowercase().to_string(), value.to_string());
+                } else {
+                    return Err(Response::bad_request("bad query value"));
+                }
+            }
+        }
+
+        let mut headers = HashMap::with_capacity(req.headers().len());
         for (key, value) in req.headers() {
             let key = key.to_string();
             let value = value
@@ -26,10 +52,12 @@ impl ParsedRequest {
             headers.insert(key, value);
         }
 
-        let body = hyper::body::to_bytes(req.into_body())
+        let body = req
+            .into_body()
+            .collect()
             .await
             .map_err(|_| Response::bad_request("unable to get body"))?
-            .to_vec();
+            .to_bytes();
 
         let body = if body.is_empty() {
             None
@@ -44,24 +72,29 @@ impl ParsedRequest {
         Ok(ParsedRequest {
             method,
             version,
-            uri,
+            path,
+            query,
             headers,
             body,
         })
     }
 }
 
-impl std::fmt::Debug for ParsedRequest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Debug for ParsedRequest {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "\n----\n")?;
-        writeln!(f, "> {} {} {}", self.method, self.uri, self.version)?;
+        writeln!(f, "> {} {} {}", self.method, self.path, self.version)?;
+
+        if !&self.query.is_empty() {
+            writeln!(f, "> query: {:?}", self.query)?;
+        }
 
         for (key, value) in &self.headers {
-            writeln!(f, "> {}: {}", key, value)?;
+            writeln!(f, "> {key}: {value}")?;
         }
 
         if let Some(body) = &self.body {
-            write!(f, "\n{}", body)?;
+            write!(f, "\n{body}")?;
         }
 
         Ok(())
@@ -69,67 +102,62 @@ impl std::fmt::Debug for ParsedRequest {
 }
 
 pub(crate) enum Response {
-    Error {
-        status: hyper::StatusCode,
-        message: String,
-    },
+    Error { status: StatusCode, message: String },
 
-    Json {
-        status: hyper::StatusCode,
-        body: String,
-    },
+    Json { status: StatusCode, body: String },
 }
 
 impl Response {
-    pub fn bad_request(message: impl std::fmt::Display) -> Self {
+    pub fn bad_request(message: impl Display) -> Self {
         Response::Error {
-            status: hyper::StatusCode::BAD_REQUEST,
+            status: StatusCode::BAD_REQUEST,
             message: message.to_string(),
         }
     }
 
-    pub fn not_found(message: impl std::fmt::Display) -> Self {
+    pub fn not_found(message: impl Display) -> Self {
         Response::Error {
-            status: hyper::StatusCode::NOT_FOUND,
+            status: StatusCode::NOT_FOUND,
             message: message.to_string(),
         }
     }
 
-    pub fn method_not_allowed(method: &hyper::Method) -> Self {
+    pub fn method_not_allowed(method: &Method) -> Self {
         Response::Error {
-            status: hyper::StatusCode::METHOD_NOT_ALLOWED,
-            message: format!("{} not allowed", method),
+            status: StatusCode::METHOD_NOT_ALLOWED,
+            message: format!("{method} not allowed"),
         }
     }
 
-    pub fn json(status: hyper::StatusCode, body: impl serde::Serialize) -> Self {
+    pub fn json(status: StatusCode, body: impl serde::Serialize) -> Self {
         let body = serde_json::to_string(&body).unwrap();
 
         Response::Json { status, body }
     }
 
     #[allow(clippy::wrong_self_convention)] // This function should consume self.
-    pub fn to_http(self) -> hyper::Response<hyper::Body> {
+    pub fn to_http(self) -> HttpResponse {
         let mut response = hyper::Response::builder();
 
         let (status, body, debug_body) = match self {
             Response::Error { status, message } => {
                 println!();
-                println!("{}", message);
+                println!("{message}");
 
-                (status, hyper::Body::from(message), None)
+                (status, Bytes::from(message), None)
             }
 
             Response::Json { status, body } => {
-                response = response.header(hyper::header::CONTENT_TYPE, "application/json");
+                response = response.header(header::CONTENT_TYPE, "application/json");
 
-                (status, hyper::Body::from(body.clone()), Some(body))
+                (status, Bytes::from(body.clone()), Some(body))
             }
         };
 
         println!();
-        println!("< {}", status);
+        println!("< {status}");
 
+        let body = Full::new(body);
         let response = response.status(status).body(body).unwrap();
 
         for (key, value) in response.headers() {
@@ -138,7 +166,7 @@ impl Response {
 
         if let Some(body) = debug_body {
             println!();
-            println!("{}", body);
+            println!("{body}");
         }
 
         response

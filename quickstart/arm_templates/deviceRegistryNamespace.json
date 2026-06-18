@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Creates a Device Registry namespace for Azure IoT Operations"
+  },
+  "parameters": {
+    "namespaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Device Registry namespace"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for the namespace"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "purpose": "device-registry"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DeviceRegistry/namespaces",
+      "apiVersion": "2025-10-01",
+      "name": "[parameters('namespaceName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {}
+    }
+  ],
+  "outputs": {
+    "namespaceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DeviceRegistry/namespaces', parameters('namespaceName'))]"
+    },
+    "namespaceName": {
+      "type": "string",
+      "value": "[parameters('namespaceName')]"
+    }
+  }
+}

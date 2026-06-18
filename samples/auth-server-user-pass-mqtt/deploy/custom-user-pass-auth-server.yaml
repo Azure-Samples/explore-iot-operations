@@ -1,0 +1,96 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-server-user-pass-mqtt-server-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: auth-server-user-pass-mqtt-server-cert
+  commonName: "Auth-Server-User-Pass-Mqtt"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - auth-server-user-pass-mqtt # Replace with your actual pod DNS name
+  issuerRef:
+    # https://learn.microsoft.com/en-us/azure/iot-operations/secure-iot-ops/concept-default-root-ca
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-server-user-pass-mqtt-client-cert
+  namespace: azure-iot-operations
+spec:
+  secretName: auth-server-user-pass-mqtt-client-cert
+  commonName: "Auth-Client-User-Pass-Mqtt"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: azure-iot-operations-aio-certificate-issuer
+    kind: ClusterIssuer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auth-server-user-pass-mqtt
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/name: CustomUPAuthServer
+spec:
+  containers:
+    # Main container for the auth server
+    - name: auth-server-user-pass-mqtt
+      image: ghcr.io/azure-samples/explore-iot-operations/auth-server-user-pass-mqtt:v0.1
+      imagePullPolicy: Always
+      ports:
+        - name: https
+          containerPort: 443
+      volumeMounts:
+        - name: auth-server-user-pass-mqtt-server-cert
+          mountPath: /tls
+        - name: auth-server-user-pass-mqtt-server-credentials
+          mountPath: /auth
+      env:
+        - name: SERVER_CERT_CHAIN
+          value: /tls/tls.crt
+        - name: SERVER_CERT_KEY
+          value: /tls/tls.key
+        - name: CLIENT_CERT_ISSUER
+          value: /tls/ca.crt
+        - name: STORED_CREDENTIALS_FILE
+          value: /auth/passwords.toml
+        - name: RUST_LOG
+          value: trace
+      resources:
+        limits:
+          memory: "64Mi"
+          cpu: "100m"
+        requests:
+          memory: "16Mi"
+          cpu: "50m"
+  volumes:
+    - name: auth-server-user-pass-mqtt-server-cert
+      secret:
+        secretName: auth-server-user-pass-mqtt-server-cert
+    - name: auth-server-user-pass-mqtt-server-credentials
+      secret:
+        secretName: auth-server-user-pass-mqtt-server-credentials
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-server-user-pass-mqtt
+  namespace: azure-iot-operations
+spec:
+  selector:
+    app.kubernetes.io/name: CustomUPAuthServer
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 443

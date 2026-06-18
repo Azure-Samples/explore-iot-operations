@@ -1,0 +1,16 @@
+apiVersion: deviceregistry.microsoft.com/v1
+kind: AssetEndpointProfile
+metadata:
+  name: spaceship-factory-mqtt
+  namespace: azure-iot-operations
+spec:
+  uuid: spaceship-factory-mqtt-endpoint
+  targetAddress: "mqtt://aio-broker.azure-iot-operations.svc.cluster.local:18883"
+  endpointProfileType: Microsoft.AssetEndpointProfile/mqtt/1.0.0
+  authentication:
+    method: Anonymous
+  additionalConfiguration: |
+    {
+      "applicationName": "SpaceShip Factory MQTT Connector",
+      "cleanSession": false
+    }
