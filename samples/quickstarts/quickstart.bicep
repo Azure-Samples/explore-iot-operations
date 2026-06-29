@@ -8,7 +8,7 @@ param clusterName string
 param customLocationName string
 param aioExtensionName string
 param aioInstanceName string
-param aioNamespaceName string
+param adrNamespaceName string
 param resourceSuffix string = substring(uniqueString(subscription().id, resourceGroup().id, clusterName), 0, 10)
 param eventHubName string = 'aio-eh-${resourceSuffix}'
 param defaultDataflowEndpointName string = 'default'
@@ -32,21 +32,21 @@ resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' 
   scope: connectedCluster
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2025-04-01' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2026-07-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2025-04-01' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-07-01' existing = {
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2025-04-01' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-07-01' existing = {
   name: defaultDataflowProfileName
   parent: aioInstance
 }
 
-resource namespace 'Microsoft.DeviceRegistry/namespaces@2026-04-01' existing = {
-  name: aioNamespaceName
+resource adrNamespace 'Microsoft.DeviceRegistry/namespaces@2026-04-01' existing = {
+  name: adrNamespaceName
 }
 
 /*****************************************************************************/
@@ -59,7 +59,7 @@ var deviceName = 'opc-ua-connector'
 
 resource device 'Microsoft.DeviceRegistry/namespaces/devices@2026-04-01' = {
   name: deviceName
-  parent: namespace
+  parent: adrNamespace
   location: resourceGroup().location
   extendedLocation: {
     type: 'CustomLocation'
@@ -86,7 +86,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2026-04-01' = {
 
 resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2026-04-01' = {
   name: assetName
-  parent: namespace
+  parent: adrNamespace
   location: resourceGroup().location
   extendedLocation: {
     type: 'CustomLocation'
@@ -232,7 +232,7 @@ resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
         operationType: 'Source'
         sourceSettings: {
           endpointRef: defaultDataflowEndpoint.name
-          assetRef: '${namespace.name}/${asset.name}'
+          assetRef: '${adrNamespace.name}/${asset.name}'
           serializationFormat: 'Json'
           dataSources: ['azure-iot-operations/data/${asset.name}']
         }
