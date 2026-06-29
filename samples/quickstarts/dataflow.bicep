@@ -115,25 +115,25 @@ resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-p
   name: customLocationName
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2024-08-15-preview' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2026-03-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' existing = {
   parent: aioInstance
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2024-08-15-preview' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-03-01' existing = {
   parent: aioInstance
   name: defaultDataflowProfileName
 }
 
-resource schemaRegistry 'Microsoft.DeviceRegistry/schemaRegistries@2024-09-01-preview' existing = {
+resource schemaRegistry 'Microsoft.DeviceRegistry/schemaRegistries@2026-04-01' existing = {
   name: schemaRegistryName
 }
 
-resource opcSchema 'Microsoft.DeviceRegistry/schemaRegistries/schemas@2024-09-01-preview' = {
+resource opcSchema 'Microsoft.DeviceRegistry/schemaRegistries/schemas@2026-04-01' = {
   parent: schemaRegistry
   name: opcuaSchemaName
   properties: {
@@ -144,7 +144,7 @@ resource opcSchema 'Microsoft.DeviceRegistry/schemaRegistries/schemas@2024-09-01
   }
 }
 
-resource opcuaSchemaInstance 'Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions@2024-09-01-preview' = {
+resource opcuaSchemaInstance 'Microsoft.DeviceRegistry/schemaRegistries/schemas/schemaVersions@2026-04-01' = {
   parent: opcSchema
   name: opcuaSchemaVer
   properties: {
@@ -154,7 +154,7 @@ resource opcuaSchemaInstance 'Microsoft.DeviceRegistry/schemaRegistries/schemas/
 }
 
 // ADX Endpoint
-resource adxEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource adxEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'adx-ep'
   extendedLocation: {
@@ -179,7 +179,7 @@ resource adxEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-0
 }
 
 // ADX dataflow
-resource dataflow_adx 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_adx 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'dataflow-adx'
   extendedLocation: {
@@ -221,7 +221,7 @@ resource dataflow_adx 'Microsoft.IoTOperations/instances/dataflowProfiles/datafl
 }
 
 // OneLake Endpoint
-resource oneLakeEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource oneLakeEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'onelake-ep'
   extendedLocation: {
@@ -250,7 +250,7 @@ resource oneLakeEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@20
 }
 
 // OneLake dataflow
-resource dataflow_onelake 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_onelake 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'dataflow-onelake3'
   extendedLocation: {
@@ -292,7 +292,7 @@ resource dataflow_onelake 'Microsoft.IoTOperations/instances/dataflowProfiles/da
 }
 
 // ADLS Gen2 Endpoint
-resource adlsGen2Endpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource adlsGen2Endpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'adls-gen2-ep'
   extendedLocation: {
@@ -316,7 +316,7 @@ resource adlsGen2Endpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2
 }
 
 // ADLS dataflow
-resource dataflow_adls 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_adls 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'dataflow-adls'
   extendedLocation: {
@@ -374,7 +374,7 @@ spec:
   storageClassName: unbacked-sc
 */
 
-resource localStorageDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource localStorageDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'local-storage-ep'
   extendedLocation: {
@@ -390,7 +390,7 @@ resource localStorageDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflo
 }
 
 // Local storage dataflow
-resource dataflow_localstor 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_localstor 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'dataflow-localstor'
   extendedLocation: {
@@ -432,7 +432,7 @@ resource dataflow_localstor 'Microsoft.IoTOperations/instances/dataflowProfiles/
 }
 
 // MQ Endpoint
-resource MqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource MqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'aiomq'
   extendedLocation: {
@@ -458,7 +458,7 @@ resource MqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowE
 }
 
 // EventGrid Endpoint
-resource remoteMqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource remoteMqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'eventgrid'
   extendedLocation: {
@@ -481,7 +481,7 @@ resource remoteMqttBrokerDataflowEndpoint 'Microsoft.IoTOperations/instances/dat
 }
 
 // Dataflow for local to remote
-resource dataflow_1 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_1 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'local-to-remote'
   extendedLocation: {
@@ -510,7 +510,7 @@ resource dataflow_1 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflow
 } 
 
 // Dataflow for remote to local
-resource dataflow_2 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource dataflow_2 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'remote-to-local'
   extendedLocation: {
@@ -539,7 +539,7 @@ resource dataflow_2 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflow
 }
 
 // EventHub Endpoint
-resource kafkaEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024-08-15-preview' = {
+resource kafkaEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
   parent: aioInstance
   name: 'eventhubs'
   extendedLocation: {
@@ -571,7 +571,7 @@ resource kafkaEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2024
 }
 
 // Kafka Dataflow
-resource kafka_dataflow 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2024-08-15-preview' = {
+resource kafka_dataflow 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
   parent: defaultDataflowProfile
   name: 'local-to-eventhub'
   extendedLocation: {

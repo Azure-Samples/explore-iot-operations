@@ -15,7 +15,7 @@ resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-p
   name: customLocationName
 }
 
-resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-07-01-preview' existing = {
+resource namespace 'Microsoft.DeviceRegistry/namespaces@2026-04-01' existing = {
   name: aioNamespaceName
 }
 
@@ -26,7 +26,7 @@ resource namespace 'Microsoft.DeviceRegistry/namespaces@2025-07-01-preview' exis
 var assetName = 'boiler'
 var opcUaEndpointName = 'opc-ua-commander-0'
 
-resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview' = {
+resource device 'Microsoft.DeviceRegistry/namespaces/devices@2026-04-01' = {
   name: 'opc-ua-commander'
   parent: namespace
   location: resourceGroup().location
@@ -52,7 +52,7 @@ resource device 'Microsoft.DeviceRegistry/namespaces/devices@2025-07-01-preview'
   }
 }
 
-resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2025-07-01-preview' = {
+resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2026-04-01' = {
   name: assetName
   parent: namespace
   location: resourceGroup().location
