@@ -32,15 +32,15 @@ resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' 
   scope: connectedCluster
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2026-07-01' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2026-03-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-07-01' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' existing = {
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-07-01' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-03-01' existing = {
   name: defaultDataflowProfileName
   parent: aioInstance
 }
