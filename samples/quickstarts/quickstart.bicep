@@ -19,28 +19,28 @@ param createRoleAssignment bool = true
 /*                          Existing AIO cluster                             */
 /*****************************************************************************/
 
-resource connectedCluster 'Microsoft.Kubernetes/connectedClusters@2021-10-01' existing = {
+resource connectedCluster 'Microsoft.Kubernetes/connectedClusters@2026-05-01' existing = {
   name: clusterName
 }
 
-resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
+resource customLocation 'Microsoft.ExtendedLocation/customLocations@2024-09-15-preview' existing = {
   name: customLocationName
 }
 
-resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' existing = {
+resource aioExtension 'Microsoft.KubernetesConfiguration/extensions@2025-03-01' existing = {
   name: aioExtensionName
   scope: connectedCluster
 }
 
-resource aioInstance 'Microsoft.IoTOperations/instances@2026-03-01' existing = {
+resource aioInstance 'Microsoft.IoTOperations/instances@2026-07-01' existing = {
   name: aioInstanceName
 }
 
-resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' existing = {
+resource defaultDataflowEndpoint 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-07-01' existing = {
   name: defaultDataflowEndpointName
 }
 
-resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-03-01' existing = {
+resource defaultDataflowProfile 'Microsoft.IoTOperations/instances/dataflowProfiles@2026-07-01' existing = {
   name: defaultDataflowProfileName
   parent: aioInstance
 }
@@ -154,7 +154,7 @@ resource asset 'Microsoft.DeviceRegistry/namespaces/assets@2026-04-01' = {
 /*                                  Event Hub                                */
 /*****************************************************************************/
 
-resource eventHubNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
+resource eventHubNamespace 'Microsoft.EventHub/namespaces@2026-01-01' = {
   name: eventHubName
   location: resourceGroup().location
   properties: {
@@ -174,7 +174,7 @@ resource roleAssignmentDataSender 'Microsoft.Authorization/roleAssignments@2022-
   }
 }
 
-resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
+resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2026-01-01' = {
   name: 'destinationeh'
   parent: eventHubNamespace
   properties: {
@@ -187,7 +187,7 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 /*                                    Data flow                              */
 /*****************************************************************************/
 
-resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-03-01' = {
+resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-07-01' = {
   parent: aioInstance
   name: 'quickstart-eh-endpoint'
   extendedLocation: {
@@ -218,7 +218,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   ]
 }
 
-resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-03-01' = {
+resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-07-01' = {
   parent: defaultDataflowProfile
   name: 'quickstart-oven-data-flow'
   extendedLocation: {
