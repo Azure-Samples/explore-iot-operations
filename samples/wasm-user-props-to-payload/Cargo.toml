@@ -1,0 +1,16 @@
+[package]
+name = "user_props_to_payload"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde_json = "1"
+
+wasm_graph_sdk = { version = "=1.1.1", registry = "aio-sdks" }
+wit-bindgen = "0.46"
+
+[lib]
+crate-type = ["cdylib"]
+
+[lints.rust]
+rust_2018_idioms = "deny"
