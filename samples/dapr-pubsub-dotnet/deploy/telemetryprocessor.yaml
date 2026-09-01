@@ -1,0 +1,202 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: aio-mq-pubsub
+  namespace: azure-iot-operations
+spec:
+  type: pubsub.aio-mq-pubsub-pluggable
+  version: v1
+  metadata:
+  - name: url
+    value: "aio-mq-dmqtt-frontend:8883"
+  - name: satTokenPath
+    value: "/var/run/secrets/tokens/mqtt-client-token"
+  - name: tlsEnabled
+    value: true
+  - name: caCertPath
+    value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
+  - name: logLevel
+    value: "Info"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: aio-mq-statestore
+  namespace: azure-iot-operations
+spec:
+  type: state.aio-mq-statestore-pluggable
+  version: v1
+  metadata:
+  - name: url
+    value: "aio-mq-dmqtt-frontend:8883"
+  - name: satTokenPath
+    value: "/var/run/secrets/tokens/mqtt-client-token"
+  - name: tlsEnabled
+    value: true
+  - name: caCertPath
+    value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
+  - name: logLevel
+    value: "Info"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dapr-client
+  namespace: azure-iot-operations
+  annotations:
+    aio-mq-broker-auth/group: dapr-workload
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetrytransformer
+  namespace: azure-iot-operations
+  labels:
+    app: telemetrytransformer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetrytransformer
+  template:
+    metadata:
+      labels:
+        app: telemetrytransformer
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "telemetrytransformer"
+        dapr.io/enable-api-logging: "true"
+        dapr.io/app-port: "5050"
+        dapr.io/app-protocol: "grpc"
+        dapr.io/log-level: "debug"
+        dapr.io/sidecar-liveness-probe-delay-seconds: "30"
+        dapr.io/sidecar-liveness-probe-timeout-seconds: "10"
+    spec:
+      serviceAccountName: dapr-client
+      volumes:
+        - name: dapr-unix-domain-socket
+          emptyDir: {}
+        - name: mqtt-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+      imagePullSecrets:
+      - name: aio-pullsecret
+      containers:
+      - name: telemetrytransformer
+        image: #{container_registry}#/explore-iot-operations/samples/dapr-pubsub-dotnet/telemetrytransformer:#{image_version}#
+        imagePullPolicy: Always
+        env:
+        - name: Logging__LogLevel__Default
+          value: Debug
+      # Container for the pluggable component
+      - name: aio-mq-components
+        image: ghcr.io/azure/iot-mq-dapr-components:latest
+        volumeMounts:
+        - name: dapr-unix-domain-socket
+          mountPath: /tmp/dapr-components-sockets
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: telemetrytransformer-workload-svc
+  namespace: azure-iot-operations
+  labels:
+    app: telemetrytransformer
+spec:
+  selector:
+    app: telemetrytransformer
+  ports:
+  - protocol: TCP
+    port: 5050 #6001
+    targetPort: 5050 # 6001
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetrypersister
+  namespace: azure-iot-operations
+  labels:
+    app: telemetrypersister
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetrypersister
+  template:
+    metadata:
+      labels:
+        app: telemetrypersister
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "telemetrypersister"
+        dapr.io/enable-api-logging: "true"
+        dapr.io/app-port: "80" #"6001"
+        dapr.io/app-protocol: "http"
+        dapr.io/log-level: "debug"
+        dapr.io/sidecar-liveness-probe-delay-seconds: "30"
+        dapr.io/sidecar-liveness-probe-timeout-seconds: "10"
+    spec:
+      serviceAccountName: dapr-client
+      volumes:
+        - name: dapr-unix-domain-socket
+          emptyDir: {}
+        - name: mqtt-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+      imagePullSecrets:
+      - name: aio-pullsecret
+      containers:
+      - name: telemetrypersister        
+        image: #{container_registry}#/explore-iot-operations/samples/dapr-pubsub-dotnet/telemetrypersister:#{image_version}#
+        imagePullPolicy: Always
+        env:
+        - name: Logging__LogLevel__Default
+          value: Debug
+      # Container for the pluggable component
+      - name: aio-mq-components
+        image: ghcr.io/azure/iot-mq-dapr-components:latest
+        volumeMounts:
+        - name: dapr-unix-domain-socket
+          mountPath: /tmp/dapr-components-sockets
+        - name: mqtt-client-token
+          mountPath: /var/run/secrets/tokens
+        - name: aio-ca-trust-bundle
+          mountPath: /var/run/certs/aio-mq-ca-cert/            
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: telemetrypersister-workload-svc
+  namespace: azure-iot-operations
+  labels:
+    app: telemetrypersister
+spec:
+  selector:
+    app: telemetrypersister
+  ports:
+  - protocol: TCP
+    port: 80 #6001
+    targetPort: 80 # 6001
+  type: ClusterIP
+  
