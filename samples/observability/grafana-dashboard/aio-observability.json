@@ -2821,7 +2821,7 @@
                     },
                     "gridPos": {
                         "h": 4,
-                        "w": 6,
+                        "w": 12,
                         "x": 0,
                         "y": 98
                     },
@@ -2885,8 +2885,8 @@
                     },
                     "gridPos": {
                         "h": 4,
-                        "w": 6,
-                        "x": 6,
+                        "w": 12,
+                        "x": 12,
                         "y": 98
                     },
                     "id": 302,
@@ -2923,133 +2923,9 @@
                     ],
                     "title": "Akri Active Devices",
                     "type": "stat"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${DS_PROMETHEUS}"
-                    },
-                    "fieldConfig": {
-                        "defaults": {
-                            "color": {
-                                "mode": "thresholds"
-                            },
-                            "mappings": [],
-                            "thresholds": {
-                                "mode": "absolute",
-                                "steps": [
-                                    {
-                                        "color": "purple"
-                                    }
-                                ]
-                            },
-                            "unit": "short"
-                        },
-                        "overrides": []
-                    },
-                    "gridPos": {
-                        "h": 4,
-                        "w": 6,
-                        "x": 12,
-                        "y": 98
-                    },
-                    "id": 303,
-                    "options": {
-                        "colorMode": "value",
-                        "graphMode": "none",
-                        "justifyMode": "auto",
-                        "orientation": "auto",
-                        "percentChangeColorMode": "standard",
-                        "reduceOptions": {
-                            "calcs": [
-                                "lastNotNull"
-                            ],
-                            "fields": "",
-                            "values": false
-                        },
-                        "showPercentChange": false,
-                        "textMode": "auto",
-                        "wideLayout": true
-                    },
-                    "pluginVersion": "11.6.9",
-                    "targets": [
-                        {
-                            "datasource": {
-                                "type": "prometheus",
-                                "uid": "${DS_PROMETHEUS}"
-                            },
-                            "expr": "sum(aio_akri_discovered_assets_total_count{cluster=\"$cluster\"}) or vector(0)",
-                            "legendFormat": "__auto",
-                            "refId": "A"
-                        }
-                    ],
-                    "title": "Akri Discovered Assets",
-                    "type": "stat"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${DS_PROMETHEUS}"
-                    },
-                    "fieldConfig": {
-                        "defaults": {
-                            "color": {
-                                "mode": "thresholds"
-                            },
-                            "mappings": [],
-                            "thresholds": {
-                                "mode": "absolute",
-                                "steps": [
-                                    {
-                                        "color": "purple"
-                                    }
-                                ]
-                            },
-                            "unit": "short"
-                        },
-                        "overrides": []
-                    },
-                    "gridPos": {
-                        "h": 4,
-                        "w": 6,
-                        "x": 18,
-                        "y": 98
-                    },
-                    "id": 304,
-                    "options": {
-                        "colorMode": "value",
-                        "graphMode": "none",
-                        "justifyMode": "auto",
-                        "orientation": "auto",
-                        "percentChangeColorMode": "standard",
-                        "reduceOptions": {
-                            "calcs": [
-                                "lastNotNull"
-                            ],
-                            "fields": "",
-                            "values": false
-                        },
-                        "showPercentChange": false,
-                        "textMode": "auto",
-                        "wideLayout": true
-                    },
-                    "pluginVersion": "11.6.9",
-                    "targets": [
-                        {
-                            "datasource": {
-                                "type": "prometheus",
-                                "uid": "${DS_PROMETHEUS}"
-                            },
-                            "expr": "sum(aio_akri_discovered_devices_total_count{cluster=\"$cluster\"}) or vector(0)",
-                            "legendFormat": "__auto",
-                            "refId": "A"
-                        }
-                    ],
-                    "title": "Akri Discovered Devices",
-                    "type": "stat"
                 }
             ],
-            "title": "Akri Assets & Discovery",
+            "title": "Akri Assets & Devices",
             "type": "row"
         },
         {
