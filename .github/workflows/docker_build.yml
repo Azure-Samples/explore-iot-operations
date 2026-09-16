@@ -33,22 +33,22 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Login with Azure CLI
-        uses: azure/login@v1
+        uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           creds: ${{ secrets.azureCredentials }}
 
       - name: Azure Docker Login
-        uses: azure/docker-login@v1
+        uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2
         with:
           login-server: ${{ secrets.registryLoginServer }}
           username: ${{ secrets.registryUsername }}
           password: ${{ secrets.registryPassword }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           tags: |
             ${{ inputs.registry }}:latest
@@ -58,7 +58,7 @@ jobs:
           push: true
 
       - name: Build and Push if Pushed with Tag
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           tags: |
             ${{ inputs.registry }}:${{ github.ref_name }}
