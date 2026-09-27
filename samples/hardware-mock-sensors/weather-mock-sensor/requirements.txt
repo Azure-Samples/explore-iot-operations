@@ -1,0 +1,7 @@
+# Weather Mock Sensor Requirements  
+# Last updated: 2025-08-12
+# Core dependencies with pinned versions for security
+python-dateutil==2.9.0.post0  # Date/time utilities
+requests==2.32.4              # HTTP library
+flask==3.1.1                  # Web framework
+Jinja2==3.1.6                 # Template engine
