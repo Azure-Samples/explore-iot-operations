@@ -1,0 +1,125 @@
+name: "Publish AI Agent and Relay to GHCR"
+
+on:
+  workflow_dispatch:
+    inputs:
+      sourceRegistry:
+        description: "Source registry host (no scheme or path); anonymous pulls"
+        required: true
+        default: "mqbuilds.azurecr.io"
+        type: string
+      imageTag:
+        description: "Existing agent and relay image tag to copy (also the destination tag)"
+        required: true
+        default: "1.0.0"
+        type: string
+      chartVersion:
+        description: "Existing Helm chart version to copy unchanged (also the destination version)"
+        required: true
+        default: "1.0.0"
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: "${{ github.workflow }}"
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      SOURCE_REGISTRY: "${{ inputs.sourceRegistry }}"
+      IMAGE_TAG: "${{ inputs.imageTag }}"
+      CHART_VERSION: "${{ inputs.chartVersion }}"
+    steps:
+      - name: Validate inputs
+        run: |
+          label='[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?'
+          if [[ ! "$SOURCE_REGISTRY" =~ ^$label(\.$label)+(:[0-9]{1,5})?$ ]]; then
+            echo "::error::sourceRegistry must be a lowercase registry hostname, optionally with a port, without a scheme or path."
+            exit 1
+          fi
+          if [[ ! "$IMAGE_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+            echo "::error::imageTag must be a valid Docker tag (1-128 characters)."
+            exit 1
+          fi
+          number='(0|[1-9][0-9]*)'
+          identifier='(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)'
+          if [[ ! "$CHART_VERSION" =~ ^$number\.$number\.$number(-$identifier(\.$identifier)*)?$ ]] \
+            || (( ${#CHART_VERSION} > 128 )); then
+            echo "::error::chartVersion must be SemVer without build metadata, at most 128 characters."
+            exit 1
+          fi
+          umask 077
+          # Keep source pulls anonymous even if the source host is ghcr.io.
+          SOURCE_AUTH_FILE="$RUNNER_TEMP/ai-source-auth.json"
+          printf '{"auths":{}}\n' > "$SOURCE_AUTH_FILE"
+          printf 'SOURCE_AUTH_FILE=%s\n' "$SOURCE_AUTH_FILE" >> "$GITHUB_ENV"
+          printf 'DEST_AUTH_FILE=%s/ai-ghcr-auth.json\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+        with:
+          version: 1.3.0
+
+      - name: Resolve all source artifacts before publishing
+        run: |
+          manifest_list="$RUNNER_TEMP/ai-artifacts.tsv"
+          : > "$manifest_list"
+          for repository in aio-ai-agent aio-ai-relay helm/aio-ai-agent helm/aio-ai-relay; do
+            tag="$IMAGE_TAG"
+            if [[ "$repository" == helm/* ]]; then
+              tag="$CHART_VERSION"
+            fi
+            digest="$(oras manifest fetch --registry-config "$SOURCE_AUTH_FILE" \
+              --descriptor "$SOURCE_REGISTRY/$repository:$tag" | jq -er '.digest')"
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::Invalid source digest for $repository:$tag."
+              exit 1
+            fi
+            printf '%s\t%s\t%s\n' "$repository" "$tag" "$digest" >> "$manifest_list"
+          done
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          printf '%s' "$GHCR_TOKEN" |
+            oras login ghcr.io --registry-config "$DEST_AUTH_FILE" \
+              --username "$GITHUB_ACTOR" --password-stdin
+
+      # Copy charts byte-for-byte: their image defaults and bundled dependencies
+      # remain unchanged. Supply GHCR image overrides when installing if needed.
+      - name: Copy and verify images and Helm charts
+        run: |
+          namespace="${GITHUB_REPOSITORY,,}"
+          while IFS=$'\t' read -r repository tag digest; do
+            source="$SOURCE_REGISTRY/$repository@$digest"
+            destination="ghcr.io/$namespace/$repository:$tag"
+            # Includes every platform and OCI referrers, such as signatures/SBOMs.
+            oras cp --recursive --from-registry-config "$SOURCE_AUTH_FILE" \
+              --to-registry-config "$DEST_AUTH_FILE" "$source" "$destination"
+            actual="$(oras manifest fetch --registry-config "$DEST_AUTH_FILE" \
+              --descriptor "$destination" | jq -er '.digest')"
+            if [[ "$actual" != "$digest" ]]; then
+              echo "::error::Destination digest mismatch for $destination."
+              exit 1
+            fi
+            printf -- '- `%s` copied from `%s` (digest verified)\n' \
+              "$destination" "$source" >> "$GITHUB_STEP_SUMMARY"
+          done < "$RUNNER_TEMP/ai-artifacts.tsv"
+          {
+            printf '\nCharts retain upstream image defaults; override them at install time to use GHCR.\n'
+            printf 'Copied signatures may require a destination-specific trust policy or re-signing.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove registry credentials
+        if: always()
+        run: |
+          rm -f -- "$RUNNER_TEMP/ai-source-auth.json" "$RUNNER_TEMP/ai-ghcr-auth.json"
