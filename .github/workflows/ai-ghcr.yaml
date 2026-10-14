@@ -14,7 +14,7 @@ on:
         default: "1.0.0"
         type: string
       chartVersion:
-        description: "Existing Helm chart version to copy unchanged (also the destination version)"
+        description: "Source Helm chart version; publishes a repackaged, Cosign-signed <version>-ghcr variant"
         required: true
         default: "1.0.0"
         type: string
@@ -22,6 +22,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 concurrency:
   group: "${{ github.workflow }}"
@@ -57,16 +58,45 @@ jobs:
             echo "::error::chartVersion must be SemVer without build metadata, at most 128 characters."
             exit 1
           fi
+          PUBLISHED_CHART_VERSION="$CHART_VERSION-ghcr"
+          if (( ${#PUBLISHED_CHART_VERSION} > 128 )); then
+            echo "::error::The derived <chartVersion>-ghcr version exceeds the registry tag length limit."
+            exit 1
+          fi
           umask 077
           # Keep source pulls anonymous even if the source host is ghcr.io.
           SOURCE_AUTH_FILE="$RUNNER_TEMP/ai-source-auth.json"
           printf '{"auths":{}}\n' > "$SOURCE_AUTH_FILE"
           printf 'SOURCE_AUTH_FILE=%s\n' "$SOURCE_AUTH_FILE" >> "$GITHUB_ENV"
-          printf 'DEST_AUTH_FILE=%s/ai-ghcr-auth.json\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/ai-ghcr-auth"
+          printf 'DEST_AUTH_FILE=%s/ai-ghcr-auth/config.json\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'DOCKER_CONFIG=%s/ai-ghcr-auth\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'PUBLISHED_CHART_VERSION=%s\n' "$PUBLISHED_CHART_VERSION" >> "$GITHUB_ENV"
+          printf 'CERTIFICATE_IDENTITY=%s/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_WORKFLOW_REF" >> "$GITHUB_ENV"
 
       - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
         with:
           version: 1.3.0
+
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v3.18.6
+
+      - uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        with:
+          cosign-release: v3.1.3
+
+      - name: Install yq
+        run: |
+          mkdir -p "$RUNNER_TEMP/ai-tools"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/mikefarah/yq/releases/download/v4.49.2/yq_linux_amd64 \
+            --output "$RUNNER_TEMP/ai-tools/yq"
+          printf '%s  %s\n' \
+            be2c0ddcf426b6a231648610ec5d1666ae50e9f6473e82f6486f9f4cb6e3e2f7 \
+            "$RUNNER_TEMP/ai-tools/yq" | sha256sum --check
+          chmod 0755 "$RUNNER_TEMP/ai-tools/yq"
+          printf '%s/ai-tools\n' "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Resolve all source artifacts before publishing
         run: |
@@ -86,6 +116,74 @@ jobs:
             printf '%s\t%s\t%s\n' "$repository" "$tag" "$digest" >> "$manifest_list"
           done
 
+      - name: Prepare and validate GHCR chart variants
+        run: |
+          export GHCR_NAMESPACE="${GITHUB_REPOSITORY,,}"
+          prepared="$RUNNER_TEMP/ai-prepared-charts.tsv"
+          : > "$prepared"
+          while IFS=$'\t' read -r repository tag digest; do
+            if [[ "$repository" != helm/* ]]; then continue; fi
+            chart="${repository#helm/}"
+            work="$RUNNER_TEMP/ai-charts/$chart"
+            mkdir -p "$work/source" "$work/target"
+            source="$SOURCE_REGISTRY/$repository@$digest"
+            oras manifest fetch --registry-config "$SOURCE_AUTH_FILE" "$source" > "$work/manifest.json"
+            layer="$(jq -er '[.layers[] | select(.mediaType == "application/vnd.cncf.helm.chart.content.v1.tar+gzip")] |
+              if length == 1 then .[0].digest else error("Expected exactly one Helm chart layer") end' "$work/manifest.json")"
+            oras blob fetch --registry-config "$SOURCE_AUTH_FILE" \
+              "$SOURCE_REGISTRY/$repository@$layer" --output "$work/source.tgz"
+            python3 - "$chart" "$work/source.tgz" "$work/source" <<'PY'
+          import sys
+          import tarfile
+          from pathlib import PurePosixPath
+
+          chart, package, destination = sys.argv[1:]
+          with tarfile.open(package, "r:gz") as archive:
+              for member in archive.getmembers():
+                  path = PurePosixPath(member.name)
+                  if (path.is_absolute() or ".." in path.parts or not path.parts
+                          or path.parts[0] != chart or not (member.isfile() or member.isdir())):
+                      raise ValueError(f"Unsafe or unexpected chart archive member: {member.name}")
+              archive.extractall(destination, filter="data")
+          PY
+            chart_dir="$work/source/$chart"
+            yq -e ".name == \"$chart\"" "$chart_dir/Chart.yaml" >/dev/null
+            export SOURCE_CHART_DIGEST="$digest"
+            yq -i '.version = strenv(PUBLISHED_CHART_VERSION) |
+              .appVersion = strenv(IMAGE_TAG) |
+              .annotations."azureiotoperations.microsoft.com/source-digest" = strenv(SOURCE_CHART_DIGEST) |
+              .annotations."azureiotoperations.microsoft.com/image-registry" = "ghcr.io"' "$chart_dir/Chart.yaml"
+            image_path=.image
+            if [[ "$chart" == aio-ai-agent ]]; then image_path=.agent.image; fi
+            yq -e "$image_path.repository | tag == \"!!str\"" "$chart_dir/values.yaml" >/dev/null
+            export GHCR_IMAGE_REPOSITORY="$GHCR_NAMESPACE/$chart"
+            yq -i "$image_path.containerRegistry = \"ghcr.io\" |
+              $image_path.repository = strenv(GHCR_IMAGE_REPOSITORY) |
+              $image_path.tag = strenv(IMAGE_TAG)" "$chart_dir/values.yaml"
+
+            # Keep bundled dependencies frozen; do not run helm dependency update.
+            helm lint "$chart_dir"
+            helm template ghcr-check "$chart_dir" >/dev/null
+            render_args=()
+            if [[ "$chart" == aio-ai-agent ]]; then
+              render_args=(--set agent.enabled=true --set mcp.enabled=false --set k8s.enabled=false
+                --set agent.frontend.enabled=true --set agent.backend.auth=sat
+                --set agent.backend.satAudience=validation --set agent.backend.model=validation
+                --set agent.backend.url=https://model.invalid/v1)
+            fi
+            helm template ghcr-check "$chart_dir" "${render_args[@]}" > "$work/rendered.yaml"
+            image="$(yq -er 'select(.kind == "Deployment") |
+              .spec.template.spec.containers[].image' "$work/rendered.yaml")"
+            if [[ "$image" != "ghcr.io/$GHCR_IMAGE_REPOSITORY:$IMAGE_TAG" ]]; then
+              echo "::error::Rendered $chart image does not match the GHCR destination."
+              exit 1
+            fi
+            helm package "$chart_dir" --destination "$work/target"
+            package="$work/target/$chart-$PUBLISHED_CHART_VERSION.tgz"
+            package_digest="sha256:$(sha256sum "$package" | cut -d ' ' -f 1)"
+            printf '%s\t%s\t%s\t%s\n' "$repository" "$digest" "$package" "$package_digest" >> "$prepared"
+          done < "$RUNNER_TEMP/ai-artifacts.tsv"
+
       - name: Log in to GHCR
         env:
           GHCR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -94,12 +192,11 @@ jobs:
             oras login ghcr.io --registry-config "$DEST_AUTH_FILE" \
               --username "$GITHUB_ACTOR" --password-stdin
 
-      # Copy charts byte-for-byte: their image defaults and bundled dependencies
-      # remain unchanged. Supply GHCR image overrides when installing if needed.
-      - name: Copy and verify images and Helm charts
+      - name: Copy and verify images
         run: |
           namespace="${GITHUB_REPOSITORY,,}"
           while IFS=$'\t' read -r repository tag digest; do
+            if [[ "$repository" == helm/* ]]; then continue; fi
             source="$SOURCE_REGISTRY/$repository@$digest"
             destination="ghcr.io/$namespace/$repository:$tag"
             # Includes every platform and OCI referrers, such as signatures/SBOMs.
@@ -114,12 +211,51 @@ jobs:
             printf -- '- `%s` copied from `%s` (digest verified)\n' \
               "$destination" "$source" >> "$GITHUB_STEP_SUMMARY"
           done < "$RUNNER_TEMP/ai-artifacts.tsv"
+
+      # Repackaged charts have new digests: never copy the original chart signatures.
+      - name: Publish, sign, and verify GHCR charts
+        run: |
+          namespace="${GITHUB_REPOSITORY,,}"
+          while IFS=$'\t' read -r repository source_digest package package_digest; do
+            destination_repo="ghcr.io/$namespace/$repository"
+            destination="$destination_repo:$PUBLISHED_CHART_VERSION"
+            helm push "$package" "oci://ghcr.io/$namespace/helm" --registry-config "$DEST_AUTH_FILE"
+            digest="$(oras manifest fetch --registry-config "$DEST_AUTH_FILE" \
+              --descriptor "$destination" | jq -er '.digest')"
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::Invalid published chart digest for $destination."
+              exit 1
+            fi
+            digest_reference="$destination_repo@$digest"
+            layer="$(oras manifest fetch --registry-config "$DEST_AUTH_FILE" "$digest_reference" |
+              jq -er '[.layers[] | select(.mediaType == "application/vnd.cncf.helm.chart.content.v1.tar+gzip")] |
+                if length == 1 then .[0].digest else error("Expected exactly one Helm chart layer") end')"
+            if [[ "$layer" != "$package_digest" ]]; then
+              echo "::error::Published chart content does not match the validated package for $destination."
+              exit 1
+            fi
+            cosign sign --yes "$digest_reference"
+            cosign verify \
+              --certificate-identity "$CERTIFICATE_IDENTITY" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$digest_reference" > "$RUNNER_TEMP/cosign-${repository#helm/}-verification.json"
+            actual="$(oras manifest fetch --registry-config "$DEST_AUTH_FILE" \
+              --descriptor "$destination" | jq -er '.digest')"
+            if [[ "$actual" != "$digest" ]]; then
+              echo "::error::Chart tag moved during signing: $destination."
+              exit 1
+            fi
+            printf -- '- `%s` repackaged from `%s/%s@%s`; Cosign signature verified for `%s`\n' \
+              "$destination" "$SOURCE_REGISTRY" "$repository" "$source_digest" "$digest_reference" >> "$GITHUB_STEP_SUMMARY"
+          done < "$RUNNER_TEMP/ai-prepared-charts.tsv"
           {
-            printf '\nCharts retain upstream image defaults; override them at install time to use GHCR.\n'
-            printf 'Copied signatures may require a destination-specific trust policy or re-signing.\n'
+            printf '\nChart version: `%s`; image tag: `%s`.\n' "$PUBLISHED_CHART_VERSION" "$IMAGE_TAG"
+            printf 'Chart signing identity: `%s`.\n' "$CERTIFICATE_IDENTITY"
+            printf 'Charts use GHCR agent/relay images; bundled dependency registries remain unchanged.\n'
+            printf 'New chart signatures use GitHub OIDC/Cosign, not Microsoft Official/Notary signing authority.\n'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove registry credentials
         if: always()
         run: |
-          rm -f -- "$RUNNER_TEMP/ai-source-auth.json" "$RUNNER_TEMP/ai-ghcr-auth.json"
+          rm -f -- "$RUNNER_TEMP/ai-source-auth.json" "$RUNNER_TEMP/ai-ghcr-auth/config.json"
