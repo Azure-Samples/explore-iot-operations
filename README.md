@@ -73,12 +73,6 @@ See the [Advanced Guide](./quickstart/README_ADVANCED.md) for detailed technical
 
 See [Organization docs](./docs/ORGANIZATION.md) for conventions and contribution guidelines.
 
-## Publishing AI artifacts
-
-See [Publishing AI agent and relay artifacts](./docs/AI_GHCR_PUBLISHING.md) for
-copy-only GHCR publication of prepared charts and images, preserving existing
-signatures without modifying or re-signing the artifacts.
-
 ## Contributing
 
 Please view the developer guides in the docs directory to get started with contributions. Get started with the [Organization docs](./docs/ORGANIZATION.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
