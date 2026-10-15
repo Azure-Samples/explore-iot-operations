@@ -31,9 +31,9 @@ not require the Azure-NBC source tree or a local Helm chart.
 - Published, accessible agent/relay release artifacts. The relay chart must
   use the single-endpoint `relay.*` / `endpoint.*` configuration schema.
 
-The prepared chart must first be published using `.github/workflows/ai-ghcr.yaml`.
-Use its **exact chart version**, including any `-ghcr` suffix. This PR does not
-make an unpublished version available. The chart contains its image defaults;
+The prepared chart and its referenced images must already be published at the
+selected registry location. Use the **exact chart version**, including any
+`-ghcr` suffix. This sample does not publish artifacts. The chart contains its image defaults;
 only use `--image-tag` for an intentionally compatible image override.
 
 Check the target subscription and cluster before running:
