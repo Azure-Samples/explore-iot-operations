@@ -76,7 +76,8 @@ See [Organization docs](./docs/ORGANIZATION.md) for conventions and contribution
 ## Publishing AI artifacts
 
 See [Publishing AI agent and relay artifacts](./docs/AI_GHCR_PUBLISHING.md) for
-GHCR chart preparation, GitHub OIDC/Cosign signing, and signature verification.
+copy-only GHCR publication of prepared charts and images, preserving existing
+signatures without modifying or re-signing the artifacts.
 
 ## Contributing
 
