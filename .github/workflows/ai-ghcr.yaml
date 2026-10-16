@@ -18,6 +18,11 @@ on:
         required: true
         default: "1.0.0-ghcr"
         type: string
+      destinationChartTag:
+        description: "Optional GHCR tag for both Helm charts; defaults to chartVersion. Chart metadata stays unchanged."
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -38,6 +43,7 @@ jobs:
       SOURCE_REGISTRY: "${{ inputs.sourceRegistry }}"
       IMAGE_TAG: "${{ inputs.imageTag }}"
       CHART_VERSION: "${{ inputs.chartVersion }}"
+      DESTINATION_CHART_TAG: "${{ inputs.destinationChartTag || inputs.chartVersion }}"
     steps:
       - name: Validate inputs
         run: |
@@ -48,6 +54,10 @@ jobs:
           fi
           if [[ ! "$IMAGE_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
             echo "::error::imageTag must be a valid Docker tag (1-128 characters)."
+            exit 1
+          fi
+          if [[ ! "$DESTINATION_CHART_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+            echo "::error::destinationChartTag must be a valid OCI tag (1-128 characters)."
             exit 1
           fi
           number='(0|[1-9][0-9]*)'
@@ -101,7 +111,11 @@ jobs:
           namespace="${GITHUB_REPOSITORY,,}"
           while IFS=$'\t' read -r repository tag digest; do
             source="$SOURCE_REGISTRY/$repository@$digest"
-            destination="ghcr.io/$namespace/$repository:$tag"
+            destination_tag="$tag"
+            if [[ "$repository" == helm/* ]]; then
+              destination_tag="$DESTINATION_CHART_TAG"
+            fi
+            destination="ghcr.io/$namespace/$repository:$destination_tag"
             # Copy charts unchanged, including existing signatures and other OCI referrers.
             oras cp --recursive --from-registry-config "$SOURCE_AUTH_FILE" \
               --to-registry-config "$DEST_AUTH_FILE" "$source" "$destination"
@@ -115,8 +129,10 @@ jobs:
               "$destination" "$source" >> "$GITHUB_STEP_SUMMARY"
           done < "$RUNNER_TEMP/ai-artifacts.tsv"
           {
-            printf '\nChart version: `%s`; image tag: `%s`.\n' "$CHART_VERSION" "$IMAGE_TAG"
+            printf '\nSource chart version: `%s`; destination chart tag: `%s`; image tag: `%s`.\n' \
+              "$CHART_VERSION" "$DESTINATION_CHART_TAG" "$IMAGE_TAG"
             printf 'Charts and embedded image references are unchanged; no signatures are created.\n'
+            printf 'The destination tag does not change the version in Chart.yaml.\n'
             printf 'Existing OCI referrers are copied; publisher signature trust is not verified by this workflow.\n'
           } >> "$GITHUB_STEP_SUMMARY"
 
