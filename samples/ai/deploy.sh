@@ -7,8 +7,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
     cat <<EOF
 Usage: $(basename "$0") --resource-group <rg> --relay-namespace-name <name> \\
-  --apim-name <name> --apim-publisher-email <email> --apim-publisher-name <name> \\
-  --chart-version <published-version> [options]
+  --apim-name <name> --apim-publisher-email <email> --apim-publisher-name <name> [options]
 
 Deploys authenticated APIM -> Azure Relay -> aio-ai-relay access to an existing
 Arc-connected AIO cluster. Uses the current kubectl context and Azure subscription.
@@ -19,7 +18,6 @@ Required:
   --apim-name <name>                 Globally unique API Management name.
   --apim-publisher-email <email>     API Management publisher email.
   --apim-publisher-name <name>       API Management publisher name.
-  --chart-version <version>         Exact published chart version, including any -ghcr suffix.
 
 Authentication:
   --auth-mode <sami|sas>             Relay listener authentication. Default: sami.
@@ -39,8 +37,9 @@ Endpoint:
                                       No role by default. Applied only to the MCP relay.
 
 Optional:
+  --chart-version <version>         Exact published chart version. Default: 0.1.2.
   --chart-reference <oci-reference> Default: oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay.
-  --image-tag <tag>                  Relay image tag. Default: 0.1.2-rc-186104218.
+  --image-tag <tag>                  Relay image tag. Default: 0.1.2.
   --values <file>                    Additional Helm values file, e.g. A2A auth/TLS settings.
   --hybrid-connection-name <name>    Default: hybridconnection; suffixed per protocol for both.
   --apim-sku <sku>                   Default: BasicV2.
@@ -60,7 +59,7 @@ RELAY_NAMESPACE_NAME=""
 APIM_NAME=""
 APIM_PUBLISHER_EMAIL=""
 APIM_PUBLISHER_NAME=""
-CHART_VERSION=""
+CHART_VERSION="0.1.2"
 CHART_REFERENCE="oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay"
 AUTH_MODE="sami"
 CLUSTER_NAME=""
@@ -73,7 +72,7 @@ ENDPOINT_URL=""
 MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
 MCP_FRONTEND_AUDIENCE="aio-mcp-frontend"
 MCP_ROLE=""
-IMAGE_TAG="0.1.2-rc-186104218"
+IMAGE_TAG="0.1.2"
 VALUES_FILE=""
 HYBRID_CONNECTION_NAME="hybridconnection"
 APIM_SKU="BasicV2"
