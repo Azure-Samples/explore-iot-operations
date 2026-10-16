@@ -40,7 +40,7 @@ Endpoint:
 
 Optional:
   --chart-reference <oci-reference> Default: oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay.
-  --image-tag <tag>                  Override the chart's relay image tag only.
+  --image-tag <tag>                  Relay image tag. Default: 0.1.2-rc-186104218.
   --values <file>                    Additional Helm values file, e.g. A2A auth/TLS settings.
   --hybrid-connection-name <name>    Default: hybridconnection; suffixed per protocol for both.
   --apim-sku <sku>                   Default: BasicV2.
@@ -73,7 +73,7 @@ ENDPOINT_URL=""
 MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
 MCP_FRONTEND_AUDIENCE="aio-mcp-frontend"
 MCP_ROLE=""
-IMAGE_TAG=""
+IMAGE_TAG="0.1.2-rc-186104218"
 VALUES_FILE=""
 HYBRID_CONNECTION_NAME="hybridconnection"
 APIM_SKU="BasicV2"

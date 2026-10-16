@@ -33,8 +33,11 @@ not require the Azure-NBC source tree or a local Helm chart.
 
 The prepared chart and its referenced images must already be published at the
 selected registry location. Use the **exact chart version**, including any
-`-ghcr` suffix. This sample does not publish artifacts. The chart contains its image defaults;
-only use `--image-tag` for an intentionally compatible image override.
+`-ghcr` suffix. This sample does not publish artifacts.
+The script defaults `--image-tag` to `0.1.2-rc-186104218`, published at
+`ghcr.io/azure-samples/explore-iot-operations/aio-ai-relay:0.1.2-rc-186104218`.
+Use chart version `0.1.2-rc-186104218-ghcr` with this default. When selecting
+another chart version, set `--image-tag` to an intentionally compatible image tag.
 
 Check the target subscription and cluster before running:
 
@@ -61,7 +64,7 @@ bash samples/ai/deploy.sh \
   --apim-name '<globally-unique-apim-name>' \
   --apim-publisher-email '<publisher-email>' \
   --apim-publisher-name '<publisher-name>' \
-  --chart-version '<published-chart-version>' \
+  --chart-version '0.1.2-rc-186104218-ghcr' \
   --cluster-name '<arc-connected-cluster-name>' \
   --aio-extension-name '<azure-iot-operations-extension-name>' \
   --entra-app-name '<unique-app-name>' \
