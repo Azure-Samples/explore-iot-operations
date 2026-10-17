@@ -125,6 +125,9 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
     type: 'SystemAssigned'
   }
   properties: {
+    apiVersionConstraint: {
+      minApiVersion: '2019-12-01'
+    }
     publisherEmail: apimPublisherEmail
     publisherName: apimPublisherName
   }
@@ -173,7 +176,7 @@ var policyTemplate = '''
     </set-header>
     <set-backend-service base-url="{3}" />
   </inbound>
-  <backend><forward-request /></backend>
+  <backend><base /></backend>
   <outbound><base /></outbound>
   <on-error><base /></on-error>
 </policies>

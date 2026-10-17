@@ -144,6 +144,13 @@ Connection per protocol, plus a shared APIM instance (default `BasicV2`, capacit
 time.** Use `--apim-sku` only with a SKU available in your subscription/region.
 The resource group is not created by the script.
 
+APIM management API access is restricted to version `2019-12-01` or later.
+The relay API policies inherit parent policies in all four sections, including
+the global backend forwarding policy. Keep `forward-request` in the effective
+backend policy; APIM provides it globally by default. After deployment, use
+**Calculate effective policy** in the APIM policy editor to confirm that forwarding
+and the relay's Entra token validation apply to both GET and POST operations.
+
 The AIO extension identity receives the scoped **Azure Relay Listener** role.
 APIM's system-assigned identity receives the scoped **Azure Relay Sender** role.
 Hybrid Connections require sender authentication in both modes. `--auth-mode sas`
