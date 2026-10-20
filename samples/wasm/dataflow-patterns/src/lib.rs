@@ -4,8 +4,6 @@
 pub mod align;
 pub mod common;
 pub mod correlate;
-#[cfg(any(target_arch = "wasm32", test))]
-mod filter;
 pub mod predictor;
 #[cfg(any(target_arch = "wasm32", test))]
 mod wrapper;

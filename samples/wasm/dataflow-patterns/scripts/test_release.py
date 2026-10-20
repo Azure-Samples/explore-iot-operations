@@ -34,7 +34,7 @@ class ReleaseTests(unittest.TestCase):
                 {"name": "transform", "operationType": "map",
                  "module": f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0"},
                 {"name": "filter", "operationType": "filter",
-                 "module": f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0"},
+                 "module": f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.0"},
             ],
             "connections": [{"from": {"name": "source"}, "to": {"name": "transform"}}],
             "moduleConfigurations": [{"parameters": {"settings": {"default": '{"role":"align-by-time"}'}}}],
@@ -43,21 +43,30 @@ class ReleaseTests(unittest.TestCase):
         result = prepare.stamp_graph(graph, "1.0.0-rc.1")
         self.assertEqual(result["metadata"]["version"], "1.0.0-rc.1")
         self.assertTrue(result["operations"][1]["module"].endswith(":1.0.0-rc.1"))
-        self.assertEqual(result["operations"][2]["module"], result["operations"][1]["module"])
+        self.assertEqual(result["operations"][2]["module"],
+                         f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.0-rc.1")
         prepare.validate_graph(result, "1.0.0-rc.1")
         self.assertEqual(result["connections"], original["connections"])
         self.assertEqual(result["moduleConfigurations"], original["moduleConfigurations"])
 
     def test_rejects_missing_or_foreign_modules(self):
-        module = f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0"
-        valid = [{"operationType": kind, "module": module} for kind in ("map", "filter")]
+        valid = [{"operationType": kind, "module": f"{prepare.REPOSITORY}/{name}:1.0.0"}
+                 for kind, name in prepare.MODULES.items()]
         invalid = [[], valid[:1], valid + [valid[0]],
                    [valid[0], {"operationType": "filter"}]]
         for foreign in ("another/repository:1.0.0",
                         "mcr.microsoft.com/azureiotoperations/module-dataflow-filter:1.0.0",
-                        f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.1",
-                        f"{prepare.REPOSITORY}/module-dataflow-patterns:invalid"):
+                        f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0",
+                        f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.1",
+                        f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:invalid",
+                        f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.0@sha256:abc",
+                        f"ghcr.io/{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.0"):
             invalid.append([valid[0], {"operationType": "filter", "module": foreign}])
+        invalid.extend([
+            [{"operationType": "map", "module": valid[1]["module"]}, valid[1]],
+            [{"operationType": "sink", "module": valid[0]["module"]}, valid[1]],
+            valid + [{"operationType": "source", "module": "foreign/module:1.0.0"}],
+        ])
         for operations in invalid:
             with self.subTest(operations=operations), self.assertRaises(ValueError):
                 prepare.stamp_graph({"metadata": {}, "operations": operations}, "1.0.0")
@@ -65,9 +74,7 @@ class ReleaseTests(unittest.TestCase):
             prepare.validate_graph({"metadata": {"version": "1.0.0"}, "operations": valid},
                                    "1.0.0-rc.1")
 
-    def test_actual_graphs_preserve_defaults_and_self_contained_filter(self):
-        contracts = json.loads((SCRIPTS.parent / "contracts.json").read_text())
-        self.assertIn("wasm-graph:processor/filter@1.1.0", contracts["artifacts"]["componentExports"])
+    def test_actual_graphs_preserve_defaults_and_two_module_dependencies(self):
         for name in prepare.GRAPHS:
             graph = yaml.safe_load((SCRIPTS.parent / f"{name}.yaml").read_text())
             before = copy.deepcopy(graph)
@@ -76,23 +83,74 @@ class ReleaseTests(unittest.TestCase):
             modules = [op["module"] for op in stamped["operations"] if op.get("module")]
             self.assertEqual(modules, [
                 f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0-rc.1",
-                f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0-rc.1",
+                f"{prepare.REPOSITORY}/module-dataflow-pattern-filter:1.0.0-rc.1",
             ])
+            prepare.validate_graph(stamped, "1.0.0-rc.1")
+
+    def test_pinned_crate_versions_and_unrelated_packages_are_not_stamped(self):
+        workspace = SCRIPTS / ".work" / f"stamp-test-{uuid.uuid4().hex}"
+        workspace.mkdir(parents=True)
+        try:
+            path = workspace / "Cargo.lock"
+            pinned = (
+                '[[package]]\nname = "wasm_graph_sdk"\nversion = "1.1.3"\n\n'
+                '[[package]]\nname = "module-dataflow-patterns-helper"\nversion = "1.0.0"\n'
+            )
+            original = 'version = 4\n' + "".join(
+                f'[[package]]\nversion = "1.0.0"\nname = "{name}"\n\n'
+                for name in prepare.MODULES.values()
+            ) + pinned
+            path.write_text(original)
+            for name in prepare.MODULES.values():
+                prepare.stamp_package(path, name, "1.0.0-rc.2", lock=True)
+            self.assertIn(pinned, path.read_text())
+            self.assertEqual(path.read_text().count('version = "1.0.0-rc.2"'), 2)
+            before = path.read_bytes()
+            with self.assertRaises(ValueError):
+                prepare.stamp_package(path, "missing-package", "1.0.0-rc.2", lock=True)
+            self.assertEqual(path.read_bytes(), before)
+            path.write_text(original + '[[package]]\nname = "module-dataflow-patterns"\nversion = "1.0.0"\n')
+            before = path.read_bytes()
+            with self.assertRaises(ValueError):
+                prepare.stamp_package(path, "module-dataflow-patterns", "1.0.0-rc.2", lock=True)
+            self.assertEqual(path.read_bytes(), before)
+        finally:
+            shutil.rmtree(workspace)
 
     def test_prepare_never_mutates_source(self):
         workspace = SCRIPTS / ".work" / f"test-{uuid.uuid4().hex}"
         source = workspace / "sample"
         source.mkdir(parents=True)
         try:
-            (source / "Cargo.toml").write_text('[package]\nname = "module-dataflow-patterns"\nversion = "1.0.0"\n')
-            (source / "Cargo.lock").write_text('version = 4\n[[package]]\nname = "module-dataflow-patterns"\nversion = "1.0.0"\n')
+            pins = ('[dependencies]\nwasm_graph_sdk = { version = "=1.1.3", registry = "aio-wg" }\n'
+                    'wit-bindgen = "=0.22.0"\nserde_json = "=1.0.145"\n')
+            for role, name in prepare.MODULES.items():
+                directory = source / "filter" if role == "filter" else source
+                directory.mkdir(exist_ok=True)
+                (directory / "Cargo.toml").write_text(
+                    f'[package]\nedition = "2021"\nname = "{name}"\nversion = "1.0.0"\n\n' + pins
+                )
+            (source / "Cargo.toml").write_text(
+                (source / "Cargo.toml").read_text() + '\n[workspace]\nmembers = ["filter"]\n'
+            )
+            (source / "filter" / "src").mkdir()
+            (source / "filter" / "src" / "lib.rs").write_text("// filter component\n")
+            lock_pins = ('[[package]]\nname = "wasm_graph_sdk"\nversion = "1.1.3"\n'
+                         'source = "registry+https://example.invalid/index"\n\n'
+                         '[[package]]\nname = "wit-bindgen"\nversion = "0.22.0"\n')
+            (source / "Cargo.lock").write_text(
+                'version = 4\n' + "".join(
+                    f'[[package]]\nname = "{name}"\nversion = "1.0.0"\n\n'
+                    for name in prepare.MODULES.values()
+                ) + lock_pins
+            )
             for name in prepare.GRAPHS:
                 (source / f"{name}.yaml").write_text(yaml.safe_dump({
                     "metadata": {"version": "1.0.0"},
                     "operations": [
                         {"operationType": kind,
-                         "module": f"{prepare.REPOSITORY}/module-dataflow-patterns:1.0.0"}
-                        for kind in ("map", "filter")
+                         "module": f"{prepare.REPOSITORY}/{name}:1.0.0"}
+                        for kind, name in prepare.MODULES.items()
                     ],
                 }))
             shutil.copytree(SCRIPTS.parent / "chart", source / "chart")
@@ -110,7 +168,17 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(ledger["chartDefaults"]["profileInstanceCount"], 1)
             self.assertEqual(ledger["dependencies"], [])
             self.assertFalse(ledger["runtimeVerified"])
-            self.assertIn('version = "1.0.0-rc.1"', (output / "source" / "Cargo.lock").read_text())
+            stamped_source = output / "source"
+            lock = (stamped_source / "Cargo.lock").read_text()
+            self.assertIn(lock_pins, lock)
+            for name in prepare.MODULES.values():
+                self.assertIn(f'name = "{name}"\nversion = "1.0.0-rc.1"', lock)
+            for manifest in ("Cargo.toml", "filter/Cargo.toml"):
+                text = (stamped_source / manifest).read_text()
+                self.assertIn(pins, text)
+                self.assertIn('version = "1.0.0-rc.1"', text)
+            self.assertEqual((stamped_source / "filter" / "src" / "lib.rs").read_text(),
+                             "// filter component\n")
             self.assertEqual(yaml.safe_load((output / "chart" / "values.yaml").read_text())["artifactVersion"],
                              "1.0.0-rc.1")
         finally:

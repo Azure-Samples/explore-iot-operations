@@ -4,17 +4,17 @@
   "artifacts":{
     "registry":"ghcr.io",
     "repository":"azure-samples/explore-iot-operations/dataflow-patterns",
-    "names":["module-dataflow-patterns","graph-align-by-time","graph-correlate-by-id","graph-versioned-predictor"],
+    "names":["module-dataflow-patterns","module-dataflow-pattern-filter","graph-align-by-time","graph-correlate-by-id","graph-versioned-predictor"],
     "tag":"1.0.0",
-    "componentExports":["wasm-graph:processor/map@1.1.0","wasm-graph:processor/filter@1.1.0"],
+    "componentExports":{"module-dataflow-patterns":["wasm-graph:processor/map@1.1.0"],"module-dataflow-pattern-filter":["wasm-graph:processor/filter@1.1.0"]},
     "qualification":"Module compiled and validated locally; publication and real AIO registry resolution/deployment must be verified separately."
   },
   "commands":{
-    "tests":"cargo test --locked",
+    "tests":"cargo test --workspace --locked",
     "format":"cargo fmt --check",
-    "lint":"cargo clippy --locked --all-targets -- -D warnings",
-    "build":"cargo build --lib --locked --release --target wasm32-wasip2",
-    "validate":"wasm-tools validate target/wasm32-wasip2/release/module_dataflow_patterns.wasm",
+    "lint":"cargo clippy --workspace --locked --all-targets -- -D warnings",
+    "build":"cargo build --workspace --lib --locked --release --target wasm32-wasip2",
+    "validate":"wasm-tools validate target/wasm32-wasip2/release/module_dataflow_patterns.wasm && wasm-tools validate target/wasm32-wasip2/release/module_dataflow_pattern_filter.wasm",
     "replay":"cargo run --locked --example replay -- fixtures/align-by-time.json"
   },
   "configuration":{
@@ -53,7 +53,7 @@
   },
   "diagnostics":{
     "channel":"Core/CLI returns kind=diagnostic records. SDK wrapper counts/logs them and replaces diagnostic-only results with pending. In mixed batches it removes diagnostics after logging, so operational records never become training samples.",
-    "graphFilter":"The same sample component exports a fixed SDK filter: true passes data and alignment batches; false drops pending, modelApplied and diagnostic records. Non-Message inputs, malformed JSON, non-object payloads and non-string kind fields are SDK errors. No filter rules or external MCR module are required.",
+    "graphFilter":"A dedicated filter-only SDK component exports filter@1.1.0; the stateful component exports only map@1.1.0. This avoids AIO 1.6 selecting Map initialization for a filter node when a component exports both interfaces. The filter initializes without settings: true passes data and alignment batches; false drops pending, modelApplied and diagnostic records. Non-Message inputs, malformed JSON, non-object payloads and non-string kind fields are SDK errors. No filter rules or external MCR module are required.",
     "counters":["requests","configurationErrors","errors","batches","diagnostics","pending","modelApplied","recordsEmitted","duplicate","conflict","tooLate","noContext","capacity","expired","noActiveModel","duplicateUpdate","conflictingUpdate","staleUpdate","versionConflict"],
     "metrics":"Counters are incremented through the public SDK metrics API. Metric-export failures are not fatal to data processing. Diagnostic warning logs contain event identity and reason; schema errors produce error logs and SDK errors. Avoid sensitive IDs/payloads on sample topics."
   },
@@ -67,6 +67,6 @@
   "handoff":{
     "graphSchemaCaveat":"The public 1.1.0 graph schema permits filter operations without a moduleConfigurations entry. It checks structure, not component exports, host registry-prefix resolution or successful AIO installation; those require separate qualification.",
     "documentationChanges":["Link the supplied sample instead of asking customers to invent custom artifacts.","Use full GHCR repository paths relative to the GHCR registry endpoint.","Add a tick to the aligner publish sequence and document batch envelopes.","Describe predictor persistence as external supervisor work, not volatile WASM durability.","Original prediction and measurement sampledAt values can conflict; use predictedAt/measuredAt or other disjoint fields."],
-    "publishingChanges":"Release stamping must update both map and filter references to the same sample module. All operation module IDs are repository paths relative to the configured GHCR endpoint; the host prefixes every ID with that endpoint. Packaging scripts that expect an unchanged MCR filter must be updated by main. Main owns publishing/version qualification and real-cluster verification; no deployment is claimed by this implementation."
+    "publishingChanges":"Publish six immutable artifacts: the map module, dedicated filter module, three graphs and Helm chart. Release stamping updates the two operation-specific module references to the same release version. All module IDs are repository paths relative to GHCR; the host prefixes every ID with that endpoint. Never replace the published rc.1 artifacts; the packaging fix targets 1.0.0-rc.2. Main owns publishing/version qualification and real-cluster verification; no deployment is claimed by this implementation."
   }
 }

@@ -4,8 +4,6 @@
 // The SDK generates unsafe ABI traits without Safety documentation.
 #![allow(clippy::missing_safety_doc)]
 
-use serde_json::Value;
-
 #[wasm_graph_sdk::macros::filter_operator]
 fn filter(input: DataModel) -> Result<bool, Error> {
     let DataModel::Message(message) = input else {
@@ -13,29 +11,11 @@ fn filter(input: DataModel) -> Result<bool, Error> {
             message: "expected Message input".into(),
         });
     };
-    let output: Value = serde_json::from_slice(&message.payload.read()).map_err(|error| Error {
-        message: format!("invalid JSON: {error}"),
-    })?;
-    let object = output.as_object().ok_or_else(|| Error {
-        message: "payload must be a JSON object".into(),
-    })?;
-    let kind = object
-        .get("kind")
-        .map(|kind| {
-            kind.as_str().ok_or_else(|| Error {
-                message: "kind must be a string when present".into(),
-            })
-        })
-        .transpose()?;
-    // SDK filter results are keep predicates, not drop predicates.
-    Ok(!matches!(
-        kind,
-        Some("pending" | "modelApplied" | "diagnostic")
-    ))
+    crate::process_payload(&message.payload.read()).map_err(|message| Error { message })
 }
 
 #[cfg(test)]
-pub(super) fn process_for_test(payload: &[u8]) -> Result<bool, Error> {
+fn process_payload(payload: &[u8]) -> Result<bool, Error> {
     use exports::wasm_graph::processor::filter::Guest;
     <Module as Guest>::process(DataModel::Message(Message {
         timestamp: Timestamp {
@@ -66,7 +46,7 @@ mod tests {
             module_schemas: vec![],
         }));
         for kind in ["pending", "modelApplied", "diagnostic"] {
-            assert!(!process_for_test(json!({"kind": kind}).to_string().as_bytes()).unwrap());
+            assert!(!process_payload(json!({"kind": kind}).to_string().as_bytes()).unwrap());
         }
         for output in [
             json!({"assetId":"a","speed":12,"temperature":20}),
@@ -74,7 +54,7 @@ mod tests {
             json!({"kind":"prediction","predictedWeight":203}),
             json!({"kind":"batch","records":[{"speed":12},{"speed":13}]}),
         ] {
-            assert!(process_for_test(output.to_string().as_bytes()).unwrap());
+            assert!(process_payload(output.to_string().as_bytes()).unwrap());
         }
     }
 
@@ -96,7 +76,7 @@ mod tests {
             r#"{"kind":[]}"#,
             r#"{"kind":{}}"#,
         ] {
-            assert!(process_for_test(payload.as_bytes()).is_err(), "{payload}");
+            assert!(process_payload(payload.as_bytes()).is_err(), "{payload}");
         }
     }
 }

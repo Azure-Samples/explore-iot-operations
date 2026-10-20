@@ -23,7 +23,7 @@ operations:
     module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
   - operationType: filter
     name: suppress-internal
-    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter:1.0.0
   - operationType: sink
     name: output
     arity: 1

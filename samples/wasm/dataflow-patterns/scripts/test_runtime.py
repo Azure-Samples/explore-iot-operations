@@ -94,7 +94,12 @@ class CoreReplayTests(unittest.TestCase):
                 self.assertEqual(settings, scenario.configuration)
                 self.assertNotIn("suppress-internal", configurations)
                 operators = {op["operationType"]: op for op in graph["operations"]}
-                self.assertEqual(operators["map"]["module"], operators["filter"]["module"])
+                repository = "azure-samples/explore-iot-operations/dataflow-patterns"
+                version = graph["metadata"]["version"]
+                self.assertEqual(operators["map"]["module"],
+                                 f"{repository}/module-dataflow-patterns:{version}")
+                self.assertEqual(operators["filter"]["module"],
+                                 f"{repository}/module-dataflow-pattern-filter:{version}")
                 self.assertEqual(operators["filter"]["name"], "suppress-internal")
                 fixture = {"configuration": settings, "steps": [
                     {"topic": step.topic, "input": step.payload,

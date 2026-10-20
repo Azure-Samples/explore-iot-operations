@@ -2,7 +2,7 @@ apiVersion: v2
 name: dataflow-patterns
 description: Customer-owned stateful WASM samples for an existing Azure IoT Operations installation
 type: application
-version: 1.0.0-rc.1
-appVersion: "1.0.0-rc.1"
+version: 1.0.0-rc.2
+appVersion: "1.0.0-rc.2"
 annotations:
   org.opencontainers.image.source: https://github.com/Azure-Samples/explore-iot-operations

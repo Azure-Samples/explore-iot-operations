@@ -177,7 +177,7 @@ mod tests {
             serde_json::from_slice::<Value>(&pending.payload.read()).unwrap()["kind"],
             "pending"
         );
-        assert!(!crate::filter::process_for_test(&pending.payload.read()).unwrap());
+        assert!(!module_dataflow_pattern_filter::process_payload(&pending.payload.read()).unwrap());
         let second = json!({"kind":"measurement","assetId":"a","pieceId":"p","measuredWeight":200,"targetWeight":198});
         let DataModel::Message(matched) = <Module as Guest>::process(message(second)).unwrap()
         else {
@@ -185,7 +185,7 @@ mod tests {
         };
         let out: Value = serde_json::from_slice(&matched.payload.read()).unwrap();
         assert_eq!(out["residual"], -3.);
-        assert!(crate::filter::process_for_test(&matched.payload.read()).unwrap());
+        assert!(module_dataflow_pattern_filter::process_payload(&matched.payload.read()).unwrap());
         assert!(matched.schema.is_none());
         assert!(
             matches!(matched.content_type, Some(BufferOrString::String(ref s)) if s == "application/json")
@@ -219,7 +219,7 @@ mod tests {
                 .len(),
             2
         );
-        assert!(crate::filter::process_for_test(&m.payload.read()).unwrap());
+        assert!(module_dataflow_pattern_filter::process_payload(&m.payload.read()).unwrap());
     }
 
     #[test]
@@ -234,7 +234,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_payloads_survive_map_and_generated_filter_unchanged() {
+    fn fixture_payloads_survive_map_and_filter_unchanged() {
         for text in [
             include_str!("../fixtures/align-by-time.json"),
             include_str!("../fixtures/correlate-by-id.json"),
@@ -251,11 +251,12 @@ mod tests {
                     panic!()
                 };
                 let payload = output.payload.read();
-                let delivered = if crate::filter::process_for_test(&payload).unwrap() {
-                    serde_json::from_slice::<Value>(&payload).unwrap()
-                } else {
-                    Value::Null
-                };
+                let delivered =
+                    if module_dataflow_pattern_filter::process_payload(&payload).unwrap() {
+                        serde_json::from_slice::<Value>(&payload).unwrap()
+                    } else {
+                        Value::Null
+                    };
                 assert_eq!(delivered, step["expected"], "input: {}", step["input"]);
             }
         }
@@ -275,7 +276,7 @@ mod tests {
             serde_json::from_slice::<Value>(&ack.payload.read()).unwrap()["kind"],
             "modelApplied"
         );
-        assert!(!crate::filter::process_for_test(&ack.payload.read()).unwrap());
+        assert!(!module_dataflow_pattern_filter::process_payload(&ack.payload.read()).unwrap());
         let DataModel::Message(duplicate) = <Module as Guest>::process(message(update)).unwrap()
         else {
             panic!()
@@ -284,14 +285,18 @@ mod tests {
             serde_json::from_slice::<Value>(&duplicate.payload.read()).unwrap()["kind"],
             "pending"
         );
-        assert!(!crate::filter::process_for_test(&duplicate.payload.read()).unwrap());
+        assert!(
+            !module_dataflow_pattern_filter::process_payload(&duplicate.payload.read()).unwrap()
+        );
         let DataModel::Message(prediction) = <Module as Guest>::process(message(
             json!({"kind":"reading","assetId":"a","pieceId":"p","speed":10,"temperature":20}),
         ))
         .unwrap() else {
             panic!()
         };
-        assert!(crate::filter::process_for_test(&prediction.payload.read()).unwrap());
+        assert!(
+            module_dataflow_pattern_filter::process_payload(&prediction.payload.read()).unwrap()
+        );
         let prediction: Value = serde_json::from_slice(&prediction.payload.read()).unwrap();
         assert_eq!(prediction["modelVersion"], 8);
         assert_eq!(prediction["predictedWeight"], 203.);

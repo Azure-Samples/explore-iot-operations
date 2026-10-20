@@ -119,7 +119,9 @@ The GitHub workflow [Dataflow pattern WASM samples](../../.github/workflows/data
 builds the locked Rust sources, tests the chart, and publishes version-matched
 WASM modules, graph definitions, and an OCI Helm chart to the repository's GHCR
 namespace. Release tags are immutable. The initial sample candidate is
-`1.0.0-rc.1`, not a production-support commitment.
+`1.0.0-rc.2`, not a production-support commitment. Version `1.0.0-rc.1`
+failed AIO 1.6 initialization and must not be used. The corrected release
+uses separate Map and Filter components.
 
 The chart requires an existing Azure IoT Operations installation with the
 DataflowGraph, DataflowProfile, and RegistryEndpoint CRDs, and an existing MQTT
@@ -128,7 +130,7 @@ endpoint. It doesn't deploy a broker or change equipment.
 ```bash
 helm upgrade --install factory-patterns \
   oci://ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns \
-  --version 1.0.0-rc.1 \
+  --version 1.0.0-rc.2 \
   --namespace azure-iot-operations \
   --set endpointRef=default
 ```

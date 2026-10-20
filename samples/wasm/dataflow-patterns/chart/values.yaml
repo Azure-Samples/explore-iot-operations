@@ -13,7 +13,7 @@ profileRef: ""
 registryPullSecret: ""
 # Empty uses dataflow-patterns/<release>; never share a prefix between installations.
 topicPrefix: ""
-artifactVersion: "1.0.0-rc.1"
+artifactVersion: "1.0.0-rc.2"
 artifactRepository: azure-samples/explore-iot-operations/dataflow-patterns
 tests:
   enabled: false

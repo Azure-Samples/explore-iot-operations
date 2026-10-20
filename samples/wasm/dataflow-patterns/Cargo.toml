@@ -5,6 +5,10 @@ edition = "2021"
 license = "MIT"
 description = "Bounded stateful data flow graph examples for Azure IoT Operations"
 
+[workspace]
+members = ["filter"]
+resolver = "2"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -14,3 +18,6 @@ wit-bindgen = "=0.22.0"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.145"
 time = { version = "=0.3.44", features = ["parsing", "formatting"] }
+
+[dev-dependencies]
+module-dataflow-pattern-filter = { path = "filter" }

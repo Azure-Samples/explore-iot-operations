@@ -15,10 +15,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Immutable release version shared by module, graphs, and chart (no build metadata)
+        description: Immutable release version shared by both modules, graphs, and chart (no build metadata)
         type: string
         required: true
-        default: 1.0.0-rc.1
+        default: 1.0.0-rc.2
       publish:
         description: Publish from main or the explicit maintainer review branch
         type: boolean
@@ -35,7 +35,7 @@ concurrency:
 
 env:
   SAMPLE: samples/wasm/dataflow-patterns
-  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.1' }}
+  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.2' }}
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -55,6 +55,7 @@ jobs:
       - name: Install pinned Rust and Python YAML parser
         run: |
           rustup toolchain install 1.90.0 --profile minimal --component rustfmt --component clippy --target wasm32-wasip2
+          cargo +1.90.0 install --locked wasm-tools --version 1.230.0
           python3 -m venv "$SAMPLE/scripts/.work/venv"
           "$SAMPLE/scripts/.work/venv/bin/pip" install --disable-pip-version-check PyYAML==6.0.2
           echo "$GITHUB_WORKSPACE/$SAMPLE/scripts/.work/venv/bin" >> "$GITHUB_PATH"
@@ -62,12 +63,12 @@ jobs:
         working-directory: samples/wasm/dataflow-patterns
         run: |
           set -euo pipefail
-          cargo +1.90.0 fmt --check
-          cargo +1.90.0 test --locked
+          cargo +1.90.0 fmt --all --check
+          cargo +1.90.0 test --workspace --locked
           # SDK 1.1.3 generates an unsafe WIT trait without a Safety doc section.
-          cargo +1.90.0 clippy --locked --all-targets -- -D warnings -A clippy::missing_safety_doc
+          cargo +1.90.0 clippy --workspace --locked --all-targets -- -D warnings -A clippy::missing_safety_doc
           python3 -m unittest discover -s scripts -p 'test_*.py' -v
-          python3 scripts/check-chart.py chart --version 1.0.0-rc.1
+          python3 scripts/check-chart.py chart --version 1.0.0-rc.2
           for script in scripts/*.sh; do bash -n "$script"; done
           shellcheck scripts/*.sh
       - name: Build a version-stamped copy with the locked public SDK
@@ -75,9 +76,15 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/prepare-release.py --version "$RELEASE_VERSION" --revision "$GITHUB_SHA" --output scripts/.work/release
-          cd scripts/.work/release/source
-          cargo +1.90.0 build --lib --locked --release --target wasm32-wasip2
-          cp target/wasm32-wasip2/release/module_dataflow_patterns.wasm ../artifacts/
+          (
+            cd scripts/.work/release/source
+            cargo +1.90.0 build --workspace --lib --locked --release --target wasm32-wasip2
+            cp target/wasm32-wasip2/release/module_dataflow_patterns.wasm \
+              target/wasm32-wasip2/release/module_dataflow_pattern_filter.wasm ../artifacts/
+          )
+          python3 scripts/check-components.py scripts/.work/release/artifacts
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
+          bash scripts/publish.sh scripts/.work/release --stage-only
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dataflow-patterns-candidate
@@ -85,6 +92,9 @@ jobs:
             samples/wasm/dataflow-patterns/scripts/.work/release/artifacts/
             samples/wasm/dataflow-patterns/scripts/.work/release/chart/
             samples/wasm/dataflow-patterns/scripts/.work/release/release.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/layouts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.tsv
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: error
@@ -152,7 +162,7 @@ jobs:
           release="$SAMPLE/scripts/.work/release"
           {
             if test -f "$release/verification.json"; then
-              echo 'Anonymous full pulls and packaged Helm checks passed for all five immutable artifacts.'
+              echo 'Anonymous full pulls and packaged Helm checks passed for all six immutable artifacts.'
             else
               echo 'Release verification incomplete. New GHCR packages may need an administrator to set public visibility; anonymous verification is mandatory.'
             fi
@@ -163,7 +173,7 @@ jobs:
               awk -F '\t' '{printf "| %s | %s | %s | %s |\n", $1, $2, $3, $4}' "$release/artifacts.tsv"
             fi
             echo ''
-            echo 'Each graph uses map and filter exports from the same release module; no external module dependencies are allowed.'
+            echo 'Each graph uses the operation-specific map and filter modules at the same release version; no external module dependencies are allowed.'
             echo 'Real AIO runtime integration was NOT run. Use verify-deployed.sh with an explicitly selected kubeconfig and fresh release.'
             echo 'artifacts.json contains digest-pinned references and payload SHA256; verification.json exists only after anonymous checks pass.'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -179,6 +189,8 @@ jobs:
             samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.tsv
             samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.json
             samples/wasm/dataflow-patterns/scripts/.work/release/verification.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/layouts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/anonymous/
           include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn

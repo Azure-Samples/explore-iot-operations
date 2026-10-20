@@ -120,9 +120,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
+name = "module-dataflow-pattern-filter"
+version = "1.0.0"
+dependencies = [
+ "serde_json",
+ "wasm_graph_sdk",
+ "wit-bindgen 0.22.0",
+]
+
+[[package]]
 name = "module-dataflow-patterns"
 version = "1.0.0"
 dependencies = [
+ "module-dataflow-pattern-filter",
  "serde",
  "serde_json",
  "time",

@@ -32,6 +32,8 @@ PY
 mkdir -p "$release/layouts"
 cp -- "$release/artifacts/module_dataflow_patterns.wasm" \
   "$release/artifacts/module-dataflow-patterns.wasm"
+cp -- "$release/artifacts/module_dataflow_pattern_filter.wasm" \
+  "$release/artifacts/module-dataflow-pattern-filter.wasm"
 helm lint "$release/chart" --strict
 helm package "$release/chart" --destination "$release/artifacts"
 # Helm's gzip timestamp and tar mtimes otherwise make same-commit retries differ.
@@ -72,7 +74,7 @@ annotations=(
   --annotation "org.opencontainers.image.created=$created"
 )
 : > "$release/artifacts.tsv"
-for name in module-dataflow-patterns graph-align-by-time graph-correlate-by-id graph-versioned-predictor dataflow-patterns; do
+for name in module-dataflow-patterns module-dataflow-pattern-filter graph-align-by-time graph-correlate-by-id graph-versioned-predictor dataflow-patterns; do
   repository="$namespace/dataflow-patterns/$name"
   config="empty-config.json:application/vnd.microsoft.aio.graph.v1+yaml"
   layer="$name.yaml:application/yaml"

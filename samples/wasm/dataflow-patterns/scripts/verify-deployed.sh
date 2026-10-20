@@ -25,15 +25,20 @@ kubectl --kubeconfig "$config" get crd dataflowgraphs.connectivity.iotoperations
 helm get manifest "$release" --namespace "$namespace" --kubeconfig "$config" > "$work/manifest.yaml"
 # API-server validation uses the actual installed CRDs; no substitute/fake runtime.
 kubectl --kubeconfig "$config" --namespace "$namespace" apply --dry-run=server \
-  -f "$work/manifest.yaml" >/dev/null
+  -f "$work/manifest.yaml" -o yaml > "$work/validated-manifest.yaml"
 export TOPIC_PREFIX
-TOPIC_PREFIX="$(python3 - "$work/manifest.yaml" "$config" "$namespace" "$work" <<'PY'
+TOPIC_PREFIX="$(python3 - "$work/validated-manifest.yaml" "$config" "$namespace" "$work" <<'PY'
 import json
 import subprocess
 import sys
 from pathlib import Path
 import yaml
-graphs = [r for r in yaml.safe_load_all(open(sys.argv[1])) if r and r["kind"] == "DataflowGraph"]
+resources = []
+with open(sys.argv[1]) as manifest:
+    for resource in yaml.safe_load_all(manifest):
+        if resource:
+            resources.extend(resource["items"] if resource["kind"] == "List" else [resource])
+graphs = [r for r in resources if r["kind"] == "DataflowGraph"]
 assert len(graphs) == 3, "Expected the three installed sample graphs"
 def get(kind, name):
     return json.loads(subprocess.check_output([

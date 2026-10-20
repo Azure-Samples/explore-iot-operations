@@ -11,6 +11,7 @@ import yaml
 BASE = Path(__file__).resolve().parents[1]
 GRAPHS = ("graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor")
 REPOSITORY = "azure-samples/explore-iot-operations/dataflow-patterns"
+MODULES = {"map": "module-dataflow-patterns", "filter": "module-dataflow-pattern-filter"}
 NUMBER = r"(?:0|[1-9][0-9]*)"
 IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)"
 SEMVER = re.compile(rf"{NUMBER}\.{NUMBER}\.{NUMBER}(?:-{IDENTIFIER}(?:\.{IDENTIFIER})*)?")
@@ -28,17 +29,16 @@ def validate_graph(graph, version=None):
     if (len(operations) != 2
             or sorted(op.get("operationType", "") for op in operations) != ["filter", "map"]):
         raise ValueError("Graph must have exactly one map and one filter module reference")
-    expected = f"{REPOSITORY}/module-dataflow-patterns:"
-    modules = []
+    versions = []
     for operation in operations:
+        expected = f"{REPOSITORY}/{MODULES[operation['operationType']]}:"
         module = operation.get("module", "")
         if not isinstance(module, str) or not module.startswith(expected):
             raise ValueError(f"Unexpected module reference: {module}")
-        validate_version(module[len(expected):])
-        modules.append(module)
-    if len(set(modules)) != 1:
+        versions.append(validate_version(module[len(expected):]))
+    if len(set(versions)) != 1:
         raise ValueError("Map and filter must reference the same module version")
-    if version is not None and (modules[0] != expected + version
+    if version is not None and (versions[0] != version
                                 or graph["metadata"]["version"] != version):
         raise ValueError("Graph and both module references must use the release version")
     return operations
@@ -49,8 +49,33 @@ def stamp_graph(graph, version):
     operations = validate_graph(graph)
     graph["metadata"]["version"] = version
     for operation in operations:
-        operation["module"] = f"{REPOSITORY}/module-dataflow-patterns:{version}"
+        operation["module"] = f"{REPOSITORY}/{MODULES[operation['operationType']]}:{version}"
     return graph
+
+
+def stamp_package(path, name, version, *, lock=False):
+    text = path.read_text()
+    header = r"\[\[package\]\]" if lock else r"\[package\]"
+    count = 0
+
+    def replace(match):
+        nonlocal count
+        block = match[0]
+        if not re.search(rf'(?m)^name[ \t]*=[ \t]*"{re.escape(name)}"[ \t]*(?:#.*)?$', block):
+            return block
+        stamped, versions = re.subn(
+            r'(?m)^(version\s*=\s*")[^"]+(".*)$',
+            lambda m: m[1] + version + m[2], block,
+        )
+        if versions != 1:
+            raise ValueError(f"Cannot stamp package version for {name} in {path}")
+        count += 1
+        return stamped
+
+    text = re.sub(rf"(?ms)^{header}[ \t]*\n.*?(?=^\[|\Z)", replace, text)
+    if count != 1:
+        raise ValueError(f"Expected one package {name} in {path}; found {count}")
+    path.write_text(text)
 
 
 def prepare(version, revision, output):
@@ -61,16 +86,10 @@ def prepare(version, revision, output):
         raise ValueError(f"Output already exists: {output}; use a fresh directory")
     source = output / "source"
     shutil.copytree(BASE, source, ignore=shutil.ignore_patterns("chart", "scripts", "target", ".git"))
-    for filename in ("Cargo.toml", "Cargo.lock"):
-        path = source / filename
-        text = path.read_text()
-        pattern = r'(\[package\]\s*\nname = "module-dataflow-patterns"\s*\nversion = ")[^"]+(")'
-        if filename == "Cargo.lock":
-            pattern = r'(\[\[package\]\]\s*\nname = "module-dataflow-patterns"\s*\nversion = ")[^"]+(")'
-        text, count = re.subn(pattern, lambda m: m[1] + version + m[2], text)
-        if count != 1:
-            raise ValueError(f"Cannot stamp package version in {filename}")
-        path.write_text(text)
+    for role, name in MODULES.items():
+        manifest = source / ("filter/Cargo.toml" if role == "filter" else "Cargo.toml")
+        stamp_package(manifest, name, version)
+        stamp_package(source / "Cargo.lock", name, version, lock=True)
     artifacts = output / "artifacts"
     artifacts.mkdir()
     for name in GRAPHS:
