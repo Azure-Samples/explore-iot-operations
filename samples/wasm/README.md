@@ -113,6 +113,12 @@ defines the exact fields, configurable bounds, counters, batch envelopes, and
 restart requirements. Native fixture replay isn't a substitute for deployment
 testing against an Azure IoT Operations runtime.
 
+The published `1.0.0-rc.2` chart and both WASM modules passed actual MQTT
+verification on the public AIO 1.6 runtime, followed by the chart's packaged
+`helm test` on a fresh release. The [validation summary](dataflow-patterns/validation/1.0.0-rc.2.json)
+records the workflow, immutable digests, runtime image and exercised cases.
+This is finite functional validation, not a production durability or safety claim.
+
 ### Deploy the matching release
 
 The GitHub workflow [Dataflow pattern WASM samples](../../.github/workflows/dataflow-patterns.yml)
@@ -122,6 +128,10 @@ namespace. Release tags are immutable. The initial sample candidate is
 `1.0.0-rc.2`, not a production-support commitment. Version `1.0.0-rc.1`
 failed AIO 1.6 initialization and must not be used. The corrected release
 uses separate Map and Filter components.
+
+Pushes and pull requests run validation. A maintainer publishes a new version
+with the workflow's `workflow_dispatch` inputs (`version` and `publish=true`).
+Don't reuse a published version for another source revision.
 
 The chart requires an existing Azure IoT Operations installation with the
 DataflowGraph, DataflowProfile, and RegistryEndpoint CRDs, and an existing MQTT
@@ -153,7 +163,9 @@ MQTT_HOST=<broker-host> MQTT_PORT=1883 \
 ```
 
 The verifier checks the installed resources and single-instance profile before
-publishing fixtures. It checks timestamp selection, delayed correlation in both
+publishing fixtures. It also waits for the worker and all graph components to
+be ready; a running pod alone doesn't establish that WASM initialization has
+finished. It checks timestamp selection, delayed correlation in both
 arrival orders, duplicate suppression, model activation, and the absence of
 prediction output for update-only messages. The MQTT client must be authorized
 for the release's input and output topics. Use the script's TLS or authentication

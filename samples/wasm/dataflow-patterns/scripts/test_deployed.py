@@ -37,7 +37,18 @@ class DeployedTests(unittest.TestCase):
                 "nodeConnections": [],
             },
         } for i in range(3)]
-        profile = {"spec": {"instanceCount": 1}}
+        profile = {"metadata": {"uid": "profile-uid"}, "spec": {"instanceCount": 1}}
+        pod = {"metadata": {"creationTimestamp": "2026-10-20T20:00:00Z"},
+               "status": {"conditions": [{"type": "Ready", "status": "True"}]}}
+        health = {
+            "metadata": {"ownerReferences": [{"uid": "profile-uid"}]},
+            "data": {
+                f"0.dfg.sample-{i}.{component}": json.dumps({
+                    "s": "Available", "lu": "2026-10-20T20:00:01.123456789Z",
+                })
+                for i in range(3) for component in ("source", "transform", "destination")
+            },
+        }
         work = SCRIPTS / ".work" / f"deployed-test-{uuid.uuid4().hex}"
         work.mkdir(parents=True)
         self.addCleanup(shutil.rmtree, work)
@@ -48,8 +59,10 @@ class DeployedTests(unittest.TestCase):
             self.assertEqual(command[:6], [
                 "kubectl", "--kubeconfig", "explicit-config", "--namespace", "sample", "get",
             ])
-            value = profile if command[6] == "dataflowprofile" else next(
-                g for g in live if g["metadata"]["name"] == command[7])
+            if command[6] in ("dataflowprofile", "pod", "configmap"):
+                value = {"dataflowprofile": profile, "pod": pod, "configmap": health}[command[6]]
+            else:
+                value = next(g for g in live if g["metadata"]["name"] == command[7])
             return json.dumps(value)
 
         with patch.object(sys, "argv", [
@@ -67,6 +80,48 @@ class DeployedTests(unittest.TestCase):
             ]
             with self.assertRaisesRegex(AssertionError, "Live graph differs"):
                 exec(compile(check, "verify-deployed.sh", "exec"), {})
+
+    def test_readiness_requires_current_health_and_ready_worker(self):
+        script = (SCRIPTS / "verify-deployed.sh").read_text()
+        check = script.split("<<'PY'\n", 1)[1].split("resources = []", 1)[0]
+        scope = {}
+        exec(compile(check, "verify-deployed.sh", "exec"), scope)
+        graphs = [{"metadata": {"name": "sample"}, "spec": {"profileRef": "single"}}]
+        profiles = {"single": {"metadata": {"uid": "owned-profile"}}}
+        pod = {"metadata": {"creationTimestamp": "2026-10-20T20:00:00Z"},
+               "status": {"conditions": [{"type": "Ready", "status": "True"}]}}
+        health = {"metadata": {"ownerReferences": [{"uid": "owned-profile"}]},
+                  "data": {f"0.dfg.sample.{component}": json.dumps({
+                      "s": "Available", "lu": "2026-10-20T20:00:01Z",
+                  }) for component in ("source", "transform", "destination")}}
+        scope["get"] = lambda kind, *args, **kwargs: pod if kind == "pod" else health
+        ready = lambda: scope["runtime_ready"](graphs, profiles)
+        self.assertTrue(ready())
+        for component in ("source", "transform", "destination"):
+            key = f"0.dfg.sample.{component}"
+            original = health["data"].pop(key)
+            self.assertFalse(ready())
+            for value in ({"s": "Initializing"}, {"s": "Failed"},
+                          {"s": "Available", "lu": "2026-10-20T19:59:59Z"}):
+                health["data"][key] = json.dumps(value)
+                self.assertFalse(ready())
+            health["data"][key] = original
+        pod["status"]["conditions"][0]["status"] = "False"
+        self.assertFalse(ready())
+        pod["status"]["conditions"][0]["status"] = "True"
+        pod["metadata"]["deletionTimestamp"] = "2026-10-20T20:01:00Z"
+        self.assertFalse(ready())
+        del pod["metadata"]["deletionTimestamp"]
+        health["metadata"]["ownerReferences"][0]["uid"] = "different-profile"
+        self.assertFalse(ready())
+        scope["runtime_ready"] = unittest.mock.Mock(side_effect=[False, True])
+        with patch("time.sleep"):
+            scope["wait_for_runtime"](graphs, profiles)
+        scope["runtime_ready"] = lambda *args: False
+        with patch("time.monotonic", side_effect=[0, 2]), patch.dict(
+                "os.environ", {"RUNTIME_READY_TIMEOUT": "1"}):
+            with self.assertRaisesRegex(TimeoutError, "Runtime not ready"):
+                scope["wait_for_runtime"](graphs, profiles)
 
 
 if __name__ == "__main__":

@@ -103,9 +103,8 @@ jobs:
     needs: test
     if: >-
       github.repository == 'Azure-Samples/explore-iot-operations' &&
-      ((github.event_name == 'push' && github.ref == 'refs/heads/huguesBouvier/dataflow-pattern-samples') ||
-       (github.event_name == 'workflow_dispatch' && inputs.publish &&
-        (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/huguesBouvier/dataflow-pattern-samples')))
+      github.event_name == 'workflow_dispatch' && inputs.publish &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/huguesBouvier/dataflow-pattern-samples')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
