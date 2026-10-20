@@ -50,6 +50,12 @@ param entraAppRole string = 'AIOMcpAdmin'
 
 var usesSas = authMode == 'SharedAccessSignature'
 var usesManagedIdentity = authMode == 'SystemAssignedManagedIdentity'
+var supportsCustomCiphers = contains([
+  'Developer'
+  'Basic'
+  'Standard'
+  'Premium'
+], apimSku)
 var listenerRole = '26e0b698-aa6d-4085-9386-aadae190014d'
 var senderRole = '26baccc8-eea7-41f1-98f4-1762cc7f685d'
 var endpointDefs = endpointMode == 'both' ? [
@@ -128,6 +134,20 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
     apiVersionConstraint: {
       minApiVersion: '2019-12-01'
     }
+    // V2 tiers don't support customizing the platform-managed cipher configuration.
+    customProperties: supportsCustomCiphers ? {
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_CBC_SHA256': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_CBC_SHA256': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_128_GCM_SHA256': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_RSA_WITH_AES_256_GCM_SHA384': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA': 'False'
+    } : null
     publisherEmail: apimPublisherEmail
     publisherName: apimPublisherName
   }
