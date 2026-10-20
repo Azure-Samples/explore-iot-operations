@@ -138,6 +138,32 @@ Each installation gets a separate topic prefix. Don't install competing
 instances on the same asset/topic set. The graph artifact and module versions
 must match the chart's `artifactVersion`.
 
+### Verify the installed release
+
+Use a fresh release and topic prefix: these tests intentionally update model
+state. Install `paho-mqtt==2.1.0` and `PyYAML==6.0.2` in your test environment,
+then point the verifier at the same broker used by the installed MQTT endpoint:
+
+```bash
+cd samples/wasm/dataflow-patterns
+MQTT_HOST=<broker-host> MQTT_PORT=1883 \
+  bash scripts/verify-deployed.sh <kubeconfig-file> azure-iot-operations factory-patterns
+```
+
+The verifier checks the installed resources and single-instance profile before
+publishing fixtures. It checks timestamp selection, delayed correlation in both
+arrival orders, duplicate suppression, model activation, and the absence of
+prediction output for update-only messages. The MQTT client must be authorized
+for the release's input and output topics. Use the script's TLS or authentication
+environment variables when your broker requires them; don't disable broker
+security to run the tests.
+
+The optional `helm test` hook runs the packaged verifier inside the cluster.
+Enable it with `tests.enabled=true` and set `tests.mqttHost` to a broker listener
+reachable from the test pod. That hook doesn't carry broker credentials; for
+authenticated listeners, run the external verifier with your authorized test
+client instead.
+
 ### State and recovery limits
 
 These modules maintain bounded **in-memory** state. Pending matches, duplicate
