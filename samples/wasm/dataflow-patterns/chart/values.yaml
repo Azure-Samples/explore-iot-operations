@@ -1,0 +1,24 @@
+# Install with --namespace azure-iot-operations into an existing AIO installation.
+# Requires DataflowGraph, DataflowProfile and RegistryEndpoint CRDs and an MQTT endpoint.
+endpointRef: default
+profile:
+  # Dedicated release-scoped profile; the operator supplies its native runtime image.
+  create: true
+# With profile.create=false, name an existing profile with spec.instanceCount=1.
+# Helm must be connected to the target cluster to verify it; it is never modified.
+profileRef: ""
+# Anonymous by default. If the target runtime requires credentials, explicitly
+# reference an existing pull secret after qualifying registry access.
+# The chart never creates a Secret or changes registry hosts.
+registryPullSecret: ""
+# Empty uses dataflow-patterns/<release>; never share a prefix between installations.
+topicPrefix: ""
+artifactVersion: "1.0.0-rc.1"
+artifactRepository: azure-samples/explore-iot-operations/dataflow-patterns
+tests:
+  enabled: false
+  # A reachable real MQTT broker serving endpointRef, not a second test broker.
+  mqttHost: ""
+  mqttPort: 1883
+  tls: false
+  image: python:3.12-slim

@@ -1,0 +1,29 @@
+{
+  "configuration": {"role":"align-by-time"},
+  "steps": [
+    {
+      "topic":"factory/temperature",
+      "nowMs":1792404003000,
+      "input":{"kind":"temperature","assetId":"line-1","sampledAt":"2026-10-19T10:00:01Z","temperature":20},
+      "expected":null
+    },
+    {
+      "topic":"factory/temperature",
+      "nowMs":1792404003001,
+      "input":{"kind":"temperature","assetId":"line-1","sampledAt":"2026-10-19T10:00:03Z","temperature":22},
+      "expected":null
+    },
+    {
+      "topic":"factory/speed",
+      "nowMs":1792404003002,
+      "input":{"kind":"speed","assetId":"line-1","sampledAt":"2026-10-19T10:00:02Z","speed":12},
+      "expected":null
+    },
+    {
+      "topic":"factory/speed",
+      "nowMs":1792404004000,
+      "input":{"kind":"tick","assetId":"line-1","sampledAt":"2026-10-19T10:00:04Z"},
+      "expected":{"assetId":"line-1","sampledAt":"2026-10-19T10:00:02Z","speed":12,"temperature":20.0,"temperatureSampledAt":"2026-10-19T10:00:01Z"}
+    }
+  ]
+}

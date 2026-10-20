@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["endpointRef", "profile", "profileRef", "registryPullSecret", "topicPrefix", "artifactVersion", "artifactRepository", "tests"],
+  "allOf": [
+    {
+      "if": {"properties": {"profile": {"properties": {"create": {"const": false}}}}},
+      "then": {"properties": {"profileRef": {"minLength": 1}}},
+      "else": {"properties": {"profileRef": {"const": ""}}}
+    }
+  ],
+  "properties": {
+    "endpointRef": {"type": "string", "minLength": 1, "maxLength": 63, "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"},
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["create"],
+      "properties": {"create": {"type": "boolean"}}
+    },
+    "profileRef": {"type": "string", "maxLength": 39, "pattern": "^$|^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"},
+    "registryPullSecret": {"type": "string", "maxLength": 253, "pattern": "^$|^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"},
+    "topicPrefix": {"type": "string", "maxLength": 180, "pattern": "^$|^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$"},
+    "artifactVersion": {"type": "string", "maxLength": 128, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"},
+    "artifactRepository": {"type": "string", "const": "azure-samples/explore-iot-operations/dataflow-patterns"},
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "mqttHost", "mqttPort", "tls", "image"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "mqttHost": {"type": "string", "pattern": "^$|^[a-zA-Z0-9.:-]+$"},
+        "mqttPort": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "tls": {"type": "boolean"},
+        "image": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

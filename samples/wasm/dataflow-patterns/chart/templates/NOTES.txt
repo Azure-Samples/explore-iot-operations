@@ -1,0 +1,31 @@
+Requires an existing Azure IoT Operations installation, its CRDs, MQTT endpoint
+{{ .Values.endpointRef }} in {{ .Release.Namespace }}.
+Dataflow profile: {{ include "patterns.profile" . }} (instanceCount=1).
+{{ if .Values.profile.create }}A dedicated release-scoped profile is installed using the operator's native image defaults.
+{{ else }}The existing profile was checked for instanceCount=1 and is not modified.
+{{ end }}
+The sample component implements both the map and sentinel-filter operations.
+The release ledger records any additional external module dependencies.
+No broker, operator, credentials or Secrets are installed.
+
+WARNING: These customer-owned samples keep local state. instanceCount must remain 1;
+they are not production-safe durable state stores and must not control actuators.
+The GHCR packages must be public for this anonymous RegistryEndpoint.
+Public ORAS/Helm pulls do NOT prove AIO runtime compatibility. If registry
+qualification on your target runtime shows that credentials are required,
+explicitly set registryPullSecret to an existing GHCR read:packages pull secret;
+the registry host remains ghcr.io. No secret is created or aliased.
+See https://learn.microsoft.com/azure/iot-operations/develop-edge-apps/howto-configure-registry-endpoint#use-a-public-registry
+
+Topic prefix: {{ include "patterns.prefix" . }}
+Inputs: speed, temperature; predictions, measurements; readings, models.
+Alignment accepts only speed and temperature; send trusted ticks on speed to
+flush idle tails. Consumers must drain every record in kind=batch envelopes.
+Outputs: aligned, matches, predictions-from-updates (never subscribed as inputs).
+Runtime verification requires a fresh release/prefix and a real AIO runtime.
+Use scripts/verify-deployed.sh with an explicit kubeconfig and MQTT_HOST.
+Optional helm test requires tests.enabled=true and tests.mqttHost.
+Its non-root test pod downloads pinned paho-mqtt from PyPI; it does not carry
+broker credentials. For authenticated brokers, run verify-deployed.sh with
+MQTT_USERNAME/MQTT_PASSWORD or MQTT_TLS and MQTT_CA_FILE/MQTT_CERT_FILE/MQTT_KEY_FILE.
+Use a fresh release for every test run (the examples retain state until restart).

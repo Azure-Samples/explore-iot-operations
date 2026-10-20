@@ -1,0 +1,42 @@
+{{- $root := . -}}
+{{- $profile := include "patterns.profile" . -}}
+{{- $patterns := list
+  (dict "name" "align-by-time" "inputs" (list "speed" "temperature") "output" "aligned")
+  (dict "name" "correlate-by-id" "inputs" (list "predictions" "measurements") "output" "matches")
+  (dict "name" "versioned-predictor" "inputs" (list "readings" "models") "output" "predictions-from-updates")
+-}}
+{{- range $pattern := $patterns }}
+---
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: {{ include "patterns.name" $root }}-{{ $pattern.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  profileRef: {{ $profile | quote }}
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: {{ $root.Values.endpointRef | quote }}
+        dataSources:
+          {{- range $topic := $pattern.inputs }}
+          - {{ printf "%s/%s" (include "patterns.prefix" $root) $topic | quote }}
+          {{- end }}
+    - name: transform
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: {{ include "patterns.registry" $root }}
+        artifact: {{ printf "%s/graph-%s:%s" $root.Values.artifactRepository $pattern.name $root.Values.artifactVersion | quote }}
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: {{ $root.Values.endpointRef | quote }}
+        dataDestination: {{ printf "%s/%s" (include "patterns.prefix" $root) $pattern.output | quote }}
+  nodeConnections:
+    - from: {name: source}
+      to: {name: transform}
+    - from: {name: transform}
+      to: {name: destination}
+{{- end }}

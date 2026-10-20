@@ -1,0 +1,72 @@
+{
+  "version":"1.0.0",
+  "sdk":{"registry":"aio-wg","package":"wasm_graph_sdk","version":"=1.1.3","componentTarget":"wasm32-wasip2","witApiVersion":"1.1.0"},
+  "artifacts":{
+    "registry":"ghcr.io",
+    "repository":"azure-samples/explore-iot-operations/dataflow-patterns",
+    "names":["module-dataflow-patterns","graph-align-by-time","graph-correlate-by-id","graph-versioned-predictor"],
+    "tag":"1.0.0",
+    "componentExports":["wasm-graph:processor/map@1.1.0","wasm-graph:processor/filter@1.1.0"],
+    "qualification":"Module compiled and validated locally; publication and real AIO registry resolution/deployment must be verified separately."
+  },
+  "commands":{
+    "tests":"cargo test --locked",
+    "format":"cargo fmt --check",
+    "lint":"cargo clippy --locked --all-targets -- -D warnings",
+    "build":"cargo build --lib --locked --release --target wasm32-wasip2",
+    "validate":"wasm-tools validate target/wasm32-wasip2/release/module_dataflow_patterns.wasm",
+    "replay":"cargo run --locked --example replay -- fixtures/align-by-time.json"
+  },
+  "configuration":{
+    "property":"settings",
+    "format":"A complete JSON object; graph defaults supply role and the predictor demo bootstrap. Overrides replace the entire object.",
+    "roles":["align-by-time","correlate-by-id","versioned-predictor"],
+    "defaults":{"maxAssets":128,"maxPendingPerAsset":256,"maxHistoryPerAsset":256,"maxCompletedPerAsset":512,"maxUpdatesPerAsset":512,"pendingTtlMs":60000,"completedTtlMs":60000,"allowedLatenessMs":2000,"maxContextAgeMs":5000,"maxFutureSkewMs":30000,"initialModels":[]},
+    "limits":"Counts must be positive: maxAssets <=1024, other counts <=4096. Non-lateness durations in 1..86400000 ms; allowedLatenessMs in 0..60000 and less than pendingTtlMs. Counts bound records, not a fixed memory budget; size limits and payload size must be chosen for runtime memory.",
+    "validation":"Unknown configuration fields, duplicate bootstrap assets, non-finite coefficients and version 0 bootstrap are rejected. Identifiers are 1..128 bytes without control characters; input JSON objects are at most 65536 bytes. Configurations are immutable for one operator initialization."
+  },
+  "alignment":{
+    "inputs":{"temperature":{"required":["kind=temperature","assetId","sampledAt","temperature:number"]},"speed":{"required":["kind=speed","assetId","sampledAt","speed:number"],"optional":["pieceId","runId"]},"tick":{"required":["kind=tick","assetId","sampledAt"]}},
+    "timestamp":"RFC3339 with timezone, Unix epoch or later, precision milliseconds or coarser. Future event timestamps more than maxFutureSkewMs ahead of the processing clock are errors. Historical replay is allowed.",
+    "selection":"For each asset choose newest temperature at or before the speed timestamp, with age <=maxContextAgeMs. Never use future context. Temperatures at or behind an already established watermark are tooLate; speeds strictly behind it are tooLate.",
+    "readiness":"Per-asset watermark = maximum accepted event/tick sampledAt minus allowedLatenessMs. A speed finalizes when watermark >= its sampledAt OR processing elapsed since buffering >=allowedLatenessMs, evaluated only on input arrivals. A tick sampledAt >=speed sampledAt+allowedLatenessMs flushes an event-time tail immediately; alternatively send a tick after the processing-time wait. No background timer exists.",
+    "idleTail":"Publish a trusted periodic tick for each active asset on a subscribed speed topic. Quiescent graphs cannot emit, expire, or count diagnostics until another input arrives. For recorded fixtures publish the final tick, not just the three original docs messages.",
+    "output":"One original speed record with kind removed plus temperature and temperatureSampledAt. No eligible context produces a noContext diagnostic, not a value. Several finalized records are delivered as {kind:batch,records:[...]}. Consumers must handle this envelope.",
+    "duplicates":"Speed key is sampledAt + optional pieceId + optional runId within asset. Temperature key is sampledAt within asset. Identical retained payloads diagnose duplicate; differing payloads diagnose conflict and never replace the first. Same event instant with a differently formatted timestamp is a conflicting payload.",
+    "bounds":"History is pruned below min(watermark,oldest pending timestamp)-maxContextAgeMs. History at capacity rejects new context, not evicts usable context; send advancing ticks. Completed-reading dedup capacity blocks finalization until capacity expires; a reading still blocked at pendingTtlMs emits expired. Assets with no pending/completed entries expire after pendingTtlMs of inactivity."
+  },
+  "correlation":{
+    "predictionRequired":["kind=prediction","assetId","pieceId","modelVersion:positive unsigned integer","predictedWeight:finite number"],
+    "measurementRequired":["kind=measurement","assetId","pieceId","measuredWeight:finite number","targetWeight:finite number"],
+    "key":["assetId","pieceId","optional runId"],
+    "preservation":"Original feature, coefficient, model and predictedAt/sampledAt fields from the prediction and all measured fields are retained. Optional sampledAt/predictedAt/measuredAt fields must be valid RFC3339 timestamps with at most millisecond precision. Shared non-key fields must be equal or the match fails explicitly; use predictedAt and measuredAt for different instants.",
+    "output":"kind=correlated plus merged fields, residual=measuredWeight-predictedWeight, targetError=measuredWeight-targetWeight. Both arrival orders work.",
+    "retention":"Pending TTL is processing-time age from first side, not refreshed by retries. Completed dedup TTL starts at completion. Identical duplicates are no-ops with diagnostics; conflicts never replace state. After completedTtlMs, replay can match again. Capacity rejects instead of evicting protected records. Any valid input or {kind:tick,assetId:...} cleans all assets and logs expiration diagnostics."
+  },
+  "predictor":{
+    "readingRequired":["kind=reading","assetId","pieceId","speed:finite number","temperature:finite number"],
+    "modelRequired":["kind=model","assetId","updateId","expectedModelVersion:unsigned integer","modelVersion:unsigned integer","speedCoefficient:finite number","temperatureCoefficient:finite number","intercept:finite number"],
+    "bootstrap":"Graph default seeds line-1 v7 with speedCoefficient=2, temperatureCoefficient=0.5, intercept=175. No implicit model exists in the core: other assets get noActiveModel. Empty initialModels allows first update only with expectedModelVersion=0 and modelVersion=1.",
+    "activation":"Model updates must come from an externally approved/authenticated source. Activate only expectedModelVersion == active version AND modelVersion == active version+1. An update is never an observation. Identical updateId payload diagnoses duplicateUpdate; differing reuse diagnoses conflictingUpdate. Old versions diagnose staleUpdate; gaps diagnose versionConflict. No state is changed on rejection.",
+    "output":"Reading fields plus kind=prediction, active modelVersion, all three coefficients and predictedWeight=speed*speedCoefficient+temperature*temperatureCoefficient+intercept. Optional reading timestamps are preserved, never replaced by measurement-time values. Model fields supplied on readings must exactly agree with active model and calculated prediction.",
+    "bounds":"Assets and accepted update payloads are bounded, never evicted. After maxUpdatesPerAsset, new updates reject with capacity until a coordinated bootstrap/restart. This avoids silently forgetting an updateId."
+  },
+  "diagnostics":{
+    "channel":"Core/CLI returns kind=diagnostic records. SDK wrapper counts/logs them and replaces diagnostic-only results with pending. In mixed batches it removes diagnostics after logging, so operational records never become training samples.",
+    "graphFilter":"The same sample component exports a fixed SDK filter: true passes data and alignment batches; false drops pending, modelApplied and diagnostic records. Non-Message inputs, malformed JSON, non-object payloads and non-string kind fields are SDK errors. No filter rules or external MCR module are required.",
+    "counters":["requests","configurationErrors","errors","batches","diagnostics","pending","modelApplied","recordsEmitted","duplicate","conflict","tooLate","noContext","capacity","expired","noActiveModel","duplicateUpdate","conflictingUpdate","staleUpdate","versionConflict"],
+    "metrics":"Counters are incremented through the public SDK metrics API. Metric-export failures are not fatal to data processing. Diagnostic warning logs contain event identity and reason; schema errors produce error logs and SDK errors. Avoid sensitive IDs/payloads on sample topics."
+  },
+  "restartAndScale":{
+    "durability":"All buffers, completed dedup, active models and update IDs are VOLATILE. SDK 1.1.3 exposes state-store get/set, but this example does not persist or atomically checkpoint state. No exactly-once or restart dedup guarantee.",
+    "recovery":"Before allowing readings after every restart, an external durable supervisor must provide the latest approved initialModels configuration (not stale demo v7), or gate readings while replaying an approved sequential model log from a known bootstrap. Replay active versions only in order. Persist model approval and update IDs outside WASM; MQTT delivery alone is not a durable activation transaction.",
+    "correlatorRecovery":"Pending and completed keys are lost on restart. If rebuilding from durable prediction/measurement logs, deduplicate downstream in an external durable sink using assetId+pieceId+runId; do not claim once-only output.",
+    "scale":"One runtime instance only; do not load-balance an asset across instances. This sample does not implement partition ownership, cross-instance locking, fitting, approval, or actuation.",
+    "metadata":"SDK Message transport metadata comes from the triggering arrival; input schema is cleared and content type is application/json. Buffered origin timestamps/IDs must live in JSON. A tick-triggered batch must not be interpreted as retaining each original input's MQTT metadata."
+  },
+  "handoff":{
+    "graphSchemaCaveat":"The public 1.1.0 graph schema permits filter operations without a moduleConfigurations entry. It checks structure, not component exports, host registry-prefix resolution or successful AIO installation; those require separate qualification.",
+    "documentationChanges":["Link the supplied sample instead of asking customers to invent custom artifacts.","Use full GHCR repository paths relative to the GHCR registry endpoint.","Add a tick to the aligner publish sequence and document batch envelopes.","Describe predictor persistence as external supervisor work, not volatile WASM durability.","Original prediction and measurement sampledAt values can conflict; use predictedAt/measuredAt or other disjoint fields."],
+    "publishingChanges":"Release stamping must update both map and filter references to the same sample module. All operation module IDs are repository paths relative to the configured GHCR endpoint; the host prefixes every ID with that endpoint. Packaging scripts that expect an unchanged MCR filter must be updated by main. Main owns publishing/version qualification and real-cluster verification; no deployment is claimed by this implementation."
+  }
+}

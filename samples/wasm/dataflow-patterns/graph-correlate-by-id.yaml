@@ -1,0 +1,36 @@
+metadata:
+  name: Correlate predictions with measurements
+  description: Match assetId, pieceId and optional runId; bounded volatile retention.
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: Azure Samples
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+moduleConfigurations:
+  - name: patterns
+    parameters:
+      settings:
+        name: settings
+        description: Complete JSON settings; role must remain correlate-by-id.
+        default: '{"role":"correlate-by-id"}'
+operations:
+  - operationType: source
+    name: input
+    arity: 1
+  - operationType: map
+    name: patterns
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+  - operationType: filter
+    name: suppress-internal
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+  - operationType: sink
+    name: output
+    arity: 1
+connections:
+  - from: { name: input }
+    to: { name: patterns }
+  - from: { name: patterns }
+    to: { name: suppress-internal }
+  - from: { name: suppress-internal }
+    to: { name: output }
