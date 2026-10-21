@@ -154,6 +154,27 @@ Each installation gets a separate topic prefix. Don't install competing
 instances on the same asset/topic set. The graph artifact and module versions
 must match the chart's `artifactVersion`.
 
+### Use complete standalone manifests
+
+For an existing `default` profile and `factory-mqtt` endpoint in
+`azure-iot-operations`, the sample includes separate, complete manifests:
+
+- [`align-by-time.yaml`](dataflow-patterns/manifests/align-by-time.yaml)
+- [`correlate-predictions.yaml`](dataflow-patterns/manifests/correlate-predictions.yaml)
+
+From the repository root, apply the registry endpoint and the example you need:
+
+```bash
+kubectl apply -f samples/wasm/dataflow-patterns/manifests/registry.yaml
+kubectl apply -f samples/wasm/dataflow-patterns/manifests/correlate-predictions.yaml
+```
+
+For timestamp alignment, apply `align-by-time.yaml` instead. The
+[`fixtures`](dataflow-patterns/fixtures/) and
+[`contracts.json`](dataflow-patterns/contracts.json) describe the input messages.
+Use either these standalone manifests or the Helm installation for a given
+topic set, so multiple graphs don't process the same messages.
+
 ### Verify the installed release
 
 Use a fresh release and topic prefix: these tests intentionally update model

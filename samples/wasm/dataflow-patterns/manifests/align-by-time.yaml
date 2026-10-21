@@ -1,0 +1,29 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: align-by-time
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/speed, factory/temperature]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-align-by-time:1.0.0-rc.2
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/aligned
+  nodeConnections:
+    - from: { name: source }
+      to: { name: processor }
+    - from: { name: processor }
+      to: { name: destination }
