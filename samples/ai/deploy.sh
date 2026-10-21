@@ -28,6 +28,7 @@ Authentication:
   --entra-app-id <client-id>         Use a manually configured existing Entra app; no Graph calls.
   --entra-tenant-id <tenant-id>      Required with --entra-app-id. Both must be GUIDs.
                                       Cannot combine with --entra-app-name or --entra-azure-config-dir.
+  --entra-app-scope <scope-name>     Delegated scope to create or advertise. Default: user_impersonation.
   --entra-azure-config-dir <dir>     Optional isolated Azure CLI profile for app registration.
                                       Default: current Azure CLI profile. Tenant policies still apply.
 
@@ -51,7 +52,7 @@ Optional:
   --helm-release-name <name>         Default: aio-ai-relay; suffixed per protocol for both.
   -h, --help                        Show this help.
 
-By default the script creates an Entra app with a user_impersonation scope and
+By default the script creates an Entra app with the selected delegated scope and
 AIOMcpAdmin app role. With --entra-app-id, configure these manually, set the
 identifier URI to api://<client-id>, and require Enterprise app role assignment.
 An administrator must assign callers to that role before API use.
@@ -76,6 +77,7 @@ ENTRA_SP_ID=""
 ROLE_ID=""
 ENTRA_AZURE_CONFIG_DIR=""
 ENTRA_APP_ROLE="AIOMcpAdmin"
+ENTRA_APP_SCOPE="user_impersonation"
 ENDPOINT_PROTOCOL="mcp"
 ENDPOINT_URL=""
 MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
@@ -94,7 +96,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help) usage; exit 0 ;;
         --resource-group|--relay-namespace-name|--apim-name|--apim-publisher-email|--apim-publisher-name|\
         --chart-version|--chart-reference|--auth-mode|--cluster-name|--aio-extension-name|\
-        --entra-app-name|--entra-app-id|--entra-tenant-id|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
+        --entra-app-name|--entra-app-id|--entra-tenant-id|--entra-app-scope|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
         --mcp-frontend-service-name|--mcp-frontend-audience|--mcp-role|--image-tag|--values|\
         --hybrid-connection-name|--apim-sku|--apim-capacity|--k8s-namespace|--helm-release-name)
             if [[ $# -lt 2 || ! "${2:-}" =~ [^[:space:]] || "${2:-}" == --* ]]; then
@@ -117,6 +119,7 @@ while [[ $# -gt 0 ]]; do
         --entra-app-name) ENTRA_APP_NAME="$2" ;;
         --entra-app-id) ENTRA_APP_ID="$2" ;;
         --entra-tenant-id) ENTRA_TENANT_ID="$2" ;;
+        --entra-app-scope) ENTRA_APP_SCOPE="$2" ;;
         --entra-azure-config-dir) ENTRA_AZURE_CONFIG_DIR="$2" ;;
         --endpoint-protocol) ENDPOINT_PROTOCOL="$2" ;;
         --endpoint-url) ENDPOINT_URL="$2" ;;
@@ -149,6 +152,10 @@ if [[ -n "$ENTRA_APP_ID" || -n "$ENTRA_TENANT_ID" ]]; then
         echo "Error: existing-app IDs cannot be combined with --entra-app-name or --entra-azure-config-dir." >&2
         exit 1
     fi
+fi
+if [[ "$ENTRA_APP_SCOPE" =~ [[:space:]] || "$ENTRA_APP_SCOPE" == *://* ]]; then
+    echo "Error: --entra-app-scope must be one scope name, not a URI or space-separated list." >&2
+    exit 1
 fi
 case "$AUTH_MODE" in
     sami) BICEP_AUTH_MODE="SystemAssignedManagedIdentity"; CHART_AUTH_METHOD="system-assigned-managed-identity" ;;
@@ -248,11 +255,11 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
     ENTRA_SP_ID="$(jq -er '.id | select(type == "string" and length > 0)' <<< "$ENTRA_SP_JSON")"
     az_entra ad app update --id "$ENTRA_APP_ID" --identifier-uris "api://$ENTRA_APP_ID" --output none
     SCOPE_ID="$(uuidgen)"
-    SCOPES="$(jq -cn --arg id "$SCOPE_ID" '[{
+    SCOPES="$(jq -cn --arg id "$SCOPE_ID" --arg scope "$ENTRA_APP_SCOPE" '[{
     id:$id, adminConsentDescription:"Access the AI relay",
     adminConsentDisplayName:"Access AI relay", isEnabled:true, type:"User",
     userConsentDescription:"Access the AI relay", userConsentDisplayName:"Access AI relay",
-    value:"user_impersonation"
+    value:$scope
 }]')"
     az_entra ad app update --id "$ENTRA_APP_ID" --set "api={\"oauth2PermissionScopes\":$SCOPES}" --output none
     ROLE_ID="$(uuidgen)"
@@ -264,7 +271,7 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
     az_entra ad sp update --id "$ENTRA_APP_ID" --set appRoleAssignmentRequired=true --output none
 else
     echo "==> Using existing Entra app '$ENTRA_APP_ID' in tenant '$ENTRA_TENANT_ID'; skipping Graph registration."
-    echo "    App configuration is not verified. Require role assignment and configure user_impersonation and AIOMcpAdmin manually."
+    echo "    App configuration is not verified. Require role assignment and configure '$ENTRA_APP_SCOPE' and '$ENTRA_APP_ROLE' manually."
 fi
 
 DEPLOYMENT_NAME="ai-relay-$(date +%s)"
@@ -280,6 +287,7 @@ BICEP_PARAMS=(
     "endpointMode=$ENDPOINT_PROTOCOL"
     "entraAppId=$ENTRA_APP_ID"
     "entraTenantId=$ENTRA_TENANT_ID"
+    "entraAppScope=$ENTRA_APP_SCOPE"
     "entraAppRole=$ENTRA_APP_ROLE"
 )
 if [[ "$AUTH_MODE" == sami ]]; then
@@ -287,8 +295,10 @@ if [[ "$AUTH_MODE" == sami ]]; then
 fi
 az deployment group create --name "$DEPLOYMENT_NAME" --resource-group "$RESOURCE_GROUP" \
     --template-file "$SCRIPT_DIR/bicep/ai-relay.bicep" --parameters "${BICEP_PARAMS[@]}" --output none
-ENDPOINTS_JSON="$(az deployment group show --resource-group "$RESOURCE_GROUP" --name "$DEPLOYMENT_NAME" \
-    --query properties.outputs.endpoints.value -o json)"
+OUTPUTS_JSON="$(az deployment group show --resource-group "$RESOURCE_GROUP" --name "$DEPLOYMENT_NAME" \
+    --query properties.outputs -o json)"
+ENDPOINTS_JSON="$(jq -ce '.endpoints.value | select(type == "array")' <<< "$OUTPUTS_JSON")"
+MCP_METADATA_URL="$(jq -er '.mcpOAuthProtectedResourceMetadataUrl.value | select(type == "string")' <<< "$OUTPUTS_JSON")"
 
 install_relay_release() {
     local protocol="$1" release_name="$2" sas_secret_name="$3"
@@ -344,6 +354,9 @@ if [[ "$ENDPOINT_PROTOCOL" == both ]]; then
     install_relay_release a2a "${HELM_RELEASE_NAME}-a2a" "aio-ai-relay-hc-a2a"
 else
     install_relay_release "$ENDPOINT_PROTOCOL" "$HELM_RELEASE_NAME" "aio-ai-relay-hc"
+fi
+if [[ -n "$MCP_METADATA_URL" ]]; then
+    echo "==> [mcp] OAuth protected-resource metadata: $MCP_METADATA_URL"
 fi
 echo "==> Assign approved callers to '$ENTRA_APP_ROLE' before using the API."
 echo "    Tenant: $ENTRA_TENANT_ID; app: $ENTRA_APP_ID"

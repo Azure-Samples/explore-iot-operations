@@ -11,6 +11,12 @@ Client with Entra token -> APIM -> Azure Relay Hybrid Connection -> relay pod ->
 the published `aio-ai-relay` Helm chart. It works from any directory and does
 not require the Azure-NBC source tree or a local Helm chart.
 
+MCP endpoints are registered as native APIM MCP servers (`type: mcp`), with an
+APIM backend pointing to the Relay namespace and an MCP endpoint path pointing
+to the Hybrid Connection. A2A endpoints remain ordinary HTTP passthrough APIs.
+The display name `aio-ai-relay MCP passthrough` describes forwarding an existing
+MCP server; it does not mean that the API is registered as an ordinary REST API.
+
 ## Prerequisites
 
 - Bash on Linux, macOS, or WSL; Azure CLI with Bicep support; Helm 3.18 or later;
@@ -97,7 +103,7 @@ profile before running the script:
 AZURE_CONFIG_DIR="$HOME/.azure-ai-relay-entra" az login --allow-no-subscriptions
 ```
 
-Each run creates a new app and rejects an existing display name rather than
+By default, each run creates a new app and rejects an existing display name rather than
 modifying an app it does not own. It exposes `user_impersonation`, creates the
 `AIOMcpAdmin` role for users/applications, and enables required app-role assignment.
 APIM validates the caller's Entra token audience, issuer, and `AIOMcpAdmin` claim.
@@ -107,6 +113,41 @@ assignments. No caller is assigned automatically.
 
 The Entra `AIOMcpAdmin` role, the MCP Frontend `Reader` role, and Azure's Relay
 Listener/Sender roles are different permissions.
+
+### Use a manually configured app
+
+If an administrator has already configured the API application, replace
+`--entra-app-name` in the deployment command with:
+
+```bash
+--entra-app-id '<application-client-id>' \
+--entra-tenant-id '<directory-tenant-id>'
+```
+
+Both values must be GUIDs, not an `api://` URI or display name. This mode makes
+no Microsoft Graph calls and does not validate, modify, or delete the app.
+It cannot be combined with `--entra-app-name` or `--entra-azure-config-dir`.
+Configure the identifier URI `api://<application-client-id>`, the delegated
+scope, the `AIOMcpAdmin` role for users/applications, the
+corresponding service principal, required role assignment, and approved caller
+assignments before testing authenticated access. Tenant policies still apply.
+
+The default scope is `user_impersonation`. If the manually configured app uses
+a different scope, pass its name with `--entra-app-scope`, for example
+`--entra-app-scope mcp.access`. Use the scope name, not the full `api://...` URI.
+In registration mode this option sets the scope created on the new app; in
+existing-app mode it only sets the scope advertised by discovery.
+
+### MCP OAuth discovery
+
+For MCP, the script prints the public MCP URL and an OAuth protected-resource
+metadata URL at `/.well-known/oauth-protected-resource/<mcp-api-path>`.
+The metadata advertises the MCP resource URL, the application's tenant
+authorization server, and `api://<application-client-id>/<scope-name>`.
+It is public discovery information, not anonymous access to MCP tools.
+It does not assign app roles, grant client consent, or acquire a caller token.
+Use an organization-approved authentication method; interactive login is not
+required if an approved workload identity is assigned the application role.
 
 ## A2A and dual-protocol deployment
 
@@ -149,7 +190,8 @@ The relay API policies inherit parent policies in all four sections, including
 the global backend forwarding policy. Keep `forward-request` in the effective
 backend policy; APIM provides it globally by default. After deployment, use
 **Calculate effective policy** in the APIM policy editor to confirm that forwarding
-and the relay's Entra token validation apply to both GET and POST operations.
+and the relay's Entra token validation apply to the native MCP endpoint and
+the A2A GET/POST operations, when deployed.
 
 The AIO extension identity receives the scoped **Azure Relay Listener** role.
 APIM's system-assigned identity receives the scoped **Azure Relay Sender** role.
@@ -160,7 +202,9 @@ managed identity is the default.
 The script waits up to 180 seconds for each relay Deployment after Helm
 installation. It does not roll back Azure resources or Entra objects on failure.
 Record the printed application ID and the ARM deployment outputs for cleanup.
-Rerunning requires a new app name or deliberate cleanup of the previous app.
+In registration mode, rerunning requires a new app name or deliberate cleanup
+of the previous app. Existing-app mode can reuse the manually configured app;
+do not delete that app when cleaning up the sample deployment.
 Never delete a shared resource group as a cleanup shortcut.
 
 To remove the sample, uninstall only its Helm release(s), delete its SAS

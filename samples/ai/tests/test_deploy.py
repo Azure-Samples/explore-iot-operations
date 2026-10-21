@@ -48,13 +48,32 @@ if name == "az":
     elif args[:3] == ["deployment", "group", "create"]:
         if os.environ.get("FAIL_DEPLOY"):
             sys.exit("Simulated deployment error")
+        parameters = dict(arg.split("=", 1) for arg in args if "=" in arg)
+        Path(os.environ["PARAMETERS"]).write_text(json.dumps(parameters))
     elif args[:3] == ["deployment", "group", "show"]:
-        print(json.dumps([{
-            "protocol": "mcp",
-            "relayUrl": "https://test.servicebus.windows.net/hybridconnection",
-            "hybridConnectionName": "hybridconnection",
-            "apimGatewayUrl": "https://test.azure-api.net/mcp/hybridconnection"
-        }]))
+        parameters = json.loads(Path(os.environ["PARAMETERS"]).read_text())
+        mode = parameters["endpointMode"]
+        protocols = ["mcp", "a2a"] if mode == "both" else [mode]
+        endpoints = []
+        for protocol in protocols:
+            name = parameters["hybridConnectionName"]
+            if mode == "both":
+                name += "-" + protocol
+            endpoints.append({
+                "protocol": protocol,
+                "relayUrl": f"https://test.servicebus.windows.net/{name}",
+                "hybridConnectionName": name,
+                "apimGatewayUrl": f"https://test.azure-api.net/{protocol}/{name}",
+            })
+        mcp = next((endpoint for endpoint in endpoints if endpoint["protocol"] == "mcp"), None)
+        metadata = (
+            f'https://test.azure-api.net/.well-known/oauth-protected-resource/mcp/{mcp["hybridConnectionName"]}'
+            if mcp else ""
+        )
+        print(json.dumps({
+            "endpoints": {"value": endpoints},
+            "mcpOAuthProtectedResourceMetadataUrl": {"value": metadata},
+        }))
     else:
         sys.exit("Unexpected Azure operation")
 elif name == "helm":
@@ -79,7 +98,7 @@ else:
 
 
 class DeployTests(unittest.TestCase):
-    def run_script(self, args=(), **variables):
+    def run_script(self, args=(), base_args=BASE_ARGS, **variables):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for tool in ("az", "helm", "kubectl"):
@@ -91,11 +110,12 @@ class DeployTests(unittest.TestCase):
             env.update(
                 PATH=f"{root}{os.pathsep}{os.environ['PATH']}",
                 CALLS=str(log),
+                PARAMETERS=str(root / "parameters.json"),
                 TEST_APP_ID=APP_ID,
                 TEST_TENANT_ID=TENANT_ID,
             )
             result = subprocess.run(
-                ["bash", str(SCRIPT), *BASE_ARGS, *args],
+                ["bash", str(SCRIPT), *base_args, *args],
                 env=env, capture_output=True, text=True, timeout=30,
             )
             calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
@@ -109,6 +129,7 @@ class DeployTests(unittest.TestCase):
         for parameter in (
             f"entraAppId={APP_ID}", f"entraTenantId={TENANT_ID}",
             "entraAppRole=AIOMcpAdmin", "authMode=SystemAssignedManagedIdentity",
+            "entraAppScope=user_impersonation",
         ):
             self.assertIn(parameter, deployment)
         helm = next(call for call in calls if call[:3] == ["helm", "upgrade", "--install"])
@@ -117,12 +138,55 @@ class DeployTests(unittest.TestCase):
         self.assertIn('serviceAccount.annotations={"aio-mcp-auth/roles":"[\\"Reader\\"]"}', helm)
         self.assertIn("[mcp] Public endpoint:", result.stdout)
 
+    def test_protocol_modes_publish_only_matching_metadata_and_releases(self):
+        for mode, releases, path in (
+            ("mcp", ["aio-ai-relay"], "mcp/hybridconnection"),
+            ("a2a", ["aio-ai-relay"], None),
+            ("both", ["aio-ai-relay-mcp", "aio-ai-relay-a2a"], "mcp/hybridconnection-mcp"),
+        ):
+            with self.subTest(mode=mode):
+                result, calls = self.run_script(
+                    [*EXISTING_ARGS, "--endpoint-protocol", mode,
+                     "--endpoint-url", "https://agent.example/a2a"],
+                    base_args=BASE_ARGS[:-2] if mode == "a2a" else BASE_ARGS,
+                    EXISTING="1",
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                installs = [call for call in calls if call[:3] == ["helm", "upgrade", "--install"]]
+                self.assertEqual([call[3] for call in installs], releases)
+                if path:
+                    self.assertIn(f"OAuth protected-resource metadata: https://test.azure-api.net/.well-known/oauth-protected-resource/{path}", result.stdout)
+                else:
+                    self.assertNotIn("OAuth protected-resource metadata:", result.stdout)
+                for call in installs:
+                    if "endpoint.protocol=a2a" in call:
+                        self.assertIn("endpoint.url=https://agent.example/a2a", call)
+                        self.assertFalse(any(arg.startswith("serviceAccount.annotations=") for arg in call))
+
     def test_default_still_creates_and_configures_app(self):
         result, calls = self.run_script()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(["az", "ad", "app", "create", "--display-name", "aio-ai-relay", "-o", "json"], calls)
         self.assertIn(["az", "ad", "sp", "update", "--id", APP_ID, "--set", "appRoleAssignmentRequired=true", "--output", "none"], calls)
         self.assertTrue(any(call[:4] == ["az", "deployment", "group", "create"] for call in calls))
+
+    def test_custom_scope_matches_registration_and_discovery(self):
+        for existing in (False, True):
+            with self.subTest(existing=existing):
+                args = [*EXISTING_ARGS] if existing else []
+                variables = {"EXISTING": "1"} if existing else {}
+                result, calls = self.run_script(
+                    [*args, "--entra-app-scope", "mcp.access"], **variables,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                deployment = next(call for call in calls if call[:4] == ["az", "deployment", "group", "create"])
+                self.assertIn("entraAppScope=mcp.access", deployment)
+                if not existing:
+                    api_update = next(
+                        arg for call in calls if call[:4] == ["az", "ad", "app", "update"]
+                        for arg in call if arg.startswith("api=")
+                    )
+                    self.assertEqual(json.loads(api_update[4:])["oauth2PermissionScopes"][0]["value"], "mcp.access")
 
     def test_conflicting_or_incomplete_ids_fail_before_side_effects(self):
         for args in (
@@ -132,6 +196,8 @@ class DeployTests(unittest.TestCase):
             ["--entra-app-id", APP_ID, "--entra-tenant-id", "invalid"],
             [*EXISTING_ARGS, "--entra-app-name", "new-app"],
             [*EXISTING_ARGS, "--entra-azure-config-dir", "/unused"],
+            [*EXISTING_ARGS, "--entra-app-scope", f"api://{APP_ID}/mcp.access"],
+            [*EXISTING_ARGS, "--entra-app-scope", "mcp.access other"],
         ):
             with self.subTest(args=args):
                 result, calls = self.run_script(args)

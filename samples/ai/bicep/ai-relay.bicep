@@ -45,11 +45,16 @@ param entraAppId string
 @description('Tenant that owns the app and issues the caller tokens.')
 param entraTenantId string
 
+@description('Delegated scope advertised by the MCP protected-resource metadata endpoint.')
+param entraAppScope string = 'user_impersonation'
+
 @description('App role required in the caller token. Separate from MCP Frontend roles.')
 param entraAppRole string = 'AIOMcpAdmin'
 
 var usesSas = authMode == 'SharedAccessSignature'
 var usesManagedIdentity = authMode == 'SystemAssignedManagedIdentity'
+var hasMcp = endpointMode != 'a2a'
+var mcpApiPath = 'mcp/${hybridConnectionName}${endpointMode == 'both' ? '-mcp' : ''}'
 var supportsCustomCiphers = contains([
   'Developer'
   'Basic'
@@ -120,7 +125,7 @@ resource listeners 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (
   }
 }]
 
-resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
+resource apim 'Microsoft.ApiManagement/service@2025-09-01-preview' = {
   name: apimName
   location: location
   sku: {
@@ -153,6 +158,16 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
   }
 }
 
+// Native MCP combines this namespace URL with the Hybrid Connection endpoint path.
+resource backends 'Microsoft.ApiManagement/service/backends@2025-09-01-preview' = [for endpoint in endpointDefs: {
+  parent: apim
+  name: 'aio-ai-relay-${endpoint.protocol}-backend'
+  properties: {
+    url: 'https://${relay.name}.servicebus.windows.net'
+    protocol: 'http'
+  }
+}]
+
 resource senders 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (endpoint, i) in endpointDefs: {
   name: guid(connections[i].id, apim.id, senderRole)
   scope: connections[i]
@@ -163,17 +178,27 @@ resource senders 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (en
   }
 }]
 
-resource apis 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = [for endpoint in endpointDefs: {
+resource apis 'Microsoft.ApiManagement/service/apis@2025-09-01-preview' = [for (endpoint, i) in endpointDefs: {
   parent: apim
   name: 'aio-ai-relay-${endpoint.protocol}'
-  properties: {
+  properties: union({
     displayName: 'aio-ai-relay ${toUpper(endpoint.protocol)} passthrough'
-    path: '${endpoint.protocol}/${endpoint.name}'
+    path: endpoint.protocol == 'mcp' ? 'mcp' : '${endpoint.protocol}/${endpoint.name}'
     protocols: [
       'https'
     ]
     subscriptionRequired: false
-  }
+  }, endpoint.protocol == 'mcp' ? {
+    type: 'mcp'
+    backendId: backends[i].name
+    mcpProperties: {
+      endpoints: {
+        mcp: {
+          uriTemplate: '/${endpoint.name}'
+        }
+      }
+    }
+  } : {})
 }]
 
 var policyTemplate = '''
@@ -194,7 +219,7 @@ var policyTemplate = '''
     <set-header name="ServiceBusAuthorization" exists-action="override">
       <value>@("Bearer " + (string)context.Variables["relay-access-token"])</value>
     </set-header>
-    <set-backend-service base-url="{3}" />
+    {3}
   </inbound>
   <backend><base /></backend>
   <outbound><base /></outbound>
@@ -210,7 +235,7 @@ var a2aRewrite = '''
     </choose>
 '''
 
-resource policies 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = [for (endpoint, i) in endpointDefs: {
+resource policies 'Microsoft.ApiManagement/service/apis/policies@2025-09-01-preview' = [for (endpoint, i) in endpointDefs: {
   parent: apis[i]
   name: 'policy'
   properties: {
@@ -220,16 +245,17 @@ resource policies 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-prev
       endpoint.protocol == 'a2a' ? a2aRewrite : '',
       entraTenantId,
       entraAppId,
-      'https://${relay.name}.servicebus.windows.net/${endpoint.name}',
+      endpoint.protocol == 'mcp' ? '' : '<set-backend-service base-url="https://${relay.name}.servicebus.windows.net/${endpoint.name}" />',
       entraAppRole
     )
   }
   dependsOn: [
+    backends[i]
     postOperations[i]
   ]
 }]
 
-resource getOperations 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = [for (endpoint, i) in endpointDefs: {
+resource getOperations 'Microsoft.ApiManagement/service/apis/operations@2025-09-01-preview' = [for (endpoint, i) in endpointDefs: if (endpoint.protocol != 'mcp') {
   parent: apis[i]
   name: 'get-passthrough'
   properties: {
@@ -239,7 +265,7 @@ resource getOperations 'Microsoft.ApiManagement/service/apis/operations@2023-05-
   }
 }]
 
-resource postOperations 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = [for (endpoint, i) in endpointDefs: {
+resource postOperations 'Microsoft.ApiManagement/service/apis/operations@2025-09-01-preview' = [for (endpoint, i) in endpointDefs: if (endpoint.protocol != 'mcp') {
   parent: apis[i]
   name: 'post-passthrough'
   properties: {
@@ -252,6 +278,74 @@ resource postOperations 'Microsoft.ApiManagement/service/apis/operations@2023-05
   ]
 }]
 
+resource oauthMetadataApi 'Microsoft.ApiManagement/service/apis@2025-09-01-preview' = if (hasMcp) {
+  parent: apim
+  name: 'oauth'
+  properties: {
+    displayName: 'oauth'
+    description: 'OAuth protected-resource metadata for aio-ai-relay MCP'
+    path: ''
+    protocols: [
+      'https'
+    ]
+    subscriptionRequired: false
+  }
+}
+
+resource oauthMetadataOperation 'Microsoft.ApiManagement/service/apis/operations@2025-09-01-preview' = if (hasMcp) {
+  parent: oauthMetadataApi
+  name: 'get'
+  properties: {
+    displayName: 'Get MCP OAuth protected resource metadata'
+    method: 'GET'
+    urlTemplate: '/.well-known/oauth-protected-resource/${mcpApiPath}'
+    responses: []
+  }
+}
+
+var oauthMetadataBody = string({
+  resource: '${apim.properties.gatewayUrl}/${mcpApiPath}'
+  authorization_servers: [
+    '${environment().authentication.loginEndpoint}${entraTenantId}/v2.0'
+  ]
+  scopes_supported: [
+    'api://${entraAppId}/${entraAppScope}'
+  ]
+  bearer_methods_supported: [
+    'header'
+  ]
+})
+
+var oauthMetadataPolicyTemplate = '''
+<policies>
+  <inbound>
+    <base />
+    <return-response>
+      <set-status code="200" reason="OK" />
+      <set-header name="Content-Type" exists-action="override">
+        <value>application/json</value>
+      </set-header>
+      <set-body>{0}</set-body>
+    </return-response>
+  </inbound>
+  <backend><base /></backend>
+  <outbound><base /></outbound>
+  <on-error><base /></on-error>
+</policies>
+'''
+
+resource oauthMetadataPolicy 'Microsoft.ApiManagement/service/apis/policies@2025-09-01-preview' = if (hasMcp) {
+  parent: oauthMetadataApi
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: format(oauthMetadataPolicyTemplate, replace(replace(replace(oauthMetadataBody, '&', '&amp;'), '<', '&lt;'), '>', '&gt;'))
+  }
+  dependsOn: [
+    oauthMetadataOperation
+  ]
+}
+
 output endpoints array = [for (endpoint, i) in endpointDefs: {
   protocol: endpoint.protocol
   hybridConnectionName: endpoint.name
@@ -262,4 +356,5 @@ output endpoints array = [for (endpoint, i) in endpointDefs: {
 }]
 
 output authMode string = authMode
+output mcpOAuthProtectedResourceMetadataUrl string = hasMcp ? '${apim.properties.gatewayUrl}/.well-known/oauth-protected-resource/${mcpApiPath}' : ''
 output managedIdentityPrincipalId string = usesManagedIdentity ? extension!.identity.principalId : ''
