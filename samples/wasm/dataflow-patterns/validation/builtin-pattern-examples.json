@@ -1,8 +1,6 @@
 {
   "validatedAt": "2026-10-20T20:55:30.243587+00:00",
   "runtime": "Public Microsoft MCR Azure IoT Operations 1.6.0",
-  "documentationPullRequest": "https://github.com/MicrosoftDocs/azure-docs-pr/pull/321561",
-  "finalDocumentationRevision": "c7a3457904a0",
   "passed": 8,
   "failed": 0,
   "blocked": 0,

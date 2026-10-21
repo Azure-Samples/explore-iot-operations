@@ -89,6 +89,10 @@ The [`dataflow-patterns/`](dataflow-patterns/) sample provides three custom Rust
 graphs. They complement the built-in transforms; they don't require sliding
 windows.
 
+All fixture messages, identifiers, coefficients, and numerical results are
+synthetic or illustrative. They aren't customer telemetry, customer-calibrated
+models, or evidence of a customer's process behavior.
+
 | Graph | Input | Operation | Output |
 | --- | --- | --- | --- |
 | `graph-align-by-time` | Separate speed and temperature messages, plus ticks | Select the latest eligible temperature at or before each speed timestamp | An aligned record, or a batch when several readings become ready |
