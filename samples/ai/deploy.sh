@@ -25,6 +25,9 @@ Authentication:
   --aio-extension-name <name>        AIO Arc extension name; required for sami.
   --entra-app-name <name>            New Entra application name. Default: aio-ai-relay.
                                       Existing names are rejected; no app is reused or deleted.
+  --entra-app-id <client-id>         Use a manually configured existing Entra app; no Graph calls.
+  --entra-tenant-id <tenant-id>      Required with --entra-app-id. Both must be GUIDs.
+                                      Cannot combine with --entra-app-name or --entra-azure-config-dir.
   --entra-azure-config-dir <dir>     Optional isolated Azure CLI profile for app registration.
                                       Default: current Azure CLI profile. Tenant policies still apply.
 
@@ -48,8 +51,10 @@ Optional:
   --helm-release-name <name>         Default: aio-ai-relay; suffixed per protocol for both.
   -h, --help                        Show this help.
 
-The script creates an Entra app with a user_impersonation scope and AIOMcpAdmin
-app role. An administrator must assign callers to that role before API use.
+By default the script creates an Entra app with a user_impersonation scope and
+AIOMcpAdmin app role. With --entra-app-id, configure these manually, set the
+identifier URI to api://<client-id>, and require Enterprise app role assignment.
+An administrator must assign callers to that role before API use.
 It never enables anonymous APIM access. See README.md for prerequisites and costs.
 EOF
 }
@@ -64,7 +69,11 @@ CHART_REFERENCE="oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-
 AUTH_MODE="sami"
 CLUSTER_NAME=""
 AIO_EXTENSION_NAME=""
-ENTRA_APP_NAME="aio-ai-relay"
+ENTRA_APP_NAME=""
+ENTRA_APP_ID=""
+ENTRA_TENANT_ID=""
+ENTRA_SP_ID=""
+ROLE_ID=""
 ENTRA_AZURE_CONFIG_DIR=""
 ENTRA_APP_ROLE="AIOMcpAdmin"
 ENDPOINT_PROTOCOL="mcp"
@@ -85,7 +94,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help) usage; exit 0 ;;
         --resource-group|--relay-namespace-name|--apim-name|--apim-publisher-email|--apim-publisher-name|\
         --chart-version|--chart-reference|--auth-mode|--cluster-name|--aio-extension-name|\
-        --entra-app-name|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
+        --entra-app-name|--entra-app-id|--entra-tenant-id|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
         --mcp-frontend-service-name|--mcp-frontend-audience|--mcp-role|--image-tag|--values|\
         --hybrid-connection-name|--apim-sku|--apim-capacity|--k8s-namespace|--helm-release-name)
             if [[ $# -lt 2 || ! "${2:-}" =~ [^[:space:]] || "${2:-}" == --* ]]; then
@@ -106,6 +115,8 @@ while [[ $# -gt 0 ]]; do
         --cluster-name) CLUSTER_NAME="$2" ;;
         --aio-extension-name) AIO_EXTENSION_NAME="$2" ;;
         --entra-app-name) ENTRA_APP_NAME="$2" ;;
+        --entra-app-id) ENTRA_APP_ID="$2" ;;
+        --entra-tenant-id) ENTRA_TENANT_ID="$2" ;;
         --entra-azure-config-dir) ENTRA_AZURE_CONFIG_DIR="$2" ;;
         --endpoint-protocol) ENDPOINT_PROTOCOL="$2" ;;
         --endpoint-url) ENDPOINT_URL="$2" ;;
@@ -127,6 +138,17 @@ if [[ -z "$RESOURCE_GROUP" || -z "$RELAY_NAMESPACE_NAME" || -z "$APIM_NAME" || \
       -z "$APIM_PUBLISHER_EMAIL" || -z "$APIM_PUBLISHER_NAME" || -z "$CHART_VERSION" ]]; then
     echo "Error: missing required arguments; see --help." >&2
     exit 1
+fi
+if [[ -n "$ENTRA_APP_ID" || -n "$ENTRA_TENANT_ID" ]]; then
+    guid='[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}'
+    if [[ ! "$ENTRA_APP_ID" =~ ^$guid$ || ! "$ENTRA_TENANT_ID" =~ ^$guid$ ]]; then
+        echo "Error: --entra-app-id and --entra-tenant-id must both be supplied as GUIDs." >&2
+        exit 1
+    fi
+    if [[ -n "$ENTRA_APP_NAME" || -n "$ENTRA_AZURE_CONFIG_DIR" ]]; then
+        echo "Error: existing-app IDs cannot be combined with --entra-app-name or --entra-azure-config-dir." >&2
+        exit 1
+    fi
 fi
 case "$AUTH_MODE" in
     sami) BICEP_AUTH_MODE="SystemAssignedManagedIdentity"; CHART_AUTH_METHOD="system-assigned-managed-identity" ;;
@@ -200,44 +222,50 @@ az_entra() {
         az "$@"
     fi
 }
-if [[ -n "$ENTRA_AZURE_CONFIG_DIR" ]]; then
-    mkdir -p "$ENTRA_AZURE_CONFIG_DIR"
-fi
-if ! az_entra account show --output none; then
-    echo "Error: sign in to the Entra Azure CLI profile before deployment; tenant policies must allow app registration." >&2
-    exit 1
-fi
-ENTRA_TENANT_ID="$(az_entra account show --query tenantId -o tsv)"
-if [[ -z "$ENTRA_TENANT_ID" ]]; then
-    echo "Error: could not determine the Entra tenant." >&2
-    exit 1
-fi
-EXISTING_APPS="$(az_entra ad app list --display-name "$ENTRA_APP_NAME" -o json)"
-if [[ "$(jq -er 'length' <<< "$EXISTING_APPS")" -gt 0 ]]; then
-    echo "Error: an Entra app named '$ENTRA_APP_NAME' already exists. Use a different --entra-app-name." >&2
-    exit 1
-fi
-ENTRA_APP_JSON="$(az_entra ad app create --display-name "$ENTRA_APP_NAME" -o json)"
-ENTRA_APP_ID="$(jq -er '.appId | select(type == "string" and length > 0)' <<< "$ENTRA_APP_JSON")"
-echo "==> Created Entra app '$ENTRA_APP_ID' in tenant '$ENTRA_TENANT_ID'; retain this ID for cleanup."
-ENTRA_SP_JSON="$(az_entra ad sp create --id "$ENTRA_APP_ID" -o json)"
-ENTRA_SP_ID="$(jq -er '.id | select(type == "string" and length > 0)' <<< "$ENTRA_SP_JSON")"
-az_entra ad app update --id "$ENTRA_APP_ID" --identifier-uris "api://$ENTRA_APP_ID" --output none
-SCOPE_ID="$(uuidgen)"
-SCOPES="$(jq -cn --arg id "$SCOPE_ID" '[{
+if [[ -z "$ENTRA_APP_ID" ]]; then
+    ENTRA_APP_NAME="${ENTRA_APP_NAME:-aio-ai-relay}"
+    if [[ -n "$ENTRA_AZURE_CONFIG_DIR" ]]; then
+        mkdir -p "$ENTRA_AZURE_CONFIG_DIR"
+    fi
+    if ! az_entra account show --output none; then
+        echo "Error: sign in to the Entra Azure CLI profile before deployment; tenant policies must allow app registration." >&2
+        exit 1
+    fi
+    ENTRA_TENANT_ID="$(az_entra account show --query tenantId -o tsv)"
+    if [[ -z "$ENTRA_TENANT_ID" ]]; then
+        echo "Error: could not determine the Entra tenant." >&2
+        exit 1
+    fi
+    EXISTING_APPS="$(az_entra ad app list --display-name "$ENTRA_APP_NAME" -o json)"
+    if [[ "$(jq -er 'length' <<< "$EXISTING_APPS")" -gt 0 ]]; then
+        echo "Error: an Entra app named '$ENTRA_APP_NAME' already exists. Use a different --entra-app-name." >&2
+        exit 1
+    fi
+    ENTRA_APP_JSON="$(az_entra ad app create --display-name "$ENTRA_APP_NAME" -o json)"
+    ENTRA_APP_ID="$(jq -er '.appId | select(type == "string" and length > 0)' <<< "$ENTRA_APP_JSON")"
+    echo "==> Created Entra app '$ENTRA_APP_ID' in tenant '$ENTRA_TENANT_ID'; retain this ID for cleanup."
+    ENTRA_SP_JSON="$(az_entra ad sp create --id "$ENTRA_APP_ID" -o json)"
+    ENTRA_SP_ID="$(jq -er '.id | select(type == "string" and length > 0)' <<< "$ENTRA_SP_JSON")"
+    az_entra ad app update --id "$ENTRA_APP_ID" --identifier-uris "api://$ENTRA_APP_ID" --output none
+    SCOPE_ID="$(uuidgen)"
+    SCOPES="$(jq -cn --arg id "$SCOPE_ID" '[{
     id:$id, adminConsentDescription:"Access the AI relay",
     adminConsentDisplayName:"Access AI relay", isEnabled:true, type:"User",
     userConsentDescription:"Access the AI relay", userConsentDisplayName:"Access AI relay",
     value:"user_impersonation"
 }]')"
-az_entra ad app update --id "$ENTRA_APP_ID" --set "api={\"oauth2PermissionScopes\":$SCOPES}" --output none
-ROLE_ID="$(uuidgen)"
-ROLES="$(jq -cn --arg id "$ROLE_ID" --arg role "$ENTRA_APP_ROLE" '[{
+    az_entra ad app update --id "$ENTRA_APP_ID" --set "api={\"oauth2PermissionScopes\":$SCOPES}" --output none
+    ROLE_ID="$(uuidgen)"
+    ROLES="$(jq -cn --arg id "$ROLE_ID" --arg role "$ENTRA_APP_ROLE" '[{
     id:$id, allowedMemberTypes:["User","Application"], description:"Access the AI relay API",
     displayName:$role, isEnabled:true, value:$role
 }]')"
-az_entra ad app update --id "$ENTRA_APP_ID" --set "appRoles=$ROLES" --output none
-az_entra ad sp update --id "$ENTRA_APP_ID" --set appRoleAssignmentRequired=true --output none
+    az_entra ad app update --id "$ENTRA_APP_ID" --set "appRoles=$ROLES" --output none
+    az_entra ad sp update --id "$ENTRA_APP_ID" --set appRoleAssignmentRequired=true --output none
+else
+    echo "==> Using existing Entra app '$ENTRA_APP_ID' in tenant '$ENTRA_TENANT_ID'; skipping Graph registration."
+    echo "    App configuration is not verified. Require role assignment and configure user_impersonation and AIOMcpAdmin manually."
+fi
 
 DEPLOYMENT_NAME="ai-relay-$(date +%s)"
 BICEP_PARAMS=(
@@ -318,5 +346,8 @@ else
     install_relay_release "$ENDPOINT_PROTOCOL" "$HELM_RELEASE_NAME" "aio-ai-relay-hc"
 fi
 echo "==> Assign approved callers to '$ENTRA_APP_ROLE' before using the API."
-echo "    Tenant: $ENTRA_TENANT_ID; app: $ENTRA_APP_ID; service principal: $ENTRA_SP_ID; role ID: $ROLE_ID"
-echo "    Use Entra Enterprise applications > '$ENTRA_APP_NAME' > Users and groups."
+echo "    Tenant: $ENTRA_TENANT_ID; app: $ENTRA_APP_ID"
+if [[ -n "$ENTRA_SP_ID" ]]; then
+    echo "    Service principal: $ENTRA_SP_ID; role ID: $ROLE_ID"
+fi
+echo "    Use Entra Enterprise applications > your app > Users and groups."
