@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["endpointRef", "profile", "profileRef", "registryPullSecret", "topicPrefix", "artifactVersion", "artifactRepository", "tests", "patterns", "ticker"],
+  "allOf": [
+    {
+      "if": {"properties": {"profile": {"properties": {"create": {"const": false}}}}},
+      "then": {"properties": {"profileRef": {"minLength": 1}}},
+      "else": {"properties": {"profileRef": {"const": ""}}}
+    }
+  ],
+  "properties": {
+    "patterns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["align-by-time", "correlate-by-id", "versioned-predictor", "report-by-exception", "stable-alarm", "offline-detection", "running-total", "smooth-readings"],
+      "properties": {
+        "align-by-time": {"type": "boolean"},
+        "correlate-by-id": {"type": "boolean"},
+        "versioned-predictor": {"type": "boolean"},
+        "report-by-exception": {"type": "boolean"},
+        "stable-alarm": {"type": "boolean"},
+        "offline-detection": {"type": "boolean"},
+        "running-total": {"type": "boolean"},
+        "smooth-readings": {"type": "boolean"}
+      }
+    },
+    "ticker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "mqttHost", "mqttPort", "tls", "caConfigMap", "assets", "intervalSeconds", "targets", "auth", "image"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "mqttHost": {"type": "string", "pattern": "^$|^[a-zA-Z0-9.:-]+$"},
+        "mqttPort": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "tls": {"type": "boolean"},
+        "caConfigMap": {"type": "string", "pattern": "^$|^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"},
+        "assets": {"type": "array", "uniqueItems": true, "maxItems": 1000, "items": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\s+#/]+$"}},
+        "intervalSeconds": {"type": "number", "minimum": 0.1, "maximum": 60},
+        "targets": {
+          "type": "object", "additionalProperties": false, "required": ["report", "alarm", "availability"],
+          "properties": {"report": {"type": "boolean"}, "alarm": {"type": "boolean"}, "availability": {"type": "boolean"}}
+        },
+        "auth": {
+          "type": "object", "additionalProperties": false,
+          "required": ["mode", "username", "audience", "existingSecret", "usernameKey", "passwordKey"],
+          "properties": {
+            "mode": {"enum": ["serviceAccountToken", "existingSecret", "anonymous"]},
+            "username": {"type": "string", "minLength": 1},
+            "audience": {"type": "string", "minLength": 1},
+            "existingSecret": {"type": "string", "pattern": "^$|^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"},
+            "usernameKey": {"type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9._-]+$"},
+            "passwordKey": {"type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9._-]+$"}
+          }
+        },
+        "image": {
+          "type": "object", "additionalProperties": false, "required": ["repository", "tag", "pullPolicy"],
+          "properties": {
+            "repository": {"const": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker"},
+            "tag": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$"},
+            "pullPolicy": {"enum": ["IfNotPresent", "Always", "Never"]}
+          }
+        }
+      }
+    },
+    "endpointRef": {"type": "string", "minLength": 1, "maxLength": 63, "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"},
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["create"],
+      "properties": {"create": {"type": "boolean"}}
+    },
+    "profileRef": {"type": "string", "maxLength": 39, "pattern": "^$|^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"},
+    "registryPullSecret": {"type": "string", "maxLength": 253, "pattern": "^$|^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"},
+    "topicPrefix": {"type": "string", "maxLength": 180, "pattern": "^$|^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$"},
+    "artifactVersion": {"type": "string", "maxLength": 128, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"},
+    "artifactRepository": {"type": "string", "const": "azure-samples/explore-iot-operations/dataflow-patterns"},
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "mqttHost", "mqttPort", "tls", "image"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "mqttHost": {"type": "string", "pattern": "^$|^[a-zA-Z0-9.:-]+$"},
+        "mqttPort": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "tls": {"type": "boolean"},
+        "image": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

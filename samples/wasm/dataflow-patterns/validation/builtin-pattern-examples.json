@@ -1,0 +1,35 @@
+{
+  "validatedAt": "2026-10-20T20:55:30.243587+00:00",
+  "runtime": "Public Microsoft MCR Azure IoT Operations 1.6.0",
+  "passed": 8,
+  "failed": 0,
+  "blocked": 0,
+  "singleColdRun": false,
+  "method": "Actual MQTT results and native stage diagnostics, collected in separate isolated runs. Six earlier passes retained; the two Filter-dependent examples rerun after updating their documented artifact to Filter1.1.0.",
+  "deploymentSubstitutions": [
+    "Debug namespace default instead of azure-iot-operations",
+    "Dedicated single-instance validation profiles instead of the default profile",
+    "Isolated graph names and MQTT topic prefixes",
+    "Existing local SAT-authenticated factory-mqtt endpoint"
+  ],
+  "cases": [
+    {"name": "Export completed training matches", "result": "PASS", "scope": "Forward completed matches; no live fitting claimed"},
+    {"name": "Prediction with known coefficients", "result": "PASS", "predictedWeight": 203},
+    {"name": "Calibration context lookup", "result": "PASS", "correctedValue": 22},
+    {"name": "Prediction with approved state-store models", "result": "PASS", "v7Prediction": 205, "v8Prediction": 203},
+    {"name": "Bounded recommendation", "result": "PASS", "scope": "Positive, negative and fractional limits; stale, future, wrong-version and old-sequence rejection"},
+    {"name": "Multiway message routing", "result": "PASS", "scope": "Speed, temperature and remaining paths, including unknown kinds"},
+    {"name": "Batch noise reduction", "result": "PASS", "filterArtifactVersion": "1.1.0", "scope": "Exact updated documented YAML, actual mean output and negative fixtures"},
+    {"name": "Approved-envelope model republishing", "result": "PASS", "filterArtifactVersion": "1.1.0", "scope": "Exact updated documented YAML, flat approved model and rejected envelopes"}
+  ],
+  "additionalValidation": {
+    "documentedNumpyFittingExample": "Passed locally; separate from the eight runtime graph examples",
+    "customGraphs": "Separately qualified against published chart1.0.0-rc.2; see1.0.0-rc.2.json"
+  },
+  "knownFailureResolved": "Filter1.0.0 module transfer produced PacketTooLarge with the broker's default packet limit. Filter1.1.0 was used in the corrected documentation and the two affected examples were rerun successfully.",
+  "limitations": [
+    "Finite functional examples, not throughput, durability or equipment-safety certification",
+    "Results were collected across separate runs, not one cold simultaneous deployment",
+    "No exactly-once or restart-recovery guarantee"
+  ]
+}

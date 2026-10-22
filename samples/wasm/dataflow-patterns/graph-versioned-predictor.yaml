@@ -1,0 +1,36 @@
+metadata:
+  name: Predict with approved versioned models
+  description: Volatile sequential model activation; bootstrap from externally durable approved state on every restart.
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: Azure Samples
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+moduleConfigurations:
+  - name: patterns
+    parameters:
+      settings:
+        name: settings
+        description: Replace the demo v7 bootstrap with the latest externally approved model before restart; role must remain versioned-predictor.
+        default: '{"role":"versioned-predictor","initialModels":[{"assetId":"line-1","modelVersion":7,"speedCoefficient":2,"temperatureCoefficient":0.5,"intercept":175}]}'
+operations:
+  - operationType: source
+    name: input
+    arity: 1
+  - operationType: map
+    name: patterns
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+  - operationType: filter
+    name: suppress-internal
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter:1.0.0
+  - operationType: sink
+    name: output
+    arity: 1
+connections:
+  - from: { name: input }
+    to: { name: patterns }
+  - from: { name: patterns }
+    to: { name: suppress-internal }
+  - from: { name: suppress-internal }
+    to: { name: output }

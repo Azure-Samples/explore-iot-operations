@@ -1,0 +1,23 @@
+{
+  "configuration":{"role":"correlate-by-id"},
+  "steps":[
+    {
+      "topic":"factory/measurements",
+      "nowMs":1000,
+      "input":{"kind":"measurement","assetId":"line-1","pieceId":"part-42","runId":"batch-1","measuredAt":"2026-10-19T10:01:00Z","measuredWeight":200,"targetWeight":198},
+      "expected":null
+    },
+    {
+      "topic":"factory/predictions",
+      "nowMs":2000,
+      "input":{"kind":"prediction","assetId":"line-1","pieceId":"part-42","runId":"batch-1","predictedAt":"2026-10-19T10:00:02Z","modelVersion":8,"speed":10,"temperature":20,"predictedWeight":203},
+      "expected":{"kind":"correlated","assetId":"line-1","pieceId":"part-42","runId":"batch-1","predictedAt":"2026-10-19T10:00:02Z","measuredAt":"2026-10-19T10:01:00Z","modelVersion":8,"speed":10,"temperature":20,"predictedWeight":203,"measuredWeight":200,"targetWeight":198,"residual":-3.0,"targetError":2.0}
+    },
+    {
+      "topic":"factory/predictions",
+      "nowMs":3000,
+      "input":{"kind":"prediction","assetId":"line-1","pieceId":"part-42","runId":"batch-1","predictedAt":"2026-10-19T10:00:02Z","modelVersion":8,"speed":10,"temperature":20,"predictedWeight":203},
+      "expected":null
+    }
+  ]
+}

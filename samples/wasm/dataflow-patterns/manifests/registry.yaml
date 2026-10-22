@@ -1,0 +1,10 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: RegistryEndpoint
+metadata:
+  name: factory-artifacts
+  namespace: azure-iot-operations
+spec:
+  host: ghcr.io
+  authentication:
+    method: Anonymous
+    anonymousSettings: {}

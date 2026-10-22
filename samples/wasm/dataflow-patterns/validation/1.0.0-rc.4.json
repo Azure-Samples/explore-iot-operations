@@ -1,0 +1,4066 @@
+{
+  "version": "1.0.0-rc.4",
+  "sourceSHA": "6921a989501b9c9b89d0a161f78040b5528ef539",
+  "workflowRun": "https://github.com/Azure-Samples/explore-iot-operations/actions/runs/39713608301",
+  "workflowConclusion": "success",
+  "runtime": "Public Azure IoT Operations 1.6.0",
+  "status": "PASS",
+  "updatedAt": "2026-10-22T03:41:12.733036+00:00",
+  "syntheticDataOnly": true,
+  "runtimeVerified": true,
+  "anonymousFullPullsVerified": true,
+  "artifacts": [
+    {
+      "name": "module-dataflow-patterns",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns@sha256:432b37e0d666f7e44d5b76687accd0a411bc4f2f95aee5bffed68d551c37d6c5",
+      "manifestDigest": "sha256:432b37e0d666f7e44d5b76687accd0a411bc4f2f95aee5bffed68d551c37d6c5",
+      "filename": "module-dataflow-patterns.wasm",
+      "payloadDigest": "sha256:cc781f5521fa3e8fa7f01779ba3b1fa266e6c8b7ca969c2bc56633a3cec936de"
+    },
+    {
+      "name": "module-dataflow-pattern-filter",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter@sha256:6e626e69aaf5d2678c3febbea9dae233925f5eb24499b9a40fd7310ea0a8b6fa",
+      "manifestDigest": "sha256:6e626e69aaf5d2678c3febbea9dae233925f5eb24499b9a40fd7310ea0a8b6fa",
+      "filename": "module-dataflow-pattern-filter.wasm",
+      "payloadDigest": "sha256:ef0421c75885876d32384bc502f0cc750e308d3fbd0935665f46fef0586649b7"
+    },
+    {
+      "name": "graph-align-by-time",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-align-by-time:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-align-by-time@sha256:6d9b68be3baa35e61a888a01dfa03f40ecd97dec35a1d33d8c263d20183db2af",
+      "manifestDigest": "sha256:6d9b68be3baa35e61a888a01dfa03f40ecd97dec35a1d33d8c263d20183db2af",
+      "filename": "graph-align-by-time.yaml",
+      "payloadDigest": "sha256:c27460d2a8c63a5c622d1176dd60500115617678ef9aff47b0c25a134817e572"
+    },
+    {
+      "name": "graph-correlate-by-id",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-correlate-by-id:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-correlate-by-id@sha256:35be3108a0ecfc46988bd5a0e5f0b5fb0fc77d638ae9605c12269099b7b9ff5f",
+      "manifestDigest": "sha256:35be3108a0ecfc46988bd5a0e5f0b5fb0fc77d638ae9605c12269099b7b9ff5f",
+      "filename": "graph-correlate-by-id.yaml",
+      "payloadDigest": "sha256:52cb20244f21bef9c0bb72eefb22f4bc56d3ba2e03b00e168455f641aa5175d2"
+    },
+    {
+      "name": "graph-versioned-predictor",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-versioned-predictor:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-versioned-predictor@sha256:74896f8354f18ea4f9628184b8ab295edacdc5d2b046e81be61164bdda52a9f9",
+      "manifestDigest": "sha256:74896f8354f18ea4f9628184b8ab295edacdc5d2b046e81be61164bdda52a9f9",
+      "filename": "graph-versioned-predictor.yaml",
+      "payloadDigest": "sha256:daa2c8e081cb387d83d4437e44854343d298cc40339ff187ad09f780985aa027"
+    },
+    {
+      "name": "graph-report-by-exception",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-report-by-exception:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-report-by-exception@sha256:ccbef9e6864348a96fad7a38cc97304ace31671b271530b9cd737b2371903846",
+      "manifestDigest": "sha256:ccbef9e6864348a96fad7a38cc97304ace31671b271530b9cd737b2371903846",
+      "filename": "graph-report-by-exception.yaml",
+      "payloadDigest": "sha256:33c8f93909878bde867a38066ddad70d98a93b2caaaa7a3d5d69441a92e633cd"
+    },
+    {
+      "name": "graph-stable-alarm",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-stable-alarm:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-stable-alarm@sha256:c67fb73a271e07fe68dbd739ba6f3bafec476ee6fad73f17ed8664a11fea4425",
+      "manifestDigest": "sha256:c67fb73a271e07fe68dbd739ba6f3bafec476ee6fad73f17ed8664a11fea4425",
+      "filename": "graph-stable-alarm.yaml",
+      "payloadDigest": "sha256:edd858fb6c776a66dc1b719b71ed5906a7e04f1109cca88d7f2fafc6f0ab1cb5"
+    },
+    {
+      "name": "graph-offline-detection",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-offline-detection:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-offline-detection@sha256:1481c68907e623ad535fcaaaadf54126035503dca3540636d23d67cd3928be54",
+      "manifestDigest": "sha256:1481c68907e623ad535fcaaaadf54126035503dca3540636d23d67cd3928be54",
+      "filename": "graph-offline-detection.yaml",
+      "payloadDigest": "sha256:84a4153c6d3916c5c51d7d288ffce0cbd93294bde883a339c64869c6343fbcf4"
+    },
+    {
+      "name": "graph-running-total",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-running-total:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-running-total@sha256:eac554fb5bf56b021de7f504a1db2092667bc6dd8305ac9df35fd85e129b0d86",
+      "manifestDigest": "sha256:eac554fb5bf56b021de7f504a1db2092667bc6dd8305ac9df35fd85e129b0d86",
+      "filename": "graph-running-total.yaml",
+      "payloadDigest": "sha256:19bf73732b292758e189139fb929a458108ff117cf8617f8a87d24b48fafd07b"
+    },
+    {
+      "name": "graph-smooth-readings",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-smooth-readings:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-patterns/graph-smooth-readings@sha256:863cf523cf020975a2f63792e34f3067b1c91773d6b2f9bd8872e00788edfd3f",
+      "manifestDigest": "sha256:863cf523cf020975a2f63792e34f3067b1c91773d6b2f9bd8872e00788edfd3f",
+      "filename": "graph-smooth-readings.yaml",
+      "payloadDigest": "sha256:b94e719f4d6da8c829b5990cb43269b859e767078a81a7f487b3556a8f0c2539"
+    },
+    {
+      "name": "dataflow-patterns",
+      "tagReference": "ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns:1.0.0-rc.4",
+      "digestReference": "ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns@sha256:c92cdd835d617147cf928b7749a3907884f81ad1861b4b7e6227c24cf4bba6d2",
+      "manifestDigest": "sha256:c92cdd835d617147cf928b7749a3907884f81ad1861b4b7e6227c24cf4bba6d2",
+      "filename": "dataflow-patterns-1.0.0-rc.4.tgz",
+      "payloadDigest": "sha256:496f2cd8fa780c54e5f393e062d2117a507ecf82f516e5c6a15109bb6f0110dc"
+    }
+  ],
+  "tickerImage": {
+    "version": "1.0.0-rc.4",
+    "revision": "6921a989501b9c9b89d0a161f78040b5528ef539",
+    "tagReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+    "digestReference": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+    "manifestDigest": "sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+    "configDigest": "sha256:ec2375f9f8f952ed66ae1643ae2aaf2e935fc905afde48e47314b0ce4639b22e",
+    "anonymousFullPullVerified": true,
+    "layersVerified": 8
+  },
+  "graphCount": 8,
+  "profileCount": 1,
+  "profileInstanceCount": 1,
+  "liveGraphSpecsEqualPublishedHelmManifest": true,
+  "apiDefaultsIncludedInSpecComparison": {
+    "debugging": "Disabled",
+    "requestDiskPersistence": "Disabled",
+    "emptyGraphConfiguration": [],
+    "emptyDestinationHeaders": []
+  },
+  "publishedVerifierSHA256": "72711ad5de62c97d254b2268ffb2cc14949ca7dbc9fa9348d7bb1f10309dddab",
+  "qualificationSettings": {
+    "reportHeartbeatIntervalMs": 1000,
+    "alarm": {
+      "raiseForMs": 1000,
+      "clearForMs": 500,
+      "maxObservationGapMs": 1500,
+      "high": 80,
+      "low": 70
+    },
+    "offlineTimeoutMs": 1000,
+    "smoothingAlpha": 0.5,
+    "tickerDefaultUsername": "K8S-SAT",
+    "tickerProbeTimeoutSeconds": 10,
+    "tickerStartupBudgetSeconds": 180,
+    "tickerUsernameOrProbeOverrides": false
+  },
+  "regressions": {
+    "rustTests": 139,
+    "pythonPackagingVerifierTests": 50,
+    "pythonTickerTests": 44,
+    "failed": 0,
+    "formatClippyShellcheckChartAndWasmBuild": "PASS"
+  },
+  "cases": {
+    "mode-ready": {
+      "status": "PASS",
+      "at": "2026-10-22T03:38:07.960599+00:00",
+      "evidence": [
+        {
+          "podUID": "95cf2621-2b4d-439a-9c49-b39db36847cb",
+          "containers": [
+            {
+              "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+              "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+              "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+              "ready": true,
+              "restartCount": 0,
+              "state": {
+                "running": {
+                  "startedAt": "2026-10-22T03:36:00Z"
+                }
+              }
+            }
+          ],
+          "graphNodesAvailable": 24
+        }
+      ]
+    },
+    "packaged-real-mqtt-verifier-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.516335+00:00",
+      "evidence": {
+        "exitCode": 0,
+        "verifierSHA256": "72711ad5de62c97d254b2268ffb2cc14949ca7dbc9fa9348d7bb1f10309dddab",
+        "publishedVerifierUnmodified": true
+      }
+    },
+    "packaged-align-by-time-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.518598+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "runtime-align",
+            "sampledAt": "2026-10-22T03:11:02.535Z",
+            "speed": 12,
+            "temperature": 20.0,
+            "temperatureSampledAt": "2026-10-22T03:11:01.535Z"
+          },
+          {
+            "assetId": "runtime-batch",
+            "pieceId": "batch-a",
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:02.535Z",
+            "speed": 12,
+            "temperature": 20.0,
+            "temperatureSampledAt": "2026-10-22T03:11:01.535Z"
+          },
+          {
+            "assetId": "runtime-batch",
+            "pieceId": "batch-b",
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:03.035Z",
+            "speed": 13,
+            "temperature": 20.0,
+            "temperatureSampledAt": "2026-10-22T03:11:01.535Z"
+          },
+          {
+            "assetId": "runtime-mixed",
+            "pieceId": "batch-a",
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:03.135Z",
+            "speed": 12,
+            "temperature": 20.0,
+            "temperatureSampledAt": "2026-10-22T03:11:03.035Z"
+          },
+          {
+            "assetId": "runtime-mixed",
+            "pieceId": "batch-b",
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:03.335Z",
+            "speed": 13,
+            "temperature": 20.0,
+            "temperatureSampledAt": "2026-10-22T03:11:03.035Z"
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-correlate-by-id-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.520634+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "line-1",
+            "intercept": 175,
+            "kind": "correlated",
+            "measuredAt": "2026-10-22T03:11:03.535Z",
+            "measuredWeight": 200,
+            "modelVersion": 7,
+            "pieceId": "runtime-part-0",
+            "predictedAt": "2026-10-22T03:11:02.535Z",
+            "predictedWeight": 205,
+            "residual": -5.0,
+            "runId": "runtime-run",
+            "speed": 10,
+            "speedCoefficient": 2,
+            "targetError": 2.0,
+            "targetWeight": 198,
+            "temperature": 20,
+            "temperatureCoefficient": 0.5
+          },
+          {
+            "assetId": "line-1",
+            "intercept": 175,
+            "kind": "correlated",
+            "measuredAt": "2026-10-22T03:11:03.535Z",
+            "measuredWeight": 200,
+            "modelVersion": 7,
+            "pieceId": "runtime-part-1",
+            "predictedAt": "2026-10-22T03:11:02.535Z",
+            "predictedWeight": 205,
+            "residual": -5.0,
+            "runId": "runtime-run",
+            "speed": 10,
+            "speedCoefficient": 2,
+            "targetError": 2.0,
+            "targetWeight": 198,
+            "temperature": 20,
+            "temperatureCoefficient": 0.5
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-versioned-predictor-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.523053+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "line-1",
+            "intercept": 175.0,
+            "kind": "prediction",
+            "modelVersion": 7,
+            "pieceId": "runtime-v7",
+            "predictedWeight": 205.0,
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:02.535Z",
+            "speed": 10,
+            "speedCoefficient": 2.0,
+            "temperature": 20,
+            "temperatureCoefficient": 0.5
+          },
+          {
+            "assetId": "line-1",
+            "intercept": 173.0,
+            "kind": "prediction",
+            "modelVersion": 8,
+            "pieceId": "runtime-v8",
+            "predictedWeight": 203.0,
+            "runId": "runtime-run",
+            "sampledAt": "2026-10-22T03:11:02.535Z",
+            "speed": 10,
+            "speedCoefficient": 2.0,
+            "temperature": 20,
+            "temperatureCoefficient": 0.5
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-report-by-exception-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.524567+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "runtime-report",
+            "emittedAtMs": 1792638700587,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "r1",
+            "observationAgeMs": 0,
+            "reason": "initial",
+            "receivedAtMs": 1792638700587,
+            "sequence": 1,
+            "value": 10
+          },
+          {
+            "assetId": "runtime-report",
+            "emittedAtMs": 1792638702707,
+            "isFreshMeasurement": false,
+            "kind": "reported",
+            "messageId": "r1",
+            "observationAgeMs": 2120,
+            "reason": "heartbeat",
+            "receivedAtMs": 1792638700587,
+            "sequence": 1,
+            "value": 10
+          },
+          {
+            "assetId": "runtime-report",
+            "emittedAtMs": 1792638702862,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "r2",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638702862,
+            "sequence": 2,
+            "value": 12
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-stable-alarm-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.525901+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "runtime-alarm",
+            "emittedAtMs": 1792638704386,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "r1",
+            "observationAgeMs": 1315,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638703071,
+            "sequence": 1,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          },
+          {
+            "assetId": "runtime-alarm",
+            "emittedAtMs": 1792638707905,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "r2",
+            "observationAgeMs": 808,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638707097,
+            "sequence": 2,
+            "state": "cleared",
+            "threshold": 70.0,
+            "value": 70
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-offline-detection-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.528159+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "runtime-availability",
+            "elapsedMs": 2169,
+            "emittedAtMs": 1792638710284,
+            "kind": "availability",
+            "lastSeenAtMs": null,
+            "reason": "timeout",
+            "state": "offline"
+          },
+          {
+            "assetId": "runtime-availability",
+            "elapsedMs": 2484,
+            "emittedAtMs": 1792638710599,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638710599,
+            "reason": "recovered",
+            "state": "online"
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-running-total-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.530081+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638710807,
+            "epoch": 0,
+            "kind": "total",
+            "lastSequence": 1,
+            "messageId": "r1",
+            "sequence": 1,
+            "stateVersion": 1,
+            "total": 2.5,
+            "value": 2.5
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638711120,
+            "epoch": 1,
+            "expectedStateVersion": 1,
+            "kind": "totalReset",
+            "lastSequence": 2,
+            "resetId": "reset-1",
+            "sequence": 2,
+            "stateVersion": 2,
+            "total": 0.0
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638711594,
+            "epoch": 1,
+            "kind": "total",
+            "lastSequence": 3,
+            "messageId": "r2",
+            "sequence": 3,
+            "stateVersion": 3,
+            "total": 3.0,
+            "value": 3
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "packaged-smooth-readings-customer-patterns-rc4": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.531171+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "runtime-smoothing",
+            "emittedAtMs": 1792638711801,
+            "kind": "smoothed",
+            "messageId": "r0",
+            "sequence": 0,
+            "smoothedValue": 10.0,
+            "value": 10
+          },
+          {
+            "assetId": "runtime-smoothing",
+            "emittedAtMs": 1792638711960,
+            "kind": "smoothed",
+            "messageId": "r1",
+            "sequence": 1,
+            "smoothedValue": 11.0,
+            "value": 12
+          }
+        ],
+        "exactComparisonPassed": true
+      }
+    },
+    "mode-packaged": {
+      "status": "PASS",
+      "at": "2026-10-22T03:11:55.534001+00:00",
+      "evidence": 0
+    },
+    "total-reading-topic-forged-reset-and-proper-reset-old-epoch": {
+      "status": "PASS",
+      "at": "2026-10-22T03:12:09.041067+00:00",
+      "evidence": [
+        {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638725262,
+          "epoch": 1,
+          "kind": "total",
+          "lastSequence": 4,
+          "messageId": "sensor-1-4",
+          "sequence": 4,
+          "stateVersion": 4,
+          "total": 5.0,
+          "value": 2
+        },
+        {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638725518,
+          "epoch": 2,
+          "expectedStateVersion": 4,
+          "kind": "totalReset",
+          "lastSequence": 5,
+          "resetId": "authorized-reset",
+          "sequence": 5,
+          "stateVersion": 5,
+          "total": 0.0
+        },
+        {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638728833,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 6,
+          "messageId": "sensor-1-6",
+          "sequence": 6,
+          "stateVersion": 6,
+          "total": 4.0,
+          "value": 4
+        }
+      ]
+    },
+    "report-heartbeat-clock-and-reading-topic-forged-tick": {
+      "status": "PASS",
+      "at": "2026-10-22T03:12:13.792836+00:00",
+      "evidence": [
+        {
+          "assetId": "qualification-report-bfb6116bd46a",
+          "emittedAtMs": 1792638729115,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-report-bfb6116bd46a-1",
+          "observationAgeMs": 0,
+          "reason": "initial",
+          "receivedAtMs": 1792638729115,
+          "sequence": 1,
+          "value": 10
+        },
+        {
+          "assetId": "qualification-report-bfb6116bd46a",
+          "emittedAtMs": 1792638733590,
+          "isFreshMeasurement": false,
+          "kind": "reported",
+          "messageId": "qualification-report-bfb6116bd46a-1",
+          "observationAgeMs": 4475,
+          "reason": "heartbeat",
+          "receivedAtMs": 1792638729115,
+          "sequence": 1,
+          "value": 10
+        }
+      ]
+    },
+    "offline-no-readings-expiry-recovery-and-forged-register-tick": {
+      "status": "PASS",
+      "at": "2026-10-22T03:12:22.789939+00:00",
+      "evidence": [
+        {
+          "assetId": "qualification-roster-bfb6116bd46a",
+          "elapsedMs": 4267,
+          "emittedAtMs": 1792638742331,
+          "kind": "availability",
+          "lastSeenAtMs": null,
+          "reason": "timeout",
+          "state": "offline"
+        },
+        {
+          "assetId": "qualification-roster-bfb6116bd46a",
+          "elapsedMs": 4524,
+          "emittedAtMs": 1792638742588,
+          "kind": "availability",
+          "lastSeenAtMs": 1792638742588,
+          "reason": "recovered",
+          "state": "online"
+        }
+      ]
+    },
+    "alarm-gap-resets-dwell-forged-tick-and-no-spam": {
+      "status": "PASS",
+      "at": "2026-10-22T03:12:33.762370+00:00",
+      "evidence": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "asset": "qualification-alarm-bfb6116bd46a-1",
+            "status": "PASS",
+            "outputs": [
+              {
+                "assetId": "qualification-alarm-bfb6116bd46a-1",
+                "emittedAtMs": 1792638749540,
+                "isFreshMeasurement": false,
+                "kind": "alarm",
+                "messageId": "qualification-alarm-bfb6116bd46a-1-3",
+                "observationAgeMs": 1179,
+                "reason": "thresholdSustained",
+                "receivedAtMs": 1792638748361,
+                "sequence": 3,
+                "state": "active",
+                "threshold": 80.0,
+                "value": 80
+              },
+              {
+                "assetId": "qualification-alarm-bfb6116bd46a-1",
+                "emittedAtMs": 1792638750501,
+                "isFreshMeasurement": false,
+                "kind": "alarm",
+                "messageId": "qualification-alarm-bfb6116bd46a-1-4",
+                "observationAgeMs": 706,
+                "reason": "thresholdSustained",
+                "receivedAtMs": 1792638749795,
+                "sequence": 4,
+                "state": "cleared",
+                "threshold": 70.0,
+                "value": 70
+              }
+            ],
+            "inputs": [
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1",
+                  "messageId": "qualification-alarm-bfb6116bd46a-1-1",
+                  "sequence": 1,
+                  "value": 80
+                },
+                "beforeMs": 1792638742791,
+                "ackMs": 1792638742847
+              },
+              {
+                "topic": "alarm-ticks",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638744649,
+                "ackMs": 1792638744706
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1",
+                  "messageId": "qualification-alarm-bfb6116bd46a-1-2",
+                  "sequence": 2,
+                  "value": 80
+                },
+                "beforeMs": 1792638745007,
+                "ackMs": 1792638745067
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638746191,
+                "ackMs": 1792638746248
+              },
+              {
+                "topic": "alarm-ticks",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638747949,
+                "ackMs": 1792638748007
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1",
+                  "messageId": "qualification-alarm-bfb6116bd46a-1-3",
+                  "sequence": 3,
+                  "value": 80
+                },
+                "beforeMs": 1792638748307,
+                "ackMs": 1792638748362
+              },
+              {
+                "topic": "alarm-ticks",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638749483,
+                "ackMs": 1792638749540
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1",
+                  "messageId": "qualification-alarm-bfb6116bd46a-1-4",
+                  "sequence": 4,
+                  "value": 70
+                },
+                "beforeMs": 1792638749741,
+                "ackMs": 1792638749796
+              },
+              {
+                "topic": "alarm-ticks",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638750446,
+                "ackMs": 1792638750502
+              },
+              {
+                "topic": "alarm-ticks",
+                "payload": {
+                  "kind": "tick",
+                  "assetId": "qualification-alarm-bfb6116bd46a-1"
+                },
+                "beforeMs": 1792638750703,
+                "ackMs": 1792638750757
+              }
+            ]
+          }
+        ],
+        "raiseForMs": 1000,
+        "clearForMs": 500,
+        "maxObservationGapMs": 1500,
+        "pendingReadingsObservable": false,
+        "gapEvidence": "No transition on late/forged ticks; actual successful single-reading phases satisfy receipt-to-emission dwell/gap."
+      }
+    },
+    "smoothing-first-initializes-alpha-half-and-rejected-inputs": {
+      "status": "PASS",
+      "at": "2026-10-22T03:12:37.614218+00:00",
+      "evidence": [
+        {
+          "assetId": "qualification-smoothing-bfb6116bd46a",
+          "emittedAtMs": 1792638753822,
+          "kind": "smoothed",
+          "messageId": "qualification-smoothing-bfb6116bd46a-1",
+          "sequence": 1,
+          "smoothedValue": 10.0,
+          "value": 10
+        },
+        {
+          "assetId": "qualification-smoothing-bfb6116bd46a",
+          "emittedAtMs": 1792638753882,
+          "kind": "smoothed",
+          "messageId": "qualification-smoothing-bfb6116bd46a-2",
+          "sequence": 2,
+          "smoothedValue": 11.0,
+          "value": 12
+        },
+        {
+          "assetId": "qualification-smoothing-bfb6116bd46a",
+          "emittedAtMs": 1792638753944,
+          "kind": "smoothed",
+          "messageId": "qualification-smoothing-bfb6116bd46a-3",
+          "sequence": 3,
+          "smoothedValue": 15.5,
+          "value": 20
+        },
+        {
+          "assetId": "qualification-smoothing-bfb6116bd46a",
+          "emittedAtMs": 1792638757461,
+          "kind": "smoothed",
+          "messageId": "qualification-smoothing-bfb6116bd46a-4",
+          "sequence": 4,
+          "smoothedValue": 16.0,
+          "value": 16.5
+        }
+      ]
+    },
+    "sustained-over-256-report-by-exception": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.908757+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "sustained-over-256-stable-alarm": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.913755+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "sustained-over-256-offline-detection": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.918889+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "sustained-over-256-running-total": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.925509+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "sustained-over-256-smooth-readings": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.929724+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "sustained-over-256-all-five": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.932852+00:00",
+      "evidence": {
+        "readingsPerRole": 310,
+        "reportCount": 310,
+        "smoothingCount": 310,
+        "totalCount": 310,
+        "availability": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "elapsedMs": 0,
+            "emittedAtMs": 1792638757832,
+            "kind": "availability",
+            "lastSeenAtMs": 1792638757832,
+            "reason": "firstReading",
+            "state": "online"
+          }
+        ],
+        "alarmAfterRollover": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638904934,
+            "isFreshMeasurement": false,
+            "kind": "alarm",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 1176,
+            "reason": "thresholdSustained",
+            "receivedAtMs": 1792638903758,
+            "sequence": 311,
+            "state": "active",
+            "threshold": 80.0,
+            "value": 80
+          }
+        ],
+        "finalReport": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638900828,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "observationAgeMs": 0,
+          "reason": "change",
+          "receivedAtMs": 1792638900828,
+          "sequence": 310,
+          "value": 12
+        },
+        "finalSmoothing": {
+          "assetId": "qualification-sustained-bfb6116bd46a",
+          "emittedAtMs": 1792638901088,
+          "kind": "smoothed",
+          "messageId": "qualification-sustained-bfb6116bd46a-310",
+          "sequence": 310,
+          "smoothedValue": 11.333333333333332,
+          "value": 12
+        },
+        "finalTotal": {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792638901147,
+          "epoch": 2,
+          "kind": "total",
+          "lastSequence": 316,
+          "messageId": "sensor-1-316",
+          "sequence": 316,
+          "stateVersion": 316,
+          "total": 314.0,
+          "value": 1
+        },
+        "postReplayContinuity": [
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905189,
+            "isFreshMeasurement": true,
+            "kind": "reported",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "observationAgeMs": 0,
+            "reason": "change",
+            "receivedAtMs": 1792638905189,
+            "sequence": 311,
+            "value": 10
+          },
+          {
+            "assetId": "qualification-sustained-bfb6116bd46a",
+            "emittedAtMs": 1792638905445,
+            "kind": "smoothed",
+            "messageId": "qualification-sustained-bfb6116bd46a-311",
+            "sequence": 311,
+            "smoothedValue": 10.666666666666666,
+            "value": 10
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638905705,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 317,
+            "messageId": "sensor-1-317",
+            "sequence": 317,
+            "stateVersion": 317,
+            "total": 315.0,
+            "value": 1
+          }
+        ],
+        "replayedEvictedInputsProducedNoOutput": true
+      }
+    },
+    "mode-extended": {
+      "status": "PASS",
+      "at": "2026-10-22T03:15:05.936175+00:00",
+      "evidence": null
+    },
+    "mode-bootstrap": {
+      "status": "PASS",
+      "at": "2026-10-22T03:17:20.574582+00:00",
+      "evidence": {
+        "before": [
+          {
+            "podUID": "6de62180-f6d7-4811-8350-b4ed96870352",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:08:05Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "after": [
+          {
+            "podUID": "38770592-dbc1-4824-b30c-a8c5f559861b",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:15:08Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "outputs": [
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792639033469,
+            "epoch": 0,
+            "kind": "total",
+            "lastSequence": 1,
+            "messageId": "sensor-1-1",
+            "sequence": 1,
+            "stateVersion": 1,
+            "total": 2.5,
+            "value": 2.5
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792639036790,
+            "epoch": 0,
+            "kind": "total",
+            "lastSequence": 2,
+            "messageId": "sensor-1-2",
+            "sequence": 2,
+            "stateVersion": 2,
+            "total": 4.0,
+            "value": 1.5
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792639037049,
+            "epoch": 1,
+            "expectedStateVersion": 2,
+            "kind": "totalReset",
+            "lastSequence": 3,
+            "resetId": "after-bootstrap",
+            "sequence": 3,
+            "stateVersion": 3,
+            "total": 0.0
+          },
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792639040370,
+            "epoch": 1,
+            "kind": "total",
+            "lastSequence": 4,
+            "messageId": "sensor-1-4",
+            "sequence": 4,
+            "stateVersion": 4,
+            "total": 3.0,
+            "value": 3
+          }
+        ],
+        "observedNonzeroStateBeforeRestart": [
+          {
+            "assetId": "sensor-1",
+            "emittedAtMs": 1792638906964,
+            "epoch": 2,
+            "kind": "total",
+            "lastSequence": 318,
+            "messageId": "sensor-1-318",
+            "sequence": 318,
+            "stateVersion": 318,
+            "total": 316.0,
+            "value": 1
+          }
+        ],
+        "configuredInitialState": [
+          {
+            "assetId": "sensor-1",
+            "epoch": 0,
+            "lastSequence": 0,
+            "stateVersion": 0,
+            "total": 0
+          }
+        ],
+        "durableStateClaimed": false
+      }
+    },
+    "ticker-default-sat-image-puback-and-ten-second-probes": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:16.247400+00:00",
+      "evidence": {
+        "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-wfsbz",
+        "uid": "94e78221-d6c9-4189-bc30-739fcdf35293",
+        "createdAt": "2026-10-22T03:28:43Z",
+        "containers": [
+          {
+            "name": "ticker",
+            "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+            "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+            "ready": true,
+            "restartCount": 0
+          }
+        ],
+        "livePUBACKHealthcheckPassed": true,
+        "defaultSATEnv": {
+          "TICKER_MQTT_HOST": "aio-broker.default.svc.cluster.local",
+          "TICKER_MQTT_PORT": "1883",
+          "TICKER_TLS": "false",
+          "TICKER_TOPIC_PREFIX": "dataflow-patterns/customer-patterns-rc4",
+          "TICKER_AUTH_MODE": "serviceAccountToken",
+          "TICKER_USERNAME": "K8S-SAT",
+          "TICKER_TOKEN_FILE": "/var/run/ticker-token/token",
+          "TICKER_HEALTH_FILE": "/health/puback"
+        },
+        "probes": {
+          "startupProbe": {
+            "exec": {
+              "command": [
+                "python",
+                "/app/ticker.py",
+                "healthcheck"
+              ]
+            },
+            "failureThreshold": 18,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 10
+          },
+          "readinessProbe": {
+            "exec": {
+              "command": [
+                "python",
+                "/app/ticker.py",
+                "healthcheck"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 10
+          },
+          "livenessProbe": {
+            "exec": {
+              "command": [
+                "python",
+                "/app/ticker.py",
+                "healthcheck"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 10
+          }
+        },
+        "tokenAudience": "aio-internal",
+        "actualImageDigestObserved": true
+      }
+    },
+    "ticker-genuine-offline-no-measurements-periodic-registration": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:16.442371+00:00",
+      "evidence": {
+        "outputs": [
+          {
+            "assetId": "sensor-1",
+            "elapsedMs": 1958,
+            "emittedAtMs": 1792639731331,
+            "kind": "availability",
+            "lastSeenAtMs": null,
+            "reason": "timeout",
+            "state": "offline"
+          }
+        ],
+        "registrations": [
+          {
+            "at": "2026-10-22T03:28:49.333543+00:00",
+            "receivedAtMs": 1792639729333,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:49.326Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:50.328856+00:00",
+            "receivedAtMs": 1792639730328,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:50.326Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:51.331013+00:00",
+            "receivedAtMs": 1792639731331,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:51.327Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:52.331939+00:00",
+            "receivedAtMs": 1792639732331,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:52.327Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:53.331941+00:00",
+            "receivedAtMs": 1792639733331,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:53.328Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:54.334568+00:00",
+            "receivedAtMs": 1792639734334,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:54.328Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:55.339343+00:00",
+            "receivedAtMs": 1792639735339,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:55.329Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:56.331861+00:00",
+            "receivedAtMs": 1792639736331,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:56.329Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:57.333825+00:00",
+            "receivedAtMs": 1792639737333,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:57.329Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:58.334145+00:00",
+            "receivedAtMs": 1792639738334,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:58.330Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:28:59.333877+00:00",
+            "receivedAtMs": 1792639739333,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:28:59.330Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:00.334897+00:00",
+            "receivedAtMs": 1792639740334,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:00.330Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:01.343594+00:00",
+            "receivedAtMs": 1792639741343,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:01.333Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:02.336817+00:00",
+            "receivedAtMs": 1792639742336,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:02.333Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:03.337318+00:00",
+            "receivedAtMs": 1792639743337,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:03.333Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:04.352734+00:00",
+            "receivedAtMs": 1792639744352,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:04.349Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:05.352667+00:00",
+            "receivedAtMs": 1792639745352,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:05.350Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:06.354201+00:00",
+            "receivedAtMs": 1792639746354,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:06.350Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:07.362709+00:00",
+            "receivedAtMs": 1792639747362,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:07.350Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:08.358678+00:00",
+            "receivedAtMs": 1792639748358,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:08.351Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:09.360855+00:00",
+            "receivedAtMs": 1792639749360,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:09.351Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:10.356322+00:00",
+            "receivedAtMs": 1792639750356,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:10.352Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:11.425845+00:00",
+            "receivedAtMs": 1792639751425,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:11.416Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:12.444084+00:00",
+            "receivedAtMs": 1792639752444,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:12.417Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:13.431070+00:00",
+            "receivedAtMs": 1792639753431,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:13.417Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:14.423924+00:00",
+            "receivedAtMs": 1792639754423,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:14.417Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:29:15.430732+00:00",
+            "receivedAtMs": 1792639755430,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:29:15.418Z"
+            },
+            "retain": false
+          }
+        ],
+        "capturedBeforeEnabling": true
+      }
+    },
+    "ticker-reading-recovers-online": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:16.739614+00:00",
+      "evidence": [
+        {
+          "assetId": "sensor-1",
+          "elapsedMs": 27153,
+          "emittedAtMs": 1792639756526,
+          "kind": "availability",
+          "lastSeenAtMs": 1792639756526,
+          "reason": "recovered",
+          "state": "online"
+        }
+      ]
+    },
+    "ticker-autonomous-report-heartbeat-age-and-not-fresh": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:18.631199+00:00",
+      "evidence": [
+        {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792639756844,
+          "isFreshMeasurement": true,
+          "kind": "reported",
+          "messageId": "sensor-1-1",
+          "observationAgeMs": 0,
+          "reason": "initial",
+          "receivedAtMs": 1792639756844,
+          "sequence": 1,
+          "value": 10
+        },
+        {
+          "assetId": "sensor-1",
+          "emittedAtMs": 1792639758579,
+          "isFreshMeasurement": false,
+          "kind": "reported",
+          "messageId": "sensor-1-1",
+          "observationAgeMs": 1735,
+          "reason": "heartbeat",
+          "receivedAtMs": 1792639756844,
+          "sequence": 1,
+          "value": 10
+        }
+      ]
+    },
+    "ticker-autonomous-alarm-250ms-feed-raise-clear-no-spam": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:23.817949+00:00",
+      "evidence": {
+        "phases": [
+          {
+            "output": {
+              "assetId": "sensor-1",
+              "emittedAtMs": 1792639759979,
+              "isFreshMeasurement": true,
+              "kind": "alarm",
+              "messageId": "sensor-1-6",
+              "observationAgeMs": 0,
+              "reason": "thresholdSustained",
+              "receivedAtMs": 1792639759979,
+              "sequence": 6,
+              "state": "active",
+              "threshold": 80.0,
+              "value": 80
+            },
+            "elapsedSeconds": 1.3209166200003892,
+            "inputs": [
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-1",
+                  "sequence": 1,
+                  "value": 80
+                },
+                "beforeMs": 1792639758669,
+                "ackMs": 1792639758744
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-2",
+                  "sequence": 2,
+                  "value": 80
+                },
+                "beforeMs": 1792639758921,
+                "ackMs": 1792639758981
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-3",
+                  "sequence": 3,
+                  "value": 80
+                },
+                "beforeMs": 1792639759176,
+                "ackMs": 1792639759235
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-4",
+                  "sequence": 4,
+                  "value": 80
+                },
+                "beforeMs": 1792639759420,
+                "ackMs": 1792639759477
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-5",
+                  "sequence": 5,
+                  "value": 80
+                },
+                "beforeMs": 1792639759671,
+                "ackMs": 1792639759728
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-6",
+                  "sequence": 6,
+                  "value": 80
+                },
+                "beforeMs": 1792639759922,
+                "ackMs": 1792639759980
+              }
+            ],
+            "pendingOriginObservable": false
+          },
+          {
+            "output": {
+              "assetId": "sensor-1",
+              "emittedAtMs": 1792639760746,
+              "isFreshMeasurement": false,
+              "kind": "alarm",
+              "messageId": "sensor-1-9",
+              "observationAgeMs": 179,
+              "reason": "thresholdSustained",
+              "receivedAtMs": 1792639760567,
+              "sequence": 9,
+              "state": "cleared",
+              "threshold": 70.0,
+              "value": 70
+            },
+            "elapsedSeconds": 0.8220933430002333,
+            "inputs": [
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-7",
+                  "sequence": 7,
+                  "value": 70
+                },
+                "beforeMs": 1792639759990,
+                "ackMs": 1792639760086
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-8",
+                  "sequence": 8,
+                  "value": 70
+                },
+                "beforeMs": 1792639760241,
+                "ackMs": 1792639760303
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-9",
+                  "sequence": 9,
+                  "value": 70
+                },
+                "beforeMs": 1792639760499,
+                "ackMs": 1792639760568
+              },
+              {
+                "topic": "alarm-readings",
+                "payload": {
+                  "kind": "reading",
+                  "assetId": "sensor-1",
+                  "messageId": "sensor-1-10",
+                  "sequence": 10,
+                  "value": 70
+                },
+                "beforeMs": 1792639760743,
+                "ackMs": 1792639760802
+              }
+            ],
+            "pendingOriginObservable": false
+          }
+        ],
+        "manualTicks": 0,
+        "readingTriggeredTransitionsAllowed": true
+      }
+    },
+    "ticker-single-reading-tick-mediated-actual-dwell-and-gap": {
+      "status": "PASS",
+      "at": "2026-10-22T03:29:30.880950+00:00",
+      "evidence": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "status": "PASS",
+            "output": {
+              "assetId": "sensor-1",
+              "emittedAtMs": 1792639766615,
+              "isFreshMeasurement": false,
+              "kind": "alarm",
+              "messageId": "sensor-1-11",
+              "observationAgeMs": 1191,
+              "reason": "thresholdSustained",
+              "receivedAtMs": 1792639765424,
+              "sequence": 11,
+              "state": "active",
+              "threshold": 80.0,
+              "value": 80
+            },
+            "clearOutput": {
+              "assetId": "sensor-1",
+              "emittedAtMs": 1792639767670,
+              "isFreshMeasurement": false,
+              "kind": "alarm",
+              "messageId": "sensor-1-12",
+              "observationAgeMs": 749,
+              "reason": "thresholdSustained",
+              "receivedAtMs": 1792639766921,
+              "sequence": 12,
+              "state": "cleared",
+              "threshold": 70.0,
+              "value": 70
+            },
+            "sameLowReadingRedeliveries": 5
+          }
+        ],
+        "manualTicks": 0,
+        "actualRaiseAgeAtLeastMs": 1000,
+        "actualClearAgeAtLeastMs": 500,
+        "actualObservationGapAtMostMs": 1500
+      }
+    },
+    "ticker-over-sixty-seconds-probes-no-restarts": {
+      "status": "PASS",
+      "at": "2026-10-22T03:30:53.541062+00:00",
+      "evidence": {
+        "elapsedSeconds": 70.43075868199958,
+        "probeSamples": 13,
+        "finalLivePUBACK": {
+          "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-wfsbz",
+          "uid": "94e78221-d6c9-4189-bc30-739fcdf35293",
+          "createdAt": "2026-10-22T03:28:43Z",
+          "containers": [
+            {
+              "name": "ticker",
+              "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+              "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+              "ready": true,
+              "restartCount": 0
+            }
+          ],
+          "livePUBACKHealthcheckPassed": true
+        },
+        "minimumSeconds": 65
+      }
+    },
+    "ticker-worker-only-recreation-roster-and-fresh-all-eight-health": {
+      "status": "PASS",
+      "at": "2026-10-22T03:33:13.012673+00:00",
+      "evidence": {
+        "before": [
+          {
+            "podUID": "da568f64-85fe-4e0c-9ca3-59a2d42b8ed0",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:26:33Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "after": [
+          {
+            "podUID": "c89ad64b-81e0-4029-a1b4-0c303289b519",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:31:06Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "tickerBefore": {
+          "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-wfsbz",
+          "uid": "94e78221-d6c9-4189-bc30-739fcdf35293",
+          "createdAt": "2026-10-22T03:28:43Z",
+          "containers": [
+            {
+              "name": "ticker",
+              "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+              "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+              "ready": true,
+              "restartCount": 0
+            }
+          ],
+          "livePUBACKHealthcheckPassed": true
+        },
+        "tickerAfter": {
+          "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-wfsbz",
+          "uid": "94e78221-d6c9-4189-bc30-739fcdf35293",
+          "createdAt": "2026-10-22T03:28:43Z",
+          "containers": [
+            {
+              "name": "ticker",
+              "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+              "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+              "ready": true,
+              "restartCount": 0
+            }
+          ],
+          "livePUBACKHealthcheckPassed": true
+        },
+        "outputs": [
+          {
+            "assetId": "sensor-1",
+            "elapsedMs": 1000,
+            "emittedAtMs": 1792639873455,
+            "kind": "availability",
+            "lastSeenAtMs": null,
+            "reason": "timeout",
+            "state": "offline"
+          }
+        ],
+        "registrations": [
+          {
+            "at": "2026-10-22T03:31:04.321523+00:00",
+            "receivedAtMs": 1792639864321,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:04.312Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:05.330485+00:00",
+            "receivedAtMs": 1792639865330,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:05.316Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:06.319200+00:00",
+            "receivedAtMs": 1792639866319,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:06.316Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:07.385993+00:00",
+            "receivedAtMs": 1792639867386,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:07.375Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:08.429654+00:00",
+            "receivedAtMs": 1792639868429,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:08.377Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:09.380112+00:00",
+            "receivedAtMs": 1792639869380,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:09.377Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:10.395707+00:00",
+            "receivedAtMs": 1792639870395,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:10.381Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:11.454689+00:00",
+            "receivedAtMs": 1792639871454,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:11.451Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:12.455349+00:00",
+            "receivedAtMs": 1792639872455,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:12.452Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:13.455423+00:00",
+            "receivedAtMs": 1792639873455,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:13.452Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:14.518318+00:00",
+            "receivedAtMs": 1792639874518,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:14.511Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:15.528398+00:00",
+            "receivedAtMs": 1792639875528,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:15.515Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:16.530375+00:00",
+            "receivedAtMs": 1792639876530,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:16.525Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:17.528206+00:00",
+            "receivedAtMs": 1792639877528,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:17.525Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:18.527779+00:00",
+            "receivedAtMs": 1792639878527,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:18.525Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:19.530110+00:00",
+            "receivedAtMs": 1792639879530,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:19.526Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:20.546355+00:00",
+            "receivedAtMs": 1792639880546,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:20.529Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:21.535500+00:00",
+            "receivedAtMs": 1792639881535,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:21.529Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:22.532176+00:00",
+            "receivedAtMs": 1792639882532,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:22.530Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:23.533680+00:00",
+            "receivedAtMs": 1792639883533,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:23.530Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:24.614551+00:00",
+            "receivedAtMs": 1792639884614,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:24.611Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:25.617448+00:00",
+            "receivedAtMs": 1792639885617,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:25.612Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:26.622669+00:00",
+            "receivedAtMs": 1792639886622,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:26.612Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:27.616888+00:00",
+            "receivedAtMs": 1792639887617,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:27.613Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:28.617870+00:00",
+            "receivedAtMs": 1792639888617,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:28.613Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:29.627973+00:00",
+            "receivedAtMs": 1792639889628,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:29.617Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:30.620191+00:00",
+            "receivedAtMs": 1792639890620,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:30.617Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:31.619486+00:00",
+            "receivedAtMs": 1792639891619,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:31.617Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:32.620633+00:00",
+            "receivedAtMs": 1792639892620,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:32.617Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:33.621456+00:00",
+            "receivedAtMs": 1792639893621,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:33.618Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:34.621469+00:00",
+            "receivedAtMs": 1792639894621,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:34.618Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:35.621541+00:00",
+            "receivedAtMs": 1792639895621,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:35.619Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:36.714117+00:00",
+            "receivedAtMs": 1792639896714,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:36.619Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:37.622948+00:00",
+            "receivedAtMs": 1792639897622,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:37.619Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:38.623133+00:00",
+            "receivedAtMs": 1792639898623,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:38.619Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:39.624471+00:00",
+            "receivedAtMs": 1792639899624,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:39.620Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:40.627075+00:00",
+            "receivedAtMs": 1792639900627,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:40.620Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:41.624273+00:00",
+            "receivedAtMs": 1792639901624,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:41.620Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:42.624902+00:00",
+            "receivedAtMs": 1792639902624,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:42.621Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:43.625548+00:00",
+            "receivedAtMs": 1792639903625,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:43.621Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:44.721132+00:00",
+            "receivedAtMs": 1792639904721,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:44.711Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:45.716107+00:00",
+            "receivedAtMs": 1792639905716,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:45.712Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:46.715986+00:00",
+            "receivedAtMs": 1792639906716,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:46.712Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:47.721710+00:00",
+            "receivedAtMs": 1792639907721,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:47.713Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:48.718473+00:00",
+            "receivedAtMs": 1792639908718,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:48.713Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:49.717792+00:00",
+            "receivedAtMs": 1792639909717,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:49.714Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:50.718008+00:00",
+            "receivedAtMs": 1792639910718,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:50.715Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:51.718193+00:00",
+            "receivedAtMs": 1792639911718,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:51.715Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:52.720249+00:00",
+            "receivedAtMs": 1792639912720,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:52.715Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:53.719816+00:00",
+            "receivedAtMs": 1792639913719,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:53.716Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:54.721380+00:00",
+            "receivedAtMs": 1792639914721,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:54.716Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:55.782413+00:00",
+            "receivedAtMs": 1792639915782,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:55.774Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:56.798710+00:00",
+            "receivedAtMs": 1792639916798,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:56.775Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:57.778703+00:00",
+            "receivedAtMs": 1792639917778,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:57.775Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:58.779284+00:00",
+            "receivedAtMs": 1792639918779,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:58.775Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:31:59.778677+00:00",
+            "receivedAtMs": 1792639919778,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:31:59.775Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:00.784591+00:00",
+            "receivedAtMs": 1792639920784,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:00.777Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:01.781432+00:00",
+            "receivedAtMs": 1792639921781,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:01.777Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:02.780849+00:00",
+            "receivedAtMs": 1792639922780,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:02.778Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:03.782037+00:00",
+            "receivedAtMs": 1792639923782,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:03.778Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:04.781520+00:00",
+            "receivedAtMs": 1792639924781,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:04.779Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:05.786992+00:00",
+            "receivedAtMs": 1792639925787,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:05.779Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:06.782916+00:00",
+            "receivedAtMs": 1792639926782,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:06.779Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:07.782423+00:00",
+            "receivedAtMs": 1792639927782,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:07.780Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:08.783057+00:00",
+            "receivedAtMs": 1792639928783,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:08.780Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:09.783782+00:00",
+            "receivedAtMs": 1792639929783,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:09.780Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:10.787342+00:00",
+            "receivedAtMs": 1792639930787,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:10.781Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:11.783670+00:00",
+            "receivedAtMs": 1792639931783,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:11.781Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:12.784412+00:00",
+            "receivedAtMs": 1792639932784,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:12.782Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:13.785090+00:00",
+            "receivedAtMs": 1792639933785,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:13.782Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:14.785357+00:00",
+            "receivedAtMs": 1792639934785,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:14.782Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:15.787325+00:00",
+            "receivedAtMs": 1792639935787,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:15.783Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:16.786699+00:00",
+            "receivedAtMs": 1792639936786,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:16.784Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:17.787238+00:00",
+            "receivedAtMs": 1792639937787,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:17.784Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:18.814066+00:00",
+            "receivedAtMs": 1792639938814,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:18.811Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:19.814424+00:00",
+            "receivedAtMs": 1792639939814,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:19.811Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:20.814346+00:00",
+            "receivedAtMs": 1792639940814,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:20.812Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:21.815420+00:00",
+            "receivedAtMs": 1792639941815,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:21.812Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:22.815767+00:00",
+            "receivedAtMs": 1792639942815,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:22.813Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:23.822638+00:00",
+            "receivedAtMs": 1792639943822,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:23.817Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:24.819697+00:00",
+            "receivedAtMs": 1792639944819,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:24.817Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:25.820587+00:00",
+            "receivedAtMs": 1792639945820,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:25.817Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:26.914945+00:00",
+            "receivedAtMs": 1792639946914,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:26.911Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:27.913959+00:00",
+            "receivedAtMs": 1792639947913,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:27.911Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:28.914388+00:00",
+            "receivedAtMs": 1792639948914,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:28.912Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:29.915700+00:00",
+            "receivedAtMs": 1792639949915,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:29.912Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:30.914660+00:00",
+            "receivedAtMs": 1792639950914,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:30.912Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:31.915517+00:00",
+            "receivedAtMs": 1792639951915,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:31.913Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:32.915996+00:00",
+            "receivedAtMs": 1792639952916,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:32.913Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:33.916186+00:00",
+            "receivedAtMs": 1792639953916,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:33.914Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:34.919661+00:00",
+            "receivedAtMs": 1792639954919,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:34.916Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:35.920708+00:00",
+            "receivedAtMs": 1792639955920,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:35.916Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:36.919424+00:00",
+            "receivedAtMs": 1792639956919,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:36.917Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:37.920055+00:00",
+            "receivedAtMs": 1792639957920,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:37.917Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:38.920656+00:00",
+            "receivedAtMs": 1792639958920,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:38.917Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:39.920881+00:00",
+            "receivedAtMs": 1792639959920,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:39.918Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:40.921659+00:00",
+            "receivedAtMs": 1792639960921,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:40.918Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:41.922295+00:00",
+            "receivedAtMs": 1792639961922,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:41.919Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:42.921967+00:00",
+            "receivedAtMs": 1792639962921,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:42.919Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:43.922559+00:00",
+            "receivedAtMs": 1792639963922,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:43.920Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:44.924454+00:00",
+            "receivedAtMs": 1792639964924,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:44.921Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:45.925690+00:00",
+            "receivedAtMs": 1792639965925,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:45.922Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:46.925771+00:00",
+            "receivedAtMs": 1792639966925,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:46.922Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:47.925577+00:00",
+            "receivedAtMs": 1792639967925,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:47.922Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:48.925230+00:00",
+            "receivedAtMs": 1792639968925,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:48.923Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:49.926165+00:00",
+            "receivedAtMs": 1792639969926,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:49.923Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:50.927628+00:00",
+            "receivedAtMs": 1792639970927,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:50.924Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:51.928147+00:00",
+            "receivedAtMs": 1792639971928,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:51.925Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:52.928567+00:00",
+            "receivedAtMs": 1792639972928,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:52.925Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:53.928870+00:00",
+            "receivedAtMs": 1792639973928,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:53.925Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:54.977001+00:00",
+            "receivedAtMs": 1792639974977,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:54.973Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:55.976690+00:00",
+            "receivedAtMs": 1792639975976,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:55.974Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:56.976827+00:00",
+            "receivedAtMs": 1792639976976,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:56.974Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:57.977236+00:00",
+            "receivedAtMs": 1792639977977,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:57.974Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:58.977801+00:00",
+            "receivedAtMs": 1792639978977,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:58.975Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:32:59.979102+00:00",
+            "receivedAtMs": 1792639979979,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:32:59.975Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:00.978130+00:00",
+            "receivedAtMs": 1792639980978,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:00.976Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:01.978685+00:00",
+            "receivedAtMs": 1792639981978,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:01.976Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:02.978729+00:00",
+            "receivedAtMs": 1792639982978,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:02.976Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:03.985266+00:00",
+            "receivedAtMs": 1792639983985,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:03.977Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:04.980947+00:00",
+            "receivedAtMs": 1792639984980,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:04.977Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:05.979802+00:00",
+            "receivedAtMs": 1792639985979,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:05.978Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:06.980729+00:00",
+            "receivedAtMs": 1792639986980,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:06.978Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:07.980794+00:00",
+            "receivedAtMs": 1792639987980,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:07.978Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:08.981713+00:00",
+            "receivedAtMs": 1792639988981,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:08.979Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:09.981398+00:00",
+            "receivedAtMs": 1792639989981,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:09.979Z"
+            },
+            "retain": false
+          }
+        ],
+        "noPostRestartMeasurements": true,
+        "allEightGraphNodesFreshFromNewPod": true
+      }
+    },
+    "ticker-only-rollout-worker-unchanged-puback-resumes": {
+      "status": "PASS",
+      "at": "2026-10-22T03:33:39.881579+00:00",
+      "evidence": {
+        "before": [
+          {
+            "podUID": "c89ad64b-81e0-4029-a1b4-0c303289b519",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:31:06Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "after": [
+          {
+            "podUID": "c89ad64b-81e0-4029-a1b4-0c303289b519",
+            "containers": [
+              {
+                "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+                "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+                "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-10-22T03:31:06Z"
+                  }
+                }
+              }
+            ],
+            "graphNodesAvailable": 24
+          }
+        ],
+        "tickerBefore": {
+          "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-wfsbz",
+          "uid": "94e78221-d6c9-4189-bc30-739fcdf35293",
+          "createdAt": "2026-10-22T03:28:43Z",
+          "containers": [
+            {
+              "name": "ticker",
+              "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+              "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+              "ready": true,
+              "restartCount": 0
+            }
+          ],
+          "livePUBACKHealthcheckPassed": true
+        },
+        "tickerAfter": {
+          "name": "customer-patterns-rc4-19ba69e6-ticker-b5cd8559d-bw79h",
+          "uid": "8078fe3c-7b52-4b80-ac09-08b132ca206f",
+          "createdAt": "2026-10-22T03:33:22Z",
+          "containers": [
+            {
+              "name": "ticker",
+              "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+              "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+              "ready": true,
+              "restartCount": 0
+            }
+          ],
+          "livePUBACKHealthcheckPassed": true
+        },
+        "registrationsAfterRollout": [
+          {
+            "at": "2026-10-22T03:33:21.116229+00:00",
+            "receivedAtMs": 1792640001116,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:21.113Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:26.306000+00:00",
+            "receivedAtMs": 1792640006306,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:26.303Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:27.306339+00:00",
+            "receivedAtMs": 1792640007306,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:27.304Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:28.306475+00:00",
+            "receivedAtMs": 1792640008306,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:28.304Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:29.306616+00:00",
+            "receivedAtMs": 1792640009306,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:29.304Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:30.307934+00:00",
+            "receivedAtMs": 1792640010307,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:30.305Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:31.307329+00:00",
+            "receivedAtMs": 1792640011307,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:31.305Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:32.308225+00:00",
+            "receivedAtMs": 1792640012308,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:32.306Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:33.308901+00:00",
+            "receivedAtMs": 1792640013309,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:33.306Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:34.309079+00:00",
+            "receivedAtMs": 1792640014309,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:34.306Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:35.309392+00:00",
+            "receivedAtMs": 1792640015309,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:35.307Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:36.310223+00:00",
+            "receivedAtMs": 1792640016310,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:36.307Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:37.309763+00:00",
+            "receivedAtMs": 1792640017309,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:37.308Z"
+            },
+            "retain": false
+          },
+          {
+            "at": "2026-10-22T03:33:38.311259+00:00",
+            "receivedAtMs": 1792640018311,
+            "topic": "availability-registers",
+            "payload": {
+              "assetId": "sensor-1",
+              "kind": "register",
+              "sampledAt": "2026-10-22T03:33:38.308Z"
+            },
+            "retain": false
+          }
+        ]
+      }
+    },
+    "mode-ticker": {
+      "status": "PASS",
+      "at": "2026-10-22T03:33:39.897532+00:00",
+      "evidence": {
+        "sameAllEightRelease": "customer-patterns-rc4",
+        "manualTicks": 0,
+        "noUsernameOrProbeOverrides": true
+      }
+    },
+    "actual-published-chart-fresh-state-helm-test": {
+      "status": "PASS",
+      "at": "2026-10-22T03:41:08.634505+00:00",
+      "evidence": {
+        "phase": "Succeeded",
+        "graphs": 8,
+        "tickerDisabledDuringTest": true,
+        "publishedVerifierUnmodified": true,
+        "freshWorkerState": true
+      }
+    }
+  },
+  "finalHealth": [
+    {
+      "podUID": "95cf2621-2b4d-439a-9c49-b39db36847cb",
+      "containers": [
+        {
+          "name": "aio-dataflow-customer-patterns-rc4-19ba69e6",
+          "image": "mcr.microsoft.com/azureiotoperations/dataflow:1.6.0",
+          "imageID": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-10-22T03:36:00Z"
+            }
+          }
+        }
+      ],
+      "graphNodesAvailable": 24
+    }
+  ],
+  "finalTicker": {
+    "name": "customer-patterns-rc4-19ba69e6-ticker-6b7bbf596b-6wp4l",
+    "uid": "a11d4ae6-34f6-4a8c-a894-ddf72d82285f",
+    "createdAt": "2026-10-22T03:39:06Z",
+    "containers": [
+      {
+        "name": "ticker",
+        "image": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4",
+        "imageID": "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker@sha256:d66f95a47f4209105f70a8e69b0e605a1e3e0202b4fabe5d6a6537d399257f7c",
+        "ready": true,
+        "restartCount": 0
+      }
+    ],
+    "livePUBACKHealthcheckPassed": true,
+    "defaultSATEnv": {
+      "TICKER_MQTT_HOST": "aio-broker.default.svc.cluster.local",
+      "TICKER_MQTT_PORT": "1883",
+      "TICKER_TLS": "false",
+      "TICKER_TOPIC_PREFIX": "dataflow-patterns/customer-patterns-rc4",
+      "TICKER_AUTH_MODE": "serviceAccountToken",
+      "TICKER_USERNAME": "K8S-SAT",
+      "TICKER_TOKEN_FILE": "/var/run/ticker-token/token",
+      "TICKER_HEALTH_FILE": "/health/puback"
+    },
+    "probes": {
+      "startupProbe": {
+        "exec": {
+          "command": [
+            "python",
+            "/app/ticker.py",
+            "healthcheck"
+          ]
+        },
+        "failureThreshold": 18,
+        "periodSeconds": 10,
+        "successThreshold": 1,
+        "timeoutSeconds": 10
+      },
+      "readinessProbe": {
+        "exec": {
+          "command": [
+            "python",
+            "/app/ticker.py",
+            "healthcheck"
+          ]
+        },
+        "failureThreshold": 3,
+        "periodSeconds": 10,
+        "successThreshold": 1,
+        "timeoutSeconds": 10
+      },
+      "livenessProbe": {
+        "exec": {
+          "command": [
+            "python",
+            "/app/ticker.py",
+            "healthcheck"
+          ]
+        },
+        "failureThreshold": 3,
+        "periodSeconds": 10,
+        "successThreshold": 1,
+        "timeoutSeconds": 10
+      }
+    },
+    "tokenAudience": "aio-internal",
+    "actualImageDigestObserved": true
+  },
+  "boundaries": {
+    "brokerLeastPrivilegeACLClaimed": false,
+    "exactSDKInputTopicBindingTested": true,
+    "durableAccumulationAcrossRestartClaimed": false,
+    "restartRestoresConfiguredTotalBootstrap": true,
+    "baselineCustomerReleasesUnmodified": true,
+    "nativeRuntimeImagesUnmodified": true,
+    "sourceDelivery": "QoS-1 PUBACK is not graph receipt. Phase barriers and exact reading redelivery were used; duplicate readings do not refresh receipt clocks.",
+    "tickerDwell": "Autonomous ticks raised and cleared from one unique reading per phase. Exact low-reading redelivery drained the source without changing receipt time; actual emitted/received ages, freshness, duration and gap were checked."
+  },
+  "environmentWarnings": [
+    {
+      "component": "Native AIO 1.6 WASM graph controller",
+      "observed": "Actix arbiter creation failed with EMFILE during graph compilation/recreation.",
+      "softOpenFileLimit": 1024,
+      "automaticRestartsSinceQualificationCleanup": 3,
+      "mitigation": "Retired only owned qualification resources and used one eight-graph profile. Preserved baseline profiles and all native images.",
+      "nativeControllerFixClaimed": false,
+      "result": "Controller recovered; all final graph nodes are Available and both restart qualifications passed."
+    }
+  ],
+  "blockedCases": []
+}
