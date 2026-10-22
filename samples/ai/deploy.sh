@@ -301,7 +301,8 @@ ENDPOINTS_JSON="$(jq -ce '.endpoints.value | select(type == "array")' <<< "$OUTP
 MCP_METADATA_URL="$(jq -er '.mcpOAuthProtectedResourceMetadataUrl.value | select(type == "string")' <<< "$OUTPUTS_JSON")"
 
 install_relay_release() {
-    local protocol="$1" release_name="$2" sas_secret_name="$3"
+    local protocol="$1" release_name="$2"
+    local sas_secret_name="${release_name}-hc"
     local endpoint relay_url hc_name sas_key_name sas_key apim_url annotations
     endpoint="$(jq -ce --arg protocol "$protocol" \
         '[.[] | select(.protocol == $protocol)] | if length == 1 then .[0] else error("Expected one endpoint") end' \
@@ -350,10 +351,10 @@ install_relay_release() {
 }
 
 if [[ "$ENDPOINT_PROTOCOL" == both ]]; then
-    install_relay_release mcp "${HELM_RELEASE_NAME}-mcp" "aio-ai-relay-hc-mcp"
-    install_relay_release a2a "${HELM_RELEASE_NAME}-a2a" "aio-ai-relay-hc-a2a"
+    install_relay_release mcp "${HELM_RELEASE_NAME}-mcp"
+    install_relay_release a2a "${HELM_RELEASE_NAME}-a2a"
 else
-    install_relay_release "$ENDPOINT_PROTOCOL" "$HELM_RELEASE_NAME" "aio-ai-relay-hc"
+    install_relay_release "$ENDPOINT_PROTOCOL" "$HELM_RELEASE_NAME"
 fi
 if [[ -n "$MCP_METADATA_URL" ]]; then
     echo "==> [mcp] OAuth protected-resource metadata: $MCP_METADATA_URL"

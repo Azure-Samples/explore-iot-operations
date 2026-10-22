@@ -201,6 +201,12 @@ Hybrid Connections require sender authentication in both modes. `--auth-mode sas
 is for development: it creates Listen-only SAS rules and Kubernetes Secrets;
 managed identity is the default.
 
+Each SAS Secret is named `<full-helm-release-name>-hc`, so independent releases
+in the same namespace don't overwrite each other's credentials. In dual-protocol
+mode, the names are `<helm-release-name>-mcp-hc` and `<helm-release-name>-a2a-hc`.
+Upgrading an existing SAS deployment doesn't delete its old fixed-name Secrets;
+remove them only after confirming that no workloads still reference them.
+
 The script waits up to 180 seconds for each relay Deployment after Helm
 installation. It does not roll back Azure resources or Entra objects on failure.
 Record the printed application ID and the ARM deployment outputs for cleanup.
