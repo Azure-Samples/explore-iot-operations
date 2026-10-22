@@ -98,10 +98,10 @@ models, or evidence of a customer's process behavior.
 | `graph-correlate-by-id` | Predictions and delayed measurements | Buffer either arrival order and match asset, piece, and optional run IDs | A completed match with prediction residual and target error |
 | `graph-versioned-predictor` | Readings and externally approved model updates | Activate only the expected next version; evaluate readings with the active model | Predictions only; update acknowledgments don't re-enter the data path |
 | `graph-report-by-exception` | Readings and trusted ticks | Compare with the last reported value; optionally send a heartbeat | Initial reading, meaningful changes, and configured heartbeats |
-| `graph-stable-alarm` | Readings and trusted ticks | Apply separate raise/clear thresholds and persistence intervals | Alarm transitions |
+| `graph-stable-alarm` | Readings and clock events | Apply alarm hysteresis with separate raise/clear thresholds and persistence periods | Alarm transitions |
 | `graph-offline-detection` | Readings, expected-asset registrations, and trusted ticks | Check elapsed time since the last accepted measurement | Online, offline, and recovery transitions |
 | `graph-running-total` | Sequenced readings and approved resets | Add values within an epoch and validate reset versions | Updated totals and reset checkpoints |
-| `graph-smooth-readings` | Sequenced readings | Blend the current value with the previous smoothed value | One smoothed value per accepted reading |
+| `graph-smooth-readings` | Sequenced readings | Apply an exponential moving average | One smoothed value per accepted reading |
 
 ### Build and exercise the operators
 
@@ -248,10 +248,10 @@ below and the input-topic bindings. No settings JSON editing is needed.
 | Sample | Explicit deployment settings |
 | --- | --- |
 | Report by exception | `heartbeatIntervalMs: 1000` |
-| Stable alarm | `high: 80`, `low: 70`, `raiseForMs: 1000`, `clearForMs: 500`, `maxObservationGapMs: 1500` |
+| Alarm hysteresis | `high: 80`, `low: 70`, `raiseForMs: 1000`, `clearForMs: 500`, `maxObservationGapMs: 1500` |
 | Offline detection | `timeoutMs: 1000` |
 | Running total | Bootstrap `sensor-1` at total/version/epoch/sequence zero |
-| Smooth readings | Default blend `alpha: 0.5` |
+| Exponential moving average | Default blend `alpha: 0.5` |
 
 Use a fresh deployment with no other publishers. For standalone deployment,
 apply `registry.yaml` and the five reading manifests linked above. For Helm,
