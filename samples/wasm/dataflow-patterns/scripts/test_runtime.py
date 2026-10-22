@@ -100,7 +100,7 @@ class CoreReplayTests(unittest.TestCase):
             harness.app.config = replace(harness.config, auth_mode="serviceAccountToken")
             Path(harness.config.token_file).write_text("synthetic-test-token\n")
             harness.app.connect()
-            self.assertEqual(harness.app.client.auth, ("$sat", "synthetic-test-token"))
+            self.assertEqual(harness.app.client.auth, ("K8S-SAT", "synthetic-test-token"))
             harness.app.cycle()
             rendered = subprocess.run(
                 ["helm", "template", "security-check", str(BASE / "chart"),
@@ -343,6 +343,68 @@ class DeliveryTests(unittest.TestCase):
     def test_exact_shared_expectations_are_accepted_without_paho(self):
         runtime.assert_deliveries(self.expected, copy.deepcopy(self.expected))
 
+    def test_processing_clock_deliveries_can_arrive_after_short_input_settles(self):
+        actual = []
+        clock = [0.0]
+
+        def receive(duration):
+            clock[0] += duration
+            if clock[0] >= 1.2 and not actual:
+                actual.extend(self.expected)
+
+        with patch.object(runtime.time, "monotonic", side_effect=lambda: clock[0]):
+            runtime.await_delivery_count(receive, actual, self.expected)
+        self.assertGreater(clock[0], 0.5)
+        runtime.assert_deliveries(actual, self.expected)
+
+    def test_processing_clock_inputs_flush_with_exact_redelivery(self):
+        step = runtime.Step("report-readings", {"kind": "reading", "messageId": "r1"},
+                            elapsed_ms=100)
+        published = []
+        with patch.object(runtime.time, "sleep") as sleep:
+            runtime.publish_live_step(lambda *args: published.append(args), step)
+        self.assertEqual(published, [(step.topic, step.payload)] * 2)
+        sleep.assert_called_once_with(0.05)
+
+    def test_event_time_inputs_keep_original_publish_pacing(self):
+        step = runtime.Step("speed", {"kind": "speed"})
+        published = []
+        with patch.object(runtime.time, "sleep") as sleep:
+            runtime.publish_live_step(lambda *args: published.append(args), step)
+        self.assertEqual(published, [(step.topic, step.payload)])
+        sleep.assert_not_called()
+
+    def test_ticks_flush_with_deduplicated_reading_not_a_second_tick(self):
+        reading = runtime.Step("alarm-readings", {
+            "kind": "reading", "assetId": "a", "messageId": "r1"}, elapsed_ms=100)
+        tick = runtime.Step("alarm-ticks", {"kind": "tick", "assetId": "a"}, elapsed_ms=1350)
+        published, flush_inputs = [], {}
+        with patch.object(runtime.time, "sleep"):
+            runtime.publish_live_step(lambda *args: published.append(args), reading, flush_inputs)
+            runtime.publish_live_step(lambda *args: published.append(args), tick, flush_inputs)
+        self.assertEqual(published, [
+            (reading.topic, reading.payload), (reading.topic, reading.payload),
+            (tick.topic, tick.payload), (reading.topic, reading.payload)])
+
+    def test_cold_ticks_have_no_replayed_control_input(self):
+        tick = runtime.Step("alarm-ticks", {"kind": "tick", "assetId": "a"}, elapsed_ms=0)
+        published = []
+        runtime.publish_live_step(lambda *args: published.append(args), tick, {})
+        self.assertEqual(published, [(tick.topic, tick.payload)])
+
+    def test_delivery_wait_is_bounded_and_missing_outputs_still_fail(self):
+        actual = []
+        clock = [0.0]
+
+        def receive(duration):
+            clock[0] += duration
+
+        with patch.object(runtime.time, "monotonic", side_effect=lambda: clock[0]):
+            runtime.await_delivery_count(receive, actual, self.expected, timeout=2)
+        self.assertAlmostEqual(clock[0], 2)
+        with self.assertRaises(AssertionError):
+            runtime.assert_deliveries(actual, self.expected)
+
     def test_sample_overrides_leave_graph_defaults_and_original_scenarios_unchanged(self):
         sample = runtime.sample_scenarios(BASE_TIME)
         self.assertEqual(sample[:3], self.scenarios[:3])
@@ -398,6 +460,42 @@ class DeliveryTests(unittest.TestCase):
                       lambda: runtime.assert_live_deliveries(extra, expected, windows)):
             with self.assertRaises(AssertionError):
                 check()
+
+    def test_live_alarm_preserves_dwell_gap_and_freshness_semantics(self):
+        scenario = runtime.sample_scenarios(BASE_TIME)[4]
+        expected = [(scenario.destination, step.expected) for step in scenario.steps
+                    if step.expected is not None]
+        origin = int(BASE_TIME.timestamp() * 1000)
+        windows = {(scenario.destination, origin + step.elapsed_ms):
+                   (origin + step.elapsed_ms - 5000, origin + step.elapsed_ms + 5000)
+                   for step in scenario.steps}
+        runtime.assert_live_deliveries(copy.deepcopy(expected), expected, windows)
+        for age in (999, 1501):
+            actual = copy.deepcopy(expected)
+            value = actual[0][1]
+            value["emittedAtMs"] = value["receivedAtMs"] + age
+            value["observationAgeMs"] = age
+            with self.subTest(age=age), self.assertRaises(AssertionError):
+                runtime.assert_live_deliveries(actual, expected, windows)
+        actual = copy.deepcopy(expected)
+        actual[0][1]["isFreshMeasurement"] = True
+        with self.assertRaises(AssertionError):
+            runtime.assert_live_deliveries(actual, expected, windows)
+
+    def test_live_heartbeat_cannot_use_a_fabricated_interval(self):
+        scenario = runtime.sample_scenarios(BASE_TIME)[3]
+        expected = [(scenario.destination, step.expected) for step in scenario.steps
+                    if step.expected is not None]
+        origin = int(BASE_TIME.timestamp() * 1000)
+        windows = {(scenario.destination, origin + step.elapsed_ms):
+                   (origin + step.elapsed_ms - 5000, origin + step.elapsed_ms + 5000)
+                   for step in scenario.steps}
+        actual = copy.deepcopy(expected)
+        heartbeat = actual[1][1]
+        heartbeat["emittedAtMs"] = heartbeat["receivedAtMs"] + 999
+        heartbeat["observationAgeMs"] = 999
+        with self.assertRaises(AssertionError):
+            runtime.assert_live_deliveries(actual, expected, windows)
 
     def test_live_clocks_are_bounded_bound_consistently_and_ages_checked(self):
         scenario = next(s for s in self.scenarios if s.role == "offline-detection")

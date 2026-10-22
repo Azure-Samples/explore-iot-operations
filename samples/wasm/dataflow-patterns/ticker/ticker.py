@@ -78,7 +78,7 @@ class Config:
         if not roles:
             raise ValueError("at least one tick target is required")
         mode = env.get("TICKER_AUTH_MODE", "serviceAccountToken")
-        username = env.get("TICKER_USERNAME", "$sat")
+        username = env.get("TICKER_USERNAME", "K8S-SAT")
         password = env.get("TICKER_PASSWORD", "")
         if mode not in ("serviceAccountToken", "existingSecret", "anonymous"):
             raise ValueError("invalid authentication mode")
@@ -264,7 +264,7 @@ def main(argv=None):
         "TICKER_ASSETS (JSON array), TICKER_INTERVAL_SECONDS (0.1..60), "
         "TICKER_TARGET_REPORT/ALARM/AVAILABILITY (true/false), TICKER_AUTH_MODE "
         "(serviceAccountToken/default, existingSecret, anonymous), TICKER_USERNAME "
-        "($sat), TICKER_PASSWORD, TICKER_TOKEN_FILE, TICKER_HEALTH_FILE. "
+        "(K8S-SAT), TICKER_PASSWORD, TICKER_TOKEN_FILE, TICKER_HEALTH_FILE. "
         "Token audience is configured by the projected Kubernetes volume. "
         "Health requires a recent real PUBACK; disconnect/shutdown removes health. "
         "Publish/CONNACK deadline 5s, eight consecutive failed attempts with "

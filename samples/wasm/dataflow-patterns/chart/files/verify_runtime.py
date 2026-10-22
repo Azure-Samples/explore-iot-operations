@@ -293,6 +293,33 @@ def step_delay(step, previous_elapsed, last_publish):
                - time.monotonic())
 
 
+def await_delivery_count(receive, actual, expected, timeout=10):
+    """Allow asynchronous graph delivery without changing inter-input timing."""
+    deadline = time.monotonic() + timeout
+    while len(actual) < len(expected):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        receive(min(0.2, remaining))
+
+
+def publish_live_step(publish, step, flush_inputs=None):
+    publish(step.topic, step.payload)
+    if step.elapsed_ms is not None:
+        # AIO can buffer a source record until the next arrival or idle flush.
+        # An exact QoS-1 redelivery drains it promptly without refreshing a
+        # reading's receipt clock or changing the configured processing gates.
+        flush_inputs = {} if flush_inputs is None else flush_inputs
+        source = step.topic.split("-")[0]
+        key = (source, step.payload.get("assetId"))
+        if step.payload["kind"] in ("reading", "register"):
+            flush_inputs[key] = (step.topic, step.payload)
+        flush = flush_inputs.get(key)
+        if flush is not None:
+            time.sleep(0.05)
+            publish(*flush)
+
+
 def validate_delivery(topic, value):
     """Reject malformed envelopes and internal records, including within batches."""
     if topic not in DESTINATIONS:
@@ -333,10 +360,11 @@ def assert_live_deliveries(actual, expected, windows):
     """Bind nondeterministic processing clocks, retaining exact payload comparisons.
 
     Hosts must be clock-synchronized within two seconds. Every timestamp must
-    belong to its input's publish window; repeated references bind identically,
+    belong to its input's processing window; repeated references bind identically,
     and ages are checked arithmetically, never ignored or rounded.
     """
     bindings = {}
+    last_reports = {}
 
     def canonical(topic, value, template):
         if not isinstance(value, dict) or not isinstance(template, dict):
@@ -360,6 +388,19 @@ def assert_live_deliveries(actual, expected, windows):
         if "observationAgeMs" in template:
             assert type(value.get("observationAgeMs")) is int and value["observationAgeMs"] >= 0
             assert value.get("observationAgeMs") == value["emittedAtMs"] - value["receivedAtMs"]
+            assert value.get("isFreshMeasurement") == (value["observationAgeMs"] == 0)
+            if topic == "alarms":
+                duration = SAMPLE_OVERRIDES["stable-alarm"][
+                    "raiseForMs" if value["state"] == "active" else "clearForMs"]
+                assert duration <= value["observationAgeMs"] <= (
+                    SAMPLE_OVERRIDES["stable-alarm"]["maxObservationGapMs"]), (
+                        f"Alarm dwell/gap contract violated: {value!r}")
+            if topic == "changes":
+                asset = value["assetId"]
+                if value["reason"] == "heartbeat":
+                    assert value["emittedAtMs"] - last_reports[asset] >= (
+                        SAMPLE_OVERRIDES["report-by-exception"]["heartbeatIntervalMs"])
+                last_reports[asset] = value["emittedAtMs"]
             result["observationAgeMs"] = template["observationAgeMs"]
         if "elapsedMs" in template:
             reference = template["emittedAtMs"] - template["elapsedMs"]
@@ -371,6 +412,8 @@ def assert_live_deliveries(actual, expected, windows):
             assert lower - 2000 <= clock <= upper + 2000
             assert bindings.setdefault(key, clock) == clock
             result["elapsedMs"] = template["elapsedMs"]
+            if value.get("state") == "offline":
+                assert elapsed >= SAMPLE_OVERRIDES["offline-detection"]["timeoutMs"]
         return result
 
     assert len(actual) == len(expected), f"Delivery count differs: {actual!r} != {expected!r}"
@@ -459,7 +502,7 @@ def run():
         receive(1)
         assert not seen, "Use a fresh isolated release with no retained outputs or other publishers"
 
-        expected, windows = [], {}
+        expected, windows, flush_inputs = [], {}, {}
         base = datetime.now(timezone.utc) - timedelta(seconds=10)
         for scenario in sample_scenarios(base):
             previous_elapsed, last_publish = 0, time.monotonic()
@@ -469,7 +512,7 @@ def run():
                     if delay > 0:
                         receive(delay)
                 before = int(time.time() * 1000)
-                publish(step.topic, step.payload)
+                publish_live_step(publish, step, flush_inputs)
                 if step.elapsed_ms is not None:
                     previous_elapsed, last_publish = step.elapsed_ms, time.monotonic()
                     windows[(scenario.destination, int(base.timestamp() * 1000) + step.elapsed_ms)] = (
@@ -483,9 +526,18 @@ def run():
                     receive(step.wait)
                     if step.elapsed_ms is None:
                         assert_live_deliveries(seen, expected, windows)
+                if step.elapsed_ms is not None and step.expected is not None:
+                    # PUBACK acknowledges the broker, not the graph. Do not send
+                    # the next phase's reading until this transition is observed.
+                    await_delivery_count(receive, seen, expected)
+                    delivered = int(time.time() * 1000)
+                    for key, (lower, upper) in list(windows.items()):
+                        if key[0] == scenario.destination:
+                            windows[key] = (lower, max(upper, delivered))
+                    assert_live_deliveries(seen, expected, windows)
             if previous_elapsed:
                 # Short inter-input settles are not output-delivery deadlines.
-                receive(0.5)
+                await_delivery_count(receive, seen, expected)
                 assert_live_deliveries(seen, expected, windows)
         receive(3)
         assert_live_deliveries(seen, expected, windows)

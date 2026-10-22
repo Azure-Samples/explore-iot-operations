@@ -44,7 +44,7 @@ class ManifestTests(unittest.TestCase):
                 expected_settings = {
                     "registryEndpointRef": registry["metadata"]["name"],
                     "artifact": "azure-samples/explore-iot-operations/dataflow-patterns/"
-                                f"graph-{artifact}:1.0.0-rc.3",
+                                f"graph-{artifact}:1.0.0-rc.4",
                 }
                 if name not in ("align-by-time", "correlate-predictions"):
                     definition = yaml.safe_load((SCRIPTS.parent / f"graph-{artifact}.yaml").read_text())
@@ -84,7 +84,7 @@ class ManifestTests(unittest.TestCase):
                     graph, version = artifact.rsplit("/", 1)[1].split(":")
                     with self.subTest(path=path, graph=graph):
                         self.assertIn(graph, PREPARE["GRAPHS"])
-                        self.assertEqual(version, "1.0.0-rc.3")
+                        self.assertEqual(version, "1.0.0-rc.4")
                         definition = yaml.safe_load((SCRIPTS.parent / f"{graph}.yaml").read_text())
                         # Source crate versions need not equal a future release:
                         # prepare-release stamps the actual published graph copy.

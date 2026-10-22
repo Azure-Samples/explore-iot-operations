@@ -18,7 +18,7 @@ on:
         description: Immutable version for 11 graph/module/Helm OCI artifacts and the separate ticker image (no build metadata)
         type: string
         required: true
-        default: 1.0.0-rc.3
+        default: 1.0.0-rc.4
       publish:
         description: Publish from main or the explicit maintainer review branch
         type: boolean
@@ -35,7 +35,7 @@ concurrency:
 
 env:
   SAMPLE: samples/wasm/dataflow-patterns
-  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.3' }}
+  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.4' }}
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -69,7 +69,7 @@ jobs:
           cargo +1.90.0 clippy --workspace --locked --all-targets -- -D warnings -A clippy::missing_safety_doc
           python3 -m unittest discover -s scripts -p 'test_*.py' -v
           python3 -m unittest discover -s ticker -v
-          python3 scripts/check-chart.py chart --version 1.0.0-rc.3
+          python3 scripts/check-chart.py chart --version 1.0.0-rc.4
           for script in scripts/*.sh; do bash -n "$script"; done
           shellcheck scripts/*.sh
       - name: Build a version-stamped copy with the locked public SDK

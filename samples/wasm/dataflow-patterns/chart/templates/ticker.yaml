@@ -101,17 +101,22 @@ spec:
             - name: TICKER_CA_FILE
               value: /var/run/ticker-ca/ca.crt
             {{- end }}
+          startupProbe:
+            exec:
+              command: ["python", "/app/ticker.py", "healthcheck"]
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 18
           readinessProbe:
             exec:
               command: ["python", "/app/ticker.py", "healthcheck"]
-            periodSeconds: 5
-            timeoutSeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 10
           livenessProbe:
             exec:
               command: ["python", "/app/ticker.py", "healthcheck"]
-            initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 3
+            timeoutSeconds: 10
             failureThreshold: 3
           resources:
             requests:

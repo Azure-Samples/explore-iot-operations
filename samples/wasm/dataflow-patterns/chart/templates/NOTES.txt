@@ -51,7 +51,7 @@ publish access; reserve ticks/registers for trusted clocks and resets for approv
 Optional trusted ticker: set ticker.enabled=true, ticker.mqttHost to your endpoint's
 broker, and ticker.assets to an explicit trusted asset list. The default is verified
 TLS on port 8883 with a projected ServiceAccount JWT (audience aio-internal, username
-$sat); authorize this release's ticker ServiceAccount in your broker policy first.
+K8S-SAT); authorize this release's ticker ServiceAccount in your broker policy first.
 Configure ticker.caConfigMap with key ca.crt for a private CA. For external broker
 credentials select ticker.auth.mode=existingSecret and ticker.auth.existingSecret;
 the chart never creates credentials. Anonymous auth and plaintext are explicit opt-ins

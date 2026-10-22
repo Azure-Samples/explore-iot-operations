@@ -152,6 +152,13 @@ def check(chart, version, revision=None):
             + values["ticker"]["image"]["tag"])
         assert values["ticker"]["image"]["tag"] == version
         assert container["securityContext"]["readOnlyRootFilesystem"]
+        for probe in ("startupProbe", "readinessProbe", "livenessProbe"):
+            assert container[probe]["timeoutSeconds"] == 10
+            assert container[probe]["exec"]["command"] == ["python", "/app/ticker.py", "healthcheck"]
+        assert container["startupProbe"]["failureThreshold"] == 18
+        if mode == "serviceAccountToken":
+            assert next(e["value"] for e in container["env"]
+                        if e["name"] == "TICKER_USERNAME") == "K8S-SAT"
         assert not any(r["kind"] in ("Secret", "Role", "RoleBinding") for r in ticked)
         assert any(v["name"] == "token" for v in pod["volumes"]) == (mode == "serviceAccountToken")
     print(json.dumps({"chart": str(chart), "version": version, "wiring": "passed"}))

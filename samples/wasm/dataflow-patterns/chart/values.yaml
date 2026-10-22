@@ -13,7 +13,7 @@ profileRef: ""
 registryPullSecret: ""
 # Empty uses dataflow-patterns/<release>; never share a prefix between installations.
 topicPrefix: ""
-artifactVersion: "1.0.0-rc.3"
+artifactVersion: "1.0.0-rc.4"
 artifactRepository: azure-samples/explore-iot-operations/dataflow-patterns
 # Disable individual graphs to reduce native runtime compilation memory.
 # Reading samples explicitly use 1s report heartbeats, a 1s offline timeout,
@@ -44,14 +44,14 @@ ticker:
     availability: true
   auth:
     mode: serviceAccountToken
-    username: "$sat"
+    username: "K8S-SAT"
     audience: aio-internal
     existingSecret: ""
     usernameKey: username
     passwordKey: password
   image:
     repository: ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker
-    tag: "1.0.0-rc.3"
+    tag: "1.0.0-rc.4"
     pullPolicy: IfNotPresent
 tests:
   enabled: false

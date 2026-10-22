@@ -16,7 +16,7 @@ spec:
       nodeType: Graph
       graphSettings:
         registryEndpointRef: factory-artifacts
-        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-stable-alarm:1.0.0-rc.3
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-stable-alarm:1.0.0-rc.4
         configuration:
           - key: settings
             value: '{"role":"stable-alarm","high":80,"low":70,"raiseForMs":1000,"clearForMs":500,"maxObservationGapMs":1500,"inputTopics":{"reading":"factory/alarm-readings","tick":"factory/alarm-ticks"}}'

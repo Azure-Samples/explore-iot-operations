@@ -16,7 +16,7 @@ spec:
       nodeType: Graph
       graphSettings:
         registryEndpointRef: factory-artifacts
-        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-running-total:1.0.0-rc.3
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-running-total:1.0.0-rc.4
         configuration:
           - key: settings
             value: '{"role":"running-total","inputTopics":{"reading":"factory/total-readings","reset":"factory/total-resets"},"initialStates":[{"assetId":"sensor-1","total":0,"stateVersion":0,"epoch":0,"lastSequence":0}]}'

@@ -133,7 +133,7 @@ class Harness(unittest.TestCase):
         env = {k: v for k, v in self.env.items() if k not in ("TICKER_AUTH_MODE", "TICKER_TLS")}
         config = ticker.Config.from_env(env)
         self.assertEqual((config.auth_mode, config.username, config.port, config.tls),
-                         ("serviceAccountToken", "$sat", 8883, True))
+                         ("serviceAccountToken", "K8S-SAT", 8883, True))
         self.assertEqual(config.roles, ticker.ROLES)
         self.assertEqual(config.interval, 1)
 
@@ -196,11 +196,11 @@ class Harness(unittest.TestCase):
         token = Path(self.config.token_file)
         token.write_text("token-one\n")
         self.app.connect()
-        self.assertEqual(self.app.client.auth, ("$sat", "token-one"))
+        self.assertEqual(self.app.client.auth, ("K8S-SAT", "token-one"))
         self.app.close()
         token.write_text("token-two\n")
         self.app.connect()
-        self.assertEqual(self.app.client.auth, ("$sat", "token-two"))
+        self.assertEqual(self.app.client.auth, ("K8S-SAT", "token-two"))
         self.assertEqual(len(self.clients), 2)
 
     def test_missing_or_empty_token_never_connects_anonymously(self):
