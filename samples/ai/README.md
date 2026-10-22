@@ -186,12 +186,14 @@ time.** Use `--apim-sku` only with a SKU available in your subscription/region.
 The resource group is not created by the script.
 
 APIM management API access is restricted to version `2019-12-01` or later.
-The relay API policies inherit parent policies in all four sections, including
-the global backend forwarding policy. Keep `forward-request` in the effective
-backend policy; APIM provides it globally by default. After deployment, use
-**Calculate effective policy** in the APIM policy editor to confirm that forwarding
-and the relay's Entra token validation apply to the native MCP endpoint and
-the A2A GET/POST operations, when deployed.
+The relay API policies inherit parent inbound, outbound, and error policies.
+MCP also inherits the backend forwarding policy. A2A instead uses an explicit
+`forward-request buffer-response="false"` so Server-Sent Events aren't buffered
+by APIM's forwarding policy. This replaces backend-policy inheritance for A2A;
+incorporate any required custom parent backend logic into that policy.
+After deployment, use **Calculate effective policy** in the APIM policy editor
+to confirm forwarding and Entra token validation, and that A2A GET/POST operations
+use the non-buffering forwarding policy.
 
 The AIO extension identity receives the scoped **Azure Relay Listener** role.
 APIM's system-assigned identity receives the scoped **Azure Relay Sender** role.

@@ -225,7 +225,7 @@ var policyTemplate = '''
     </set-header>
     {3}
   </inbound>
-  <backend><base /></backend>
+  <backend>{5}</backend>
   <outbound><base /></outbound>
   <on-error><base /></on-error>
 </policies>
@@ -250,7 +250,8 @@ resource policies 'Microsoft.ApiManagement/service/apis/policies@2025-09-01-prev
       entraTenantId,
       entraAppId,
       endpoint.protocol == 'mcp' ? '' : '<set-backend-service base-url="https://${relay.name}.servicebus.windows.net/${endpoint.name}" />',
-      entraAppRole
+      entraAppRole,
+      endpoint.protocol == 'a2a' ? '<forward-request buffer-response="false" />' : '<base />'
     )
   }
   dependsOn: [
