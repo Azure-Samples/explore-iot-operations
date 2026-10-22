@@ -5,6 +5,7 @@ pub mod align;
 pub mod common;
 pub mod correlate;
 pub mod predictor;
+mod readings;
 #[cfg(any(target_arch = "wasm32", test))]
 mod wrapper;
 
@@ -20,6 +21,7 @@ enum State {
     Align(align::Aligner),
     Correlate(correlate::Correlator),
     Predict(predictor::Predictor),
+    Readings(readings::Readings),
 }
 
 impl Engine {
@@ -30,6 +32,7 @@ impl Engine {
             Role::AlignByTime => State::Align(align::Aligner::new(config)),
             Role::CorrelateById => State::Correlate(correlate::Correlator::new(config)),
             Role::VersionedPredictor => State::Predict(predictor::Predictor::new(config)?),
+            _ => State::Readings(readings::Readings::new(config)),
         };
         Ok(Self {
             state,
@@ -53,6 +56,7 @@ impl Engine {
             State::Align(s) => s.process(v, now_ms),
             State::Correlate(s) => s.process(v, now_ms),
             State::Predict(s) => s.process(v, now_ms),
+            State::Readings(s) => s.process(v, now_ms),
         }
     }
 }

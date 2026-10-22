@@ -10,6 +10,11 @@ fn customer_publish_sequences_match_expected_graph_payloads() {
         include_str!("../fixtures/align-by-time.json"),
         include_str!("../fixtures/correlate-by-id.json"),
         include_str!("../fixtures/versioned-predictor.json"),
+        include_str!("../fixtures/report-by-exception.json"),
+        include_str!("../fixtures/stable-alarm.json"),
+        include_str!("../fixtures/offline-detection.json"),
+        include_str!("../fixtures/running-total.json"),
+        include_str!("../fixtures/smooth-readings.json"),
     ] {
         let fixture: Value = serde_json::from_str(text).unwrap();
         let config = Config::parse(&fixture["configuration"].to_string()).unwrap();

@@ -13,8 +13,46 @@ profileRef: ""
 registryPullSecret: ""
 # Empty uses dataflow-patterns/<release>; never share a prefix between installations.
 topicPrefix: ""
-artifactVersion: "1.0.0-rc.2"
+artifactVersion: "1.0.0-rc.3"
 artifactRepository: azure-samples/explore-iot-operations/dataflow-patterns
+# Disable individual graphs to reduce native runtime compilation memory.
+# Reading samples explicitly use 1s report heartbeats, a 1s offline timeout,
+# and alarm high/low 80/70, raise/clear 1s/0.5s, observation gap 1.5s.
+# These demonstration settings do not change graph artifact/core defaults.
+patterns:
+  align-by-time: true
+  correlate-by-id: true
+  versioned-predictor: true
+  report-by-exception: true
+  stable-alarm: true
+  offline-detection: true
+  running-total: true
+  smooth-readings: true
+# Trusted clocks are opt-in: configure assets, host and broker authorization.
+ticker:
+  enabled: false
+  mqttHost: ""
+  mqttPort: 8883
+  tls: true
+  # Existing ConfigMap containing ca.crt; empty uses system trust roots.
+  caConfigMap: ""
+  assets: []
+  intervalSeconds: 1
+  targets:
+    report: true
+    alarm: true
+    availability: true
+  auth:
+    mode: serviceAccountToken
+    username: "$sat"
+    audience: aio-internal
+    existingSecret: ""
+    usernameKey: username
+    passwordKey: password
+  image:
+    repository: ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker
+    tag: "1.0.0-rc.3"
+    pullPolicy: IfNotPresent
 tests:
   enabled: false
   # A reachable real MQTT broker serving endpointRef, not a second test broker.

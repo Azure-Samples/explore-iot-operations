@@ -1,0 +1,32 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: report-by-exception
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/report-readings, factory/report-ticks]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-report-by-exception:1.0.0-rc.3
+        configuration:
+          - key: settings
+            value: '{"role":"report-by-exception","heartbeatIntervalMs":1000,"inputTopics":{"reading":"factory/report-readings","tick":"factory/report-ticks"}}'
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/changes
+  nodeConnections:
+    - from: {name: source}
+      to: {name: processor}
+    - from: {name: processor}
+      to: {name: destination}

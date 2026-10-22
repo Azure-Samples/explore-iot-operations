@@ -9,8 +9,13 @@ from pathlib import Path
 import yaml
 
 BASE = Path(__file__).resolve().parents[1]
-GRAPHS = ("graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor")
+GRAPHS = (
+    "graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor",
+    "graph-report-by-exception", "graph-stable-alarm", "graph-offline-detection",
+    "graph-running-total", "graph-smooth-readings",
+)
 REPOSITORY = "azure-samples/explore-iot-operations/dataflow-patterns"
+TICKER_REPOSITORY = "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker"
 MODULES = {"map": "module-dataflow-patterns", "filter": "module-dataflow-pattern-filter"}
 NUMBER = r"(?:0|[1-9][0-9]*)"
 IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)"
@@ -78,6 +83,43 @@ def stamp_package(path, name, version, *, lock=False):
     path.write_text(text)
 
 
+def stamp_manifests(directory, version):
+    validate_version(version)
+    paths = sorted(set(directory.rglob("*.yaml")) | set(directory.rglob("*.yml")))
+    documents = {path: list(yaml.safe_load_all(path.read_text())) for path in paths}
+    registries = {
+        (doc.get("metadata", {}).get("namespace"), doc["metadata"]["name"]): doc["spec"]["host"]
+        for docs in documents.values() for doc in docs
+        if isinstance(doc, dict) and doc.get("kind") == "RegistryEndpoint"
+    }
+    for path, docs in documents.items():
+        changed = False
+        for doc in docs:
+            if not isinstance(doc, dict) or doc.get("kind") != "DataflowGraph":
+                continue
+            for node in doc["spec"]["nodes"]:
+                settings = node.get("graphSettings")
+                if settings is None:
+                    continue
+                registry = (doc.get("metadata", {}).get("namespace"),
+                            settings["registryEndpointRef"])
+                if registries.get(registry) != "ghcr.io":
+                    raise ValueError(f"Expected a ghcr.io graph registry in {path}")
+                artifact = settings.get("artifact", "")
+                prefix = "ghcr.io/" if isinstance(artifact, str) and artifact.startswith("ghcr.io/") else ""
+                match = re.fullmatch(
+                    rf"{re.escape(prefix + REPOSITORY)}/({'|'.join(map(re.escape, GRAPHS))}):(.+)",
+                    artifact if isinstance(artifact, str) else "",
+                )
+                if not match:
+                    raise ValueError(f"Unexpected graph reference: {artifact}")
+                validate_version(match[2])
+                settings["artifact"] = f"{prefix}{REPOSITORY}/{match[1]}:{version}"
+                changed = True
+        if changed:
+            path.write_text(yaml.safe_dump_all(docs, sort_keys=False))
+
+
 def prepare(version, revision, output):
     validate_version(version)
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
@@ -97,7 +139,10 @@ def prepare(version, revision, output):
         if len(candidates) != 1:
             raise ValueError(f"Expected one {name}.yaml; found {len(candidates)}")
         graph = stamp_graph(yaml.safe_load(candidates[0].read_text()), version)
-        (artifacts / f"{name}.yaml").write_text(yaml.safe_dump(graph, sort_keys=False))
+        stamped = yaml.safe_dump(graph, sort_keys=False)
+        candidates[0].write_text(stamped)
+        (artifacts / f"{name}.yaml").write_text(stamped)
+    stamp_manifests(source / "manifests", version)
     shutil.copytree(BASE / "chart", output / "chart")
     chart_path = output / "chart" / "Chart.yaml"
     chart = yaml.safe_load(chart_path.read_text())
@@ -110,6 +155,9 @@ def prepare(version, revision, output):
     values_path = output / "chart" / "values.yaml"
     values = yaml.safe_load(values_path.read_text())
     values["artifactVersion"] = version
+    ticker = values.setdefault("ticker", {})
+    ticker.setdefault("enabled", False)
+    ticker.setdefault("image", {}).update(repository=TICKER_REPOSITORY, tag=version)
     values_path.write_text(yaml.safe_dump(values, sort_keys=False))
     (output / "release.json").write_text(json.dumps({
         "version": version,
@@ -127,6 +175,7 @@ def prepare(version, revision, output):
             "artifactVersion": version,
             "topicPrefix": "dataflow-patterns/<release>",
             "tests": values["tests"],
+            "ticker": ticker,
         },
     }, indent=2) + "\n")
 

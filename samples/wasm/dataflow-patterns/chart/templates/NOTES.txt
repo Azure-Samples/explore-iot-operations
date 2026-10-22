@@ -29,3 +29,41 @@ Its non-root test pod downloads pinned paho-mqtt from PyPI; it does not carry
 broker credentials. For authenticated brokers, run verify-deployed.sh with
 MQTT_USERNAME/MQTT_PASSWORD or MQTT_TLS and MQTT_CA_FILE/MQTT_CERT_FILE/MQTT_KEY_FILE.
 Use a fresh release for every test run (the examples retain state until restart).
+All eight graphs are enabled by default, each using the release-scoped single-instance
+profile. Disable individual patterns with --set patterns.<graph-role>=false if native
+compilation exceeds the worker's memory budget.
+
+New input -> output suffixes (all under {{ include "patterns.prefix" . }}):
+  report-readings + report-ticks -> changes
+  alarm-readings + alarm-ticks -> alarms
+  availability-readings + availability-ticks + availability-registers -> availability
+  total-readings + total-resets -> totals
+  smoothing-readings -> smoothed
+Registrations (kind=register, assetId) use availability-registers. Trusted clocks
+(kind=tick, assetId, sampledAt) use each role's dedicated ticks topic; sampledAt is
+informational for these roles, which use the processing clock. Unknown tick assets
+do not register sensors. No callbacks run while idle without a clock publisher.
+The five reading-role wrappers require complete settings.inputTopics kind-to-full-topic
+bindings. This chart supplies them using the computed prefix. Topic/kind mismatches
+are SDK errors before state changes. Grant measurement identities only readings-topic
+publish access; reserve ticks/registers for trusted clocks and resets for approved admins.
+
+Optional trusted ticker: set ticker.enabled=true, ticker.mqttHost to your endpoint's
+broker, and ticker.assets to an explicit trusted asset list. The default is verified
+TLS on port 8883 with a projected ServiceAccount JWT (audience aio-internal, username
+$sat); authorize this release's ticker ServiceAccount in your broker policy first.
+Configure ticker.caConfigMap with key ca.crt for a private CA. For external broker
+credentials select ticker.auth.mode=existingSecret and ticker.auth.existingSecret;
+the chart never creates credentials. Anonymous auth and plaintext are explicit opt-ins
+only (ticker.auth.mode=anonymous, ticker.tls=false, ticker.mqttPort=1883).
+The ticker idempotently registers availability assets every cycle, then publishes QoS1 clocks to
+enabled ticker.targets.report/alarm/availability roles every intervalSeconds (default
+1). Repeated registration does not refresh timeout watches; it restores the expected
+roster after graph restart. It does not publish measurements. Readiness/liveness require recent broker PUBACKs;
+they cannot prove a graph consumed a tick.
+The chart explicitly configures report heartbeats every 1000ms, offline timeout
+1000ms, and alarm high/low 80/70 with raise/clear persistence 1000/500ms and a
+1500ms maximum observation gap. These are demo overrides, not core/artifact defaults.
+Ticks do not refresh alarm observations or become new measurements.
+Keep the optional ticker disabled during isolated verification: the verifier sends
+its own trusted clocks and checks exact outputs, including configured heartbeats.

@@ -27,7 +27,7 @@ assert ledger["version"] == version and ledger["revision"] == release["revision"
 assert release["dependencies"] == ledger["dependencies"] == []
 expected_names = set(prepare["MODULES"].values()) | set(prepare["GRAPHS"]) | {"dataflow-patterns"}
 rows = [line.split("\t") for line in (root / "artifacts.tsv").read_text().splitlines()]
-assert len(rows) == len(ledger["artifacts"]) == len(expected_names) == 6
+assert len(rows) == len(ledger["artifacts"]) == len(expected_names)
 assert {row[0] for row in rows} == {item["name"] for item in ledger["artifacts"]} == expected_names
 for name, repository, digest, filename in rows:
     prefix = "helm" if name == "dataflow-patterns" else "dataflow-patterns"

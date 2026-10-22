@@ -3,6 +3,7 @@
 import json
 import hashlib
 import os
+import runpy
 import shutil
 import subprocess
 import unittest
@@ -12,6 +13,8 @@ from pathlib import Path
 import yaml
 
 SCRIPTS = Path(__file__).resolve().parent
+PREPARE = runpy.run_path(str(SCRIPTS / "prepare-release.py"))
+ARTIFACT_NAMES = set(PREPARE["MODULES"].values()) | set(PREPARE["GRAPHS"]) | {"dataflow-patterns"}
 
 
 class PublishTests(unittest.TestCase):
@@ -30,6 +33,8 @@ class PublishTests(unittest.TestCase):
             values_path = work / "chart" / "values.yaml"
             values = yaml.safe_load(values_path.read_text())
             values["artifactVersion"] = "1.0.0-rc.1"
+            values.setdefault("ticker", {}).setdefault("image", {}).update(
+                repository=PREPARE["TICKER_REPOSITORY"], tag="1.0.0-rc.1")
             values_path.write_text(yaml.safe_dump(values))
             (work / "release.json").write_text(json.dumps({
                 "version": "1.0.0-rc.1", "revision": "a" * 40, "dependencies": [],
@@ -37,7 +42,7 @@ class PublishTests(unittest.TestCase):
             # Minimal component header; this test validates packaging, NOT WASM execution.
             (artifacts / "module_dataflow_patterns.wasm").write_bytes(b"\0asm\x0d\0\x01\0")
             (artifacts / "module_dataflow_pattern_filter.wasm").write_bytes(b"\0asm\x0d\0\x01\0filter")
-            for name in ("graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor"):
+            for name in PREPARE["GRAPHS"]:
                 (artifacts / f"{name}.yaml").write_text(yaml.safe_dump({
                     "metadata": {"version": "1.0.0-rc.1"},
                     "operations": [
@@ -54,18 +59,14 @@ class PublishTests(unittest.TestCase):
             subprocess.run(command, env=env, check=True, stdout=subprocess.DEVNULL)
             self.assertEqual(first, (work / "artifacts.tsv").read_text())
             entries = [line.split("\t") for line in first.splitlines()]
-            self.assertEqual(len(entries), 6)
-            self.assertEqual({entry[0] for entry in entries}, {
-                "module-dataflow-patterns", "module-dataflow-pattern-filter",
-                "graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor",
-                "dataflow-patterns",
-            })
+            self.assertEqual(len(entries), len(ARTIFACT_NAMES))
+            self.assertEqual({entry[0] for entry in entries}, ARTIFACT_NAMES)
             ledger = json.loads((work / "artifacts.json").read_text())
             self.assertEqual(ledger["revision"], "a" * 40)
             self.assertFalse(ledger["runtimeVerified"])
             self.assertEqual(ledger["dependencies"], [])
             self.assertFalse((work / "verification.json").exists())
-            self.assertEqual(len(ledger["artifacts"]), 6)
+            self.assertEqual(len(ledger["artifacts"]), len(ARTIFACT_NAMES))
             for name, repository, digest, filename in entries:
                 entry = next(item for item in ledger["artifacts"] if item["name"] == name)
                 self.assertEqual(entry["tagReference"], f"{repository}:1.0.0-rc.1")
@@ -87,6 +88,12 @@ class PublishTests(unittest.TestCase):
                     self.assertEqual(manifest["layers"][0]["mediaType"], "application/wasm")
                     self.assertEqual(manifest["layers"][0]["annotations"]["org.opencontainers.image.title"],
                                      f"{name}.wasm")
+                elif name in PREPARE["GRAPHS"]:
+                    self.assertEqual(manifest["config"]["mediaType"],
+                                     "application/vnd.microsoft.aio.graph.v1+yaml")
+                    self.assertEqual(manifest["layers"][0]["mediaType"], "application/yaml")
+                    self.assertEqual(manifest["layers"][0]["annotations"]["org.opencontainers.image.title"],
+                                     f"{name}.yaml")
             helm_manifest = json.loads(subprocess.check_output([
                 "oras", "manifest", "fetch", "--oci-layout", f"{work}/layouts/dataflow-patterns:1.0.0-rc.1",
             ]))
@@ -181,7 +188,7 @@ class PublishTests(unittest.TestCase):
             result = subprocess.run(command[:-1], env=mocked_env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             verified = json.loads((work / "verification.json").read_text())
-            self.assertEqual(len(verified["artifacts"]), 6)
+            self.assertEqual(len(verified["artifacts"]), len(ARTIFACT_NAMES))
             self.assertTrue(verified["anonymousFullPullsVerified"])
             self.assertTrue(verified["packagedChartVerified"])
             self.assertFalse(verified["runtimeVerified"])
@@ -200,6 +207,8 @@ class PublishTests(unittest.TestCase):
                 original_tsv.replace("ghcr.io/azure-samples/", "ghcr.io/foreign-owner/"),
                 original_tsv.replace("module-dataflow-pattern-filter\t",
                                      "module-dataflow-patterns\t", 1),
+                "\n".join(line for line in original_tsv.splitlines()
+                          if not line.startswith("graph-smooth-readings\t")) + "\n",
             ):
                 tsv_path.write_text(invalid_tsv)
                 before = pull_log.read_bytes()

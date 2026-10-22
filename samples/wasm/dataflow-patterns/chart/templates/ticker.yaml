@@ -1,0 +1,159 @@
+{{- $ticker := .Values.ticker | default dict -}}
+{{- if $ticker.enabled -}}
+{{- $name := printf "%s-ticker" (include "patterns.name" .) -}}
+{{- $host := required "ticker.mqttHost is required when ticker.enabled=true" $ticker.mqttHost -}}
+{{- if not $ticker.assets -}}
+{{- fail "ticker.assets must explicitly list trusted assets" -}}
+{{- end -}}
+{{- if not (or $ticker.targets.report $ticker.targets.alarm $ticker.targets.availability) -}}
+{{- fail "ticker.targets must enable at least one role" -}}
+{{- end -}}
+{{- $mode := $ticker.auth.mode -}}
+{{- if not (has $mode (list "serviceAccountToken" "existingSecret" "anonymous")) -}}
+{{- fail "ticker.auth.mode must be serviceAccountToken, existingSecret or anonymous" -}}
+{{- end -}}
+{{- if and (eq $mode "existingSecret") (not $ticker.auth.existingSecret) -}}
+{{- fail "ticker.auth.existingSecret is required in existingSecret mode" -}}
+{{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  # Avoid overlapping clocks on rollout.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+    spec:
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 15
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ticker
+          image: {{ printf "%s:%s" $ticker.image.repository $ticker.image.tag | quote }}
+          imagePullPolicy: {{ $ticker.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: TICKER_MQTT_HOST
+              value: {{ $host | quote }}
+            - name: TICKER_MQTT_PORT
+              value: {{ $ticker.mqttPort | quote }}
+            - name: TICKER_TLS
+              value: {{ $ticker.tls | quote }}
+            - name: TICKER_TOPIC_PREFIX
+              value: {{ include "patterns.prefix" . | quote }}
+            - name: TICKER_ASSETS
+              value: {{ $ticker.assets | toJson | quote }}
+            - name: TICKER_INTERVAL_SECONDS
+              value: {{ $ticker.intervalSeconds | quote }}
+            {{- range $role := list "report" "alarm" "availability" }}
+            - name: TICKER_TARGET_{{ $role | upper }}
+              value: {{ index $ticker.targets $role | quote }}
+            {{- end }}
+            - name: TICKER_AUTH_MODE
+              value: {{ $mode | quote }}
+            {{- if eq $mode "existingSecret" }}
+            - name: TICKER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ticker.auth.existingSecret | quote }}
+                  key: {{ $ticker.auth.usernameKey | quote }}
+            - name: TICKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ticker.auth.existingSecret | quote }}
+                  key: {{ $ticker.auth.passwordKey | quote }}
+            {{- else if eq $mode "serviceAccountToken" }}
+            - name: TICKER_USERNAME
+              value: {{ $ticker.auth.username | quote }}
+            - name: TICKER_TOKEN_FILE
+              value: /var/run/ticker-token/token
+            {{- end }}
+            - name: TICKER_HEALTH_FILE
+              value: /health/puback
+            {{- if $ticker.caConfigMap }}
+            - name: TICKER_CA_FILE
+              value: /var/run/ticker-ca/ca.crt
+            {{- end }}
+          readinessProbe:
+            exec:
+              command: ["python", "/app/ticker.py", "healthcheck"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["python", "/app/ticker.py", "healthcheck"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: health
+              mountPath: /health
+            {{- if eq $mode "serviceAccountToken" }}
+            - name: token
+              mountPath: /var/run/ticker-token
+              readOnly: true
+            {{- end }}
+            {{- if $ticker.caConfigMap }}
+            - name: ca
+              mountPath: /var/run/ticker-ca
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: health
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+        {{- if eq $mode "serviceAccountToken" }}
+        - name: token
+          projected:
+            defaultMode: 0440
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: {{ $ticker.auth.audience | quote }}
+                  expirationSeconds: 3600
+        {{- end }}
+        {{- if $ticker.caConfigMap }}
+        - name: ca
+          configMap:
+            name: {{ $ticker.caConfigMap | quote }}
+            items:
+              - key: ca.crt
+                path: ca.crt
+        {{- end }}
+{{- end }}

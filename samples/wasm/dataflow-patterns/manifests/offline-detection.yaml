@@ -1,0 +1,32 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: offline-detection
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/availability-readings, factory/availability-ticks, factory/availability-registers]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-offline-detection:1.0.0-rc.3
+        configuration:
+          - key: settings
+            value: '{"role":"offline-detection","timeoutMs":1000,"inputTopics":{"reading":"factory/availability-readings","tick":"factory/availability-ticks","register":"factory/availability-registers"}}'
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/availability
+  nodeConnections:
+    - from: {name: source}
+      to: {name: processor}
+    - from: {name: processor}
+      to: {name: destination}

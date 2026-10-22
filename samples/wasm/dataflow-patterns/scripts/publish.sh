@@ -74,7 +74,14 @@ annotations=(
   --annotation "org.opencontainers.image.created=$created"
 )
 : > "$release/artifacts.tsv"
-for name in module-dataflow-patterns module-dataflow-pattern-filter graph-align-by-time graph-correlate-by-id graph-versioned-predictor dataflow-patterns; do
+mapfile -t artifact_names < <(python3 - "$(dirname -- "$0")/prepare-release.py" <<'PY'
+import runpy
+import sys
+prepare = runpy.run_path(sys.argv[1])
+print(*prepare["MODULES"].values(), *prepare["GRAPHS"], "dataflow-patterns", sep="\n")
+PY
+)
+for name in "${artifact_names[@]}"; do
   repository="$namespace/dataflow-patterns/$name"
   config="empty-config.json:application/vnd.microsoft.aio.graph.v1+yaml"
   layer="$name.yaml:application/yaml"

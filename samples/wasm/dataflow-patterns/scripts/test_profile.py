@@ -89,7 +89,8 @@ class ProfileTests(unittest.TestCase):
                     resources = list(yaml.safe_load_all(result.stdout))
                     self.assertFalse(any(r["kind"] == "DataflowProfile" for r in resources))
                     graphs = [r for r in resources if r["kind"] == "DataflowGraph"]
-                    self.assertEqual(len(graphs), 3)
+                    values = yaml.safe_load((SCRIPTS.parent / "chart" / "values.yaml").read_text())
+                    self.assertEqual(len(graphs), sum(values["patterns"].values()))
                     self.assertTrue(all(r["spec"]["profileRef"] == "existing" for r in graphs))
                 else:
                     self.assertNotEqual(result.returncode, 0)

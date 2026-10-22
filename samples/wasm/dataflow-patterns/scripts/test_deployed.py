@@ -36,7 +36,7 @@ class DeployedTests(unittest.TestCase):
                 ],
                 "nodeConnections": [],
             },
-        } for i in range(3)]
+        } for i in range(8)]
         profile = {"metadata": {"uid": "profile-uid"}, "spec": {"instanceCount": 1}}
         pod = {"metadata": {"creationTimestamp": "2026-10-20T20:00:00Z"},
                "status": {"conditions": [{"type": "Ready", "status": "True"}]}}
@@ -46,7 +46,7 @@ class DeployedTests(unittest.TestCase):
                 f"0.dfg.sample-{i}.{component}": json.dumps({
                     "s": "Available", "lu": "2026-10-20T20:00:01.123456789Z",
                 })
-                for i in range(3) for component in ("source", "transform", "destination")
+                for i in range(8) for component in ("source", "transform", "destination")
             },
         }
         work = SCRIPTS / ".work" / f"deployed-test-{uuid.uuid4().hex}"
@@ -75,6 +75,10 @@ class DeployedTests(unittest.TestCase):
                     exec(compile(check, "verify-deployed.sh", "exec"), {})
                 self.assertEqual(output.getvalue().strip(), "isolated")
                 self.assertTrue((work / "live-resources.json").is_file())
+            manifest.write_text(yaml.safe_dump_all(graphs[:3]))
+            with self.assertRaisesRegex(AssertionError, "eight installed"):
+                exec(compile(check, "verify-deployed.sh", "exec"), {})
+            manifest.write_text(yaml.safe_dump_all(graphs))
             live[0]["spec"]["nodes"][1]["graphSettings"]["configuration"] = [
                 {"name": "changed", "value": "not the installed configuration"},
             ]

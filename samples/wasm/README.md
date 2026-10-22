@@ -85,9 +85,8 @@ Output lands under `operators/<name>/bin/<arch>/<mode>/`. CI uses the `Makefile`
 
 ## Data flow pattern samples
 
-The [`dataflow-patterns/`](dataflow-patterns/) sample provides three custom Rust
-graphs. They complement the built-in transforms; they don't require sliding
-windows.
+The [`dataflow-patterns/`](dataflow-patterns/) sample provides custom Rust graphs
+for correlation, prediction, and stateful reading processing.
 
 All fixture messages, identifiers, coefficients, and numerical results are
 synthetic or illustrative. They aren't customer telemetry, customer-calibrated
@@ -98,6 +97,11 @@ models, or evidence of a customer's process behavior.
 | `graph-align-by-time` | Separate speed and temperature messages, plus ticks | Select the latest eligible temperature at or before each speed timestamp | An aligned record, or a batch when several readings become ready |
 | `graph-correlate-by-id` | Predictions and delayed measurements | Buffer either arrival order and match asset, piece, and optional run IDs | A completed match with prediction residual and target error |
 | `graph-versioned-predictor` | Readings and externally approved model updates | Activate only the expected next version; evaluate readings with the active model | Predictions only; update acknowledgments don't re-enter the data path |
+| `graph-report-by-exception` | Readings and trusted ticks | Compare with the last reported value; optionally send a heartbeat | Initial reading, meaningful changes, and configured heartbeats |
+| `graph-stable-alarm` | Readings and trusted ticks | Apply separate raise/clear thresholds and persistence intervals | Alarm transitions |
+| `graph-offline-detection` | Readings, expected-asset registrations, and trusted ticks | Check elapsed time since the last accepted measurement | Online, offline, and recovery transitions |
+| `graph-running-total` | Sequenced readings and approved resets | Add values within an epoch and validate reset versions | Updated totals and reset checkpoints |
+| `graph-smooth-readings` | Sequenced readings | Blend the current value with the previous smoothed value | One smoothed value per accepted reading |
 
 ### Build and exercise the operators
 
@@ -110,6 +114,11 @@ make test check build
 cargo run --locked --example replay -- fixtures/align-by-time.json
 cargo run --locked --example replay -- fixtures/correlate-by-id.json
 cargo run --locked --example replay -- fixtures/versioned-predictor.json
+cargo run --locked --example replay -- fixtures/report-by-exception.json
+cargo run --locked --example replay -- fixtures/stable-alarm.json
+cargo run --locked --example replay -- fixtures/offline-detection.json
+cargo run --locked --example replay -- fixtures/running-total.json
+cargo run --locked --example replay -- fixtures/smooth-readings.json
 ```
 
 The fixtures contain input messages and expected results. [`contracts.json`](dataflow-patterns/contracts.json)
@@ -128,10 +137,9 @@ This is finite functional validation, not a production durability or safety clai
 The GitHub workflow [Dataflow pattern WASM samples](../../.github/workflows/dataflow-patterns.yml)
 builds the locked Rust sources, tests the chart, and publishes version-matched
 WASM modules, graph definitions, and an OCI Helm chart to the repository's GHCR
-namespace. Release tags are immutable. The initial sample candidate is
-`1.0.0-rc.2`, not a production-support commitment. Version `1.0.0-rc.1`
-failed AIO 1.6 initialization and must not be used. The corrected release
-uses separate Map and Filter components.
+namespace. Release tags are immutable. Version `1.0.0-rc.3` adds the five
+reading patterns and an optional clock publisher. Map and Filter run as
+separate components.
 
 Pushes and pull requests run validation. A maintainer publishes a new version
 with the workflow's `workflow_dispatch` inputs (`version` and `publish=true`).
@@ -144,7 +152,7 @@ endpoint. It doesn't deploy a broker or change equipment.
 ```bash
 helm upgrade --install factory-patterns \
   oci://ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns \
-  --version 1.0.0-rc.2 \
+  --version 1.0.0-rc.3 \
   --namespace azure-iot-operations \
   --set endpointRef=default
 ```
@@ -161,6 +169,11 @@ For an existing `default` profile and `factory-mqtt` endpoint in
 
 - [`align-by-time.yaml`](dataflow-patterns/manifests/align-by-time.yaml)
 - [`correlate-predictions.yaml`](dataflow-patterns/manifests/correlate-predictions.yaml)
+- [`report-by-exception.yaml`](dataflow-patterns/manifests/report-by-exception.yaml)
+- [`stable-alarm.yaml`](dataflow-patterns/manifests/stable-alarm.yaml)
+- [`offline-detection.yaml`](dataflow-patterns/manifests/offline-detection.yaml)
+- [`running-total.yaml`](dataflow-patterns/manifests/running-total.yaml)
+- [`smooth-readings.yaml`](dataflow-patterns/manifests/smooth-readings.yaml)
 
 From the repository root, apply the registry endpoint and the example you need:
 
@@ -174,6 +187,133 @@ For timestamp alignment, apply `align-by-time.yaml` instead. The
 [`contracts.json`](dataflow-patterns/contracts.json) describe the input messages.
 Use either these standalone manifests or the Helm installation for a given
 topic set, so multiple graphs don't process the same messages.
+
+### Supply clock events during sensor silence
+
+The change-reporting, alarm, and availability graphs evaluate elapsed time when
+an input arrives. Enable the optional clock publisher to keep those checks
+running while sensors are quiet. It publishes ticks for the configured assets
+and periodically registers expected assets for availability checks.
+
+Set `ticker.enabled=true`, list the assets in `ticker.assets`, and configure
+`ticker.mqttHost` for the broker used by `endpointRef`. The default publisher uses
+TLS and a projected service-account token. Set `ticker.caConfigMap` to the
+existing broker CA ConfigMap when the broker uses a private certificate authority.
+Its `ca.crt` entry must contain the broker's trusted CA certificate.
+
+For example, these Helm values enable clock events for the synthetic asset used
+in the walkthroughs:
+
+```yaml
+ticker:
+  enabled: true
+  assets: [sensor-1]
+  mqttHost: YOUR_BROKER_HOST
+  caConfigMap: YOUR_BROKER_CA_CONFIGMAP
+  intervalSeconds: 1
+```
+
+Use your installation's host and CA names. Broker authorization must allow the
+clock identity to publish the clock and registration topics, while sensor
+identities publish only their reading topics. Reset publishers use their own
+authorized reset topic. The processor validates the incoming MQTT topic against
+the message kind before changing state.
+
+The publisher's readiness probe requires recent successful broker
+acknowledgments. Monitor both the publisher and graph health: detection latency
+includes clock cadence, transport and processing delay. On a graph restart,
+periodic registration restores the expected-asset watches.
+
+### Walk through the five reading patterns
+
+The chart and standalone manifests already contain the demonstration settings
+below, including complete, exact full-topic `inputTopics` bindings. **No settings
+JSON editing is needed.** Graph-artifact and Rust core defaults remain generic:
+an alarm defaults to zero persistence and offline detection to ten seconds.
+
+| Sample | Explicit deployment settings |
+| --- | --- |
+| Report by exception | `heartbeatIntervalMs: 1000` |
+| Stable alarm | `high: 80`, `low: 70`, `raiseForMs: 1000`, `clearForMs: 500`, `maxObservationGapMs: 1500` |
+| Offline detection | `timeoutMs: 1000` |
+| Running total | Bootstrap `sensor-1` at total/version/epoch/sequence zero |
+| Smooth readings | Default blend `alpha: 0.5` |
+
+Use a fresh deployment with no other publishers. For standalone deployment,
+apply `registry.yaml` and the five reading manifests linked above. For Helm,
+use the installation command above. Set `PREFIX=factory` for standalone manifests
+or `PREFIX=dataflow-patterns/factory-patterns` for that Helm release (use your
+`topicPrefix` value if overridden).
+
+The following Bash commands use installed Mosquitto MQTT clients. Configure
+`MQTT_ARGS` for your broker's trusted TLS listener and required authentication;
+the client identity must be authorized for these sample topics. Do not disable
+certificate validation. Start the subscriber in a separate terminal using the
+same variables:
+
+```bash
+PREFIX=dataflow-patterns/factory-patterns
+MQTT_ARGS=(-h "$MQTT_HOST" -p 8883 --cafile "$MQTT_CA_FILE")
+# Add your broker's required authentication options to MQTT_ARGS.
+mosquitto_sub "${MQTT_ARGS[@]}" -q 1 -v -t "$PREFIX/#"
+```
+
+In the publishing terminal, set the same `PREFIX` and `MQTT_ARGS`, then define:
+
+```bash
+send() { mosquitto_pub "${MQTT_ARGS[@]}" -q 1 -t "$PREFIX/$1" -m "$2"; }
+tick() { send "$1" "{\"kind\":\"tick\",\"assetId\":\"$2\",\"sampledAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"; }
+```
+
+Run each block once on fresh state; reusing message IDs intentionally suppresses
+duplicates. Subscriber output includes both published inputs and graph outputs.
+
+```bash
+# factory-patterns: changes -> initial 10, cached heartbeat 10, change 12.
+send report-readings '{"kind":"reading","assetId":"demo-report","messageId":"r1","sequence":1,"value":10}'
+sleep 1.2
+tick report-ticks demo-report
+send report-readings '{"kind":"reading","assetId":"demo-report","messageId":"r2","sequence":2,"value":12}'
+
+# alarms -> active after 1.2s, cleared after another 0.7s of low observation.
+# The first tick stays inside the 1.5s maximum observation gap.
+send alarm-readings '{"kind":"reading","assetId":"demo-alarm","messageId":"a1","sequence":1,"value":80}'
+sleep 1.2
+tick alarm-ticks demo-alarm
+send alarm-readings '{"kind":"reading","assetId":"demo-alarm","messageId":"a2","sequence":2,"value":70}'
+sleep 0.7
+tick alarm-ticks demo-alarm
+
+# availability -> offline for a registered, never-seen asset, then online/recovered.
+send availability-registers '{"kind":"register","assetId":"demo-availability"}'
+sleep 1.2
+tick availability-ticks demo-availability
+send availability-readings '{"kind":"reading","assetId":"demo-availability","messageId":"v1","sequence":1,"value":10}'
+
+# totals -> 2.5 (version 1), reset to 0 (version 2, epoch 1), then 3 (version 3).
+send total-readings '{"kind":"reading","assetId":"sensor-1","messageId":"t1","sequence":1,"epoch":0,"value":2.5}'
+send total-resets '{"kind":"reset","assetId":"sensor-1","resetId":"reset-1","sequence":2,"expectedStateVersion":1}'
+send total-readings '{"kind":"reading","assetId":"sensor-1","messageId":"t2","sequence":3,"epoch":1,"value":3}'
+
+# smoothed -> 10, then 11.
+send smoothing-readings '{"kind":"reading","assetId":"demo-smoothing","messageId":"s1","sequence":1,"value":10}'
+send smoothing-readings '{"kind":"reading","assetId":"demo-smoothing","messageId":"s2","sequence":2,"value":12}'
+```
+
+Ticks evaluate the processing clock; their `sampledAt` does not advance it.
+A heartbeat repeats a cached observation, not a new measurement. Alarm ticks
+do not refresh observations: a gap over 1500ms cancels pending persistence.
+If manual timing misses that limit, publish a new sequenced reading and retry.
+Authorize reading, tick, registration and reset publishers separately in real
+deployments; a payload's `kind` is not authorization.
+
+For continuous clocks, the chart's optional ticker publishes only ticks and
+idempotent availability registrations for configured assets. Set
+`ticker.enabled=true`, `ticker.mqttHost` and `ticker.assets` using Helm values;
+its default authentication uses a projected service-account token. Grant that
+identity publish permission only on enabled tick/register topics. It never
+publishes readings or resets. Do not run it alongside the isolated verification
+below: those tests publish their own clocks and expect no other publishers.
 
 ### Verify the installed release
 
@@ -191,8 +331,10 @@ The verifier checks the installed resources and single-instance profile before
 publishing fixtures. It also waits for the worker and all graph components to
 be ready; a running pod alone doesn't establish that WASM initialization has
 finished. It checks timestamp selection, delayed correlation in both
-arrival orders, duplicate suppression, model activation, and the absence of
-prediction output for update-only messages. The MQTT client must be authorized
+arrival orders, duplicate suppression, model activation, all five reading
+patterns with the deployment timings above, and the absence of prediction output
+for update-only messages. Heartbeats are expected explicitly, not ignored.
+The MQTT client must be authorized
 for the release's input and output topics. Use the script's TLS or authentication
 environment variables when your broker requires them; don't disable broker
 security to run the tests.

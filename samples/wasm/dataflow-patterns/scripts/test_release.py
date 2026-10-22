@@ -18,6 +18,14 @@ SPEC.loader.exec_module(prepare)
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_release_graph_set(self):
+        self.assertEqual(set(prepare.GRAPHS), {
+            "graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor",
+            "graph-report-by-exception", "graph-stable-alarm", "graph-offline-detection",
+            "graph-running-total", "graph-smooth-readings",
+        })
+        self.assertEqual(len(prepare.GRAPHS), len(set(prepare.GRAPHS)))
+
     def test_semver(self):
         for version in ("1.0.0", "1.0.0-rc.1", "0.2.3-review-42"):
             self.assertEqual(prepare.validate_version(version), version)
@@ -128,7 +136,7 @@ class ReleaseTests(unittest.TestCase):
                 directory = source / "filter" if role == "filter" else source
                 directory.mkdir(exist_ok=True)
                 (directory / "Cargo.toml").write_text(
-                    f'[package]\nedition = "2021"\nname = "{name}"\nversion = "1.0.0"\n\n' + pins
+                    f'[package]\nedition = "2021"\nname = "{name}"\nversion = "1.0.0-rc.3"\n\n' + pins
                 )
             (source / "Cargo.toml").write_text(
                 (source / "Cargo.toml").read_text() + '\n[workspace]\nmembers = ["filter"]\n'
@@ -140,26 +148,30 @@ class ReleaseTests(unittest.TestCase):
                          '[[package]]\nname = "wit-bindgen"\nversion = "0.22.0"\n')
             (source / "Cargo.lock").write_text(
                 'version = 4\n' + "".join(
-                    f'[[package]]\nname = "{name}"\nversion = "1.0.0"\n\n'
+                    f'[[package]]\nname = "{name}"\nversion = "1.0.0-rc.3"\n\n'
                     for name in prepare.MODULES.values()
                 ) + lock_pins
             )
             for name in prepare.GRAPHS:
                 (source / f"{name}.yaml").write_text(yaml.safe_dump({
-                    "metadata": {"version": "1.0.0"},
+                    "metadata": {"version": "1.0.0-rc.3"},
                     "operations": [
                         {"operationType": kind,
-                         "module": f"{prepare.REPOSITORY}/{name}:1.0.0"}
+                         "module": f"{prepare.REPOSITORY}/{name}:1.0.0-rc.3"}
                         for kind, name in prepare.MODULES.items()
                     ],
                 }))
             shutil.copytree(SCRIPTS.parent / "chart", source / "chart")
+            shutil.copytree(SCRIPTS.parent / "manifests", source / "manifests")
+            prepare.stamp_manifests(source / "manifests", "1.0.0-rc.3")
+            (source / "ticker").mkdir()
+            (source / "ticker" / "ticker.py").write_text("# ticker source\n")
             before = {path.relative_to(source): path.read_bytes() for path in source.rglob("*") if path.is_file()}
             output = workspace / "release"
             with patch.object(prepare, "BASE", source):
-                prepare.prepare("1.0.0-rc.1", "a" * 40, output)
+                prepare.prepare("7.8.9-rc.4", "a" * 40, output)
                 with self.assertRaises(ValueError):
-                    prepare.prepare("1.0.0-rc.1", "a" * 40, output)
+                    prepare.prepare("7.8.9-rc.4", "a" * 40, output)
             after = {path.relative_to(source): path.read_bytes() for path in source.rglob("*") if path.is_file()}
             self.assertEqual(before, after)
             self.assertEqual(json.loads((output / "release.json").read_text())["revision"], "a" * 40)
@@ -172,15 +184,34 @@ class ReleaseTests(unittest.TestCase):
             lock = (stamped_source / "Cargo.lock").read_text()
             self.assertIn(lock_pins, lock)
             for name in prepare.MODULES.values():
-                self.assertIn(f'name = "{name}"\nversion = "1.0.0-rc.1"', lock)
+                self.assertIn(f'name = "{name}"\nversion = "7.8.9-rc.4"', lock)
             for manifest in ("Cargo.toml", "filter/Cargo.toml"):
                 text = (stamped_source / manifest).read_text()
                 self.assertIn(pins, text)
-                self.assertIn('version = "1.0.0-rc.1"', text)
+                self.assertIn('version = "7.8.9-rc.4"', text)
             self.assertEqual((stamped_source / "filter" / "src" / "lib.rs").read_text(),
                              "// filter component\n")
-            self.assertEqual(yaml.safe_load((output / "chart" / "values.yaml").read_text())["artifactVersion"],
-                             "1.0.0-rc.1")
+            values = yaml.safe_load((output / "chart" / "values.yaml").read_text())
+            self.assertEqual(values["artifactVersion"], "7.8.9-rc.4")
+            self.assertFalse(values["ticker"]["enabled"])
+            self.assertEqual(values["ticker"]["image"]["repository"], prepare.TICKER_REPOSITORY)
+            self.assertEqual(values["ticker"]["image"]["tag"], "7.8.9-rc.4")
+            self.assertEqual(ledger["chartDefaults"]["ticker"], values["ticker"])
+            self.assertEqual((stamped_source / "ticker" / "ticker.py").read_text(), "# ticker source\n")
+            chart = yaml.safe_load((output / "chart" / "Chart.yaml").read_text())
+            self.assertEqual(chart["version"], "7.8.9-rc.4")
+            self.assertEqual(chart["appVersion"], "7.8.9-rc.4")
+            self.assertEqual({p.stem for p in (output / "artifacts").glob("*.yaml")}, set(prepare.GRAPHS))
+            for name in prepare.GRAPHS:
+                artifact = output / "artifacts" / f"{name}.yaml"
+                prepare.validate_graph(yaml.safe_load(artifact.read_text()), "7.8.9-rc.4")
+                self.assertEqual(artifact.read_bytes(), (stamped_source / f"{name}.yaml").read_bytes())
+            for path in (stamped_source / "manifests").glob("*.yaml"):
+                for doc in yaml.safe_load_all(path.read_text()):
+                    if doc["kind"] == "DataflowGraph":
+                        for node in doc["spec"]["nodes"]:
+                            if "graphSettings" in node:
+                                self.assertTrue(node["graphSettings"]["artifact"].endswith(":7.8.9-rc.4"))
         finally:
             shutil.rmtree(workspace)
 

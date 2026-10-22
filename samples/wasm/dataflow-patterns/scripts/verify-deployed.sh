@@ -92,7 +92,7 @@ with open(sys.argv[1]) as manifest:
         if resource:
             resources.extend(resource["items"] if resource["kind"] == "List" else [resource])
 graphs = [r for r in resources if r["kind"] == "DataflowGraph"]
-assert len(graphs) == 3, "Expected the three installed sample graphs"
+assert len(graphs) == 8, "Expected the eight installed sample graphs"
 prefixes = set()
 profiles = {}
 live_graphs = []

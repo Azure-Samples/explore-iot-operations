@@ -2,6 +2,7 @@
 """Exercise deployed WASM graphs through their real MQTT endpoint.
 
 Requires paho-mqtt==2.1.0, a fresh sample installation and MQTT_HOST/TOPIC_PREFIX.
+Disable the external ticker and all other publishers for this isolated run.
 Never runs a broker, installs an operator, or changes cluster credentials.
 """
 import json
@@ -14,8 +15,15 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 
-DESTINATIONS = ("aligned", "matches", "predictions-from-updates")
+DESTINATIONS = ("aligned", "matches", "predictions-from-updates",
+                "changes", "alarms", "availability", "totals", "smoothed")
 INTERNAL_KINDS = ("pending", "diagnostic", "modelApplied")
+SAMPLE_OVERRIDES = {
+    "report-by-exception": {"heartbeatIntervalMs": 1000},
+    "stable-alarm": {"high": 80, "low": 70, "raiseForMs": 1000,
+                     "clearForMs": 500, "maxObservationGapMs": 1500},
+    "offline-detection": {"timeoutMs": 1000},
+}
 
 
 @dataclass
@@ -26,6 +34,7 @@ class Step:
     wait: float = 0
     core_codes: tuple = ()
     core_kind: str | None = None
+    elapsed_ms: int | None = None
 
 
 @dataclass
@@ -40,7 +49,7 @@ def stamp(value):
     return value.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-def scenarios(base):
+def scenarios(base, reading_overrides=None):
     """Exact inputs/deliveries shared by MQTT and deterministic Rust replay.
 
     Zero-wait steps are sent together so a trusted event-time tick, rather than
@@ -143,7 +152,145 @@ def scenarios(base):
         Scenario("correlate-by-id", "matches", {"role": "correlate-by-id"}, correlate),
         Scenario("versioned-predictor", "predictions-from-updates",
                  {"role": "versioned-predictor", "initialModels": [initial]}, predictor),
-    ]
+    ] + reading_scenarios(base, reading_overrides)
+
+
+def sample_scenarios(base):
+    """Chart/standalone demo settings, separate from graph-artifact defaults."""
+    result = scenarios(base, SAMPLE_OVERRIDES)
+    for scenario in result[3:]:
+        # These two graphs have no tick source; their cold ticks are core-only.
+        if scenario.role in ("running-total", "smooth-readings"):
+            scenario.steps = [step for step in scenario.steps if step.payload["kind"] != "tick"]
+        for step in scenario.steps:
+            step.wait = 0.05
+    return result
+
+
+def reading_scenarios(base, overrides=None):
+    """Processing-clock cases; sampledAt on ticks deliberately does not advance time."""
+    overrides = overrides or {}
+    origin = int(base.timestamp() * 1000)
+    result = []
+    for role, source, destination in (
+            ("report-by-exception", "report", "changes"),
+            ("stable-alarm", "alarm", "alarms"),
+            ("offline-detection", "availability", "availability"),
+            ("running-total", "total", "totals"),
+            ("smooth-readings", "smoothing", "smoothed")):
+        config = {"role": role}
+        if role == "running-total":
+            config["initialStates"] = [{"assetId": "sensor-1", "total": 0,
+                                        "stateVersion": 0, "epoch": 0, "lastSequence": 0}]
+        config.update(overrides.get(role, {}))
+        steps = []
+        asset = "sensor-1" if role == "running-total" else f"runtime-{source}"
+
+        def add(kind, elapsed, expected=None, codes=(), **fields):
+            payload = dict(kind=kind, assetId=asset, **fields)
+            suffix = {"reset": "resets", "tick": "ticks", "register": "registers"}.get(kind, "readings")
+            topic = f"{source}-{suffix}"
+            steps.append(Step(topic, payload, expected, wait=0.5,
+                              core_codes=codes, elapsed_ms=elapsed))
+            return payload
+
+        def observation(payload, kind, elapsed, received=None, **fields):
+            value = dict(payload, kind=kind, emittedAtMs=origin + elapsed, **fields)
+            if kind in ("reported", "alarm"):
+                received = elapsed if received is None else received
+                value.update(receivedAtMs=origin + received,
+                             observationAgeMs=elapsed - received,
+                             isFreshMeasurement=received == elapsed)
+            return value
+
+        tick = {"sampledAt": stamp(base)}
+        add("tick", 0, **tick)  # Cold ticks must never initialize state.
+        if role == "offline-detection":
+            timeout = config.get("timeoutMs", 10000)
+            add("register", 100)
+            add("register", 200)
+            add("tick", 300, **tick)
+            offline = dict(kind="availability", assetId=asset, state="offline",
+                           reason="timeout", emittedAtMs=origin + timeout + 1100,
+                           lastSeenAtMs=None, elapsedMs=timeout + 1000)
+            add("tick", timeout + 1100, offline, **tick)
+            add("tick", timeout + 1200, **tick)
+            online = dict(kind="availability", assetId=asset, state="online",
+                          reason="recovered", emittedAtMs=origin + timeout + 1300,
+                          lastSeenAtMs=origin + timeout + 1300, elapsedMs=timeout + 1200)
+            add("reading", timeout + 1300, online, messageId="r1", sequence=1, value=10)
+        elif role == "report-by-exception":
+            reading = add("reading", 100, messageId="r1", sequence=1, value=10)
+            steps[-1].expected = observation(reading, "reported", 100, reason="initial")
+            add("reading", 200, codes=("duplicate",), messageId="r1", sequence=1, value=10)
+            interval = config.get("heartbeatIntervalMs")
+            elapsed = 100 + interval + 1000 if interval else 1200
+            heartbeat = observation(reading, "reported", elapsed, received=100,
+                                    reason="heartbeat") if interval else None
+            add("tick", elapsed, heartbeat, **tick)
+            reading = add("reading", elapsed + 100, messageId="r2", sequence=2, value=12)
+            steps[-1].expected = observation(reading, "reported", elapsed + 100, reason="change")
+        elif role == "stable-alarm":
+            duration = config.get("raiseForMs", 0)
+            reading = add("reading", 100, messageId="r1", sequence=1, value=80)
+            if not duration:
+                steps[-1].expected = observation(reading, "alarm", 100, state="active",
+                                                reason="thresholdSustained", threshold=80.0)
+            else:
+                raised = 100 + duration + 250
+                add("tick", raised, observation(
+                    reading, "alarm", raised, received=100, state="active",
+                    reason="thresholdSustained", threshold=80.0), **tick)
+            gap = steps[-1].elapsed_ms + config.get("maxObservationGapMs", 5000) + 1000
+            add("tick", gap, **tick)
+            reading = add("reading", gap + 100, messageId="r2", sequence=2, value=70)
+            clear = config.get("clearForMs", 0)
+            if clear:
+                cleared = gap + 100 + clear + 250
+                add("tick", cleared, observation(
+                    reading, "alarm", cleared, received=gap + 100,
+                    state="cleared", reason="thresholdSustained", threshold=70.0), **tick)
+            else:
+                steps[-1].expected = observation(reading, "alarm", gap + 100,
+                                                state="cleared", reason="thresholdSustained",
+                                                threshold=70.0)
+        elif role == "running-total":
+            reading = add("reading", 100, messageId="r1", sequence=1, epoch=0, value=2.5)
+            steps[-1].expected = observation(reading, "total", 100, total=2.5,
+                                            stateVersion=1, lastSequence=1)
+            add("reading", 200, codes=("duplicate",), messageId="r1", sequence=1, epoch=0, value=2.5)
+            reset = add("reset", 300, resetId="reset-1", sequence=2, expectedStateVersion=1)
+            steps[-1].expected = observation(reset, "totalReset", 300, total=0.0,
+                                            epoch=1, stateVersion=2, lastSequence=2)
+            add("reset", 400, codes=("duplicateReset",), resetId="reset-1",
+                sequence=2, expectedStateVersion=1)
+            add("reading", 500, codes=("epochConflict",),
+                messageId="old", sequence=3, epoch=0, value=99)
+            reading = add("reading", 600, messageId="r2", sequence=3, epoch=1, value=3)
+            steps[-1].expected = observation(reading, "total", 600, total=3.0,
+                                            stateVersion=3, lastSequence=3)
+        else:
+            alpha = config.get("alpha", 0.5)
+            for index, value in enumerate((10, 12)):
+                reading = add("reading", 100 + index * 100, messageId=f"r{index}",
+                              sequence=index, value=value)
+                steps[-1].expected = observation(reading, "smoothed", 100 + index * 100,
+                                                smoothedValue=10 if not index else 10 + 2 * alpha)
+            add("reading", 300, codes=("duplicate",), messageId="r1", sequence=1, value=12)
+            add("reading", 400, codes=("conflict",), messageId="r1", sequence=2, value=99)
+            add("reading", 500, codes=("staleReading",), messageId="old", sequence=0, value=99)
+        result.append(Scenario(role, destination, config, steps))
+    return result
+
+
+def step_delay(step, previous_elapsed, last_publish):
+    """Keep processing-clock intervals relative to the last acknowledged publish.
+
+    A late step must not compress the next interval. Short settle waits count
+    toward the gate, rather than accumulating on top of every 100ms step.
+    """
+    return max(0, last_publish + (step.elapsed_ms - previous_elapsed) / 1000
+               - time.monotonic())
 
 
 def validate_delivery(topic, value):
@@ -166,7 +313,11 @@ def validate_delivery(topic, value):
             validate_delivery(topic, record)
     elif ((topic == "aligned" and "kind" in value)
           or (topic == "matches" and kind != "correlated")
-          or (topic == "predictions-from-updates" and kind != "prediction")):
+          or (topic == "predictions-from-updates" and kind != "prediction")
+          or (topic in {"changes", "alarms", "availability", "totals", "smoothed"}
+              and kind not in {"changes": ("reported",), "alarms": ("alarm",),
+                               "availability": ("availability",), "totals": ("total", "totalReset"),
+                               "smoothed": ("smoothed",)}[topic])):
         raise AssertionError(f"Wrong output kind on {topic}: {value!r}")
     # Data shape and every field/value are checked against exact expectations.
 
@@ -176,6 +327,56 @@ def assert_deliveries(actual, expected):
         validate_delivery(topic, value)
     if actual != expected:
         raise AssertionError(f"Exact deliveries differ:\nexpected={expected!r}\nactual={actual!r}")
+
+
+def assert_live_deliveries(actual, expected, windows):
+    """Bind nondeterministic processing clocks, retaining exact payload comparisons.
+
+    Hosts must be clock-synchronized within two seconds. Every timestamp must
+    belong to its input's publish window; repeated references bind identically,
+    and ages are checked arithmetically, never ignored or rounded.
+    """
+    bindings = {}
+
+    def canonical(topic, value, template):
+        if not isinstance(value, dict) or not isinstance(template, dict):
+            return value
+        result = dict(value)
+        if template.get("kind") == "batch" and isinstance(value.get("records"), list):
+            result["records"] = [canonical(topic, record, wanted) for record, wanted
+                                 in zip(value["records"], template["records"])]
+            assert len(value["records"]) == len(template["records"])
+            return result
+        for field in ("emittedAtMs", "receivedAtMs", "lastSeenAtMs"):
+            if field not in template or template[field] is None:
+                continue
+            clock = value.get(field)
+            assert type(clock) is int, f"Invalid processing clock: {value!r}"
+            key = (topic, template[field])
+            lower, upper = windows[key]
+            assert lower - 2000 <= clock <= upper + 2000, f"Clock outside publish window: {value!r}"
+            assert bindings.setdefault(key, clock) == clock, f"Inconsistent clock reference: {value!r}"
+            result[field] = template[field]
+        if "observationAgeMs" in template:
+            assert type(value.get("observationAgeMs")) is int and value["observationAgeMs"] >= 0
+            assert value.get("observationAgeMs") == value["emittedAtMs"] - value["receivedAtMs"]
+            result["observationAgeMs"] = template["observationAgeMs"]
+        if "elapsedMs" in template:
+            reference = template["emittedAtMs"] - template["elapsedMs"]
+            key = (topic, reference)
+            elapsed = value.get("elapsedMs")
+            assert type(elapsed) is int and elapsed >= 0
+            clock = value["emittedAtMs"] - elapsed
+            lower, upper = windows[key]
+            assert lower - 2000 <= clock <= upper + 2000
+            assert bindings.setdefault(key, clock) == clock
+            result["elapsedMs"] = template["elapsedMs"]
+        return result
+
+    assert len(actual) == len(expected), f"Delivery count differs: {actual!r} != {expected!r}"
+    normalized = [(topic, canonical(topic, value, template))
+                  for (topic, value), (_, template) in zip(actual, expected)]
+    assert_deliveries(normalized, expected)
 
 
 def run():
@@ -232,8 +433,6 @@ def run():
         result = client.publish(f"{prefix}/{topic}", json.dumps(payload), qos=1, retain=False)
         result.wait_for_publish(timeout=10)
         assert result.is_published(), "MQTT publish not acknowledged"
-        # Pace cross-topic arrivals; acknowledgement is not a graph-processing barrier.
-        time.sleep(0.2)
 
     seen = []
 
@@ -260,19 +459,38 @@ def run():
         receive(1)
         assert not seen, "Use a fresh isolated release with no retained outputs or other publishers"
 
-        expected = []
-        for scenario in scenarios(datetime.now(timezone.utc) - timedelta(seconds=10)):
+        expected, windows = [], {}
+        base = datetime.now(timezone.utc) - timedelta(seconds=10)
+        for scenario in sample_scenarios(base):
+            previous_elapsed, last_publish = 0, time.monotonic()
             for step in scenario.steps:
+                if step.elapsed_ms is not None:
+                    delay = step_delay(step, previous_elapsed, last_publish)
+                    if delay > 0:
+                        receive(delay)
+                before = int(time.time() * 1000)
                 publish(step.topic, step.payload)
+                if step.elapsed_ms is not None:
+                    previous_elapsed, last_publish = step.elapsed_ms, time.monotonic()
+                    windows[(scenario.destination, int(base.timestamp() * 1000) + step.elapsed_ms)] = (
+                        before, int(time.time() * 1000))
+                else:
+                    # Preserve the original event-time scenarios' cross-topic pacing.
+                    time.sleep(0.2)
                 if step.expected is not None:
                     expected.append((scenario.destination, step.expected))
                 if step.wait:
                     receive(step.wait)
-                    assert_deliveries(seen, expected)
+                    if step.elapsed_ms is None:
+                        assert_live_deliveries(seen, expected, windows)
+            if previous_elapsed:
+                # Short inter-input settles are not output-delivery deadlines.
+                receive(0.5)
+                assert_live_deliveries(seen, expected, windows)
         receive(3)
-        assert_deliveries(seen, expected)
-        print("PASS: exact real-MQTT payloads, tick/batch drain, both match orders, "
-              "duplicates/conflicts, bootstrap v7/sequential v8, no internal outputs or feedback")
+        assert_live_deliveries(seen, expected, windows)
+        print("PASS: eight real-MQTT graph scenarios, exact payloads and processing-clock "
+              "relationships, cold/gap ticks, resets, smoothing, no internal outputs")
     finally:
         client.disconnect()
         client.loop_stop()
