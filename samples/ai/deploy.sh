@@ -340,7 +340,7 @@ install_relay_release() {
     else
         # Remove MCP defaults; an A2A values file can provide its own auth, token and TLS settings.
         args=("--values" "$WORK_DIR/a2a-defaults.yaml" "${args[@]}"
-            "--set-string" "endpoint.url=$ENDPOINT_URL")
+            "--set-literal" "endpoint.url=$ENDPOINT_URL")
     fi
     if [[ -n "$IMAGE_TAG" ]]; then args+=("--set-string" "image.tag=$IMAGE_TAG"); fi
     helm upgrade --install "$release_name" "$CHART_PACKAGE" --namespace "$K8S_NAMESPACE" \
