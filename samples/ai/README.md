@@ -9,7 +9,7 @@ Client with Entra token -> APIM -> Azure Relay Hybrid Connection -> relay pod ->
 
 `deploy.sh` deploys the Azure resources from `bicep/ai-relay.bicep` and installs
 the published `aio-ai-relay` Helm chart. It works from any directory and does
-not require the Azure-NBC source tree or a local Helm chart.
+not require a local Helm chart.
 
 MCP endpoints are registered as native APIM MCP servers (`type: mcp`), with an
 APIM backend pointing to the Relay namespace and an MCP endpoint path pointing
