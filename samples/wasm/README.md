@@ -126,9 +126,9 @@ defines the exact fields, configurable bounds, counters, batch envelopes, and
 restart requirements. Native fixture replay isn't a substitute for deployment
 testing against an Azure IoT Operations runtime.
 
-The published `1.0.0-rc.2` chart and both WASM modules passed actual MQTT
-verification on the public AIO 1.6 runtime, followed by the chart's packaged
-`helm test` on a fresh release. The [validation summary](dataflow-patterns/validation/1.0.0-rc.2.json)
+The published `1.0.0-rc.4` release passed all 35 runtime cases on public AIO 1.6,
+including all eight graphs, the chart's packaged `helm test` on fresh state,
+and clock-publisher recovery. The [validation summary](dataflow-patterns/validation/1.0.0-rc.4.json)
 records the workflow, immutable digests, runtime image and exercised cases.
 This is finite functional validation, not a production durability or safety claim.
 
@@ -137,9 +137,9 @@ This is finite functional validation, not a production durability or safety clai
 The GitHub workflow [Dataflow pattern WASM samples](../../.github/workflows/dataflow-patterns.yml)
 builds the locked Rust sources, tests the chart, and publishes version-matched
 WASM modules, graph definitions, and an OCI Helm chart to the repository's GHCR
-namespace. Release tags are immutable. Version `1.0.0-rc.3` adds the five
-reading patterns and an optional clock publisher. Map and Filter run as
-separate components.
+namespace. Use version `1.0.0-rc.4` for the chart, graphs, modules, and optional
+clock publisher. Release tags are immutable. Map and Filter run as separate
+components.
 
 Pushes and pull requests run validation. A maintainer publishes a new version
 with the workflow's `workflow_dispatch` inputs (`version` and `publish=true`).
@@ -152,7 +152,7 @@ endpoint. It doesn't deploy a broker or change equipment.
 ```bash
 helm upgrade --install factory-patterns \
   oci://ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns \
-  --version 1.0.0-rc.3 \
+  --version 1.0.0-rc.4 \
   --namespace azure-iot-operations \
   --set endpointRef=default
 ```
@@ -187,6 +187,11 @@ For timestamp alignment, apply `align-by-time.yaml` instead. The
 [`contracts.json`](dataflow-patterns/contracts.json) describe the input messages.
 Use either these standalone manifests or the Helm installation for a given
 topic set, so multiple graphs don't process the same messages.
+
+Keep the standalone `default` profile on one runtime instance so each asset has
+one state owner. The Helm chart creates its own single-instance profile.
+Standalone manifests use literal `factory/...` topics; Helm uses the rendered
+release prefix instead. Publish to the topics for your chosen deployment.
 
 ### Supply clock events during sensor silence
 
@@ -224,12 +229,21 @@ acknowledgments. Monitor both the publisher and graph health: detection latency
 includes clock cadence, transport and processing delay. On a graph restart,
 periodic registration restores the expected-asset watches.
 
+For standalone manifests, use a trusted external publisher with topic prefix
+`factory`, or run the companion
+`ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:1.0.0-rc.4`
+image against your existing broker. Configure `TICKER_MQTT_HOST`,
+`TICKER_TOPIC_PREFIX=factory`, and `TICKER_ASSETS` (for example, `["sensor-1"]`).
+TLS on port `8883` is enabled by default. For password authentication, set
+`TICKER_AUTH_MODE=existingSecret` and supply `TICKER_USERNAME` and
+`TICKER_PASSWORD` through your secret-management mechanism. For private CA trust,
+mount the certificate read-only and set `TICKER_CA_FILE` to its container path.
+Authorize the publisher before sending clock or registration events.
+
 ### Walk through the five reading patterns
 
 The chart and standalone manifests already contain the demonstration settings
-below, including complete, exact full-topic `inputTopics` bindings. **No settings
-JSON editing is needed.** Graph-artifact and Rust core defaults remain generic:
-an alarm defaults to zero persistence and offline detection to ten seconds.
+below and the input-topic bindings. No settings JSON editing is needed.
 
 | Sample | Explicit deployment settings |
 | --- | --- |
