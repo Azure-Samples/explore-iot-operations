@@ -165,6 +165,10 @@ resource backends 'Microsoft.ApiManagement/service/backends@2025-09-01-preview' 
   properties: {
     url: 'https://${relay.name}.servicebus.windows.net'
     protocol: 'http'
+    tls: {
+      validateCertificateChain: true
+      validateCertificateName: true
+    }
   }
 }]
 
