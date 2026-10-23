@@ -39,9 +39,9 @@ MCP server; it does not mean that the API is registered as an ordinary REST API.
 
 The prepared chart and its referenced images must already be published at the
 selected registry location. This sample does not publish artifacts.
-The script defaults both `--chart-version` and `--image-tag` to `0.1.2`, using
+The script defaults `--chart-version` to `0.1.2` and `--image-tag` to `0.1.3`, using
 `oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay` and
-`ghcr.io/azure-samples/explore-iot-operations/aio-ai-relay:0.1.2`.
+`ghcr.io/azure-samples/explore-iot-operations/aio-ai-relay:0.1.3`.
 These versions must be available before deployment. Use `--chart-version` and
 `--image-tag` to select another compatible published chart and image pair.
 
