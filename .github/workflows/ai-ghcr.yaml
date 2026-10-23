@@ -76,7 +76,7 @@ jobs:
           printf 'DEST_AUTH_FILE=%s/ai-ghcr-auth/config.json\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
           printf 'DOCKER_CONFIG=%s/ai-ghcr-auth\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
 
-      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+      - uses: oras-project/setup-oras@005458ad77f1c8facd38a094e4af2e69e5607ff4 # v2.0.2
         with:
           version: 1.3.0
 
