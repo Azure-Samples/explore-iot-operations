@@ -41,9 +41,9 @@ Endpoint:
                                       No role by default. Applied only to the MCP relay.
 
 Optional:
-  --chart-version <version>         Exact published chart version. Default: 0.1.2.
+  --chart-version <version>         Exact published chart version. Default: 0.1.3.
   --chart-reference <oci-reference> Default: oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay.
-  --image-tag <tag>                  Relay image tag. Default: 0.1.2.
+  --image-tag <tag>                  Relay image tag. Default: 0.1.3.
   --values <file>                    Additional Helm values file, e.g. A2A auth/TLS settings.
   --hybrid-connection-name <name>    Default: hybridconnection; suffixed per protocol for both.
   --apim-sku <sku>                   Default: BasicV2.
@@ -65,7 +65,7 @@ RELAY_NAMESPACE_NAME=""
 APIM_NAME=""
 APIM_PUBLISHER_EMAIL=""
 APIM_PUBLISHER_NAME=""
-CHART_VERSION="0.1.2"
+CHART_VERSION="0.1.3"
 CHART_REFERENCE="oci://ghcr.io/azure-samples/explore-iot-operations/helm/aio-ai-relay"
 AUTH_MODE="sami"
 CLUSTER_NAME=""
@@ -83,7 +83,7 @@ ENDPOINT_URL=""
 MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
 MCP_FRONTEND_AUDIENCE="aio-mcp-frontend"
 MCP_ROLE=""
-IMAGE_TAG="0.1.2"
+IMAGE_TAG="0.1.3"
 VALUES_FILE=""
 HYBRID_CONNECTION_NAME="hybridconnection"
 APIM_SKU="BasicV2"
