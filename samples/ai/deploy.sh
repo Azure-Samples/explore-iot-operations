@@ -28,7 +28,7 @@ Authentication:
   --entra-app-id <client-id>         Use a manually configured existing Entra app; no Graph calls.
   --entra-tenant-id <tenant-id>      Required with --entra-app-id. Both must be GUIDs.
                                       Cannot combine with --entra-app-name or --entra-azure-config-dir.
-  --entra-app-scope <scope-name>     Delegated scope to create or advertise. Default: user_impersonation.
+  --entra-app-scope <scope-name>     Delegated scope to create or advertise. Default: mcp.access.
   --entra-azure-config-dir <dir>     Optional isolated Azure CLI profile for app registration.
                                       Default: current Azure CLI profile. Tenant policies still apply.
 
@@ -77,7 +77,7 @@ ENTRA_SP_ID=""
 ROLE_ID=""
 ENTRA_AZURE_CONFIG_DIR=""
 ENTRA_APP_ROLE="AIOMcpAdmin"
-ENTRA_APP_SCOPE="user_impersonation"
+ENTRA_APP_SCOPE="mcp.access"
 ENDPOINT_PROTOCOL="mcp"
 ENDPOINT_URL=""
 MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
@@ -193,12 +193,33 @@ if [[ -n "$VALUES_FILE" && ! -f "$VALUES_FILE" ]]; then
     echo "Error: values file not found: $VALUES_FILE" >&2
     exit 1
 fi
-for cmd in az helm kubectl jq uuidgen; do
+for cmd in az helm kubectl jq; do
     if ! command -v "$cmd" &>/dev/null; then
         echo "Error: required command '$cmd' not found." >&2
         exit 1
     fi
 done
+
+if [[ -z "$ENTRA_APP_ID" ]] &&
+   ! command -v uuidgen &>/dev/null &&
+   ! command -v python3 &>/dev/null &&
+   ! command -v powershell.exe &>/dev/null; then
+    echo "Error: unable to generate a UUID; install uuidgen, Python 3, or PowerShell." >&2
+    exit 1
+fi
+
+generate_uuid() {
+    if command -v uuidgen &>/dev/null; then
+        uuidgen
+    elif command -v python3 &>/dev/null; then
+        python3 -c 'import uuid; print(uuid.uuid4())'
+    elif command -v powershell.exe &>/dev/null; then
+        powershell.exe -NoProfile -NonInteractive -Command '[guid]::NewGuid().ToString()' | tr -d '\r'
+    else
+        echo "Error: unable to generate a UUID; install uuidgen, Python 3, or PowerShell." >&2
+        return 1
+    fi
+}
 
 az account show --output none
 CONTEXT="$(kubectl config current-context)"
@@ -254,7 +275,7 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
     ENTRA_SP_JSON="$(az_entra ad sp create --id "$ENTRA_APP_ID" -o json)"
     ENTRA_SP_ID="$(jq -er '.id | select(type == "string" and length > 0)' <<< "$ENTRA_SP_JSON")"
     az_entra ad app update --id "$ENTRA_APP_ID" --identifier-uris "api://$ENTRA_APP_ID" --output none
-    SCOPE_ID="$(uuidgen)"
+    SCOPE_ID="$(generate_uuid)"
     SCOPES="$(jq -cn --arg id "$SCOPE_ID" --arg scope "$ENTRA_APP_SCOPE" '[{
     id:$id, adminConsentDescription:"Access the AI relay",
     adminConsentDisplayName:"Access AI relay", isEnabled:true, type:"User",
@@ -262,7 +283,7 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
     value:$scope
 }]')"
     az_entra ad app update --id "$ENTRA_APP_ID" --set "api={\"oauth2PermissionScopes\":$SCOPES}" --output none
-    ROLE_ID="$(uuidgen)"
+    ROLE_ID="$(generate_uuid)"
     ROLES="$(jq -cn --arg id "$ROLE_ID" --arg role "$ENTRA_APP_ROLE" '[{
     id:$id, allowedMemberTypes:["User","Application"], description:"Access the AI relay API",
     displayName:$role, isEnabled:true, value:$role

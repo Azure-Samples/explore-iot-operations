@@ -46,7 +46,7 @@ param entraAppId string
 param entraTenantId string
 
 @description('Delegated scope advertised by the MCP protected-resource metadata endpoint.')
-param entraAppScope string = 'user_impersonation'
+param entraAppScope string = 'mcp.access'
 
 @description('App role required in the caller token. Separate from MCP Frontend roles.')
 param entraAppRole string = 'AIOMcpAdmin'

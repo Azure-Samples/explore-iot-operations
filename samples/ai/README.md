@@ -20,7 +20,8 @@ MCP server; it does not mean that the API is registered as an ordinary REST API.
 ## Prerequisites
 
 - Bash on Linux, macOS, or WSL; Azure CLI with Bicep support; Helm 3.18 or later;
-  kubectl; jq; uuidgen.
+  kubectl; jq. New app registration also requires uuidgen, Python 3, or PowerShell,
+  tried in that order. Existing-app mode does not require a UUID generator.
 - An Azure subscription, an existing resource group, and an Arc-connected
   Kubernetes cluster with Azure IoT Operations already installed. For managed
   identity mode, the Arc cluster must be in that resource group and its AIO
@@ -104,7 +105,7 @@ AZURE_CONFIG_DIR="$HOME/.azure-ai-relay-entra" az login --allow-no-subscriptions
 ```
 
 By default, each run creates a new app and rejects an existing display name rather than
-modifying an app it does not own. It exposes `user_impersonation`, creates the
+modifying an app it does not own. It exposes `mcp.access`, creates the
 `AIOMcpAdmin` role for users/applications, and enables required app-role assignment.
 APIM validates the caller's Entra token audience, issuer, and `AIOMcpAdmin` claim.
 An administrator must assign approved callers through **Entra Enterprise
@@ -132,9 +133,10 @@ scope, the `AIOMcpAdmin` role for users/applications, the
 corresponding service principal, required role assignment, and approved caller
 assignments before testing authenticated access. Tenant policies still apply.
 
-The default scope is `user_impersonation`. If the manually configured app uses
+The default scope is `mcp.access`. If the manually configured app uses
 a different scope, pass its name with `--entra-app-scope`, for example
-`--entra-app-scope mcp.access`. Use the scope name, not the full `api://...` URI.
+`--entra-app-scope user_impersonation` for an app created with the previous
+default. Use the scope name, not the full `api://...` URI.
 In registration mode this option sets the scope created on the new app; in
 existing-app mode it only sets the scope advertised by discovery.
 
