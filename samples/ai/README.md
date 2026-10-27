@@ -245,9 +245,3 @@ helm uninstall aio-ai-relay --namespace azure-iot-operations
 ```
 
 Run `bash samples/ai/deploy.sh --help` for all options.
-
-## Deployment script tests
-
-Run `python3 -B -m unittest discover -s samples/ai -p test_deploy.py -v` from the
-repository root. These tests require Bash and jq, mock Azure/Helm/kubectl calls,
-and do not log in or deploy resources.
