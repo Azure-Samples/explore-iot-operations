@@ -17,6 +17,11 @@ to the Hybrid Connection. A2A endpoints remain ordinary HTTP passthrough APIs.
 The display name `aio-ai-relay MCP passthrough` describes forwarding an existing
 MCP server; it does not mean that the API is registered as an ordinary REST API.
 
+Only MCP creates a named APIM backend. A2A policies forward directly to the
+Relay Hybrid Connection URL. Incremental redeployment does not delete unused
+A2A backends created by older versions; remove those separately only after
+confirming that no other API references them.
+
 ## Prerequisites
 
 - Bash on Linux, macOS, or WSL; Azure CLI with Bicep support; Helm 3.18 or later;
