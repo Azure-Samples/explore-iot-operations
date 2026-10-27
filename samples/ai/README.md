@@ -93,16 +93,29 @@ All callers through the relay share its backend MCP permissions.
 The frontend Service name and its inbound SAT audience are independent. Do not
 use its backend token audience as `--mcp-frontend-audience`.
 
+The script checks response types when looking up Entra apps and reading Azure
+deployment outputs. Hybrid Connection names, Relay URLs and APIM gateway URLs
+must be non-empty strings; SAS rule names must also be non-empty strings in SAS
+mode. Malformed results stop the script rather than being passed to Helm or
+subsequent Kubernetes changes. Existing-app configuration is not verified.
+
 ## Entra caller access
 
 The script uses the current Azure CLI profile for both ARM and Entra operations
 by default. An optional `--entra-azure-config-dir` selects a separately
-authenticated, policy-approved profile for Entra operations; sign in to that
-profile before running the script:
+authenticated, policy-approved profile for Entra operations. If that profile has
+no active session, the script prompts with `az login --allow-no-subscriptions`.
+You can also sign in to it beforehand:
 
 ```bash
 AZURE_CONFIG_DIR="$HOME/.azure-ai-relay-entra" az login --allow-no-subscriptions
 ```
+
+The normal Azure CLI profile must already be signed in for the ARM deployment;
+the script does not automatically log in to it. An existing Entra session is
+reused and its account and tenant are printed. Login failures and registration
+policy failures stop deployment; there is no fallback to another profile or
+tenant. Existing-app mode skips Graph registration and these Entra session checks.
 
 By default, each run creates a new app and rejects an existing display name rather than
 modifying an app it does not own. It exposes `mcp.access`, creates the
@@ -227,3 +240,9 @@ helm uninstall aio-ai-relay --namespace azure-iot-operations
 ```
 
 Run `bash samples/ai/deploy.sh --help` for all options.
+
+## Deployment script tests
+
+Run `python3 -B -m unittest discover -s samples/ai -p test_deploy.py -v` from the
+repository root. These tests require Bash and jq, mock Azure/Helm/kubectl calls,
+and do not log in or deploy resources.

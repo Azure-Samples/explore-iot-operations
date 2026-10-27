@@ -31,6 +31,7 @@ Authentication:
   --entra-app-scope <scope-name>     Delegated scope to create or advertise. Default: mcp.access.
   --entra-azure-config-dir <dir>     Optional isolated Azure CLI profile for app registration.
                                       Default: current Azure CLI profile. Tenant policies still apply.
+                                      If the isolated profile has no active session, prompts for login.
 
 Endpoint:
   --endpoint-protocol <mcp|a2a|both>  Default: mcp. "both" installs two Helm releases.
@@ -94,6 +95,9 @@ HELM_RELEASE_NAME="aio-ai-relay"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
+        --aio-mcp-release-name)
+            echo "Error: --aio-mcp-release-name is no longer supported; use --mcp-frontend-service-name and --mcp-frontend-audience." >&2
+            exit 1 ;;
         --resource-group|--relay-namespace-name|--apim-name|--apim-publisher-email|--apim-publisher-name|\
         --chart-version|--chart-reference|--auth-mode|--cluster-name|--aio-extension-name|\
         --entra-app-name|--entra-app-id|--entra-tenant-id|--entra-app-scope|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
@@ -178,6 +182,10 @@ if [[ "$ENDPOINT_PROTOCOL" == a2a && -n "$MCP_ROLE" ]]; then
     echo "Error: --mcp-role requires --endpoint-protocol mcp or both." >&2
     exit 1
 fi
+if [[ "$ENDPOINT_PROTOCOL" != a2a && ( -z "$MCP_FRONTEND_SERVICE_NAME" || -z "$MCP_FRONTEND_AUDIENCE" ) ]]; then
+    echo "Error: MCP Frontend Service name and audience must not be empty." >&2
+    exit 1
+fi
 if [[ "$CHART_REFERENCE" != oci://* || ! "$APIM_CAPACITY" =~ ^[1-9][0-9]*$ ]]; then
     echo "Error: --chart-reference must be an OCI URI and --apim-capacity a positive integer." >&2
     exit 1
@@ -256,8 +264,19 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
         mkdir -p "$ENTRA_AZURE_CONFIG_DIR"
     fi
     if ! az_entra account show --output none; then
-        echo "Error: sign in to the Entra Azure CLI profile before deployment; tenant policies must allow app registration." >&2
-        exit 1
+        if [[ -z "$ENTRA_AZURE_CONFIG_DIR" ]]; then
+            echo "Error: no active Azure CLI session. Run 'az login' before invoking this script," >&2
+            echo "       or pass --entra-azure-config-dir to use a separate Entra login." >&2
+            exit 1
+        fi
+        echo "==> No active az CLI session in '$ENTRA_AZURE_CONFIG_DIR' -- logging in (this is an isolated"
+        echo "    session separate from your normal az CLI login; sign in with the account/tenant you want"
+        echo "    the Entra app registration created under. Tenant policies must allow registration)."
+        az_entra login --allow-no-subscriptions
+    else
+        ACTIVE_ENTRA_ACCOUNT=$(az_entra account show --query "user.name" -o tsv)
+        ACTIVE_ENTRA_TENANT=$(az_entra account show --query "tenantId" -o tsv)
+        echo "==> Reusing Entra Azure CLI session: $ACTIVE_ENTRA_ACCOUNT (tenant $ACTIVE_ENTRA_TENANT)"
     fi
     ENTRA_TENANT_ID="$(az_entra account show --query tenantId -o tsv)"
     if [[ -z "$ENTRA_TENANT_ID" ]]; then
@@ -265,15 +284,16 @@ if [[ -z "$ENTRA_APP_ID" ]]; then
         exit 1
     fi
     EXISTING_APPS="$(az_entra ad app list --display-name "$ENTRA_APP_NAME" -o json)"
-    if [[ "$(jq -er 'length' <<< "$EXISTING_APPS")" -gt 0 ]]; then
+    EXISTING_APP_COUNT="$(jq -er 'if type == "array" then length else error("Expected an Entra app array") end' <<< "$EXISTING_APPS")"
+    if [[ "$EXISTING_APP_COUNT" -gt 0 ]]; then
         echo "Error: an Entra app named '$ENTRA_APP_NAME' already exists. Use a different --entra-app-name." >&2
         exit 1
     fi
     ENTRA_APP_JSON="$(az_entra ad app create --display-name "$ENTRA_APP_NAME" -o json)"
-    ENTRA_APP_ID="$(jq -er '.appId | select(type == "string" and length > 0)' <<< "$ENTRA_APP_JSON")"
+    ENTRA_APP_ID="$(jq -er '.appId | if type == "string" and length > 0 then . else error("Expected an Entra appId") end' <<< "$ENTRA_APP_JSON")"
     echo "==> Created Entra app '$ENTRA_APP_ID' in tenant '$ENTRA_TENANT_ID'; retain this ID for cleanup."
     ENTRA_SP_JSON="$(az_entra ad sp create --id "$ENTRA_APP_ID" -o json)"
-    ENTRA_SP_ID="$(jq -er '.id | select(type == "string" and length > 0)' <<< "$ENTRA_SP_JSON")"
+    ENTRA_SP_ID="$(jq -er '.id | if type == "string" and length > 0 then . else error("Expected an Entra service principal ID") end' <<< "$ENTRA_SP_JSON")"
     az_entra ad app update --id "$ENTRA_APP_ID" --identifier-uris "api://$ENTRA_APP_ID" --output none
     SCOPE_ID="$(generate_uuid)"
     SCOPES="$(jq -cn --arg id "$SCOPE_ID" --arg scope "$ENTRA_APP_SCOPE" '[{
@@ -318,8 +338,8 @@ az deployment group create --name "$DEPLOYMENT_NAME" --resource-group "$RESOURCE
     --template-file "$SCRIPT_DIR/bicep/ai-relay.bicep" --parameters "${BICEP_PARAMS[@]}" --output none
 OUTPUTS_JSON="$(az deployment group show --resource-group "$RESOURCE_GROUP" --name "$DEPLOYMENT_NAME" \
     --query properties.outputs -o json)"
-ENDPOINTS_JSON="$(jq -ce '.endpoints.value | select(type == "array")' <<< "$OUTPUTS_JSON")"
-MCP_METADATA_URL="$(jq -er '.mcpOAuthProtectedResourceMetadataUrl.value | select(type == "string")' <<< "$OUTPUTS_JSON")"
+ENDPOINTS_JSON="$(jq -ce '.endpoints.value | if type == "array" then . else error("Expected deployment endpoints") end' <<< "$OUTPUTS_JSON")"
+MCP_METADATA_URL="$(jq -er '.mcpOAuthProtectedResourceMetadataUrl.value | if type == "string" then . else error("Expected the OAuth metadata URL output") end' <<< "$OUTPUTS_JSON")"
 
 install_relay_release() {
     local protocol="$1" release_name="$2"
@@ -328,16 +348,22 @@ install_relay_release() {
     endpoint="$(jq -ce --arg protocol "$protocol" \
         '[.[] | select(.protocol == $protocol)] | if length == 1 then .[0] else error("Expected one endpoint") end' \
         <<< "$ENDPOINTS_JSON")"
-    relay_url="$(jq -er '.relayUrl' <<< "$endpoint")"
-    hc_name="$(jq -er '.hybridConnectionName' <<< "$endpoint")"
-    apim_url="$(jq -er '.apimGatewayUrl' <<< "$endpoint")"
+    relay_url="$(jq -er '.relayUrl | if type == "string" and length > 0 then . else error("Expected a Relay URL") end' <<< "$endpoint")"
+    hc_name="$(jq -er '.hybridConnectionName | if type == "string" and length > 0 then . else error("Expected a Hybrid Connection name") end' <<< "$endpoint")"
+    apim_url="$(jq -er '.apimGatewayUrl | if type == "string" and length > 0 then . else error("Expected an APIM gateway URL") end' <<< "$endpoint")"
+    if [[ "$AUTH_MODE" == sas ]]; then
+        sas_key_name="$(jq -er '.sasKeyName | if type == "string" then . else error("Expected a SAS key name") end' <<< "$endpoint")"
+        if [[ -z "$sas_key_name" ]]; then
+            echo "Error: [$protocol] bicep deployment did not return a sasKeyName output; cannot configure SAS auth." >&2
+            exit 1
+        fi
+    fi
     kubectl create namespace "$K8S_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
     local args=()
     if [[ -n "$VALUES_FILE" ]]; then args+=("--values" "$VALUES_FILE"); fi
     args+=("--set-string" "relay.url=$relay_url" "--set-string" "relay.auth.method=$CHART_AUTH_METHOD"
         "--set-string" "endpoint.protocol=$protocol")
     if [[ "$AUTH_MODE" == sas ]]; then
-        sas_key_name="$(jq -er '.sasKeyName | select(length > 0)' <<< "$endpoint")"
         sas_key="$(az relay hyco authorization-rule keys list --resource-group "$RESOURCE_GROUP" \
             --namespace-name "$RELAY_NAMESPACE_NAME" --hybrid-connection-name "$hc_name" \
             --name "$sas_key_name" --query primaryKey -o tsv)"
