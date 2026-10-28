@@ -46,7 +46,7 @@ param entraAppId string
 param entraTenantId string
 
 @description('Delegated scope advertised by the MCP protected-resource metadata endpoint.')
-param entraAppScope string = 'user_impersonation'
+param entraAppScope string = 'mcp.access'
 
 @description('App role required in the caller token. Separate from MCP Frontend roles.')
 param entraAppRole string = 'AIOMcpAdmin'
@@ -159,7 +159,7 @@ resource apim 'Microsoft.ApiManagement/service@2025-09-01-preview' = {
 }
 
 // Native MCP combines this namespace URL with the Hybrid Connection endpoint path.
-resource backends 'Microsoft.ApiManagement/service/backends@2025-09-01-preview' = [for endpoint in endpointDefs: {
+resource backends 'Microsoft.ApiManagement/service/backends@2025-09-01-preview' = [for endpoint in endpointDefs: if (endpoint.protocol == 'mcp') {
   parent: apim
   name: 'aio-ai-relay-${endpoint.protocol}-backend'
   properties: {
@@ -254,8 +254,9 @@ resource policies 'Microsoft.ApiManagement/service/apis/policies@2025-09-01-prev
       endpoint.protocol == 'a2a' ? '<forward-request buffer-response="false" />' : '<base />'
     )
   }
-  dependsOn: [
+  dependsOn: endpoint.protocol == 'mcp' ? [
     backends[i]
+  ] : [
     postOperations[i]
   ]
 }]

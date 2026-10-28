@@ -17,10 +17,16 @@ to the Hybrid Connection. A2A endpoints remain ordinary HTTP passthrough APIs.
 The display name `aio-ai-relay MCP passthrough` describes forwarding an existing
 MCP server; it does not mean that the API is registered as an ordinary REST API.
 
+Only MCP creates a named APIM backend. A2A policies forward directly to the
+Relay Hybrid Connection URL. Incremental redeployment does not delete unused
+A2A backends created by older versions; remove those separately only after
+confirming that no other API references them.
+
 ## Prerequisites
 
 - Bash on Linux, macOS, or WSL; Azure CLI with Bicep support; Helm 3.18 or later;
-  kubectl; jq; uuidgen.
+  kubectl; jq. New app registration also requires uuidgen, Python 3, or PowerShell,
+  tried in that order. Existing-app mode does not require a UUID generator.
 - An Azure subscription, an existing resource group, and an Arc-connected
   Kubernetes cluster with Azure IoT Operations already installed. For managed
   identity mode, the Arc cluster must be in that resource group and its AIO
@@ -92,19 +98,32 @@ All callers through the relay share its backend MCP permissions.
 The frontend Service name and its inbound SAT audience are independent. Do not
 use its backend token audience as `--mcp-frontend-audience`.
 
+The script checks response types when looking up Entra apps and reading Azure
+deployment outputs. Hybrid Connection names, Relay URLs and APIM gateway URLs
+must be non-empty strings; SAS rule names must also be non-empty strings in SAS
+mode. Malformed results stop the script rather than being passed to Helm or
+subsequent Kubernetes changes. Existing-app configuration is not verified.
+
 ## Entra caller access
 
 The script uses the current Azure CLI profile for both ARM and Entra operations
 by default. An optional `--entra-azure-config-dir` selects a separately
-authenticated, policy-approved profile for Entra operations; sign in to that
-profile before running the script:
+authenticated, policy-approved profile for Entra operations. If that profile has
+no active session, the script prompts with `az login --allow-no-subscriptions`.
+You can also sign in to it beforehand:
 
 ```bash
 AZURE_CONFIG_DIR="$HOME/.azure-ai-relay-entra" az login --allow-no-subscriptions
 ```
 
+The normal Azure CLI profile must already be signed in for the ARM deployment;
+the script does not automatically log in to it. An existing Entra session is
+reused and its account and tenant are printed. Login failures and registration
+policy failures stop deployment; there is no fallback to another profile or
+tenant. Existing-app mode skips Graph registration and these Entra session checks.
+
 By default, each run creates a new app and rejects an existing display name rather than
-modifying an app it does not own. It exposes `user_impersonation`, creates the
+modifying an app it does not own. It exposes `mcp.access`, creates the
 `AIOMcpAdmin` role for users/applications, and enables required app-role assignment.
 APIM validates the caller's Entra token audience, issuer, and `AIOMcpAdmin` claim.
 An administrator must assign approved callers through **Entra Enterprise
@@ -132,9 +151,10 @@ scope, the `AIOMcpAdmin` role for users/applications, the
 corresponding service principal, required role assignment, and approved caller
 assignments before testing authenticated access. Tenant policies still apply.
 
-The default scope is `user_impersonation`. If the manually configured app uses
+The default scope is `mcp.access`. If the manually configured app uses
 a different scope, pass its name with `--entra-app-scope`, for example
-`--entra-app-scope mcp.access`. Use the scope name, not the full `api://...` URI.
+`--entra-app-scope user_impersonation` for an app created with the previous
+default. Use the scope name, not the full `api://...` URI.
 In registration mode this option sets the scope created on the new app; in
 existing-app mode it only sets the scope advertised by discovery.
 
