@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${REPLAY_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+data:
+  mediamtx.yml: |
+    logLevel: warn
+    rtspTransports: [tcp]
+    rtmp: no
+    hls: no
+    webrtc: no
+    srt: no
+    authInternalUsers:
+      - user: any
+        ips: ["127.0.0.1", "::1"]
+        permissions:
+          - action: publish
+            path: camera
+      - user: any
+        permissions:
+          - action: read
+            path: camera
+    paths:
+      camera:
+        runOnInit: ffmpeg -nostdin -hide_banner -loglevel warning -re -loop 1 -i /replay/camera.jpg -c:v libx264 -pix_fmt yuv420p -preset ultrafast -tune zerolatency -r 5 -g 5 -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/camera
+        runOnInitRestart: yes
+binaryData:
+  camera.jpg: ${IMAGE_BASE64}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${REPLAY_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${REPLAY_NAME}
+  template:
+    metadata:
+      annotations:
+        edge-inference/config-hash: ${REPLAY_HASH}
+      labels:
+        app: ${REPLAY_NAME}
+        app.kubernetes.io/part-of: edge-inference-sample
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: rtsp
+          image: bluenviron/mediamtx:1.12.3-ffmpeg@sha256:f4bbb3af99b7d9a812499f69f6dd3de5ac54339a788c1c5e45dc36f9c1dffbd3
+          args: [/replay/mediamtx.yml]
+          ports:
+            - name: rtsp
+              containerPort: 8554
+          readinessProbe:
+            tcpSocket:
+              port: rtsp
+            initialDelaySeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          volumeMounts:
+            - name: replay
+              mountPath: /replay
+              readOnly: true
+      volumes:
+        - name: replay
+          configMap:
+            name: ${REPLAY_NAME}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${REPLAY_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  type: ClusterIP
+  selector:
+    app: ${REPLAY_NAME}
+  ports:
+    - name: rtsp
+      port: 8554
+      targetPort: rtsp

@@ -1,0 +1,51 @@
+{
+  "$schema": "./config.schema.json",
+  "subscriptionId": "REPLACE_WITH_SUBSCRIPTION_ID",
+  "resourceGroup": "REPLACE_WITH_RESOURCE_GROUP",
+  "aioInstanceName": "REPLACE_WITH_AIO_INSTANCE",
+  "customLocationName": "REPLACE_WITH_CUSTOM_LOCATION",
+  "kubeContext": "REPLACE_WITH_KUBERNETES_CONTEXT",
+  "dataClaimName": "edge-inference-data",
+  "stateClaimName": "edge-inference-state",
+  "foundryNamespace": "foundry-local-operator",
+  "foundryTrustSecret": "REPLACE_WITH_FOUNDRY_CA_SECRET_IN_AIO_NAMESPACE",
+  "modelRegistry": "REPLACE_WITH_REGISTRY.azurecr.io",
+  "modelRegistrySecret": "REPLACE_WITH_REGISTRY_SECRET_IN_FOUNDRY_NAMESPACE",
+  "modelTag": "sample-v1",
+  "collectorImage": "REPLACE_WITH_REGISTRY.azurecr.io/samples/edge-inference:sample-v1",
+  "imagePullSecret": "REPLACE_WITH_PULL_SECRET_IN_AIO_NAMESPACE",
+  "inferenceImage": {
+    "registry": "mcr.microsoft.com",
+    "name": "azureiotoperations/inference-connector",
+    "tag": "1.6.0"
+  },
+  "mediaImage": {
+    "registry": "mcr.microsoft.com",
+    "name": "azureiotoperations/akri-connectors/media",
+    "tag": "1.6.0"
+  },
+  "mediaTemplateName": "edge-inference-media",
+  "useExistingMediaTemplate": false,
+  "graphRegistryEndpointName": "REPLACE_WITH_COMPATIBLE_PREVIEW_GRAPH_REGISTRY_ENDPOINT",
+  "graphs": {
+    "capture": "azureiotoperations/graph-dataflow-media-connector:0.1.0-preview.0",
+    "preprocessing": "azureiotoperations/graph-dataflow-extract-clip-preprocessing:0.1.0-preview.0",
+    "inference": "azureiotoperations/graph-dataflow-inference:0.3.0-preview.0",
+    "postprocessing": "azureiotoperations/graph-dataflow-yolo-postprocessing:0.2.0"
+  },
+  "enabledScenarios": ["pcb-quality", "equipment-area"],
+  "cameras": {
+    "pcb-quality": {
+      "address": "rtsp://edge-replay-pcb-quality.azure-iot-operations.svc.cluster.local:8554/camera",
+      "authentication": {
+        "method": "Anonymous"
+      }
+    },
+    "equipment-area": {
+      "address": "rtsp://edge-replay-equipment-area.azure-iot-operations.svc.cluster.local:8554/camera",
+      "authentication": {
+        "method": "Anonymous"
+      }
+    }
+  }
+}

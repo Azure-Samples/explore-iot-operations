@@ -1,0 +1,45 @@
+apiVersion: namespaces.deviceregistry.microsoft.com/v1
+kind: Device
+metadata:
+  name: ${DEVICE_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  enabled: true
+  externalDeviceId: ${DEVICE_NAME}
+  endpoints:
+    inbound:
+      rtsp:
+        address: ${CAMERA_URL}
+        endpointType: Microsoft.Media
+        authentication: ${CAMERA_AUTHENTICATION}
+---
+apiVersion: namespaces.deviceregistry.microsoft.com/v1
+kind: Asset
+metadata:
+  name: ${ASSET_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  enabled: true
+  version: 1
+  deviceRef:
+    deviceName: ${DEVICE_NAME}
+    endpointName: rtsp
+  streams:
+    - name: camera-snapshots
+      streamConfiguration: '{"taskType":"snapshot-to-fs","autostart":true,"snapshotsPerSecond":1,"format":"jpeg"}'
+      destinations:
+        - target: Storage
+          configuration:
+            path: recordings
+  managementGroups:
+    - name: control
+      actions:
+        - name: ExtractClip
+          actionType: Call
+          targetUri: ExtractClip
+          typeRef: ExtractClip
+          topic: ${ACTION_TOPIC}

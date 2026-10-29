@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-inference-data
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: REPLACE_WITH_RWX_STORAGE_CLASS
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-inference-state
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: REPLACE_WITH_POSIX_BLOCK_STORAGE_CLASS
+  resources:
+    requests:
+      storage: 10Gi

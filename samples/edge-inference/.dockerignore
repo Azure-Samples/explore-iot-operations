@@ -1,0 +1,6 @@
+*
+!requirements.txt
+!collector.py
+!inspection.py
+!mqtt_client.py
+!mqtt_transport.py

@@ -11,6 +11,7 @@ This project provides the following:
 * MQTT Device Simulator
 * Edge modules: factory equipment simulator, MQTT historian
 * Samples for auth servers, WASM dataflow operators, custom RBAC, observability, and more
+* [Edge inference and media inspection](./samples/edge-inference/README.md) — PCB quality screening and equipment-area observations with correlated camera evidence (preview)
 
 > [!IMPORTANT]
 > Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use the [IoT Operations Quickstart](./quickstart/readme.md) or a validated environment from the official documentation.

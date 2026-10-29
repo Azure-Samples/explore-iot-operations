@@ -1,0 +1,40 @@
+apiVersion: foundrylocal.azure.com/v1
+kind: ModelDeployment
+metadata:
+  name: ${MODEL_NAME}
+  namespace: ${FOUNDRY_NAMESPACE}
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  workloadType: predictive
+  compute: cpu
+  port: 5000
+  replicas: 1
+  authenticationMethods:
+    - method: serviceAccountToken
+      enabled: true
+      roles:
+        - role: GeneralInferenceUser
+          authorizedSubjects:
+            - serviceAccountName: aioappcfg-edge-inference-sa
+              serviceAccountNamespace: azure-iot-operations
+  model:
+    custom:
+      registry: ${MODEL_REGISTRY}
+      repository: ${MODEL_REPOSITORY}
+      tag: ${MODEL_TAG}
+      credentials:
+        secretRef:
+          name: ${MODEL_REGISTRY_SECRET}
+          usernameKey: username
+          passwordKey: password
+  env:
+    - name: BATCH_SIZE
+      value: "1"
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi

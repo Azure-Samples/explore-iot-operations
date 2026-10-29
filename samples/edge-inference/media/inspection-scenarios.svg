@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="704" viewBox="0 0 1120 704"
+     font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+     role="img" aria-labelledby="title description">
+  <title id="title">One inspection pipeline with two model and review configurations</title>
+  <desc id="description">Both scenarios use an event, a selected camera snapshot, model inference, a review rule, and an observation with retained evidence. PCB quality reviews six classes of defect candidates above the confidence threshold. Equipment-area inspection reviews person detections above the threshold when their box centers fall inside a configured image region. Both produce REVIEW, NO_FINDING, or ERROR; neither makes an automatic quality or safety decision.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#605E5C"/>
+    </marker>
+    <style>
+      text { fill: #242424; }
+      .title { font-size: 24px; font-weight: 600; }
+      .heading { font-size: 18px; font-weight: 600; }
+      .label { font-size: 16px; font-weight: 600; }
+      .detail { font-size: 16px; fill: #605E5C; }
+      .small { font-size: 14px; fill: #605E5C; }
+      .step { fill: #FFFFFF; stroke: #8A8886; stroke-width: 1; }
+      .flow { fill: none; stroke: #605E5C; stroke-width: 1.6; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="704" fill="#FFFFFF"/>
+  <text x="24" y="34" class="title">One pipeline. Two inspection configurations.</text>
+  <text x="24" y="60" class="detail">Default configurations: different models and review rules, the same media and inference integration.</text>
+
+  <rect x="16" y="80" width="1088" height="138" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <text x="32" y="108" class="heading">Shared event-to-evidence workflow</text>
+  <g text-anchor="middle">
+    <rect x="32" y="132" width="176" height="66" rx="4" class="step"/>
+    <text x="120" y="160" class="label">Inspection event</text>
+    <text x="120" y="181" class="small">UUID + business context</text>
+    <rect x="252" y="132" width="176" height="66" rx="4" class="step"/>
+    <text x="340" y="160" class="label">Select snapshot</text>
+    <text x="340" y="181" class="small">Near the event time</text>
+    <rect x="472" y="132" width="176" height="66" rx="4" class="step"/>
+    <text x="560" y="160" class="label">Run model</text>
+    <text x="560" y="181" class="small">ONNX in Foundry Local</text>
+    <rect x="692" y="132" width="176" height="66" rx="4" class="step"/>
+    <text x="780" y="160" class="label">Validate + review</text>
+    <text x="780" y="181" class="small">Apply the scenario rule</text>
+    <rect x="912" y="132" width="176" height="66" rx="4" class="step"/>
+    <text x="1000" y="160" class="label">Observation</text>
+    <text x="1000" y="181" class="small">JSON + retained JPEG</text>
+  </g>
+  <path d="M210,165 H250" class="flow"/>
+  <path d="M430,165 H470" class="flow"/>
+  <path d="M650,165 H690" class="flow"/>
+  <path d="M870,165 H910" class="flow"/>
+
+  <rect x="16" y="248" width="528" height="258" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <rect x="576" y="248" width="528" height="258" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <path d="M16,296 H544 M576,296 H1104" fill="none" stroke="#A9C9EE"/>
+  <text x="40" y="279" class="heading">PCB quality screening</text>
+  <text x="600" y="279" class="heading">Equipment-area investigation</text>
+
+  <text x="40" y="326" class="label">Model</text>
+  <text x="154" y="326" class="detail">PCB defect detector</text>
+  <text x="40" y="364" class="label">Context</text>
+  <text x="154" y="364" class="detail">Work order, lot, inspection station</text>
+  <text x="40" y="402" class="label">Findings</text>
+  <text x="154" y="402" class="detail">missing_hole, mouse_bite, open_circuit,</text>
+  <text x="154" y="425" class="detail">short, spur, spurious_copper</text>
+  <text x="40" y="467" class="label">Review rule</text>
+  <text x="154" y="467" class="detail">Any defect with confidence &gt;= 0.55</text>
+
+  <text x="600" y="326" class="label">Model</text>
+  <text x="714" y="326" class="detail">General object detector; person class</text>
+  <text x="600" y="364" class="label">Context</text>
+  <text x="714" y="364" class="detail">Equipment, alarm, workcell</text>
+  <text x="600" y="402" class="label">Region</text>
+  <text x="714" y="402" class="detail">[0.15, 0.15, 0.95, 0.90]</text>
+  <text x="714" y="425" class="small">Normalized [left, top, right, bottom]</text>
+  <text x="600" y="467" class="label">Review rule</text>
+  <text x="714" y="467" class="detail">Person confidence &gt;= 0.55 and</text>
+  <text x="714" y="490" class="detail">bounding-box center inside the region</text>
+
+  <text x="24" y="542" class="heading">Shared outcomes</text>
+  <g text-anchor="middle">
+    <rect x="16" y="560" width="344" height="84" rx="4" fill="#FFFFFF" stroke="#CA5010"/>
+    <text x="188" y="589" class="heading" style="fill: #CA5010">REVIEW</text>
+    <text x="188" y="615" class="detail">Rule matched or capture warnings</text>
+    <rect x="388" y="560" width="344" height="84" rx="4" fill="#FFFFFF" stroke="#8A8886"/>
+    <text x="560" y="589" class="heading">NO_FINDING</text>
+    <text x="560" y="615" class="detail">Valid result with no rule match</text>
+    <rect x="760" y="560" width="344" height="84" rx="4" fill="#FFFFFF" stroke="#A4262C"/>
+    <text x="932" y="589" class="heading" style="fill: #A4262C">ERROR</text>
+    <text x="932" y="615" class="detail">Missing or invalid stage / evidence</text>
+  </g>
+  <text x="24" y="681" class="detail">Advisory only: no automatic quality acceptance, safety decision, or equipment actuation.</text>
+</svg>

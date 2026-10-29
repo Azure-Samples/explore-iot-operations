@@ -1,0 +1,48 @@
+apiVersion: akri.iotoperations.azure.com/v1
+kind: ConnectorTemplate
+metadata:
+  name: ${MEDIA_TEMPLATE_NAME}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  deviceInboundEndpointTypes:
+    - endpointType: Microsoft.Media
+  runtimeConfiguration:
+    runtimeConfigurationType: managedConfiguration
+    managedConfigurationSettings:
+      managedConfigurationType: imageConfiguration
+      imageConfigurationSettings:
+        replicas: 1
+        registrySettings:
+          registrySettingsType: containerRegistry
+          containerRegistrySettings:
+            registry: ${MEDIA_REGISTRY}
+        imageName: ${MEDIA_IMAGE}
+        tagDigestSettings:
+          tagDigestType: tag
+          tag: ${MEDIA_TAG}
+        imagePullPolicy: IfNotPresent
+      allocation:
+        policy: Bucketized
+        bucketSize: 100
+      persistentVolumeClaims:
+        - claimName: ${DATA_CLAIM}
+          mountPath: /inference-shared
+      additionalConfiguration:
+        localSharedPath: /inference-shared/edge-inference/media
+        localStoreSnapshotRetentionMinutes: "10"
+        localSharedSnapshotRetentionMinutes: "60"
+        localSharedRetentionIntervalMinutes: "60"
+  mqttConnectionConfiguration:
+    host: aio-broker:18883
+    authentication:
+      method: ServiceAccountToken
+      serviceAccountTokenSettings:
+        audience: aio-internal
+    tls:
+      mode: Enabled
+      trustedCaCertificateConfigMapRef: azure-iot-operations-aio-ca-trust-bundle
+  diagnostics:
+    logs:
+      level: info
