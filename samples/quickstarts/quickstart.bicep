@@ -187,6 +187,10 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2026-01-01' = {
 /*                                    Data flow                              */
 /*****************************************************************************/
 
+// Derive the Event Hubs host from the namespace so the sample works in any Azure cloud
+// (for example, servicebus.windows.net in global Azure and servicebus.usgovcloudapi.net in Azure Government)
+var eventHubHost = split(split(eventHubNamespace.properties.serviceBusEndpoint, '//')[1], ':')[0]
+
 resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEndpoints@2026-07-01' = {
   parent: aioInstance
   name: 'quickstart-eh-endpoint'
@@ -197,7 +201,7 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
   properties: {
     endpointType: 'Kafka'
     kafkaSettings: {
-      host: '${eventHubName}.servicebus.windows.net:9093'
+      host: '${eventHubHost}:9093'
       batching: {
         latencyMs: 0
         maxMessages: 100
@@ -208,14 +212,11 @@ resource dataflowEndpointEventHub 'Microsoft.IoTOperations/instances/dataflowEnd
       authentication: {
         method: 'SystemAssignedManagedIdentity'
         systemAssignedManagedIdentitySettings: {
-          audience: 'https://${eventHubName}.servicebus.windows.net'
+          audience: 'https://${eventHubHost}'
         }
       }
     }
   }
-  dependsOn: [
-    eventHubNamespace
-  ]
 }
 
 resource dataflowCToF 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflows@2026-07-01' = {
