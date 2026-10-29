@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1420" viewBox="0 0 1280 1420"
+     font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+     role="img" aria-labelledby="title description">
+  <title id="title">Inspection message sequence from trigger to retained evidence</title>
+  <desc id="description">The client publishes a trigger. The capture graph requests snapshots from the media connector, which copies them to shared storage. The inference graph selects the nearest snapshot and invokes the inference connector. The connector reads the JPEG, calls Foundry Local over HTTPS, stores the tensor, and returns file references. The postprocessing graph reads the tensor and publishes labeled detections. The observer receives all four stage messages, audits the tensor and image, applies the review rule, retains records and evidence on a separate state volume, and publishes an observation. MQTT messages pass through the broker; observer deliveries can arrive out of order.</desc>
+  <defs>
+    <marker id="mqtt-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#0078D4"/>
+    </marker>
+    <marker id="file-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#CA5010"/>
+    </marker>
+    <marker id="https-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#605E5C"/>
+    </marker>
+    <style>
+      text { fill: #242424; font-size: 16px; }
+      .title { font-size: 24px; font-weight: 600; }
+      .heading { font-weight: 600; text-anchor: middle; }
+      .detail { fill: #605E5C; }
+      .small { font-size: 15px; fill: #605E5C; }
+      .actor { fill: #FFFFFF; stroke: #8A8886; stroke-width: 1; }
+      .lifeline { stroke: #C8C6C4; stroke-width: 1; stroke-dasharray: 4 4; }
+      .mqtt { fill: none; stroke: #0078D4; stroke-width: 1.6; marker-end: url(#mqtt-arrow); }
+      .file { fill: none; stroke: #CA5010; stroke-width: 1.6; stroke-dasharray: 6 4; marker-end: url(#file-arrow); }
+      .https { fill: none; stroke: #605E5C; stroke-width: 1.6; marker-end: url(#https-arrow); }
+      .response { stroke-dasharray: 3 3; }
+    </style>
+  </defs>
+  <rect width="1280" height="1420" fill="#FFFFFF"/>
+  <text x="24" y="34" class="title">Inspection sequence: one event to retained evidence</text>
+  <text x="24" y="62" class="detail">All blue messages use the MQTT broker. The graph lane represents three separate data flow graphs.</text>
+
+  <rect x="182" y="84" width="168" height="1216" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <path d="M88,150 V1300 M266,150 V1300 M444,150 V1300 M622,150 V1300 M800,150 V1300 M978,150 V1300 M1160,150 V1300" class="lifeline"/>
+  <g class="heading">
+    <rect x="16" y="94" width="144" height="56" rx="4" class="actor"/>
+    <text x="88" y="117">Inspection</text>
+    <text x="88" y="138">client</text>
+    <rect x="190" y="94" width="152" height="56" rx="4" class="actor"/>
+    <text x="266" y="117">Data flow</text>
+    <text x="266" y="138">graphs (1-3)</text>
+    <rect x="368" y="94" width="152" height="56" rx="4" class="actor"/>
+    <text x="444" y="117">Media</text>
+    <text x="444" y="138">connector</text>
+    <rect x="546" y="94" width="152" height="56" rx="4" class="actor"/>
+    <text x="622" y="117">Shared</text>
+    <text x="622" y="138">data PVC</text>
+    <rect x="724" y="94" width="152" height="56" rx="4" class="actor"/>
+    <text x="800" y="117">Inference</text>
+    <text x="800" y="138">connector</text>
+    <rect x="902" y="94" width="152" height="56" rx="4" class="actor"/>
+    <text x="978" y="117">Foundry</text>
+    <text x="978" y="138">Local</text>
+    <rect x="1080" y="94" width="160" height="56" rx="4" class="actor"/>
+    <text x="1160" y="117">Inspection</text>
+    <text x="1160" y="138">observer</text>
+  </g>
+
+  <rect x="16" y="166" width="1224" height="44" rx="4" fill="#F3F2F1" stroke="#C8C6C4"/>
+  <text x="32" y="194">Before each event: the media connector continuously records finalized snapshots from the camera.</text>
+
+  <text x="102" y="232">1. trigger</text>
+  <path d="M88,246 H264" class="mqtt"/>
+  <text x="102" y="280">trigger: the same UUID, event time, and business context</text>
+  <path d="M88,294 H1158" class="mqtt"/>
+
+  <text x="278" y="330">2. ExtractClip</text>
+  <text x="278" y="350" class="small">CopySource</text>
+  <path d="M266,362 H442" class="mqtt"/>
+  <text x="456" y="399" class="small">Copy snapshots</text>
+  <path d="M444,412 H620" class="file"/>
+  <text x="278" y="449" class="small">Paths + offsets</text>
+  <path d="M444,462 H268" class="mqtt response"/>
+  <text x="280" y="499">capture: copied paths and event-time offsets</text>
+  <path d="M266,512 H1158" class="mqtt"/>
+
+  <rect x="190" y="536" width="250" height="44" rx="4" fill="#DEECF9" stroke="#71AFE5"/>
+  <text x="204" y="563" class="small">Graph 2: select nearest snapshot</text>
+  <text x="280" y="601">3. predict (relative JPEG path)</text>
+  <path d="M266,614 H798" class="mqtt"/>
+  <text x="634" y="651" class="small">Read selected JPEG</text>
+  <path d="M800,664 H624" class="file"/>
+  <text x="812" y="701" class="small">HTTPS + SAT</text>
+  <path d="M800,714 H976" class="https"/>
+  <text x="812" y="751" class="small">Model tensor</text>
+  <path d="M978,764 H802" class="https response"/>
+  <text x="634" y="801" class="small">Write UUID tensor</text>
+  <path d="M800,814 H624" class="file"/>
+  <text x="280" y="851">Input path + output filename</text>
+  <path d="M800,864 H268" class="mqtt response"/>
+  <text x="280" y="901">inference: raw-result envelope</text>
+  <path d="M266,914 H1158" class="mqtt"/>
+
+  <rect x="190" y="936" width="250" height="44" rx="4" fill="#DEECF9" stroke="#71AFE5"/>
+  <text x="204" y="963" class="small">Graph 3: labels + confidence</text>
+  <text x="280" y="999">4. Read raw tensor</text>
+  <path d="M266,1012 H620" class="file"/>
+  <text x="280" y="1049">result: labeled detections</text>
+  <path d="M266,1062 H1158" class="mqtt"/>
+
+  <text x="636" y="1099">5. Audit tensor, match image reference, copy JPEG</text>
+  <path d="M1160,1112 H624" class="file"/>
+  <rect x="1030" y="1138" width="234" height="92" rx="4" fill="#FFFFFF" stroke="#CA5010"/>
+  <text x="1147" y="1166" text-anchor="middle" class="small">Apply rule; write record</text>
+  <text x="1147" y="1189" text-anchor="middle" class="small">and JPEG to state PVC</text>
+  <text x="1147" y="1212" text-anchor="middle" class="small">Keep a durable outbox</text>
+  <text x="102" y="1267">6. observations: REVIEW / NO_FINDING / ERROR; consumers deduplicate by inspectionId</text>
+  <path d="M1160,1280 H90" class="mqtt"/>
+
+  <path d="M24,1330 H64" class="mqtt"/>
+  <text x="76" y="1335" class="small">MQTT delivery or command RPC</text>
+  <path d="M390,1330 H430" class="file"/>
+  <text x="442" y="1335" class="small">File operation</text>
+  <path d="M654,1330 H694" class="https"/>
+  <text x="706" y="1335" class="small">Authenticated HTTPS</text>
+  <text x="24" y="1370" class="small">Logical successful-path order is shown. Stage deliveries to the observer can arrive out of order.</text>
+  <text x="24" y="1396" class="small">Missing or invalid stages become ERROR. Usable evidence with capture warnings requires REVIEW.</text>
+</svg>

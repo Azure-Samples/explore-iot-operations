@@ -1,0 +1,28 @@
+{
+  "pcb-quality": {
+    "repository": "betty0/pcb-defect-detection",
+    "revision": "08f7ff096054f6ad3e1f37dfdf5cfc63d04dabaa",
+    "file": "best.onnx",
+    "sha256": "057c61dbd2745f59bd246effebf47a31686e95b0e2263610b0600664e5210fc5",
+    "license": "AGPL-3.0",
+    "source": "https://github.com/tun0000/pcb-defect-detection",
+    "id2label": {
+      "0": "missing_hole",
+      "1": "mouse_bite",
+      "2": "open_circuit",
+      "3": "short",
+      "4": "spur",
+      "5": "spurious_copper"
+    }
+  },
+  "equipment-area": {
+    "repository": "onnx-community/yolov10n",
+    "revision": "57657320425ee34056408a57ad9d29c4d4815bd8",
+    "file": "onnx/model.onnx",
+    "sha256": "a77dd863933f184a19e84361c64b788228a7c7dacc2c78939239a96ad3efca3b",
+    "license": "AGPL-3.0",
+    "source": "https://github.com/THU-MIG/yolov10",
+    "configFile": "config.json",
+    "configSha256": "b516086d7b32f0914a0317d9dcd1819785ad90486852798fe999f5adb1728daf"
+  }
+}

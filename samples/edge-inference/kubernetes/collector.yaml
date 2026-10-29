@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge-inference-observer
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-inference-observer
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-inference-sample
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: edge-inference-observer
+  template:
+    metadata:
+      annotations:
+        edge-inference/config-hash: ${SCENARIOS_HASH}
+      labels:
+        app: edge-inference-observer
+        app.kubernetes.io/part-of: edge-inference-sample
+    spec:
+      serviceAccountName: edge-inference-observer
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: ${IMAGE_PULL_SECRET}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: observer
+          image: ${COLLECTOR_IMAGE}
+          args: [collect]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "from pathlib import Path; import sys; sys.exit(not Path('/tmp/edge-inference-ready').is_file())"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: broker-ca
+              mountPath: /var/run/certs
+              readOnly: true
+            - name: broker-token
+              mountPath: /var/run/tokens
+              readOnly: true
+            - name: data
+              mountPath: /media
+              subPath: edge-inference/media
+              readOnly: true
+            - name: state
+              mountPath: /state
+            - name: data
+              mountPath: /responses
+              subPath: edge-inference/responses
+              readOnly: true
+            - name: temporary
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: edge-inference-scenarios
+        - name: broker-ca
+          configMap:
+            name: azure-iot-operations-aio-ca-trust-bundle
+        - name: broker-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: aio-internal
+                  expirationSeconds: 3600
+        - name: data
+          persistentVolumeClaim:
+            claimName: ${DATA_CLAIM}
+        - name: state
+          persistentVolumeClaim:
+            claimName: ${STATE_CLAIM}
+        - name: temporary
+          emptyDir:
+            sizeLimit: 16Mi
