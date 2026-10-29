@@ -1,0 +1,65 @@
+{{- $root := . -}}
+{{- $profile := include "patterns.profile" . -}}
+{{- $patterns := list
+  (dict "name" "align-by-time" "inputs" (list "speed" "temperature") "output" "aligned")
+  (dict "name" "correlate-by-id" "inputs" (list "predictions" "measurements") "output" "matches")
+  (dict "name" "versioned-predictor" "inputs" (list "readings" "models") "output" "predictions-from-updates")
+  (dict "name" "report-by-exception" "inputs" (list "report-readings" "report-ticks") "bindings" (dict "reading" "report-readings" "tick" "report-ticks") "settings" (dict "heartbeatIntervalMs" 1000) "output" "changes")
+  (dict "name" "stable-alarm" "inputs" (list "alarm-readings" "alarm-ticks") "bindings" (dict "reading" "alarm-readings" "tick" "alarm-ticks") "settings" (dict "high" 80 "low" 70 "raiseForMs" 1000 "clearForMs" 500 "maxObservationGapMs" 1500) "output" "alarms")
+  (dict "name" "offline-detection" "inputs" (list "availability-readings" "availability-ticks" "availability-registers") "bindings" (dict "reading" "availability-readings" "tick" "availability-ticks" "register" "availability-registers") "settings" (dict "timeoutMs" 1000) "output" "availability")
+  (dict "name" "running-total" "inputs" (list "total-readings" "total-resets") "bindings" (dict "reading" "total-readings" "reset" "total-resets") "output" "totals")
+  (dict "name" "smooth-readings" "inputs" (list "smoothing-readings") "bindings" (dict "reading" "smoothing-readings") "output" "smoothed")
+-}}
+{{- range $pattern := $patterns }}
+{{- if index $root.Values.patterns $pattern.name }}
+---
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: {{ include "patterns.name" $root }}-{{ $pattern.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  profileRef: {{ $profile | quote }}
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: {{ $root.Values.endpointRef | quote }}
+        dataSources:
+          {{- range $topic := $pattern.inputs }}
+          - {{ printf "%s/%s" (include "patterns.prefix" $root) $topic | quote }}
+          {{- end }}
+    - name: transform
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: {{ include "patterns.registry" $root }}
+        artifact: {{ printf "%s/graph-%s:%s" $root.Values.artifactRepository $pattern.name $root.Values.artifactVersion | quote }}
+        {{- if $pattern.bindings }}
+        {{- $topics := dict }}
+        {{- range $kind, $topic := $pattern.bindings }}
+        {{- $_ := set $topics $kind (printf "%s/%s" (include "patterns.prefix" $root) $topic) }}
+        {{- end }}
+        {{- $settings := dict "role" $pattern.name "inputTopics" $topics }}
+        {{- range $key, $value := $pattern.settings }}
+        {{- $_ := set $settings $key $value }}
+        {{- end }}
+        {{- if eq $pattern.name "running-total" }}
+        {{- $_ := set $settings "initialStates" (list (dict "assetId" "sensor-1" "total" 0 "stateVersion" 0 "epoch" 0 "lastSequence" 0)) }}
+        {{- end }}
+        configuration:
+          - key: settings
+            value: {{ $settings | toJson | quote }}
+        {{- end }}
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: {{ $root.Values.endpointRef | quote }}
+        dataDestination: {{ printf "%s/%s" (include "patterns.prefix" $root) $pattern.output | quote }}
+  nodeConnections:
+    - from: {name: source}
+      to: {name: transform}
+    - from: {name: transform}
+      to: {name: destination}
+{{- end }}
+{{- end }}

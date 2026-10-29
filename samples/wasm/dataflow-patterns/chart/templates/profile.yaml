@@ -1,0 +1,9 @@
+{{- if .Values.profile.create }}
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowProfile
+metadata:
+  name: {{ include "patterns.profile" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  instanceCount: 1
+{{- end }}

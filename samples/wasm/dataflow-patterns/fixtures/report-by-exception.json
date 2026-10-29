@@ -1,0 +1,55 @@
+{
+  "configuration": {"role":"report-by-exception","deadband":1,"heartbeatIntervalMs":1000},
+  "steps": [
+    {
+      "topic":"factory/readings","nowMs":0,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r0","sequence":0,"value":10,"units":"C"},
+      "expected":{"kind":"reported","assetId":"sensor-1","messageId":"r0","sequence":0,"value":10,"units":"C","reason":"initial","emittedAtMs":0,"receivedAtMs":0,"observationAgeMs":0,"isFreshMeasurement":true}
+    },
+    {
+      "topic":"factory/readings","nowMs":100,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":1,"value":10.5,"sampledAt":"1970-01-01T00:00:02Z","units":"C"},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":200,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":1,"value":10.5,"sampledAt":"1970-01-01T00:00:02Z","units":"C"},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":300,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":2,"value":99},
+      "expected":null
+    },
+    {
+      "topic":"factory/ticks","nowMs":999,
+      "input":{"kind":"tick","assetId":"sensor-1"},
+      "expected":null
+    },
+    {
+      "topic":"factory/ticks","nowMs":1000,
+      "input":{"kind":"tick","assetId":"sensor-1"},
+      "expected":{"kind":"reported","assetId":"sensor-1","messageId":"r1","sequence":1,"value":10.5,"sampledAt":"1970-01-01T00:00:02Z","units":"C","reason":"heartbeat","emittedAtMs":1000,"receivedAtMs":100,"observationAgeMs":900,"isFreshMeasurement":false}
+    },
+    {
+      "topic":"factory/readings","nowMs":1100,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r2","sequence":2,"value":11},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":1200,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r3","sequence":3,"value":11.5},
+      "expected":{"kind":"reported","assetId":"sensor-1","messageId":"r3","sequence":3,"value":11.5,"reason":"change","emittedAtMs":1200,"receivedAtMs":1200,"observationAgeMs":0,"isFreshMeasurement":true}
+    },
+    {
+      "topic":"factory/readings","nowMs":1300,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"stale","sequence":2,"value":100},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":1400,
+      "input":{"kind":"reading","assetId":"sensor-2","messageId":"r0","sequence":0,"value":50},
+      "expected":{"kind":"reported","assetId":"sensor-2","messageId":"r0","sequence":0,"value":50,"reason":"initial","emittedAtMs":1400,"receivedAtMs":1400,"observationAgeMs":0,"isFreshMeasurement":true}
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "configuration":{"role":"versioned-predictor","initialModels":[{"assetId":"line-1","modelVersion":7,"speedCoefficient":2,"temperatureCoefficient":0.5,"intercept":175}]},
+  "steps":[
+    {
+      "topic":"factory/model-updates",
+      "nowMs":1000,
+      "input":{"kind":"model","assetId":"line-1","updateId":"update-42","expectedModelVersion":7,"modelVersion":8,"speedCoefficient":2,"temperatureCoefficient":0.5,"intercept":173},
+      "expected":null
+    },
+    {
+      "topic":"factory/model-updates",
+      "nowMs":2000,
+      "input":{"kind":"model","assetId":"line-1","updateId":"update-42","expectedModelVersion":7,"modelVersion":8,"speedCoefficient":2,"temperatureCoefficient":0.5,"intercept":173},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings",
+      "nowMs":3000,
+      "input":{"kind":"reading","assetId":"line-1","pieceId":"part-44","speed":10,"temperature":20},
+      "expected":{"kind":"prediction","assetId":"line-1","pieceId":"part-44","modelVersion":8,"speed":10,"temperature":20,"speedCoefficient":2.0,"temperatureCoefficient":0.5,"intercept":173.0,"predictedWeight":203.0}
+    }
+  ]
+}
