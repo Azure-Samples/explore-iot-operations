@@ -1,0 +1,32 @@
+{
+  "$schema": "./config.schema.json",
+  "subscriptionId": "REPLACE_WITH_SUBSCRIPTION_ID",
+  "resourceGroup": "REPLACE_WITH_RESOURCE_GROUP",
+  "aioInstanceName": "REPLACE_WITH_AIO_INSTANCE",
+  "customLocationName": "REPLACE_WITH_CUSTOM_LOCATION",
+  "kubeContext": "REPLACE_WITH_KUBERNETES_CONTEXT",
+  "adrNamespaceName": "REPLACE_WITH_ADR_NAMESPACE",
+  "adrNamespaceLocation": "REPLACE_WITH_ADR_NAMESPACE_LOCATION",
+  "cameraId": "edge-person-camera",
+  "cameraUrl": "rtsp://REPLACE_WITH_CAMERA_HOST/stream",
+  "cameraAuthentication": {
+    "method": "UsernamePassword",
+    "usernamePasswordCredentials": {
+      "usernameSecretName": "camera-credentials/username",
+      "passwordSecretName": "camera-credentials/password"
+    }
+  },
+  "topicPrefix": "edge/predictive-inference/person",
+  "foundryNamespace": "foundry-local-operator",
+  "modelName": "edge-person-yolox",
+  "modelEndpoint": "https://edge-person-yolox.foundry-local-operator.svc.cluster.local:5000",
+  "foundryTrustSecret": "REPLACE_WITH_FOUNDRY_CA_SECRET_IN_AIO_NAMESPACE",
+  "modelRegistrySecret": "REPLACE_WITH_REGISTRY_SECRET_IN_FOUNDRY_NAMESPACE",
+  "registry": "REPLACE_WITH_REGISTRY.azurecr.io",
+  "registryEndpointName": "REPLACE_WITH_AIO_REGISTRY_ENDPOINT",
+  "artifactVersion": "0.1.0",
+  "dataClaimName": "edge-predictive-data",
+  "storageClassName": "REPLACE_WITH_RWX_STORAGE_CLASS",
+  "scoreThreshold": 0.3,
+  "nmsThreshold": 0.45
+}
