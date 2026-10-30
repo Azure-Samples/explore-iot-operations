@@ -1,0 +1,35 @@
+apiVersion: foundrylocal.azure.com/v1
+kind: ModelDeployment
+metadata:
+  name: ${modelName}
+  namespace: ${foundryNamespace}
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+spec:
+  model:
+    custom:
+      registry: ${registry}
+      repository: azure-samples/edge-predictive-inference/yolox-nano
+      tag: ${artifactVersion}
+      task: object-detection
+      credentials:
+        secretRef:
+          name: ${modelRegistrySecret}
+  workloadType: predictive
+  compute: cpu
+  runtime: onnx-genai
+  port: 5000
+  replicas: 1
+  endpoint:
+    exposure: internal
+  authenticationMethods:
+    - method: serviceAccountToken
+      enabled: true
+      roles:
+        - role: GeneralInferenceUser
+          authorizedSubjects:
+            - serviceAccountName: aioappcfg-edge-predictive-inference-sa
+              serviceAccountNamespace: azure-iot-operations
+  resources:
+    requests: {cpu: "1", memory: 512Mi}
+    limits: {cpu: "2", memory: 2Gi}

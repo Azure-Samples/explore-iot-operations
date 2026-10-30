@@ -1,0 +1,27 @@
+[package]
+name = "edge-predictive-inference"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+preprocess = []
+postprocess = []
+
+[dependencies]
+image = { version = "=0.25.6", default-features = false, features = ["jpeg"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "=1.16.0", features = ["v4", "serde"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wit-bindgen = "=0.38.0"
+wasm_graph_sdk = { version = "=1.7.4", registry = "aio-wg" }
+
+[profile.release]
+lto = true
+opt-level = 3

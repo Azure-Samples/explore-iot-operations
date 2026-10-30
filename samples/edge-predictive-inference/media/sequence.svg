@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1140" viewBox="0 0 1280 1140"
+     font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+     role="img" aria-labelledby="title description">
+  <title id="title">One JPEG snapshot through file-backed native inference</title>
+  <desc id="description">Six participants show a successful sample processing attempt. The media connector publishes a JPEG. The graph writes an input tensor, invokes the native inference connector with a filename, and preserves frame context. The connector reads the tensor, calls Foundry Local over HTTPS, stores its raw response, and returns a filename. The graph reads and decodes that response, then publishes an observation. A subscriber can retrieve both referenced files before cleanup. All blue messages traverse the MQTT broker, whose lifeline is omitted. Failed preprocessing or inference can produce no observation.</desc>
+  <defs>
+    <marker id="mqtt-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#0078D4"/></marker>
+    <marker id="files-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#CA5010"/></marker>
+    <marker id="https-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#605E5C"/></marker>
+    <style>
+      text { fill: #242424; }
+      .title { font-size: 24px; font-weight: 600; }
+      .actor { font-size: 17px; font-weight: 600; }
+      .detail { font-size: 15px; }
+      .note { font-size: 15px; fill: #605E5C; }
+      .small { font-size: 14px; fill: #605E5C; }
+      .lifeline { stroke: #C8C6C4; stroke-width: 1; stroke-dasharray: 4 4; }
+      .mqtt { fill: none; stroke: #0078D4; stroke-width: 1.8; marker-end: url(#mqtt-end); }
+      .files { fill: none; stroke: #CA5010; stroke-width: 1.8; stroke-dasharray: 6 4; marker-end: url(#files-end); }
+      .https { fill: none; stroke: #605E5C; stroke-width: 1.8; marker-end: url(#https-end); }
+      .reply { stroke-dasharray: 3 3; }
+    </style>
+  </defs>
+  <rect width="1280" height="1140" fill="#FFFFFF"/>
+  <text x="24" y="34" class="title">One JPEG snapshot: request, response and observation</text>
+  <text x="24" y="62" class="note">All blue messages traverse the MQTT broker. Dashed blue/gray arrows are replies; orange arrows are file operations.</text>
+
+  <rect x="234" y="92" width="176" height="906" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <g fill="#FFFFFF" stroke="#8A8886">
+    <rect x="30" y="104" width="160" height="82" rx="4"/>
+    <rect x="242" y="104" width="160" height="82" rx="4"/>
+    <rect x="454" y="104" width="160" height="82" rx="4"/>
+    <rect x="666" y="104" width="160" height="82" rx="4"/>
+    <rect x="878" y="104" width="160" height="82" rx="4"/>
+    <rect x="1090" y="104" width="160" height="82" rx="4"/>
+  </g>
+  <g text-anchor="middle" class="actor">
+    <text x="110" y="137">Media</text><text x="110" y="162">connector</text>
+    <text x="322" y="130">Data flow</text><text x="322" y="153">pre / inference</text><text x="322" y="176">/ post</text>
+    <text x="534" y="137">Shared</text><text x="534" y="162">scratch PVC</text>
+    <text x="746" y="137">Native inference</text><text x="746" y="162">connector</text>
+    <text x="958" y="137">Foundry Local</text><text x="958" y="162">YOLOX-Nano</text>
+    <text x="1170" y="137">Result / file</text><text x="1170" y="162">reader</text>
+  </g>
+  <g class="lifeline">
+    <path d="M110,186 V998"/><path d="M322,186 V998"/><path d="M534,186 V998"/>
+    <path d="M746,186 V998"/><path d="M958,186 V998"/><path d="M1170,186 V998"/>
+  </g>
+  <rect x="24" y="204" width="1232" height="42" rx="4" fill="#F3F2F1" stroke="#C8C6C4"/>
+  <text x="40" y="231" class="note">The graph generates a processing UUID and preserves its geometry/input-file context through the built-in inference node.</text>
+
+  <text x="122" y="278" class="detail">1. JPEG snapshot</text>
+  <path d="M110,290 H320" class="mqtt"/>
+  <text x="334" y="348" class="detail">2. Write request JSON</text>
+  <path d="M322,360 H532" class="files"/>
+  <text x="334" y="418" class="detail">3. predict(input filename), fileRead=true</text>
+  <path d="M322,430 H744" class="mqtt"/>
+  <text x="546" y="488" class="detail">4. Read request tensor</text>
+  <path d="M746,500 H536" class="files"/>
+  <text x="758" y="558" class="detail">5. HTTPS /v1/predict</text>
+  <path d="M746,570 H956" class="https"/>
+  <text x="758" y="628" class="detail">6. JSON output_0 tensor</text>
+  <path d="M958,640 H748" class="https reply"/>
+  <text x="546" y="698" class="detail">7. Write response file</text>
+  <path d="M746,710 H536" class="files"/>
+  <text x="334" y="768" class="detail">8. Reply: output filename (text/plain)</text>
+  <path d="M746,780 H324" class="mqtt reply"/>
+  <text x="334" y="838" class="detail">9. Read raw response</text>
+  <path d="M322,850 H532" class="files"/>
+  <text x="334" y="908" class="detail">10. Decode and publish observation JSON, with both file references</text>
+  <path d="M322,920 H1168" class="mqtt"/>
+  <text x="546" y="968" class="detail">11. Copy referenced tensor files before cleanup (read-only)</text>
+  <path d="M1170,980 H536" class="files"/>
+
+  <rect x="24" y="1020" width="1232" height="64" rx="4" fill="#FAF9F8" stroke="#C8C6C4"/>
+  <text x="40" y="1045" class="note">Success path shown. Contextual postprocessing failures use /errors; preprocessing or inference failures can produce no observation.</text>
+  <text x="40" y="1070" class="note">No result is not zero people. Files are temporary tensors, not retained JPEG evidence or complete MQTT/HTTP envelopes.</text>
+  <path d="M24,1110 H72" class="mqtt"/>
+  <text x="86" y="1115" class="small">Broker-routed MQTT / RPC</text>
+  <path d="M444,1110 H492" class="files"/>
+  <text x="506" y="1115" class="small">File operation</text>
+  <path d="M820,1110 H868" class="https"/>
+  <text x="882" y="1115" class="small">HTTPS + service-account token</text>
+</svg>

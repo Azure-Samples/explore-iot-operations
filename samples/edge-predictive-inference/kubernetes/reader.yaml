@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge-predictive-reader
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: edge-predictive-reader
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+spec:
+  serviceAccountName: edge-predictive-reader
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: reader
+      image: eclipse-mosquitto:2.0.22
+      command: [/bin/sh, -ec]
+      args: ["sleep infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: {drop: [ALL]}
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {cpu: 100m, memory: 128Mi}
+      volumeMounts:
+        - {name: data, mountPath: /data, readOnly: true}
+        - {name: broker-sat, mountPath: /var/run/secrets/tokens, readOnly: true}
+        - {name: trust-bundle, mountPath: /var/run/certs, readOnly: true}
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: ${dataClaimName}
+        readOnly: true
+    - name: broker-sat
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: broker-sat
+              audience: aio-internal
+              expirationSeconds: 3600
+    - name: trust-bundle
+      configMap:
+        name: azure-iot-operations-aio-ca-trust-bundle

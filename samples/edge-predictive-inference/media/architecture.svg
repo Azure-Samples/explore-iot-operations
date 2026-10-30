@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1010" viewBox="0 0 1280 1010"
+     font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+     role="img" aria-labelledby="title description">
+  <title id="title">Continuous person detection with media and native inference connectors</title>
+  <desc id="description">An RTSP camera feeds the media connector, which publishes JPEG snapshots through the MQTT broker to one five-node data flow graph. Its three transforms prepare an input tensor, invoke the native inference connector over broker-routed RPC, and decode the output. The connector calls Foundry Local over HTTPS with a service-account token. Prepared requests and raw responses share a scratch PVC. Observations return through the broker to a read-only result and file reader. ARM and Kubernetes own deployment; OCI supplies artifacts. The RPC link is shorthand for broker transport, detailed in the companion sequence.</desc>
+  <metadata>Hand-editable SVG. Azure and Fluent icon notices: ../THIRD-PARTY-NOTICES.md.</metadata>
+  <defs>
+    <marker id="mqtt-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#0078D4"/></marker>
+    <marker id="other-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#605E5C"/></marker>
+    <linearGradient id="foundry-pink" x1="-603.563" y1="-218.378" x2="-606.6" y2="-206.22" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#712575"/><stop offset=".09" stop-color="#9a2884"/><stop offset=".18" stop-color="#bf2c92"/><stop offset=".27" stop-color="#da2e9c"/><stop offset=".34" stop-color="#eb30a2"/><stop offset=".4" stop-color="#f131a5"/><stop offset=".5" stop-color="#ec30a3"/><stop offset=".61" stop-color="#df2f9e"/><stop offset=".72" stop-color="#c92d96"/><stop offset=".83" stop-color="#aa2a8a"/><stop offset=".95" stop-color="#83267c"/><stop offset="1" stop-color="#712575"/>
+    </linearGradient>
+    <linearGradient id="foundry-blue" x1="-602.412" y1="-206.025" x2="-602.412" y2="-223.175" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#da7ed0"/><stop offset=".08" stop-color="#b17bd5"/><stop offset=".19" stop-color="#8778db"/><stop offset=".3" stop-color="#6276e1"/><stop offset=".41" stop-color="#4574e5"/><stop offset=".54" stop-color="#2e72e8"/><stop offset=".67" stop-color="#1d71eb"/><stop offset=".81" stop-color="#1471ec"/><stop offset="1" stop-color="#1171ed"/>
+    </linearGradient>
+    <linearGradient id="foundry-body" x1="-603.438" y1="-206.414" x2="-614.807" y2="-224.644" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#da7ed0"/><stop offset=".05" stop-color="#b77bd4"/><stop offset=".11" stop-color="#9079da"/><stop offset=".18" stop-color="#6e77df"/><stop offset=".25" stop-color="#5175e3"/><stop offset=".33" stop-color="#3973e7"/><stop offset=".42" stop-color="#2772e9"/><stop offset=".54" stop-color="#1a71eb"/><stop offset=".68" stop-color="#1371ec"/><stop offset="1" stop-color="#1171ed"/>
+    </linearGradient>
+    <symbol id="foundry-icon" viewBox="0 0 18 18">
+      <path d="m12.061.012c.534,0,1.008.401,1.178.984s1.166,4.19,1.166,4.19v7.166h-3.607l.073-12.352h1.19v.012Z" fill="url(#foundry-pink)" fill-rule="evenodd"/>
+      <path d="m17.356,5.611c0-.255-.206-.449-.449-.449h-2.126c-1.494,0-2.709,1.215-2.709,2.709v4.494h2.575c1.494,0,2.709-1.215,2.709-2.709v-4.045Z" fill="url(#foundry-blue)"/>
+      <path d="m12.061.012c-.413,0-.741.328-.741.741l-.073,13.64c0,1.992-1.615,3.607-3.607,3.607H1.093c-.316,0-.522-.304-.425-.595L5.915,2.429C6.425.984,7.785.012,9.316.012h2.757-.012Z" fill="url(#foundry-body)" fill-rule="evenodd"/>
+    </symbol>
+    <symbol id="camera-icon" viewBox="0 0 24 24">
+      <path d="M5.25 5C3.45507 5 2 6.45507 2 8.25V15.75C2 17.5449 3.45507 19 5.25 19H12.75C14.5449 19 16 17.5449 16 15.75V15.438L19.2575 17.6872C20.4183 18.4887 22.0018 17.6578 22.0018 16.2471V7.75204C22.0018 6.34137 20.4183 5.51044 19.2575 6.31197L16 8.56118V8.25C16 6.45507 14.5449 5 12.75 5H5.25ZM16 10.384L20.1098 7.54632C20.2756 7.43181 20.5018 7.55051 20.5018 7.75204V16.2471C20.5018 16.4486 20.2756 16.5673 20.1098 16.4528L16 13.6151V10.384ZM3.5 8.25C3.5 7.2835 4.2835 6.5 5.25 6.5H12.75C13.7165 6.5 14.5 7.2835 14.5 8.25V15.75C14.5 16.7165 13.7165 17.5 12.75 17.5H5.25C4.2835 17.5 3.5 16.7165 3.5 15.75V8.25Z" fill="#605E5C"/>
+    </symbol>
+    <symbol id="database-icon" viewBox="0 0 24 24">
+      <path d="M4 6C4 5.30945 4.3153 4.70664 4.77423 4.22025C5.2294 3.73784 5.85301 3.33745 6.56668 3.01752C7.99575 2.3769 9.91738 2 12 2C14.0826 2 16.0042 2.3769 17.4333 3.01752C18.147 3.33745 18.7706 3.73784 19.2258 4.22025C19.6847 4.70664 20 5.30945 20 6V18C20 18.6906 19.6847 19.2934 19.2258 19.7798C18.7706 20.2622 18.147 20.6626 17.4333 20.9825C16.0042 21.6231 14.0826 22 12 22C9.91738 22 7.99575 21.6231 6.56668 20.9825C5.85301 20.6626 5.2294 20.2622 4.77423 19.7798C4.3153 19.2934 4 18.6906 4 18V6ZM5.5 6C5.5 6.20691 5.59044 6.45909 5.86525 6.75034C6.14382 7.04559 6.58195 7.3455 7.18027 7.61372C8.37519 8.14937 10.0786 8.5 12 8.5C13.9214 8.5 15.6248 8.14937 16.8197 7.61372C17.418 7.3455 17.8562 7.04559 18.1348 6.75034C18.4096 6.45909 18.5 6.20691 18.5 6C18.5 5.79309 18.4096 5.54091 18.1348 5.24966C17.8562 4.95441 17.418 4.65449 16.8197 4.38628C15.6248 3.85063 13.9214 3.5 12 3.5C10.0786 3.5 8.37519 3.85063 7.18027 4.38628C6.58195 4.65449 6.14382 4.95441 5.86525 5.24966C5.59044 5.54091 5.5 5.79309 5.5 6ZM18.5 8.39242C18.1791 8.61282 17.8194 8.80942 17.4333 8.98248C16.0042 9.6231 14.0826 10 12 10C9.91738 10 7.99575 9.6231 6.56668 8.98248C6.18063 8.80942 5.82094 8.61282 5.5 8.39242V18C5.5 18.2069 5.59044 18.4591 5.86525 18.7503C6.14382 19.0456 6.58195 19.3455 7.18027 19.6137C8.37519 20.1494 10.0786 20.5 12 20.5C13.9214 20.5 15.6248 20.1494 16.8197 19.6137C17.418 19.3455 17.8562 19.0456 18.1348 18.7503C18.4096 18.4591 18.5 18.2069 18.5 18V8.39242Z" fill="#CA5010"/>
+    </symbol>
+    <symbol id="application-icon" viewBox="0 0 24 24">
+      <path d="M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V6.5H19.5V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25ZM4.5 17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V8H4.5V17.75ZM6.85 9.5H10.15C10.6194 9.5 11 9.88056 11 10.35V17.15C11 17.6194 10.6194 18 10.15 18H6.85C6.38056 18 6 17.6194 6 17.15V10.35C6 9.88056 6.38056 9.5 6.85 9.5ZM7.5 16.5H9.5V11H7.5V16.5ZM12 10.25C12 9.83579 12.3358 9.5 12.75 9.5H17.25C17.6642 9.5 18 9.83579 18 10.25C18 10.6642 17.6642 11 17.25 11H12.75C12.3358 11 12 10.6642 12 10.25ZM12.75 12.5C12.3358 12.5 12 12.8358 12 13.25C12 13.6642 12.3358 14 12.75 14H16.25C16.6642 14 17 13.6642 17 13.25C17 12.8358 16.6642 12.5 16.25 12.5H12.75Z" fill="#605E5C"/>
+    </symbol>
+    <style>
+      text { fill: #242424; }
+      .title { font-size: 24px; font-weight: 600; }
+      .heading { font-size: 18px; font-weight: 600; }
+      .label { font-size: 17px; font-weight: 600; }
+      .detail { font-size: 15px; fill: #605E5C; }
+      .small { font-size: 14px; fill: #605E5C; }
+      .card { fill: #FFFFFF; stroke: #8A8886; }
+      .mqtt { fill: none; stroke: #0078D4; stroke-width: 1.8; marker-end: url(#mqtt-end); }
+      .other { fill: none; stroke: #605E5C; stroke-width: 1.8; marker-end: url(#other-end); }
+      .files { fill: none; stroke: #CA5010; stroke-width: 1.8; stroke-dasharray: 6 4; }
+    </style>
+  </defs>
+  <rect width="1280" height="1010" fill="#FFFFFF"/>
+  <text x="24" y="34" class="title">Continuous person detection at the edge</text>
+  <text x="24" y="60" class="detail">Media + native inference integration only: no camera control, viewer, text model or training pipeline.</text>
+
+  <rect x="16" y="82" width="1248" height="102" rx="6" fill="#F3F2F1" stroke="#C8C6C4"/>
+  <text x="36" y="107" class="heading">Deployment and artifact distribution</text>
+  <rect x="32" y="120" width="400" height="50" rx="4" class="card"/>
+  <text x="46" y="141" class="label">ARM / Bicep</text>
+  <text x="46" y="161" class="small">Camera, AIO application, data flow</text>
+  <rect x="452" y="120" width="380" height="50" rx="4" class="card"/>
+  <text x="466" y="141" class="label">Kubernetes resources</text>
+  <text x="466" y="161" class="small">Foundry model, PVC, reader, cleanup</text>
+  <rect x="852" y="120" width="396" height="50" rx="4" class="card"/>
+  <text x="866" y="141" class="label">OCI registries</text>
+  <text x="866" y="161" class="small">Model, custom WASM/graphs, Microsoft artifacts</text>
+
+  <rect x="220" y="204" width="1044" height="726" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+  <text x="242" y="234" class="heading">Azure IoT Operations + Foundry Local on the edge cluster</text>
+  <rect x="24" y="275" width="170" height="115" rx="4" class="card"/>
+  <use href="#camera-icon" x="93" y="285" width="32" height="32"/>
+  <text x="109" y="344" text-anchor="middle" class="label">RTSP camera</text>
+  <text x="109" y="369" text-anchor="middle" class="small">Authorized stream</text>
+  <rect x="250" y="275" width="210" height="95" rx="4" class="card"/>
+  <text x="270" y="302" class="label">Media connector</text>
+  <text x="270" y="328" class="detail">snapshot-to-mqtt</text>
+  <text x="270" y="352" class="small">JPEG, 0.2 snapshots/sec</text>
+  <rect x="520" y="275" width="245" height="95" rx="4" class="card"/>
+  <text x="540" y="302" class="label">MQTT broker</text>
+  <text x="540" y="328" class="detail">Frames, results, errors</text>
+  <text x="540" y="352" class="small">TLS + K8S-SAT</text>
+  <rect x="990" y="275" width="240" height="95" rx="4" class="card"/>
+  <text x="1010" y="302" class="label">MQTT / file reader</text>
+  <text x="1010" y="328" class="detail">Observation JSON</text>
+  <text x="1010" y="352" class="small">Read-only PVC access</text>
+  <path d="M196,322 H248" class="other"/>
+  <text x="222" y="309" text-anchor="middle" class="small">RTSP</text>
+  <path d="M462,322 H518" class="mqtt"/>
+  <text x="490" y="309" text-anchor="middle" class="small">JPEG</text>
+  <path d="M767,322 H988" class="mqtt"/>
+  <text x="792" y="307" class="detail">JSON observations</text>
+
+  <rect x="250" y="410" width="380" height="340" rx="6" fill="#DEECF9" stroke="#71AFE5"/>
+  <text x="270" y="438" class="heading">Person-detection data flow</text>
+  <text x="270" y="460" class="small">MQTT source + three transforms + sink</text>
+  <rect x="275" y="480" width="330" height="65" rx="4" class="card"/>
+  <text x="293" y="505" class="label">1. Prepare JPEG</text>
+  <text x="293" y="530" class="small">BGR CHW tensor; [1,3,416,416]</text>
+  <rect x="275" y="570" width="330" height="65" rx="4" class="card"/>
+  <text x="293" y="595" class="label">2. Inference (Preview)</text>
+  <text x="293" y="620" class="small">Microsoft graph 0.2 / fileRead=true</text>
+  <rect x="275" y="660" width="330" height="65" rx="4" class="card"/>
+  <text x="293" y="685" class="label">3. Decode person detections</text>
+  <text x="293" y="710" class="small">Restore pixels; threshold + NMS</text>
+  <path d="M440,547 V568" class="other"/>
+  <path d="M440,637 V658" class="other"/>
+  <path d="M575,372 V397 H240 V510 H273" class="mqtt"/>
+  <text x="320" y="387" class="small">JPEG input</text>
+  <path d="M607,695 H650 V372" class="mqtt"/>
+  <text x="665" y="427" class="small">Results / errors</text>
+
+  <rect x="850" y="470" width="380" height="95" rx="4" class="card"/>
+  <use href="#application-icon" x="866" y="485" width="28" height="28"/>
+  <text x="906" y="497" class="label">Native inference connector</text>
+  <text x="872" y="525" class="detail">AIO Apps-managed; model-specific RPC</text>
+  <text x="872" y="548" class="small">Reads requests; writes raw responses</text>
+  <path d="M641,602 Q650,590 659,602" fill="none" stroke="#F3F8FD" stroke-width="7"/>
+  <path d="M607,602 H641 Q650,590 659,602 H790 V515 H848" class="mqtt"/>
+  <text x="665" y="625" class="small">RPC via broker</text>
+
+  <rect x="850" y="700" width="380" height="105" rx="4" class="card"/>
+  <use href="#foundry-icon" x="872" y="717" width="28" height="28"/>
+  <text x="912" y="730" class="label">Foundry Local</text>
+  <text x="872" y="758" class="detail">YOLOX-Nano / ONNX CPU</text>
+  <text x="872" y="785" class="small">Raw output: [1,3549,85]</text>
+  <path d="M1110,567 V698" class="other"/>
+  <path d="M1134,698 V567" class="other"/>
+  <text x="928" y="674" class="detail">HTTPS + SAT</text>
+  <text x="928" y="692" class="small">Audience: aio-internal</text>
+
+  <rect x="250" y="800" width="520" height="105" rx="4" class="card"/>
+  <use href="#database-icon" x="270" y="816" width="28" height="28"/>
+  <text x="310" y="835" class="label">Shared PVC: edge-predictive-data</text>
+  <text x="274" y="859" class="detail">inputs/&lt;frameId&gt;.json</text>
+  <text x="274" y="881" class="detail">responses/&lt;connector-reference&gt;</text>
+  <text x="274" y="899" class="small">Scratch tensors only; age-based cleanup every minute</text>
+  <path d="M275,530 H260 V770 H340 V800" class="files"/>
+  <text x="275" y="765" class="small">Write input</text>
+  <path d="M500,725 V800" class="files"/>
+  <text x="512" y="780" class="small">Read response</text>
+  <path d="M1040,565 V645 H790 V852 H770" class="files"/>
+  <text x="820" y="639" class="small">Read request / write response</text>
+  <path d="M1230,340 H1248 V884 H770" class="files"/>
+  <text x="1020" y="872" class="small">Read-only file retrieval</text>
+
+  <path d="M24,960 H72" class="mqtt"/>
+  <text x="84" y="965" class="small">MQTT; all RPC traffic traverses the broker</text>
+  <path d="M445,960 H493" class="files"/>
+  <text x="505" y="965" class="small">Shared-file access (labeled)</text>
+  <path d="M820,960 H868" class="other"/>
+  <text x="880" y="965" class="small">RTSP / HTTPS / in-process data</text>
+  <text x="24" y="993" class="small">One sampled frame per attempt. No retained JPEG evidence, tracking, permanent result history, or safety decision.</text>
+</svg>
