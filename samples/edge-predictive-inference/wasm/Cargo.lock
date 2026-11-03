@@ -59,6 +59,8 @@ dependencies = [
  "uuid",
  "wasm_graph_sdk",
  "wit-bindgen 0.38.0",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]

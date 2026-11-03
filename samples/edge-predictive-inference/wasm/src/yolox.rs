@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 use crate::Settings;
-use image::{imageops::FilterType, ImageReader, Limits};
+use image::imageops::FilterType;
 use serde::{Deserialize, Serialize};
-use std::io::Cursor;
+use zune_core::{colorspace::ColorSpace, options::DecoderOptions};
+use zune_jpeg::JpegDecoder;
 
 pub const SIZE: usize = 416;
 pub const MAX_DETECTIONS: usize = 100;
@@ -47,21 +48,38 @@ pub fn prepare(jpeg: &[u8]) -> Result<PreparedImage, String> {
     if jpeg.len() > 8 * 1024 * 1024 {
         return Err("JPEG exceeds 8 MiB".into());
     }
-    let mut reader = ImageReader::with_format(Cursor::new(jpeg), image::ImageFormat::Jpeg);
-    let mut limits = Limits::default();
-    limits.max_image_width = Some(4096);
-    limits.max_image_height = Some(4096);
-    limits.max_alloc = Some(64 * 1024 * 1024);
-    reader.limits(limits);
-    let rgb = reader
-        .decode()
-        .map_err(|e| format!("Invalid JPEG: {e}"))?
-        .to_rgb8();
+    // The image wrapper disables strict decoding; zune also tolerates a missing final EOI.
+    if !jpeg.starts_with(&[0xff, 0xd8]) || !jpeg.ends_with(&[0xff, 0xd9]) {
+        return Err("Invalid or incomplete JPEG: missing start/end markers".into());
+    }
+    let options = DecoderOptions::default()
+        .set_strict_mode(true)
+        .set_max_width(4096)
+        .set_max_height(4096)
+        .jpeg_set_out_colorspace(ColorSpace::RGB);
+    let mut decoder = JpegDecoder::new_with_options(jpeg, options);
+    decoder
+        .decode_headers()
+        .map_err(|e| format!("Invalid JPEG: {e}"))?;
+    let info = decoder
+        .info()
+        .ok_or("JPEG decoder returned no image information")?;
     let geometry = Geometry {
-        width: rgb.width(),
-        height: rgb.height(),
+        width: u32::from(info.width),
+        height: u32::from(info.height),
     };
     geometry.validate()?;
+    let pixels = decoder.decode().map_err(|e| format!("Invalid JPEG: {e}"))?;
+    // Grayscale JPEG headers override the requested RGB output colorspace.
+    let rgb = match decoder.get_output_colorspace() {
+        Some(ColorSpace::RGB) => image::RgbImage::from_raw(geometry.width, geometry.height, pixels),
+        Some(ColorSpace::Luma) => {
+            image::GrayImage::from_raw(geometry.width, geometry.height, pixels)
+                .map(|gray| image::DynamicImage::ImageLuma8(gray).into_rgb8())
+        }
+        _ => return Err("JPEG decoder returned an unsupported output colorspace".into()),
+    }
+    .ok_or("JPEG decoder returned an invalid pixel buffer")?;
     let ratio = geometry.ratio();
     let width = ((geometry.width as f32 * ratio) as u32).clamp(1, SIZE as u32);
     let height = ((geometry.height as f32 * ratio) as u32).clamp(1, SIZE as u32);

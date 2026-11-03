@@ -32,6 +32,8 @@ both an application-facing result and a way to inspect the data used for inferen
 > and [deployment prerequisites](docs/deployment.md#prerequisites).
 > Foundry Local here is the Kubernetes predictive-model operator, not the desktop
 > application.
+> Check the [media compatibility findings](docs/deployment.md#media-connector-compatibility)
+> before choosing a media image; successful pod startup alone is not sufficient.
 
 ## Scenario
 
@@ -64,7 +66,7 @@ flow graph contains five nodes:
 | Node | Responsibility | Output |
 | --- | --- | --- |
 | Camera source | Subscribe to sampled camera images. | JPEG bytes and MQTT metadata. |
-| Preprocess | Decode, resize, pad, and arrange the image for YOLOX-Nano. | A prepared tensor file, its reference, and frame context. |
+| Preprocess | Validate and decode a complete JPEG, then resize, pad, and arrange it for YOLOX-Nano. | A prepared tensor file, its reference, and frame context. |
 | Inference (Preview) | Invoke the native inference connector through MQTT RPC. | The connector's response-file reference. |
 | Postprocess | Decode model output, filter person detections, and suppress overlapping boxes. | An observation or a contextual postprocessing error. |
 | Observation destination | Publish JSON to the appropriate MQTT topic. | Results for downstream applications. |
@@ -197,6 +199,10 @@ ReadWriteMany (RWX) storage. Deployment also requires Azure CLI with Bicep,
 
 Complete the [deployment prerequisites](docs/deployment.md#prerequisites),
 including [trust, credentials, and permissions](docs/deployment.md#trust-credentials-and-permissions).
+For a multi-node cluster, use shared RWX storage such as Azure Container Storage
+enabled by Azure Arc (ACSA) with `unbacked-sc`; a default Azure Disk RWO claim is
+not a substitute. Review [multi-node storage](docs/deployment.md#multi-node-shared-storage)
+and [media image compatibility](docs/deployment.md#media-connector-compatibility).
 These commands do not install Azure IoT Operations, Foundry Local, or a storage
 driver. Run them in order from the sample directory with `.venv` active, and
 stop if a command fails.
@@ -322,11 +328,17 @@ shellcheck build.sh publish.sh deploy.sh
 The Python tests cover configuration rendering and deployment guards using
 simulated Azure and Kubernetes commands. `build.sh` runs the Rust processing
 tests and builds both WASM components. These checks do not deploy resources.
+The Rust tests include truncated-JPEG rejection and correct grayscale expansion;
+incomplete images must not produce apparently successful detections.
 
 Use the [local inference command](#build-and-run-locally) to exercise the actual
 model with an image, and the [running pipeline](#run-and-observe-the-pipeline) to
 verify the connector integration on your cluster. Local checks do not establish
 model accuracy, throughput, or live-cluster readiness.
+For live verification, fully decode sampled MQTT JPEGs, exercise both an empty
+and a person-containing authorized scene, and retrieve each observation's
+referenced tensor files. A JPEG header or a zero-person observation alone is
+insufficient evidence that the full image reached inference.
 
 ## Stop and clean up
 

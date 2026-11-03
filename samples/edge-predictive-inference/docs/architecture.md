@@ -52,7 +52,9 @@ name and shape rather than guessing how to interpret an arbitrary model.
 
 The Rust implementation:
 
-- Decodes only JPEG, with an 8 MiB payload limit and 4096-pixel dimension limits.
+- Requires a complete JPEG payload, including start/end markers, and uses strict
+  decoding with an 8 MiB payload limit and 4096-pixel dimension limits.
+- Expands grayscale JPEGs to three channels before resizing and tensor layout.
 - Uses the smaller of `416 / width` and `416 / height` as its resize ratio.
 - Resizes with the `image` crate's Triangle filter, preserving aspect ratio.
 - Places the image at the top-left of a 416 x 416 canvas; bottom/right padding is
@@ -132,7 +134,7 @@ A duplicate JPEG delivery can generate a different processing UUID.
 
 | Failure | Observable behavior |
 | --- | --- |
-| Invalid/oversized JPEG, input write failure, or invalid source metadata | Preprocessing logs an error and fails the operation. No successful observation is emitted. |
+| Empty, truncated, invalid, or oversized JPEG; input write failure; or invalid source metadata | Preprocessing logs an error and fails the operation. No successful observation is emitted. |
 | Inference RPC timeout, model/authentication failure, or connector I/O failure | The built-in transform logs the failure and drops that message. It does not emit a synthetic observation or a sample `/errors` message. |
 | Missing/invalid internal context or mismatched stage settings | Postprocessing logs and fails the operation. |
 | Wrong response content type/reference, missing response file, invalid model tensor, or decode failure with valid context | Postprocessing publishes `status: "error"` under `/errors`, with frame identity, the request reference, and the response reference when valid. No person count or detection list is included. |
@@ -162,6 +164,7 @@ and available file-reference fields. This excerpt is not a complete payload.
 
 | Component | Selected contract |
 | --- | --- |
+| Media connector | `snapshot-to-mqtt`, complete JPEG payloads, and an image compatible with Akri's non-root policy. See the [media compatibility findings](deployment.md#media-connector-compatibility). |
 | Native connector | `mcr.microsoft.com/azureiotoperations/inference-connector:0.1.2` |
 | Microsoft inference graph | `azureiotoperations/graph-dataflow-inference:0.2.0-preview.0` |
 | Graph digest | `sha256:4a3ca352ad900e459785674c3a2648c9b5a1f73583e8dbdb73c653471704c52d` |

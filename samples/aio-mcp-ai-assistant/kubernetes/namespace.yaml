@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge-assistant
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+  annotations:
+    aio-broker-auth/edge-assistant: ${namespace}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge-resource-mcp
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+automountServiceAccountToken: false

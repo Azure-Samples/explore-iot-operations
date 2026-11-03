@@ -1,0 +1,27 @@
+apiVersion: foundrylocal.azure.com/v1
+kind: ModelDeployment
+metadata:
+  name: ${modelName}
+  namespace: ${foundryNamespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  model: ${modelSource}
+  workloadType: generative
+  compute: ${modelCompute}
+  runtime: onnx-genai
+  replicas: 1
+  nodeSelector: ${modelNodeSelector}
+  tolerations: ${modelTolerations}
+  port: 5000
+  endpoint:
+    exposure: internal
+  authenticationMethods:
+    - method: serviceAccountToken
+      enabled: true
+      roles:
+        - role: GeneralInferenceUser
+          authorizedSubjects:
+            - serviceAccountName: edge-assistant
+              serviceAccountNamespace: ${namespace}
+  resources: ${modelResources}

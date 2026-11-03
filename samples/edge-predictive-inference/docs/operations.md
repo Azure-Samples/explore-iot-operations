@@ -24,12 +24,15 @@ Do not assume the managed connector's pod is named `aio-inference-connector`.
 | Symptom | Check |
 | --- | --- |
 | No JPEGs on `<prefix>/frames` | Camera/asset enabled state, camera reachability, synchronized credentials, media connector logs, and broker publish/subscribe authorization. |
+| Media pod has `CreateContainerConfigError` for a non-numeric user | Use a [compatible media image](deployment.md#media-connector-compatibility) through its managed connector template. Keep non-root enforcement enabled; do not patch the generated StatefulSet. |
+| `Invalid or incomplete JPEG`, `No more bytes`, or missing frames | Capture actual MQTT payloads and fully decode them. Empty/truncated frames are a media-input problem, not a valid zero-person result. Review the [media compatibility findings](deployment.md#media-connector-compatibility); do not relax decoding or append missing bytes. |
 | JPEGs arrive but no observations | Graph enabled/available state, all five nodes, artifact pulls, file stores, graph logs, and connector/model readiness. |
 | `no file store configured` | The parent data flow must keep both file-store entries. A mounted connector PVC alone is insufficient. Redeploy the Bicep graph if a portal edit removed them. |
 | Input write or response read errors | Same claim and subpaths in graph and connector, RWX support, permissions, free space, and cleanup age versus processing delays. |
 | Foundry returns 401/403 | Audience `aio-internal`, model authorization for the generated application service account, and the actual model base URL. |
 | TLS failure | Secret in the AIO namespace with correct `ca.crt`, certificate hostname, and CA rotation. Do not disable certificate verification. |
 | Model does not load | Foundry status/events, registry credentials and expiry, registry permissions, model artifact version, and predictive ONNX runtime support. |
+| Updated model remains pending with `InsufficientCPU` | A rolling update can require capacity for both old and new model pods. An old ready pod does not prove the replacement is ready; see the update guidance below. |
 | Wrong response contract | Keep the pinned 0.2 inference graph. The 0.3 envelope is not a filename. |
 | Valid zero-person observations | Inspect authorized scene data, field of view, preprocessing, threshold, and the generic model's domain limitations. Zero detections is not proof of no people. |
 | Increasing delays or missing frames | Start at 0.2 snapshots/sec, then assess model latency, graph capacity, MQTT limits, CPU/memory, and storage. This sample is not a throughput sizing result. |
@@ -52,6 +55,10 @@ The claim must support RWX, concurrent readers/writers, and the filesystem
 operations used by the graph. An `RWO` local-path claim or unrelated namespace's
 claim is not a substitute. The sample intentionally keeps storage in the AIO
 namespace and does not change a cluster storage class.
+For multi-node deployments, ACSA's `unbacked-sc` is a shared RWX option.
+Verify actual cross-node access as described in
+[multi-node storage setup](deployment.md#multi-node-shared-storage), including
+the permissions of both application directories.
 
 The CronJob runs once per minute and uses `find -mmin +5`. Minute rounding and
 the sweep interval mean files can remain for roughly six to seven minutes.
@@ -103,6 +110,16 @@ Reapply the sample's model/camera/flow resources as appropriate, verify readines
 then enable. Updating an already completed initialization Job or an existing
 reader Pod with immutable-field changes requires explicitly recreating that
 sample-owned object. Do not delete the data claim just to rerun initialization.
+
+On a small cluster, reserve capacity for a model rolling update as well as steady
+state. The tested Foundry operator requires at least one replica and does not
+expose a deployment-strategy setting on `ModelDeployment`. If a replacement
+cannot schedule, arrange a sample outage: disable and confirm the pipeline,
+verify ownership, then recreate only this sample's `ModelDeployment` from
+`.generated/model.yaml`. Wait for its current model to be `Running` and
+`Available` before enabling the pipeline. This preserves the declared resource
+requests without patching the operator-generated Deployment or resizing nodes.
+Do not use this procedure for a shared model with other consumers.
 
 ## Stop and remove only this sample
 

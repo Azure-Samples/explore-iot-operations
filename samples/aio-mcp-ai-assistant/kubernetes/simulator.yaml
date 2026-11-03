@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-assistant-camera
+  namespace: ${namespace}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: edge-assistant-camera}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: edge-assistant-camera
+        app.kubernetes.io/part-of: aio-mcp-ai-assistant
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets: ${pullSecrets}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: camera
+          image: ${simulatorImage}
+          env:
+            - name: ONVIF_SIMULATOR_ADVERTISED_HOST
+              value: ${simulatorHost}
+            - name: ONVIF_SIMULATOR_CAMERA_USERNAME
+              valueFrom:
+                secretKeyRef: {name: "${cameraSecret}", key: username}
+            - name: ONVIF_SIMULATOR_CAMERA_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: "${cameraSecret}", key: password}
+            - name: ONVIF_SIMULATOR_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef: {name: "${cameraSecret}", key: admin-token}
+          ports:
+            - {name: onvif, containerPort: 2020}
+            - {name: rtsp, containerPort: 8554}
+          volumeMounts:
+            - {name: state, mountPath: /app/state}
+            - {name: tmp, mountPath: /tmp}
+          readinessProbe:
+            httpGet: {path: /readyz, port: onvif}
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: onvif}
+            initialDelaySeconds: 20
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 500m, memory: 512Mi}
+            limits: {cpu: "2", memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+      volumes:
+        - name: state
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-assistant-camera
+  namespace: ${namespace}
+spec:
+  type: ClusterIP
+  selector: {app.kubernetes.io/name: edge-assistant-camera}
+  ports:
+    - {name: onvif, port: 2020, targetPort: onvif}
+    - {name: rtsp, port: 554, targetPort: rtsp}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edge-assistant-camera
+  namespace: ${namespace}
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: edge-assistant-camera}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ${aioNamespace}
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 2020}
+        - {protocol: TCP, port: 8554}

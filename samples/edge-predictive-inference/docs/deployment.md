@@ -34,6 +34,52 @@ application.
 > configuration into the existing managed connector and authorize its actual
 > service account. Do not run the connector installation commands unchanged.
 
+### Multi-node shared storage
+
+The graph runtime, inference connector, and reader can run on different nodes.
+Use a storage class that provides concurrent cross-node filesystem access, not
+the cluster's default Azure Disk or local-path RWO class.
+
+[Azure Container Storage enabled by Azure Arc (ACSA)](https://learn.microsoft.com/azure/azure-arc/container-storage/howto-install-edge-volumes)
+provides [local shared edge volumes](https://learn.microsoft.com/azure/azure-arc/container-storage/howto-configure-local-shared-edge-volumes)
+through `unbacked-sc`. Install and configure the extension before running the
+sample preflight, then set `"storageClassName": "unbacked-sc"` in `config.json`.
+The sample creates its own 2 GiB RWX claim; it does not install ACSA or change
+the cluster's default storage class.
+
+`Bound` and `ReadWriteMany` alone do not prove cross-node access. Before enabling
+the camera, verify concurrent writes and reciprocal checksum reads from two pods
+on different nodes, using UID/GID `65532` and this sample's input/response
+directories. Keep `runAsNonRoot` enabled and remove the verification files and pods
+afterward. See [storage permissions and retention](operations.md#storage-and-retention).
+
+### Media connector compatibility
+
+This scenario requires `snapshot-to-mqtt`, not clip extraction or media-file
+storage. The media connector must both start under Akri's non-root policy and
+publish complete JPEG payloads. If the instance needs a media template, use the supported
+[connector template management commands](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-manage-connector-templates)
+with a compatible metadata reference. Keep exactly one template for `Microsoft.Media`.
+
+Validation with Akri `1.4.0-preview.9` identified these compatibility constraints:
+
+- Media images `1.4.0`, `1.5.0`, and `1.6.1` declare the named user `nonroot`.
+  Without a numeric `runAsUser` in the generated workload, Kubernetes rejects
+  them with `CreateContainerConfigError`.
+- Media `1.3.4` starts with numeric UID `65532`, but testing captured empty and
+  truncated JPEGs on MQTT. Do not select it merely to avoid the startup error.
+- A test-only AMD64 repackaging of the official `1.6.1` image, changing only
+  `USER` to `65532:65532`, emitted complete JPEGs in validation. Its filesystem
+  layers were unchanged, and it was deployed through the managed template.
+  This is a validation workaround, **not an official connector release**.
+
+Resolve the supported image/operator combination with the platform owner before
+customer deployment. Do not disable non-root checks, patch generated workloads,
+or weaken JPEG validation. A private validation image is not a replacement for
+an officially supported prerequisite. The CLI does not allow metadata
+downgrades; stopping affected consumers is required before replacing a
+sample-owned template.
+
 ### Trust, credentials, and permissions
 
 Foundry Local must accept the token audience **`aio-internal`**. The model
@@ -41,6 +87,13 @@ authorizes `azure-iot-operations/aioappcfg-edge-predictive-inference-sa`, the
 service account generated for this AIO application configuration. Coordinate the
 Foundry installation's audience with its owner; changing it can break other
 clients. The sample does not change it.
+
+Size the Foundry installation separately from the model pod. In particular,
+its default model-cache job can request 16 GiB, which will not fit on a smaller
+node even though this model requests only 512 MiB. Use the supported
+`storeModel.cacheJob.resources` settings in the
+[Foundry installation guide](https://learn.microsoft.com/azure/azure-sovereign-clouds/private/foundry-local/deploy-foundry-local-arc-extension)
+for the model and available node capacity; do not patch operator-generated jobs.
 
 Prepare these existing secrets through your approved secret-management process:
 
@@ -276,7 +329,22 @@ path. The response is the raw tensor, not the final detection list.
 
 To inspect an incoming JPEG independently, subscribe to `<topicPrefix>/frames`
 with `mosquitto_sub -C 1 -W 30 -N` and redirect its binary output to a `.jpg` file.
-Do not use the JSON formatting option. Such a separately captured JPEG is
+Do not use the JSON formatting option. Check full decoding, not just the JPEG
+header or reported dimensions. For a capture saved as `.build/frame.jpg`, the
+Pillow dependency installed with the model requirements provides an independent
+check:
+
+```bash
+python - <<'PY'
+from PIL import Image
+with Image.open(".build/frame.jpg") as image:
+    image.load()
+    print("Fully decoded:", image.size, image.mode)
+PY
+```
+
+Do not enable permissive truncated-image loading. Repeat this check across
+multiple frames while inference is running. A separately captured JPEG is
 **not guaranteed to be the frame associated with an observation**.
 
 ## Stop processing

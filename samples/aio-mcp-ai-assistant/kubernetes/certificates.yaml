@@ -1,0 +1,61 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: edge-resource-selfsigned
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: edge-resource-ca
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  isCA: true
+  commonName: edge-resource-mcp-ca
+  secretName: edge-resource-ca
+  secretTemplate:
+    labels:
+      app.kubernetes.io/part-of: aio-mcp-ai-assistant
+  duration: 8760h
+  renewBefore: 720h
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef:
+    name: edge-resource-selfsigned
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: edge-resource-ca
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  ca:
+    secretName: edge-resource-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: edge-resource-tls
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  secretName: edge-resource-tls
+  secretTemplate:
+    labels:
+      app.kubernetes.io/part-of: aio-mcp-ai-assistant
+  duration: 2160h
+  renewBefore: 360h
+  dnsNames: ${resourceDnsNames}
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef:
+    name: edge-resource-ca
+    kind: Issuer

@@ -353,4 +353,43 @@ mod tests {
         assert!(FrameContext::parse(&serde_json::to_vec(&context).unwrap()).is_ok());
         assert!(prepare_frame(b"invalid", Settings::default(), 1000, Uuid::new_v4()).is_err());
     }
+
+    #[test]
+    fn rejects_truncated_jpegs_instead_of_preparing_partial_images() {
+        let image = image::RgbImage::from_fn(64, 64, |x, y| {
+            image::Rgb([(x * y % 256) as u8, (x * 4) as u8, (y * 4) as u8])
+        });
+        let mut jpeg = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 90)
+            .encode_image(&image)
+            .unwrap();
+        for length in [0, jpeg.len() / 2, jpeg.len() - 2, jpeg.len() - 1] {
+            assert!(
+                prepare_frame(
+                    &jpeg[..length],
+                    Settings::default(),
+                    1000,
+                    Uuid::from_u128(123)
+                )
+                .is_err(),
+                "accepted a JPEG truncated to {length} of {} bytes",
+                jpeg.len()
+            );
+        }
+    }
+
+    #[test]
+    fn expands_grayscale_jpegs_before_resizing_and_preparing_the_tensor() {
+        let image = image::GrayImage::from_pixel(64, 32, image::Luma([120]));
+        let mut jpeg = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 90)
+            .encode_image(&image)
+            .unwrap();
+        let prepared = yolox::prepare(&jpeg).unwrap();
+        for plane in prepared.values.chunks_exact(yolox::SIZE * yolox::SIZE) {
+            assert!(plane[..yolox::SIZE * (yolox::SIZE / 2)]
+                .iter()
+                .all(|value| (*value - 120.0).abs() < 3.0));
+        }
+    }
 }
