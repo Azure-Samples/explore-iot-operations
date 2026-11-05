@@ -78,7 +78,7 @@ case "$ACTION" in
             mcr.microsoft.com/azureiotoperations/graph-dataflow-inference:0.2.0-preview.0 |
             jq -e '.digest == "sha256:4a3ca352ad900e459785674c3a2648c9b5a1f73583e8dbdb73c653471704c52d"' \
                 >/dev/null || fail "The Microsoft inference graph differs from the selected 0.2 contract"
-        echo "First-install checks passed. Also confirm AIO Apps support, Foundry audience aio-internal, registry pull authorization, camera secret synchronization, and shared-storage permissions."
+        echo "First-install checks passed. Also confirm AIO applications support, Foundry audience aio-internal, registry pull authorization, camera secret synchronization, and shared-storage permissions."
         ;;
     storage)
         require_owned_or_absent persistentvolumeclaim "$CLAIM" "$NAMESPACE"

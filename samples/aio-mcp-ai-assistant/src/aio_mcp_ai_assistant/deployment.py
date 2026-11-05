@@ -11,9 +11,9 @@ from typing import Any
 import yaml
 
 from .common import JsonObject, SampleError, encode, loads
-from .config import AGENT, PART_OF, RESOURCES, Settings
+from .config import AGENT, PART_OF, Settings
 
-GROUPS = ("namespace", "access", "certificates", "model", "workloads")
+GROUPS = ("namespace", "access", "model", "workloads")
 
 
 def ownership(settings: Settings) -> dict[str, str]:
@@ -47,8 +47,8 @@ def render(settings: Settings, template_dir: Path) -> dict[str, list[JsonObject]
         "pullSecrets": (
             [{"name": settings.image_pull_secret}] if settings.image_pull_secret else []
         ),
-        "resourceRole": f"{RESOURCES}-{settings.namespace}",
-        "tokenReviewerRole": settings.cluster_role,
+        "mcpRoles": encode(settings.mcp_roles),
+        "mcpAudience": settings.mcp.token_audience,
         "modelReaderRole": f"{AGENT}-{settings.namespace}-model",
         "foundryNamespace": settings.foundry.namespace,
         "foundryAudience": settings.foundry.token_audience,
@@ -92,10 +92,6 @@ def render(settings: Settings, template_dir: Path) -> dict[str, list[JsonObject]
                 "limits": {"cpu": "8", "memory": "8Gi"},
             }
         ),
-        "resourceDnsNames": [
-            f"{RESOURCES}.{settings.namespace}.svc",
-            f"{RESOURCES}.{settings.namespace}.svc.cluster.local",
-        ],
         "settingsChecksum": hashlib.sha256(
             encode(settings.model_dump(by_alias=True)).encode()
         ).hexdigest(),
@@ -106,8 +102,6 @@ def render(settings: Settings, template_dir: Path) -> dict[str, list[JsonObject]
         for document in yaml.safe_load_all((template_dir / f"{group}.yaml").read_text()):
             document = _substitute(document, variables)
             document["metadata"].setdefault("labels", {}).update(ownership(settings))
-            if document["kind"] == "Certificate":
-                document["spec"]["secretTemplate"]["labels"].update(ownership(settings))
             documents.append(document)
         manifests[group] = documents
     manifests["workloads"].insert(
@@ -134,30 +128,36 @@ def write_manifests(
         (destination / f"{group}.yaml").write_text(
             yaml.safe_dump_all(documents, sort_keys=False), encoding="utf-8"
         )
+    for obsolete in ("broker-rule.json", "certificates.yaml"):
+        (destination / obsolete).unlink(missing_ok=True)
     subscriptions = [source.topic for source in settings.sources.values()]
     publications = []
-    if settings.camera.enabled:
-        subscriptions.append(settings.camera_response_topic)
-        publications.extend(
-            settings.camera.action_topic(action)
-            for action in ("ContinuousMove", "Stop", "GetStatus")
+    if settings.camera_graphs is not None:
+        actions = (
+            ("ContinuousMove", "Stop", "GetStatus") if settings.camera.enabled else ("GetStatus",)
         )
+        subscriptions.extend(settings.camera.topic("responses", action) for action in actions)
+        publications.extend(settings.camera.topic("requests", action) for action in actions)
     if settings.recommendations.enabled:
         publications.append(settings.recommendations.topic)
-    rule = {
-        "principals": {"attributes": [{"edge-assistant": settings.namespace}]},
-        "brokerResources": [
-            {"method": "Connect"},
-            {
-                "method": "Subscribe",
-                "topics": subscriptions,
-            },
-            *([{"method": "Publish", "topics": publications}] if publications else []),
-        ],
+    access = {
+        "endpoint": settings.mcp_url,
+        "tokenAudience": settings.mcp.token_audience,
+        "roles": settings.mcp_roles,
+        "applicationTopics": {"subscribe": subscriptions, "publish": publications},
+        "note": (
+            "Review inventory, not an authorization policy. AIO's backend owns broker "
+            "access; frontend roles and backend broker grants can be broader than these "
+            "application-enforced topics. Never replace shared platform policies."
+        ),
     }
-    (destination / "broker-rule.json").write_text(
-        json.dumps(rule, indent=2) + "\n", encoding="utf-8"
+    (destination / "mcp-access.json").write_text(
+        json.dumps(access, indent=2) + "\n", encoding="utf-8"
     )
+    if settings.camera_graphs is not None:
+        from .camera_graphs import write_camera_graphs
+
+        write_camera_graphs(settings, destination)
 
 
 class Deployment:
@@ -228,28 +228,14 @@ class Deployment:
         self.kubectl("apply", "--dry-run=server", "-f", "-", stdin=data)
         self.kubectl("apply", "-f", "-", stdin=data, display=True)
 
-    def certificate_secrets(self) -> list[JsonObject]:
-        return [
-            {
-                "apiVersion": "v1",
-                "kind": "Secret",
-                "metadata": {
-                    "name": document["spec"]["secretName"],
-                    "namespace": self.settings.namespace,
-                },
-            }
-            for document in self.manifests["certificates"]
-            if document["kind"] == "Certificate"
-        ]
-
     def trust(self) -> JsonObject:
         data = {}
         for destination, namespace, name, key in (
             (
-                "broker.crt",
+                "aio-mcp.crt",
                 self.settings.aio_namespace,
-                self.settings.broker.ca_config_map,
-                self.settings.broker.ca_key,
+                self.settings.mcp.ca_config_map,
+                self.settings.mcp.ca_key,
             ),
             (
                 "foundry.crt",
@@ -292,32 +278,29 @@ class Deployment:
             "assets.namespaces.deviceregistry.microsoft.com",
             "devices.namespaces.deviceregistry.microsoft.com",
             "modeldeployments.foundrylocal.azure.com",
-            "issuers.cert-manager.io",
-            "certificates.cert-manager.io",
         )
+        frontend = loads(
+            self.kubectl(
+                "get",
+                "service",
+                "aio-mcp-frontend",
+                "--namespace",
+                self.settings.aio_namespace,
+                "--output=json",
+            )
+        )
+        if not any(port.get("port") == 443 for port in frontend.get("spec", {}).get("ports", [])):
+            raise SampleError("The built-in AIO MCP frontend must expose HTTPS on port 443")
         trust = self.trust()
         groups = [
             [item for item in self.manifests["namespace"] if item["kind"] == "Namespace"],
             [item for item in self.manifests["namespace"] if item["kind"] != "Namespace"],
             self.manifests["access"],
-            self.manifests["certificates"],
         ]
-        self.require_owned(
-            [item for group in groups for item in group] + [trust] + self.certificate_secrets()
-        )
+        self.require_owned([item for group in groups for item in group] + [trust])
         for group in groups:
             self.apply(group)
         self.apply([trust])
-        self.kubectl(
-            "wait",
-            "certificate/edge-resource-tls",
-            "--namespace",
-            self.settings.namespace,
-            "--for=condition=Ready",
-            "--timeout=180s",
-            display=True,
-            timeout=200,
-        )
 
     def model(self) -> None:
         self.require_owned(self.manifests["namespace"], must_exist=True)
@@ -338,17 +321,16 @@ class Deployment:
             if secret_type != "kubernetes.io/dockerconfigjson":
                 raise SampleError("imagePullSecret must be an existing docker-registry pull secret")
         self.apply(self.manifests["workloads"])
-        for name in (RESOURCES, AGENT):
-            self.kubectl(
-                "rollout",
-                "status",
-                f"deployment/{name}",
-                "--namespace",
-                self.settings.namespace,
-                "--timeout=600s",
-                display=True,
-                timeout=620,
-            )
+        self.kubectl(
+            "rollout",
+            "status",
+            f"deployment/{AGENT}",
+            "--namespace",
+            self.settings.namespace,
+            "--timeout=600s",
+            display=True,
+            timeout=620,
+        )
 
     def simulator_secrets(self) -> list[JsonObject]:
         return [
@@ -418,7 +400,7 @@ class Deployment:
     def status(self) -> None:
         self.kubectl(
             "get",
-            "deployments,pods,certificates",
+            "deployments,pods",
             "--namespace",
             self.settings.namespace,
             "--selector",
@@ -463,11 +445,10 @@ class Deployment:
     def cleanup(self) -> None:
         documents = [
             item
-            for group in ("workloads", "model", "certificates", "access", "namespace")
+            for group in ("workloads", "model", "access", "namespace")
             for item in self.manifests[group]
             if item["kind"] != "Namespace"
         ]
-        documents += self.certificate_secrets()
         if self.settings.simulator is not None:
             documents = self.manifests["simulator"] + self.simulator_secrets() + documents
         documents.append(
@@ -482,3 +463,77 @@ class Deployment:
                 "delete", *self.target(document), "--ignore-not-found", "--wait=false", display=True
             )
         print("Sample resources removed. Namespace, registry credentials, and platform retained.")
+
+    def remove_legacy_mcp(self) -> None:
+        current = loads(
+            self.kubectl(
+                "get", "deployment", AGENT, "--namespace", self.settings.namespace, "--output=json"
+            )
+        )
+        containers = current["spec"]["template"]["spec"]["containers"]
+        if [container["name"] for container in containers] != ["agent"]:
+            raise SampleError("Deploy the frontend-only agent before removing legacy MCP resources")
+        self.kubectl(
+            "rollout",
+            "status",
+            f"deployment/{AGENT}",
+            "--namespace",
+            self.settings.namespace,
+            "--timeout=180s",
+            timeout=200,
+        )
+        self.client("check")
+        targets = [
+            ("apps/v1", "Deployment", "edge-resource-mcp", self.settings.namespace),
+            ("v1", "Service", "edge-resource-mcp", self.settings.namespace),
+            ("v1", "ServiceAccount", "edge-resource-mcp", self.settings.namespace),
+            (
+                "networking.k8s.io/v1",
+                "NetworkPolicy",
+                "edge-resource-mcp-ingress",
+                self.settings.namespace,
+            ),
+        ]
+        for kind, names in (
+            ("Issuer", ("edge-resource-selfsigned", "edge-resource-ca")),
+            ("Certificate", ("edge-resource-ca", "edge-resource-tls")),
+            ("Secret", ("edge-resource-ca", "edge-resource-tls")),
+        ):
+            targets.extend(
+                (
+                    "v1" if kind == "Secret" else "cert-manager.io/v1",
+                    kind,
+                    name,
+                    self.settings.namespace,
+                )
+                for name in names
+            )
+        for kind in ("Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding"):
+            cluster = kind.startswith("Cluster")
+            name = (
+                f"{PART_OF}-{self.settings.namespace}-token-reviewer"
+                if cluster
+                else f"edge-resource-mcp-{self.settings.namespace}"
+            )
+            targets.append(
+                (
+                    "rbac.authorization.k8s.io/v1",
+                    kind,
+                    name,
+                    None if cluster else self.settings.aio_namespace,
+                )
+            )
+        documents = [
+            {
+                "apiVersion": version,
+                "kind": kind,
+                "metadata": {"name": name, **({"namespace": namespace} if namespace else {})},
+            }
+            for version, kind, name, namespace in targets
+        ]
+        self.require_owned(documents)
+        for document in documents:
+            self.kubectl(
+                "delete", *self.target(document), "--ignore-not-found", "--wait=false", display=True
+            )
+        print("Legacy custom MCP resources removed; built-in AIO services and model retained.")

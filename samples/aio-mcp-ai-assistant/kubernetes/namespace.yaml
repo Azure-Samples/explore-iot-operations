@@ -13,14 +13,5 @@ metadata:
   labels:
     app.kubernetes.io/part-of: aio-mcp-ai-assistant
   annotations:
-    aio-broker-auth/edge-assistant: ${namespace}
-automountServiceAccountToken: false
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: edge-resource-mcp
-  namespace: ${namespace}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+    aio-mcp-auth/roles: ${mcpRoles}
 automountServiceAccountToken: false

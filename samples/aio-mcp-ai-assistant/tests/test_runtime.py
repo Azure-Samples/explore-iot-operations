@@ -3,13 +3,13 @@ import json
 from copy import deepcopy
 
 import pytest
+from conftest import builtin_tools
 
 from aio_mcp_ai_assistant.approvals import ApprovalStore
 from aio_mcp_ai_assistant.common import SampleError
 from aio_mcp_ai_assistant.foundry import Completion
 from aio_mcp_ai_assistant.runtime import AgentBusy, Runtime
 from aio_mcp_ai_assistant.tool_parser import ToolCallFormatError, parse_tool_call
-from aio_mcp_ai_assistant.tools import catalog
 
 
 class Model:
@@ -25,12 +25,8 @@ class Model:
 
 
 class Tools:
-    def __init__(self, settings, source):
-        self.tools = [
-            {"name": tool.remote_name, "inputSchema": tool.schema}
-            for tool in catalog().values()
-            if tool.source == source
-        ]
+    def __init__(self):
+        self.tools = builtin_tools()
         self.calls = []
 
     async def list_tools(self):
@@ -38,7 +34,7 @@ class Tools:
 
     async def call_tool(self, name, arguments):
         self.calls.append((name, arguments))
-        if name == "mq_publish":
+        if name == "recommendation-publish":
             return {"published": True}
         return {"items": [{"metadata": {"name": "camera-01"}}], "count": 1, "truncated": False}
 
@@ -53,7 +49,7 @@ def runtime(settings, completions):
     return Runtime(
         settings,
         Model(completions),
-        {"resources": Tools(settings, "resources"), "mqtt": Tools(settings, "mqtt")},
+        Tools(),
     )
 
 
@@ -72,7 +68,7 @@ def test_correlated_evidence_and_independent_questions(settings):
     async def run():
         result = await agent.ask("List assets")
         assert result["toolActivity"][0]["result"]["items"] == [{"metadata": {"name": "camera-01"}}]
-        assert result["toolActivity"][0]["source"] == "resources"
+        assert result["toolActivity"][0]["source"] == "aio-frontend"
         conversation = agent.foundry.messages[1]
         assert conversation[-1]["role"] == "tool"
         assert conversation[-1]["tool_call_id"] == conversation[-2]["tool_calls"][0]["id"]
@@ -116,7 +112,7 @@ def test_invalid_tools_or_arguments_fail_without_a_format_retry(settings, comple
     agent = runtime(settings, [completion])
     with pytest.raises(SampleError, match=message):
         asyncio.run(agent.ask("Check the operation"))
-    assert not any(client.calls for client in agent.clients.values())
+    assert not agent.frontend.calls
     assert len(agent.foundry.messages) == 1
 
 
@@ -129,7 +125,7 @@ def test_plain_text_is_preserved_without_inventing_tool_activity(settings, text,
     assert "without retrieving tool evidence" in caplog.text
 
 
-def test_one_format_correction_routes_plant_telemetry_to_remote_mq_messages(settings):
+def test_one_format_correction_routes_plant_telemetry_to_frontend_adapter(settings):
     malformed = '<tool_call>{"name":"plant-telemetry","arguments":{</tool_call>'
     arguments = {"stage": "inference", "machine_id": "person", "max_messages": 1}
     agent = runtime(
@@ -141,7 +137,7 @@ def test_one_format_correction_routes_plant_telemetry_to_remote_mq_messages(sett
     assert correction[-2] == {"role": "assistant", "content": malformed}
     assert correction[-1]["role"] == "user"
     assert "<function=TOOL><parameter=ARG>VALUE</parameter>" in correction[-1]["content"]
-    assert agent.clients["mqtt"].calls == [("mq_messages", arguments)]
+    assert agent.frontend.calls == [("plant-telemetry", arguments)]
     assert result["toolActivity"][0]["tool"] == "plant-telemetry"
     assert agent.foundry.messages[2][-1]["name"] == "plant-telemetry"
     assert {tool["function"]["name"] for tool in agent.foundry.tools[0]} == {
@@ -161,13 +157,13 @@ def test_a_second_malformed_call_fails_without_executing_either(settings):
     with pytest.raises(ToolCallFormatError):
         asyncio.run(agent.ask("Read inference"))
     assert len(agent.foundry.messages) == 2
-    assert not any(client.calls for client in agent.clients.values())
+    assert not agent.frontend.calls
 
 
 def test_catalog_drift_is_rejected_before_inference(settings):
     agent = runtime(settings, [])
-    agent.clients["mqtt"].tools[0]["inputSchema"]["additionalProperties"] = True
-    with pytest.raises(SampleError, match="schemas differ"):
+    agent.frontend.tools[1]["inputSchema"]["properties"]["asset"]["type"] = "integer"
+    with pytest.raises(SampleError, match="schema drift"):
         asyncio.run(agent.ask("Read observations"))
     assert not agent.foundry.messages
 
@@ -176,7 +172,7 @@ def test_four_completion_limit(settings):
     agent = runtime(settings, [call("list_assets", {})] * 5)
     with pytest.raises(SampleError, match="four completions"):
         asyncio.run(agent.ask("Keep listing"))
-    assert len(agent.clients["resources"].calls) == 4
+    assert len(agent.frontend.calls) == 4
     assert len(agent.foundry.messages) == 4
 
 
@@ -215,7 +211,7 @@ def test_model_recommendation_stops_at_operator_approval(action_settings, recomm
     assert result["approval"]["arguments"] == recommendation
     assert result["toolActivity"][0]["tool"] == "recommendation-publish"
     assert len(agent.foundry.messages) == 1
-    assert not agent.clients["mqtt"].calls
+    assert not agent.frontend.calls
 
 
 def test_direct_tool_requires_one_use_approval_and_preserves_reviewed_payload(
@@ -226,7 +222,7 @@ def test_direct_tool_requires_one_use_approval_and_preserves_reviewed_payload(
 
     async def run():
         pending = await agent.call_tool("recommendation-publish", recommendation)
-        assert not agent.clients["mqtt"].calls
+        assert not agent.frontend.calls
         pending["approval"]["arguments"]["recommendation"]["summary"] = "Changed response"
         recommendation["recommendation"]["summary"] = "Changed request"
         outcomes = await asyncio.gather(
@@ -238,7 +234,7 @@ def test_direct_tool_requires_one_use_approval_and_preserves_reviewed_payload(
         assert any(isinstance(item, dict) and item["status"] == "published" for item in outcomes)
 
     asyncio.run(run())
-    assert agent.clients["mqtt"].calls == [("mq_publish", original)]
+    assert agent.frontend.calls == [("recommendation-publish", original)]
 
 
 def test_denial_and_expiry_never_publish(action_settings, recommendation):
@@ -259,10 +255,10 @@ def test_denial_and_expiry_never_publish(action_settings, recommendation):
             await agent.decide_approval(expired["approval"]["id"], "approve")
 
     asyncio.run(run())
-    assert not agent.clients["mqtt"].calls
+    assert not agent.frontend.calls
 
 
-def test_disabled_actions_do_not_call_the_sidecar(settings, recommendation):
+def test_disabled_actions_do_not_call_the_frontend(settings, recommendation):
     agent = runtime(settings, [call("recommendation-publish", recommendation)])
 
     async def run():
@@ -274,7 +270,7 @@ def test_disabled_actions_do_not_call_the_sidecar(settings, recommendation):
             await agent.call_tool("camera-pan", {"direction": "right"})
 
     asyncio.run(run())
-    assert not agent.clients["mqtt"].calls
+    assert not agent.frontend.calls
 
 
 @pytest.mark.parametrize(
@@ -291,7 +287,7 @@ def test_invalid_camera_arguments_are_rejected_before_actuation(action_settings,
     agent = runtime(action_settings, [])
     with pytest.raises(SampleError):
         asyncio.run(agent.call_tool("camera-pan", arguments))
-    assert not agent.clients["mqtt"].calls
+    assert not agent.frontend.calls
 
 
 def test_recommendation_byte_limit_applies_before_approval(action_settings, recommendation):

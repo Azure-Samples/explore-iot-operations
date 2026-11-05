@@ -1,8 +1,9 @@
 ---
 page_type: sample
-description: Use custom MCP services and Foundry Local to explain Azure IoT Operations resources and observations, pan a simulated camera, and publish operator-approved recommendations.
+description: Use the built-in AIO MCP frontend and Foundry Local to explain resources and observations, pan a simulated camera, and publish operator-approved recommendations.
 languages:
 - python
+- rust
 products:
 - azure-iot
 - azure-iot-operations
@@ -13,7 +14,8 @@ products:
 Ask natural-language questions about equipment configured in Azure IoT
 Operations (AIO) and the observations published by your edge applications.
 This sample runs an assistant on the edge cluster, using a Foundry
-Local text model and two custom **Model Context Protocol (MCP)** services.
+Local text model and AIO's built-in **Model Context Protocol (MCP)** frontend.
+The assistant is an MCP client; it does not deploy custom MCP servers.
 
 The assistant can retrieve Asset and Device configuration, read recent JSON
 messages from approved MQTT topics, and explain the results. Each response
@@ -35,8 +37,10 @@ operator approves it**. Both actions are disabled in the default configuration.
 > **Compatible preview environment required.** Foundry Local here is the
 > Kubernetes operator with `ModelDeployment` and generative-model support, not
 > the desktop application. Confirm the [prerequisites](#prerequisites) before
-> deploying. These are custom MCP implementations included in this sample,
-> **not the built-in AIO MCP frontend**; enabling that frontend is not required.
+> deploying. The built-in AIO MCP frontend/backend must already be enabled,
+> with TLS, service-account-token authentication, and the required tools.
+> Upgrading an earlier custom-MCP deployment? Follow the
+> [migration steps](docs/operations.md#migrate-from-the-custom-mcp-version).
 
 This is an evaluation sample, not an autonomous monitoring or safety system.
 Review the [limitations](#limitations) before using its answers operationally.
@@ -53,15 +57,15 @@ This sample adds a conversational interface to those existing data sources:
 
 | Operator request | What happens |
 | --- | --- |
-| Which assets are configured, and which devices do they reference? | Asset and Device resources in the configured AIO namespace. |
+| Which assets are configured, and which devices do they reference? | Built-in resource tools list names and descriptions; named reads retrieve configuration. |
 | Which streams or datasets are configured on this asset? | The named resource's configuration, with sensitive fields redacted. |
 | What do recent person-detection messages report? | A bounded sample of JSON messages from the configured results topic. |
 | Were any processing errors reported during the sample window? | Messages from the configured error topic, or an explicit empty result. |
-| Pan the simulated camera right for two seconds. | Sends bounded PTZ commands through the real broker and ONVIF connector, explicitly stops, and checks the returned position and `IDLE` state. Requires camera enablement. |
+| Pan the simulated camera right for two seconds. | Sends bounded PTZ commands through the MQTT broker and connector for ONVIF, explicitly stops, and checks the returned position and `IDLE` state. Requires camera enablement. |
 | Prepare a recommendation for an operator to review. | Returns the proposed JSON and an expiring approval ID. Only a separate operator approval can publish it to the configured MQTT topic. Requires publishing enablement. |
 
 Use the [edge predictive inference sample](../edge-predictive-inference/README.md)
-to supply the camera observations. Its media connector, data flow, native
+to supply the camera observations. Its media connector, data flow graph,
 inference connector, and YOLOX-Nano model produce frame-level person detections.
 The assistant reads that **result JSON**; it does not process images or run the
 person-detection model.
@@ -73,25 +77,28 @@ producer is unavailable.
 
 ### What you will deploy and run
 
-By completing this scenario, you will deploy the assistant and its two MCP
-services, deploy a dedicated text model, and run questions against your own
+By completing this scenario, you will deploy the assistant, reuse the existing
+AIO MCP frontend/backend, deploy a dedicated text model, and run questions against your own
 resource metadata and MQTT observations. You will also call the tools directly
 to compare their data with the model's answer.
 
 The seven-tool catalog includes four resource reads, a telemetry read,
-`camera-pan`, and `recommendation-publish`. The host and sidecar reject disabled
+`camera-pan`, and `recommendation-publish`. The host rejects disabled
 actions; enabling them does not grant arbitrary topics, camera addresses, or
 shell access. Resource queries remain read-only.
 
 The optional [camera tutorial](docs/camera-actions.md) adds a software camera,
-an AIO ONVIF connector template if one is needed, and a registered Device and
-PTZ control Asset. No physical camera is required for that tutorial. There is
+an AIO connector template for ONVIF if one is needed, a registered Device and
+PTZ control Asset, and three **data flow graphs for camera control**. Each graph
+runs a custom WebAssembly (WASM) transform. These transforms add the
+MQTT RPC properties that the built-in publish tool cannot set; they are not MCP
+servers. No physical camera is required for that tutorial. There is
 no web chat interface, continuous monitoring, historical store, model training,
 automatic alerting, or recommendation-execution workflow.
 
 ## Architecture
 
-![Custom MCP assistant with Foundry Local, MQTT observations, optional camera control, and approval-gated publishing.](media/architecture.svg)
+![Assistant using the built-in AIO MCP frontend and backend, Foundry Local, optional camera-control data flow graphs, and approval-gated publishing.](media/architecture.svg)
 
 Dashed outlines mark optional integrations. Observation producers and recommendation
 consumers are deployed separately; the camera simulator is not automatically
@@ -101,11 +108,12 @@ connected to the observation pipeline.
 | --- | --- | --- |
 | Operator CLI | Sends questions/tool requests and explicitly approves or denies pending recommendations. | Runs on your workstation using authenticated `kubectl exec`; no public chat endpoint. |
 | Assistant agent | Checks model-selected calls, collects evidence, and holds recommendations for approval. | `edge-assistant` Deployment. |
-| Resource MCP service | Reads sanitized Asset and Device resources through the Kubernetes API. | Separate `edge-resource-mcp` Deployment with namespace-scoped read permissions. |
-| MQTT MCP service | Samples JSON topics; optionally performs correlated camera RPC and acknowledged recommendation publication. | Sidecar in the assistant Pod; accessible only on Pod loopback. |
+| Built-in AIO MCP frontend | Authenticates the agent and exposes its role-filtered tool catalog. | Existing platform Service `aio-mcp-frontend`, HTTPS `/mcp`; not deployed by this sample. |
+| Built-in AIO MCP backend | Reads AIO resources, samples MQTT messages, and publishes JSON. | Existing platform-managed backend; owns Kubernetes resource access and broker connections. |
 | Foundry Local text model | Selects tools and generates an answer using their results. | Dedicated generative `ModelDeployment` managed by the existing Foundry operator. |
 | AIO broker and observation producer | Supply the messages to interpret. | Existing broker; companion predictive-inference pipeline or another separately deployed producer. |
-| ONVIF connector and simulator, optional | Translate managed-action MQTT requests to ONVIF SOAP; the simulator changes its image viewport and PTZ state. | Native connector managed by AIO; sample-owned simulator Deployment and Service. |
+| Connector for ONVIF and camera simulator, optional | Translate managed-action MQTT requests to ONVIF SOAP; the simulator changes its image viewport and PTZ state. | Connector managed by AIO; sample-owned simulator Deployment and Service. |
+| Camera-control data flow graphs, optional | Run custom WASM transforms that add MQTT response/correlation properties using the AIO SDK and return the actual ONVIF managed-action result. | Three independently deployed `DataflowGraph` resources: GetStatus, ContinuousMove, and Stop. |
 
 ### Request and data flow
 
@@ -113,16 +121,19 @@ connected to the observation pipeline.
    Kubernetes context in your configuration to send the question to the agent.
 2. The agent sends the question and available tool definitions to Foundry Local.
    The model requests a resource read or a telemetry sample.
-3. The selected MCP service reads the real data: the resource service queries
-   AIO resources, or the MQTT service subscribes to the approved topics.
+3. The host maps the selected application tool to the built-in frontend.
+   The platform backend reads AIO resources or samples the configured MQTT topics.
 4. The agent returns the tool result to the text model, which generates its
    answer. Additional permitted reads can occur before the answer is returned.
 5. The CLI prints both the answer and `toolActivity`, containing the actual
    arguments, resources, and messages used for that question.
 
-Remote service connections use TLS and projected service-account tokens.
-Resource permissions and broker authorization limit the data the tools can
-read. Model output is not an authorization boundary.
+Agent connections to MCP and Foundry use TLS and projected service-account tokens.
+Frontend roles control the available built-in tools; the backend's platform
+permissions control resource and broker access. The application adds a fixed
+tool allowlist, exact topic bindings, and an approval gate. Model output is not
+an authorization boundary, and these application restrictions do not narrow
+the underlying platform identity's permissions.
 
 The sample's Kubernetes manifests create the assistant workloads, identities,
 and text-model request. They do not install AIO or Foundry Local, and do not
@@ -130,10 +141,12 @@ deploy or change the camera pipeline. See
 [architecture and contracts](docs/architecture.md) for detailed permissions,
 data formats, and component boundaries.
 
-For an enabled camera action, the MQTT sidecar sends `ContinuousMove`, then
-`Stop`, then `GetStatus` through the broker to the AIO ONVIF connector. Each
-response must match its request's MQTT correlation data. A successful result
-requires a confirmed stop and `IDLE` pan state.
+For an enabled camera action, the agent publishes JSON through
+`aio_mqtt_publish` to the camera-control data flow graphs. Their WASM transforms
+invoke the connector for ONVIF with proper MQTT RPC properties; the agent samples
+correlated results through `aio_mq_messages`. It checks initial status, attempts
+`ContinuousMove`, explicitly stops, and verifies final `IDLE` and pan position.
+It never sends SOAP directly to the camera.
 
 For a recommendation, the question ends with `approval_required`; nothing is
 published yet. A separate `manage.py approve` command consumes that approval
@@ -145,11 +158,11 @@ publisher sends no recommendation. The text model cannot approve its own request
 | Requirement | Expected capability |
 | --- | --- |
 | Development machine | Linux or WSL, Python 3.10+, Docker with Linux/amd64 image builds, and `kubectl`. |
-| AIO installation | A working TLS MQTT listener supporting MQTT 5 `K8S-SAT` with audience `aio-internal`, plus namespaced Asset and Device CRDs under `namespaces.deviceregistry.microsoft.com/v1`. Register equipment before running the resource examples. |
+| AIO installation | Built-in MCP frontend/backend enabled; the frontend Service exposes HTTPS port 443 and accepts projected SATs. Its catalog must provide `aio_list_assets`, `aio_get_asset`, `aio_list_devices`, `aio_get_device`, and `aio_mq_messages`; actions also require `aio_mqtt_publish`. |
 | Foundry Local operator | `foundrylocal.azure.com/v1` `ModelDeployment`, internal HTTPS endpoints, SAT authorization, and the generative `onnx-genai` runtime for the selected compute. |
 | Model catalog | Access to `qwen3.5-2b-text-generic-cpu:1`, the CPU text model used by the example configuration, and acceptance of its terms. The sample does not redistribute model weights. |
-| TLS and networking | cert-manager with `cert-manager.io/v1` Issuer/Certificate support; accessible public broker and Foundry CA bundles; standard `cluster.local` DNS; a CNI enforcing NetworkPolicy. |
-| Permissions | An installer able to create the listed sample resources and cross-namespace RBAC bindings; a platform owner to authorize MQTT subscriptions. |
+| TLS and networking | Public AIO frontend and Foundry CA bundles; standard `cluster.local` DNS; a CNI enforcing NetworkPolicy. Platform certificates are reused; the sample creates no MCP server certificate. |
+| Permissions | An installer able to create sample resources and the scoped Foundry model-reader binding; a platform owner to approve MCP role assignments and backend access. |
 | Container registry | A registry you can push to, and pull access for the sample namespace. |
 | Observation producer | Required for MQTT questions: a running publisher of JSON objects on the selected topics. The companion person-detection pipeline is one supported input scenario. |
 
@@ -200,10 +213,11 @@ Edit `config.json` before running the next commands. Replace every
 | --- | --- |
 | `kubeContext` | An explicit context from `kubectl config get-contexts`. Helpers never switch the global context. |
 | `namespace` | A new, dedicated namespace. The helper creates it and refuses to adopt unrelated existing resources. |
-| `aioNamespace` | The namespace containing the AIO Asset/Device resources and broker CA ConfigMap. |
+| `aioNamespace` | The namespace containing the built-in MCP frontend and its public CA ConfigMap. Resource visibility is controlled by the platform backend, not a custom reader Role. |
 | `image` | Your registry/repository and a new explicit version tag. `latest` and unqualified image names are rejected. |
 | `imagePullSecret` | An existing or planned registry pull secret in the sample namespace. Use `""` only when no secret is needed. |
-| `broker` | The existing TLS listener host/port, CA ConfigMap name, and its PEM data key. Confirm the key: some installations use `trust-bundle.pem`, not `ca.crt`. |
+| `mcp.tokenAudience` | The built-in frontend's inbound SAT audience, normally `aio-mcp-frontend`. This is not the backend's audience or the broker's `aio-internal` audience. |
+| `mcp.caConfigMap` / `caKey` | The public CA bundle trusting the built-in frontend in `aioNamespace`. Confirm the actual key, such as `trust-bundle.pem` or `ca.crt`. |
 | `foundry.namespace` | The existing Foundry operator/model namespace. |
 | `foundry.deploymentName` | A new, dedicated model name; the helper will not overwrite an unrelated deployment. |
 | `foundry.catalogName` / `catalogVersion` | The model's installed catalog name and version. Keep the example's Qwen CPU entry for the documented CPU configuration. |
@@ -213,7 +227,8 @@ Edit `config.json` before running the next commands. Replace every
 | `foundry.tokenAudience` | The audience accepted by your installed Foundry gateway. Obtain it from the platform owner; do not guess or change the shared operator to match this sample. |
 | `foundry.caConfigMap` / `caKey` | The public CA bundle for the model's internal HTTPS endpoint, in the configured Foundry namespace. |
 | `sources` | One to eight distinct, exact JSON topics. Each has a `stage`, optional `machineId`, and meaningful `description`. Stage/machine bindings must be unique; wildcards are not allowed. |
-| `camera` | Disabled by default. After [camera setup](docs/camera-actions.md), set `enabled: true`, the control `assetName`, and the discovered `profileToken`. |
+| `camera` | After [camera setup](docs/camera-actions.md), set `enabled: true`, the control `assetName`, discovered `profileToken`, and an instance-specific `topicPrefix`. |
+| `cameraGraphs` | Registry settings for the camera-control data flow graphs' WASM modules and graph definitions: artifact registry, existing `registryEndpointName`, and explicit `artifactVersion`. Required for camera checks and movement. Configuring it adds the frontend `Admin` role even while movement is disabled, because GetStatus requests use the publish tool. |
 | `recommendations` | Disabled by default. Set `enabled: true` and a dedicated exact `topic` only when an operator and intended consumer are ready. See [recommendation publishing](#review-and-publish-a-recommendation). |
 | `simulator` | Omit for read-only use or real equipment. For the camera tutorial, add an `image` with your explicitly versioned simulator image. |
 
@@ -278,10 +293,11 @@ python manage.py render config.json
 python manage.py build config.json
 ```
 
-`render` validates configuration and writes reviewable YAML plus a broker rule
-fragment under `.generated/`, without contacting the cluster. `build` creates
-the Linux/amd64 container image identified by `image`. The same image runs the
-agent, resource MCP service, and MQTT MCP sidecar.
+`render` validates configuration and writes reviewable YAML plus
+`mcp-access.json` under `.generated/`, without contacting the cluster. The JSON
+is a review inventory, **not an authorization policy**. Optional graph artifacts
+are rendered when `cameraGraphs` is configured. `build` creates the Linux/amd64
+agent image identified by `image`; there are no custom MCP server containers.
 
 Authenticate Docker to your registry using your organization's approved flow,
 then publish:
@@ -293,55 +309,48 @@ python manage.py push config.json
 Keep `config.json`, generated files, and credentials out of commits. The sample
 ignores local configuration and build output.
 
+### Authorize the built-in frontend
+
+Have the platform owner review `.generated/mcp-access.json` and the generated
+ServiceAccount before `prepare`. The default annotation is:
+
+```yaml
+aio-mcp-auth/roles: '["Reader","DataReader"]'
+```
+
+Configuring camera-control data flow graphs or enabling recommendation publication adds
+`Admin`, matching the built-in catalog where `aio_mqtt_publish` is an Admin tool.
+**Admin exposes more capabilities than this sample uses.** The model receives
+only the seven fixed application tools, not raw publish/topic tools or the full
+Admin catalog. Restrict who can annotate ServiceAccounts, read projected tokens,
+or exec into the agent.
+
+The agent has no broker token or direct MQTT connection. The built-in backend
+uses its own platform-managed identity. Its broker permissions must allow the
+topics in the review inventory, and its resource configuration must expose the
+intended Assets/Devices. Have the platform owner inspect those permissions;
+the application allowlist is not a per-agent broker authorization policy.
+Do not overwrite shared frontend roles, backend configuration, or broker policies.
+
 ### Prepare identities and TLS
 
-Review the generated manifests, then prepare the sample namespace and access:
+After reviewing frontend access and the generated manifests, prepare the sample
+namespace and identity:
 
 ```bash
 python manage.py prepare config.json
 ```
 
 This checks the required platform namespaces and CRDs, validates the configured
-CA bundles, and creates the dedicated namespace, two service accounts, scoped
-RBAC, resource-MCP certificates, and a public trust ConfigMap. It waits for the
-resource-MCP TLS certificate. It never copies platform private keys or registry
-credentials.
+CA bundles and frontend Service, then creates the dedicated namespace, one
+service account, scoped Foundry model-reader RBAC, and a public trust ConfigMap.
+It never copies platform private keys or registry credentials and never creates
+direct AIO resource-reader or TokenReview permissions.
 
 If using a private image, now have the registry/cluster owner provision the
 configured `imagePullSecret` in this new namespace. It must be a
 `kubernetes.io/dockerconfigjson` secret with pull access to this image. The
 helper does not create, display, or manage registry credentials.
-
-### Authorize observation subscriptions
-
-Have the broker owner review `.generated/broker-rule.json` and merge that rule
-into the authorization policy attached to the configured listener, using the
-platform's supported management path. Preserve the existing policy and other
-clients' permissions.
-
-With the default configuration, the rule grants **Connect and Subscribe only**.
-Enabling actions adds only their exact Publish topics and the camera response
-subscription; it never adds a wildcard grant. It matches the verified SAT
-attribute created by this service-account
-annotation:
-
-```text
-aio-broker-auth/edge-assistant: <sample-namespace>
-```
-
-It does not authorize by an arbitrary MQTT client ID or username. Authorization
-policies are allow-only; the broker owner must also ensure no other matching
-rule gives this identity broader access. Restrict who can assign these
-service-account attributes.
-
-The helper deliberately does not install a replacement broker policy, change
-the listener, or alter default authentication. Follow
-[Configure MQTT broker authorization](https://learn.microsoft.com/azure/iot-operations/manage-mqtt-broker/howto-configure-authorization#authorize-clients-that-use-kubernetes-service-account-tokens).
-
-If a new restricted port is needed, have the broker owner add it to the existing
-ClusterIP listener rather than creating a second ClusterIP listener. Preserve
-other clients' settings. Authorization on one port does not restrict the same
-identity on other reachable ports.
 
 ### Deploy the model and workloads
 
@@ -356,15 +365,15 @@ YOLOX model. Initial model download can take several minutes. Inspect `status`
 and the [model logs](docs/operations.md#inspect-logs-and-events) to confirm the
 requested model is serving before continuing.
 
-Deploy the assistant and MCP services:
+Deploy the assistant client:
 
 ```bash
 python manage.py workloads config.json
 python manage.py check config.json
 ```
 
-The workloads step creates the two Deployments and internal resource MCP
-Service, and waits for rollout.
+The workloads step creates one single-container Deployment and its inbound-deny
+NetworkPolicy, then waits for rollout. It reuses the platform MCP services.
 
 `check` verifies MCP discovery/authentication and the model endpoint lookup. It
 should report `status: "ready"` and all seven tools, including disabled actions. Its
@@ -380,7 +389,7 @@ step; do not remove shared platform resources.
 
 ### Inspect configured equipment
 
-Start with direct resource reads. These call the resource MCP service without
+Start with direct resource reads. These call the built-in frontend without
 using the language model:
 
 ```bash
@@ -388,8 +397,9 @@ python manage.py tool config.json list_assets '{"limit":5}'
 python manage.py tool config.json list_devices '{"limit":5}'
 ```
 
-List responses contain `items`, `count`, and `truncated`; `truncated: true`
-means the returned list is incomplete. Use names from those results to retrieve
+List responses contain `items` with `name` and `description`, plus `count` and
+`truncated`. A description can be `true` when the backend has no description.
+`truncated: true` means the returned list is incomplete. Use names from those results to retrieve
 individual resources. The following commands use the
 companion sample's default Asset and Device names; replace them if yours differ:
 
@@ -398,14 +408,15 @@ python manage.py tool config.json get_asset '{"name":"edge-person-camera"}'
 python manage.py tool config.json get_device '{"name":"edge-person-camera"}'
 ```
 
-The returned `item` contains the resource's metadata and redacted configuration.
-Check the Asset's `spec.deviceRef` against the Device you retrieved.
+The returned `item` contains the backend's redacted resource configuration, not
+a synthesized Kubernetes envelope. Inspect its actual device-reference fields
+and compare them with the Device you retrieved.
 
 Now ask the assistant to interpret the configuration:
 
 ```bash
 python manage.py ask config.json \
-  "List up to five configured assets and identify their device references."
+  "List up to two configured assets and use named reads to identify their device references."
 ```
 
 The answer should identify resources actually returned by its tool calls.
@@ -420,8 +431,11 @@ python manage.py tool config.json plant-telemetry \
   '{"stage":"inference","machine_id":"person","max_messages":1,"timeout_ms":5000}'
 ```
 
-This subscribes for up to five seconds and returns the payload with its receipt
-time. It does not ask the model to interpret it. A nonempty result should
+This samples for up to five seconds and returns the payload with `sampledAt`,
+the time the completed sample reached the agent. The built-in sampler does not
+return per-message receipt times or originating topics; the host samples
+concrete topics separately rather than inventing wildcard-message origins.
+It does not ask the model to interpret the result. A nonempty result should
 contain the producer's `frameId`, `personCount`, and other observation fields.
 
 Ask the assistant to read and explain a new observation:
@@ -433,8 +447,8 @@ python manage.py ask config.json \
 
 Compare the answer with **this question's `toolActivity`**, not the earlier
 direct read: each call opens a separate sampling window. Subscriptions can
-receive retained messages, so inspect producer timestamps as well as receipt
-times. The companion producer normally samples every five seconds; a
+receive retained messages, so inspect producer timestamps; `sampledAt` does not
+establish freshness. The companion producer normally samples every five seconds; a
 five-second window may return fewer messages than requested.
 
 ### Inspect the error topic
@@ -459,8 +473,8 @@ interpretation.
 ### Pan the simulated camera
 
 Complete the [camera deployment tutorial](docs/camera-actions.md) first. It
-includes the simulator build, native ONVIF connector, Device/control Asset,
-exact-topic authorization, and real-hardware replacement steps.
+includes the simulator build, connector for ONVIF, Device/control Asset,
+camera-control data flow graphs, platform access, and real-hardware replacement steps.
 
 Call the action directly before testing model-selected movement:
 
@@ -486,8 +500,8 @@ cause another movement.
 
 Set `recommendations.enabled` to `true` and choose a dedicated exact MQTT topic.
 Keep validation messages separate from operational recommendations. Run
-`manage.py render`, have the broker owner merge the updated rule, and run
-`manage.py workloads` to deploy the configuration.
+`manage.py render`, have the platform owner approve the added `Admin` role and
+backend topic access, then run `manage.py prepare` and `manage.py workloads`.
 
 Start your authorized MQTT consumer on that topic **before approval**.
 Give that consumer its own identity and an exact Subscribe grant; the assistant
@@ -512,8 +526,8 @@ python manage.py deny config.json APPROVAL_ID
 python manage.py approve config.json APPROVAL_ID
 ```
 
-A denial publishes nothing. Approval publishes once through the MQTT sidecar
-using QoS 1, without retention, and returns the broker-acknowledged result.
+A denial publishes nothing. Approval calls the built-in `aio_mqtt_publish`
+tool, which uses QoS 1 without retention and checks the broker acknowledgement.
 The consumer receives an object containing `idempotencyKey` and
 `recommendation`. Verify both against the reviewed request.
 `published: true` confirms broker acceptance, not delivery to every consumer,
@@ -524,7 +538,8 @@ To let the model propose the request instead:
 > [!IMPORTANT]
 > The configured CPU model has **not passed this recommendation-proposal
 > flow** in the recorded checks: it returned invalid arguments or no proposal.
-> The direct approval-and-delivery workflow above is independently validated.
+> Those recorded checks used the previous custom-MCP transport; validate the
+> migrated direct workflow independently before trying model-generated proposals.
 
 ```bash
 python manage.py ask config.json \
@@ -537,7 +552,7 @@ approval ID. There is no model-facing approval tool, and the direct
 `recommendation-publish` command cannot bypass this step.
 
 Approvals are single-use and expire after 300 seconds. Pending approvals and
-the sidecar's successful-key ledger are in memory and disappear on restart.
+the agent's successful-key ledger are in memory and disappear on restart.
 Reusing a successful key with the same payload reports `duplicate: true`;
 reusing it with different content fails. This is not durable exactly-once
 delivery: consumers should also deduplicate `idempotencyKey`, and ambiguous
@@ -556,7 +571,7 @@ observation or a guaranteed model answer:
   "toolActivity": [
     {
       "tool": "plant-telemetry",
-      "source": "mqtt",
+      "source": "aio-frontend",
       "arguments": {
         "stage": "inference",
         "machine_id": "person",
@@ -568,7 +583,7 @@ observation or a guaranteed model answer:
         "messages": [
           {
             "topic": "edge/predictive-inference/person/results",
-            "receivedAt": "2026-11-03T10:00:00+00:00",
+            "sampledAt": "2026-11-03T10:00:00+00:00",
             "payload": {
               "status": "ok",
               "frameId": "example-frame-001",
@@ -591,7 +606,7 @@ observation or a guaranteed model answer:
 | `status: "completed"` | The request completed, not a guarantee of factual correctness. |
 | `count` in an MQTT result | Number of messages received, not the number of people. Read `payload.personCount` for a frame's detection count. |
 | `timedOut` | The window ended before the requested message count was reached. Partial results can still be present. |
-| `receivedAt` | Local message receipt time, not camera capture time. Producer processing timestamps also do not necessarily represent capture time. |
+| `sampledAt` | Agent-side sample completion time, not per-message receipt, publication, or camera capture time. |
 
 The complete response also includes a request ID, timing, and model-completion
 diagnostics for [troubleshooting](docs/operations.md#inspect-logs-and-events).
@@ -602,7 +617,7 @@ Use these checks to establish what is working in your environment:
 
 | Check | Expected outcome |
 | --- | --- |
-| `manage.py check` | Ready agent, discoverable tool catalogs, and a resolvable model endpoint. |
+| `manage.py check` | Ready agent, compatible built-in tool catalog, and a resolvable model endpoint. |
 | Direct resource reads | Returned resources match the AIO configuration; sensitive fields are redacted. |
 | Direct observation read with a running producer | Payloads match the producer's output, including frame IDs, counts, and timestamps. |
 | Resource and observation questions | Actual tool calls are present, and the answer agrees with those exact results and includes the requested details. |
@@ -625,15 +640,16 @@ or a successful HTTP response as an end-to-end result. See the
 ### Real components, mocks, and replay inputs
 
 **The deployed assistant has no mock MCP or model mode.** It calls the real
-Kubernetes API, MQTT broker, and configured Foundry model. The optional camera
+built-in AIO MCP frontend and configured Foundry model. The optional camera
 is explicitly a simulator; local tests and external test producers are also
 identified below:
 
 | Location | Mocked or simulated input | How to exercise the real integration |
 | --- | --- | --- |
 | [`test_foundry.py`](tests/test_foundry.py), [`test_runtime.py`](tests/test_runtime.py), [`test_server.py`](tests/test_server.py) | Model streams, answers, and selected HTTP/tool backends. | Deploy the model and run `manage.py ask`; inspect actual tool activity and the answer. |
-| [`test_resources.py`](tests/test_resources.py), [`test_mcp.py`](tests/test_mcp.py) | Resource fixtures, Kubernetes/TokenReview responses, and in-process MCP backends. | Register real equipment, then compare direct resource-tool results with AIO. |
-| [`test_mqtt.py`](tests/test_mqtt.py) | A replaced MQTT client supplies messages, camera replies, and publication acknowledgements. | Use the real broker, ONVIF connector, and an independent recommendation subscriber. |
+| [`test_mcp.py`](tests/test_mcp.py), [`test_frontend.py`](tests/test_frontend.py) | A simulated frontend supplies MCP envelopes, resource fixtures, encoded observations, and camera/publication results. | Register real equipment and use the built-in frontend, camera-control data flow graphs, connector for ONVIF, and an independent subscriber. |
+| [`test_kubernetes.py`](tests/test_kubernetes.py) | Mocked model-endpoint API responses; no custom AIO resource reader. | Verify the actual Foundry ModelDeployment's internal endpoint. |
+| [Camera-control WASM unit tests](native-camera-actions/) | Synthetic request envelopes and response objects; no MQTT or ONVIF invocation in unit tests. | Build the WASM modules, deploy the data flow graphs, and qualify GetStatus through the real frontend before enabling movement. |
 | [`test_deployment.py`](tests/test_deployment.py) | Cluster commands are replaced where deployment behavior is exercised. | Follow the deployment steps and inspect the created resources and rollouts. |
 | README response examples | Illustrative JSON, not recorded observations. | Inspect the JSON returned by your own `tool` and `ask` commands. |
 | [`simulator/`](simulator/) | A generated calibration panorama and software PTZ state stand in for a camera and physical motion. | Register an authorized ONVIF camera and its real profile using the [hardware replacement steps](docs/camera-actions.md#use-an-actual-onvif-camera). |
@@ -649,12 +665,12 @@ Stop test publishers before validating the real producer.
 The text model can omit requested details or misinterpret evidence. A known
 limitation is that an answer can report correct person counts but omit the
 requested frame IDs. Use `toolActivity` or direct tool reads when exact fields
-are required. Model-selected camera movement passed against the simulator, but
-model-generated recommendation proposals did not. Direct approval and MQTT
-delivery passed independently. Model-assisted validation therefore remains
-partial; recorded checks used simulated hardware and synthetic test inputs,
-not a physical camera.
-See [validation results and known issues](docs/operations.md#observed-model-limitations).
+are required. Previous custom-MCP checks passed model-selected simulated
+movement and direct approval/delivery, but model-generated recommendation
+proposals failed. Those results **do not qualify the migrated built-in MCP path**.
+Run the integration checks for your installation; local tests use mocks, not
+a physical camera or a complete media-to-recommendation workflow.
+See [validation status and model limitations](docs/operations.md#validation-status-and-model-limitations).
 
 Do not treat the assistant as a health monitor, occupancy counter, or safety
 decision system. Observations are bounded samples, not history; retained
@@ -662,26 +678,31 @@ messages can be stale. Counts are per frame and must not be summed as unique
 people. Empty reads do not prove an empty scene or a healthy pipeline.
 
 Validate authorization and network isolation in your deployment. The CNI must
-enforce NetworkPolicy, and broker restrictions must cover all listener ports
-reachable by the identity. Redaction and prompts do not replace access controls.
+enforce NetworkPolicy. Frontend Admin rights and the backend's broker/resource
+identity may be broader than the application allowlist. Redaction and prompts
+do not replace platform access controls.
 
 ## Stop and clean up
 
-Stop sending questions, then remove only this instance's explicitly named,
-ownership-checked resources:
+Stop sending questions and disable actions. If deployed, first remove the
+camera-control data flow graphs and camera Device/control Asset using the
+[camera cleanup steps](docs/camera-actions.md#clean-up). For an upgraded instance,
+finish [legacy MCP cleanup](docs/operations.md#migrate-from-the-custom-mcp-version)
+while the new agent still exists. Then remove only this instance's explicitly
+named, ownership-checked resources:
 
 ```bash
 python manage.py cleanup config.json --yes
 ```
 
 This removes the assistant workloads, dedicated Qwen `ModelDeployment`, sample
-RBAC, resource-MCP certificates/secrets, and sample ConfigMaps/service accounts.
+model-reader RBAC, and sample ConfigMaps/service account.
 When `simulator` remains configured, it also removes the owned simulator
-workload and its two credential Secrets. First remove the simulator's Azure
-Device/control Asset using the [camera cleanup steps](docs/camera-actions.md#clean-up).
+workload and its two credential Secrets.
 It retains the namespace, registry credentials/artifacts, platform installations,
-and all producer resources. Broker authorization is externally managed: have its
-owner remove only the sample's rule and review any cached authorization.
+and all producer resources. It never removes the built-in MCP frontend/backend.
+Platform authorization is externally managed; have its owner review any
+sample-specific changes without removing grants needed by other callers.
 Separately provisioned node pools and broker ports are also retained; coordinate
 their removal with the platform owner if no longer needed.
 
@@ -692,13 +713,14 @@ does not migrate or delete the resources created with the previous values.
 
 | Path | Purpose |
 | --- | --- |
-| [`src/aio_mcp_ai_assistant/`](src/aio_mcp_ai_assistant/) | Agent, actual Foundry/MCP/MQTT clients, resource reader, and bounded tool contracts. |
+| [`src/aio_mcp_ai_assistant/`](src/aio_mcp_ai_assistant/) | Agent, Foundry/MCP clients, built-in-tool adapter, and bounded application contracts. |
 | [`config.example.json`](config.example.json) | Deployment and runtime settings without credentials. |
 | [`manage.py`](manage.py) | Explicit-context build, render, staged deployment, operator access, and cleanup. |
-| [`kubernetes/`](kubernetes/) | Reviewable manifests for application ownership, identities, TLS, and the model. |
+| [`kubernetes/`](kubernetes/) | Reviewable manifests for the agent, frontend role annotation, model identity, and model. |
 | [`simulator/`](simulator/) | Optional ONVIF/RTSP software camera with an explicitly synthetic scene. |
-| [`bicep/`](bicep/) | Optional native ONVIF connector template and camera Device/control Asset. |
-| [`onvif-connector-compat/`](onvif-connector-compat/) | Optional numeric-user packaging fix; the official native connector filesystem is unchanged. |
+| [`bicep/`](bicep/) | Optional camera-control data flow graphs, connector template for ONVIF, and camera Device/control Asset. |
+| [`native-camera-actions/`](native-camera-actions/) | Camera-control WASM modules, graph definitions, and OCI publication. |
+| [`onvif-connector-compat/`](onvif-connector-compat/) | Optional numeric-user packaging fix for the connector for ONVIF; the official image's filesystem is unchanged. |
 | [`tests/`](tests/) | Focused contract, failure, protocol, and deployment tests. |
 | [`docs/architecture.md`](docs/architecture.md) | Data, authentication, and model/tool-loop contracts. |
 | [`docs/camera-actions.md`](docs/camera-actions.md) | Deploy and exercise the simulated camera; replace it with authorized real hardware. |

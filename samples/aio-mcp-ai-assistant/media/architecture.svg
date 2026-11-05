@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="952" viewBox="0 0 1280 952"
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1244" viewBox="0 0 1280 1244"
      font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
      role="img" aria-labelledby="title description">
   <title id="title">AIO MCP and AI assistant: runtime architecture</title>
-  <desc id="description">An operator outside the edge cluster uses authenticated kubectl exec, through the Kubernetes API, to ask questions, inspect tools, and approve or deny recommendations. Inside the agent Pod, the agent validates tool calls and holds publication for operator approval; a custom MQTT MCP sidecar handles broker access. The agent calls a Foundry Local Qwen text model and a separate custom Resource MCP service, which reads AIO Assets and Devices through the Kubernetes API. The AIO MQTT broker receives JSON from a separately deployed observation producer, delivers approved recommendations to a separately deployed consumer, and carries optional camera RPC to the ARM/AIO-managed ONVIF connector. That connector calls the sample's ONVIF camera simulator over SOAP and HTTP. The simulator uses a synthetic scene and is not automatically connected to the observation producer. Dashed outlines mark optional integrations; action tools are disabled by default. This is a source-defined runtime overview, not a live deployment or end-to-end validation result. Auxiliary endpoint-discovery and token-validation calls are omitted.</desc>
+  <desc id="description">An operator outside the edge cluster uses authenticated kubectl exec to ask questions, inspect tools, and approve or deny recommendations. The single-container agent validates calls, holds publication for approval, and calls a Foundry Local Qwen text model. All AIO tools go through the built-in HTTPS MCP frontend and platform backend, which owns resource reads and broker connections. There is no custom MCP server, sidecar, or agent broker token. The AIO MQTT broker receives observation JSON from a separate producer and delivers approved recommendation JSON to a separate consumer. Optional camera-control data flow graphs receive JSON requests and run custom WASM transforms that invoke ONVIF managed actions through the same broker. The connector for ONVIF exchanges MQTT RPC with that broker and calls the software camera over SOAP and HTTP. Three independent DataflowGraph resources handle GetStatus, ContinuousMove, and Stop. The simulator uses a synthetic scene and is not automatically connected to a media or vision pipeline. Dashed outlines mark optional integrations; actions are opt-in. The model receives text and JSON, not images. This is a source-defined runtime overview, not a live deployment or end-to-end validation result. Auxiliary model endpoint lookup and platform authentication calls are omitted.</desc>
   <metadata>Hand-editable SVG. Source map and deployment ownership: ../docs/architecture.md. Azure Foundry and Fluent icon notices: THIRD-PARTY-NOTICES.md.</metadata>
   <defs>
     <marker id="other-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
@@ -73,19 +73,19 @@
       .rpc { stroke: #0078D4; marker-start: url(#mqtt-start); marker-end: url(#mqtt-end); }
     </style>
   </defs>
-  <rect width="1280" height="952" fill="#FFFFFF"/>
+  <rect width="1280" height="1244" fill="#FFFFFF"/>
   <text x="32" y="44" class="title">AIO MCP + AI assistant</text>
   <text x="32" y="72" class="detail">Ask about equipment, inspect observations, and enable controlled actions.</text>
   <rect x="1020" y="24" width="228" height="32" rx="4" fill="#DEECF9"/>
-  <text x="1134" y="45" text-anchor="middle" class="badge">Read-only by default</text>
+  <text x="1134" y="45" text-anchor="middle" class="badge">Actions are opt-in</text>
 
   <g id="boundaries">
-    <rect x="248" y="104" width="1016" height="748" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+    <rect x="248" y="104" width="1016" height="1046" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
     <text x="272" y="134" class="heading">Edge Kubernetes cluster</text>
-    <rect x="276" y="250" width="300" height="352" rx="6" fill="#DEECF9" stroke="#71AFE5"/>
+    <rect x="276" y="250" width="300" height="334" rx="6" fill="#DEECF9" stroke="#71AFE5"/>
     <text x="296" y="278" class="heading">Sample agent Pod</text>
-    <rect x="992" y="450" width="264" height="390" rx="6" fill="#F3F8FD" stroke="#A9C9EE" class="optional"/>
-    <text x="1016" y="478" class="label">Camera control (opt-in)</text>
+    <rect x="642" y="780" width="614" height="350" rx="6" fill="#F3F8FD" stroke="#A9C9EE" class="optional"/>
+    <text x="666" y="810" class="label">Camera control (opt-in)</text>
   </g>
 
   <g id="connections">
@@ -99,24 +99,25 @@
     <text x="602" y="203" text-anchor="middle" class="small">HTTPS</text>
     <path d="M558,368 H664" class="exchange"/>
     <text x="611" y="351" text-anchor="middle" class="small">MCP / HTTPS</text>
-    <path d="M926,368 H1014" class="exchange"/>
-    <text x="970" y="351" text-anchor="middle" class="small">get / list</text>
+    <path d="M795,428 L795,492" class="exchange"/>
+    <text x="811" y="464" class="small">Platform MCP</text>
+    <path d="M926,539 H968 V372 H1014" class="exchange"/>
+    <text x="986" y="484" class="small">Resource reads</text>
+    <path d="M795,586 L795,648" class="rpc"/>
+    <text x="811" y="622" class="small">MQTT 5 / TLS</text>
 
-    <path d="M426,440 L426,492" class="exchange"/>
-    <text x="444" y="470" class="small">MCP / HTTP</text>
-    <path d="M558,539 H664" class="rpc"/>
-    <text x="611" y="523" text-anchor="middle" class="small">MQTT 5 / TLS</text>
-    <text x="611" y="563" text-anchor="middle" class="small">Exact topics</text>
+    <path d="M294,690 H236 V894 H214" class="mqtt"/>
+    <text x="32" y="652" class="detail">Approved recommendation</text>
+    <text x="32" y="676" class="detail">JSON</text>
+    <path d="M426,838 L426,742" class="mqtt"/>
+    <text x="442" y="798" class="small">Observation JSON</text>
 
-    <path d="M926,539 H1014" class="rpc"/>
-    <text x="970" y="523" text-anchor="middle" class="small">RPC</text>
-    <path d="M1128,586 L1128,698" class="exchange"/>
-    <text x="1142" y="647" class="small">SOAP / HTTP</text>
-
-    <path d="M744,586 V634 H236 V760 H214" class="mqtt"/>
-    <text x="296" y="622" class="detail">Approved recommendation JSON</text>
-    <path d="M558,760 H608 V674 H820 V586" class="mqtt"/>
-    <text x="632" y="697" class="detail">Observation JSON</text>
+    <path d="M900,742 L900,838" class="rpc"/>
+    <text x="884" y="765" text-anchor="end" class="small">JSON + MQTT RPC</text>
+    <path d="M1128,742 L1128,838" class="rpc"/>
+    <text x="1142" y="765" class="small">MQTT RPC</text>
+    <path d="M1128,950 L1128,1018" class="exchange"/>
+    <text x="1142" y="988" class="small">SOAP / HTTP</text>
   </g>
 
   <g id="operator">
@@ -131,12 +132,16 @@
   </g>
 
   <g id="agent">
-    <rect x="296" y="300" width="260" height="138" rx="4" class="card"/>
+    <rect x="296" y="300" width="260" height="266" rx="4" class="card"/>
     <use href="#agent-icon" x="312" y="316" width="26" height="26"/>
-    <text x="348" y="336" class="label">Agent + approval gate</text>
-    <text x="314" y="366" class="detail">Validate calls / collect evidence</text>
-    <rect x="314" y="386" width="224" height="30" rx="4" fill="#FFF4CE" stroke="#E6C875"/>
-    <text x="426" y="406" text-anchor="middle" class="approval">Operator approves publishing</text>
+    <text x="348" y="336" class="label">Agent + tool policy</text>
+    <text x="314" y="374" class="detail">Validate calls / collect evidence</text>
+    <text x="314" y="406" class="detail">Fixed tools / exact topics</text>
+    <text x="314" y="438" class="detail">Built-in MCP client</text>
+    <path d="M314,458 H538" stroke="#E1DFDD"/>
+    <rect x="314" y="482" width="224" height="30" rx="4" fill="#FFF4CE" stroke="#E6C875"/>
+    <text x="426" y="503" text-anchor="middle" class="approval">Operator approves publishing</text>
+    <text x="314" y="542" class="small">One container / loopback API</text>
   </g>
 
   <g id="foundry">
@@ -147,12 +152,12 @@
     <text x="684" y="252" class="small">Foundry-operator managed</text>
   </g>
 
-  <g id="resource-mcp">
+  <g id="mcp-frontend">
     <rect x="666" y="318" width="258" height="108" rx="4" class="card"/>
     <use href="#application-icon" x="682" y="334" width="26" height="26"/>
-    <text x="720" y="354" class="label">Resource MCP</text>
-    <text x="684" y="382" class="detail">Custom / separate Deployment</text>
-    <text x="684" y="406" class="small">Sanitized resource JSON</text>
+    <text x="720" y="354" class="label">AIO MCP frontend</text>
+    <text x="684" y="382" class="detail">TLS / SAT / role-filtered tools</text>
+    <text x="684" y="406" class="small">Built-in / platform managed</text>
   </g>
 
   <g id="kubernetes-api">
@@ -160,64 +165,74 @@
     <use href="#api-icon" x="1032" y="334" width="26" height="26"/>
     <text x="1068" y="354" class="label">Kubernetes API</text>
     <text x="1034" y="382" class="detail">AIO Assets + Devices</text>
-    <text x="1034" y="406" class="small">Namespace-scoped reads</text>
+    <text x="1034" y="406" class="small">Backend-owned reads</text>
   </g>
 
-  <g id="mqtt-mcp">
-    <rect x="296" y="494" width="260" height="90" rx="4" class="card"/>
-    <use href="#application-icon" x="312" y="510" width="26" height="26"/>
-    <text x="348" y="530" class="label">MQTT MCP</text>
-    <text x="314" y="560" class="detail">Custom sidecar / loopback only</text>
+  <g id="mcp-backend">
+    <rect x="666" y="494" width="258" height="90" rx="4" class="card"/>
+    <use href="#application-icon" x="682" y="510" width="26" height="26"/>
+    <text x="720" y="530" class="label">AIO MCP backend</text>
+    <text x="684" y="560" class="detail">Resource + MQTT tools</text>
   </g>
 
   <g id="broker">
-    <rect x="666" y="494" width="258" height="90" rx="4" class="card"/>
-    <use href="#broker-icon" x="682" y="510" width="26" height="26"/>
-    <text x="720" y="530" class="label">AIO MQTT broker</text>
-    <text x="684" y="560" class="detail">TLS + service-account token</text>
+    <rect x="296" y="650" width="944" height="90" rx="4" class="card"/>
+    <use href="#broker-icon" x="312" y="670" width="26" height="26"/>
+    <text x="348" y="690" class="label">AIO MQTT broker</text>
+    <text x="600" y="690" class="detail">Observations / recommendations / ONVIF managed actions</text>
+    <text x="314" y="720" class="small">Platform-managed connections; the agent has no broker token.</text>
+  </g>
+
+  <g id="camera-control-dataflow-graphs">
+    <rect x="666" y="840" width="258" height="108" rx="4" class="card"/>
+    <use href="#application-icon" x="682" y="856" width="26" height="26"/>
+    <text x="720" y="876" class="label">Data flow graphs</text>
+    <text x="684" y="906" class="detail">GetStatus / Move / Stop</text>
+    <text x="684" y="930" class="small">3 DataflowGraph resources</text>
+    <text x="666" y="1012" class="detail">WASM transforms add RPC properties.</text>
+    <text x="666" y="1040" class="detail">No automatic link to vision pipeline.</text>
   </g>
 
   <g id="onvif-connector">
-    <rect x="1016" y="494" width="224" height="90" rx="4" class="card"/>
-    <use href="#application-icon" x="1032" y="508" width="26" height="26"/>
-    <text x="1068" y="528" class="label">ONVIF connector</text>
-    <text x="1034" y="554" class="detail">Native PTZ managed actions</text>
-    <text x="1034" y="574" class="small">ARM / AIO managed</text>
+    <rect x="1016" y="840" width="224" height="108" rx="4" class="card"/>
+    <use href="#application-icon" x="1032" y="856" width="26" height="26"/>
+    <text x="1068" y="870" class="label">Connector for</text>
+    <text x="1068" y="892" class="label">ONVIF</text>
+    <text x="1034" y="916" class="detail">PTZ managed actions</text>
+    <text x="1034" y="938" class="small">ARM / AIO managed</text>
   </g>
 
   <g id="recommendation-consumer">
-    <rect x="24" y="700" width="188" height="120" rx="4" class="external optional"/>
-    <text x="42" y="730" class="label">Recommendation</text>
-    <text x="42" y="754" class="label">consumer</text>
-    <text x="42" y="784" class="detail">Your MQTT client</text>
-    <text x="42" y="808" class="small">Deployed separately</text>
+    <rect x="24" y="840" width="188" height="108" rx="4" class="external optional"/>
+    <text x="42" y="870" class="label">Recommendation</text>
+    <text x="42" y="894" class="label">consumer</text>
+    <text x="42" y="920" class="detail">Your MQTT client</text>
+    <text x="42" y="940" class="small">Deployed separately</text>
   </g>
 
   <g id="observation-producer">
-    <rect x="296" y="700" width="260" height="120" rx="4" class="card optional"/>
-    <use href="#application-icon" x="312" y="716" width="28" height="28"/>
-    <text x="352" y="732" class="label">Observation</text>
-    <text x="352" y="754" class="label">producer</text>
-    <text x="314" y="784" class="detail">Media / vision or JSON publisher</text>
-    <text x="314" y="808" class="small">Deployed separately</text>
+    <rect x="296" y="840" width="260" height="108" rx="4" class="card optional"/>
+    <use href="#application-icon" x="312" y="854" width="28" height="28"/>
+    <text x="352" y="872" class="label">Observation producer</text>
+    <text x="314" y="906" class="detail">Media / vision or JSON publisher</text>
+    <text x="314" y="930" class="small">Deployed separately</text>
   </g>
 
   <g id="camera-simulator">
-    <rect x="1016" y="700" width="224" height="120" rx="4" class="card"/>
-    <use href="#camera-icon" x="1032" y="716" width="28" height="28"/>
-    <text x="1072" y="732" class="label">ONVIF camera</text>
-    <text x="1072" y="754" class="label">simulator</text>
-    <text x="1034" y="784" class="detail">Synthetic scene / virtual PTZ</text>
-    <text x="1034" y="808" class="small">Resets on Pod replacement</text>
+    <rect x="1016" y="1020" width="224" height="90" rx="4" class="card"/>
+    <use href="#camera-icon" x="1032" y="1034" width="26" height="26"/>
+    <text x="1068" y="1054" class="label">Camera simulator</text>
+    <text x="1034" y="1080" class="detail">Synthetic scene / virtual PTZ</text>
+    <text x="1034" y="1100" class="small">Sample-managed</text>
   </g>
 
   <g id="legend">
-    <path d="M32,890 H74" class="exchange"/>
-    <text x="92" y="895" class="detail">HTTPS / MCP / ONVIF</text>
-    <path d="M390,890 H432" class="rpc"/>
-    <text x="450" y="895" class="detail">MQTT messages / RPC</text>
-    <rect x="800" y="879" width="30" height="22" rx="3" class="card optional"/>
-    <text x="848" y="895" class="detail">Optional / separately deployed</text>
-    <text x="32" y="930" class="small">The text model receives JSON, not images. Camera motion is simulated; publishing requires operator approval.</text>
+    <path d="M32,1188 H74" class="exchange"/>
+    <text x="92" y="1193" class="detail">HTTPS / MCP / ONVIF</text>
+    <path d="M390,1188 H432" class="rpc"/>
+    <text x="450" y="1193" class="detail">MQTT messages / RPC</text>
+    <rect x="800" y="1177" width="30" height="22" rx="3" class="card optional"/>
+    <text x="848" y="1193" class="detail">Optional / separately deployed</text>
+    <text x="32" y="1228" class="small">The text model receives JSON, not images. Camera motion is simulated; publishing requires operator approval.</text>
   </g>
 </svg>

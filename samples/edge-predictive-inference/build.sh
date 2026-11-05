@@ -12,4 +12,4 @@ for stage in preprocess postprocess; do
         "$ROOT/.build/$stage.wasm"
 done
 cargo build --locked --release --example pipeline --target-dir "$ROOT/.build/target"
-printf 'Built both WASM components and the native model-validation helper in %s/.build\n' "$ROOT"
+printf 'Built both WASM components and the local model-validation helper in %s/.build\n' "$ROOT"

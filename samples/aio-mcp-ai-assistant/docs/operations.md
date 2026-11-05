@@ -11,14 +11,13 @@ python manage.py status config.json
 python manage.py check config.json
 ```
 
-The agent's `/readyz` checks the MCP catalogs and the named model's internal
+The agent's `/readyz` checks the built-in frontend catalog and the named model's internal
 endpoint. It does not make a broker subscription or run inference. Its
 `modelInferenceVerified` and `mqttSubscriptionVerified` fields are always false
 for this check, even if an earlier question succeeded.
 
-The MCP services' readiness endpoints check process/configuration availability.
-They are not proof that Asset/Device reads, topic access, a running observation
-producer, or the model work end to end.
+It is not proof that the platform backend can read your resources or topics,
+or that an observation producer or the model works end to end.
 
 Validate those separately:
 
@@ -29,44 +28,24 @@ python manage.py tool config.json plant-telemetry \
 python manage.py ask config.json "List up to two assets using the resource tool."
 ```
 
-Direct tools still verify both MCP catalogs, but they do not call the text model.
+Direct tools still verify the frontend catalog, but they do not call the text model.
 They are the first place to separate a dependency/data issue from a model
 interpretation issue.
 
-## Observed model limitations
+## Validation status and model limitations
 
-**Model-assisted acceptance is partial.** The configured CPU model can select
-and explain a camera action, but it has not passed the recommendation-proposal
-flow. It can also omit requested observation fields. Successful direct tools
-do not establish reliable model selection or interpretation.
+**The migrated built-in MCP path has not been live end-to-end qualified.**
+Local protocol/adapter tests and WASM module builds do not validate the
+installed frontend, ARM preview API, registry, camera, or model together.
+Earlier live results used the removed custom MCP servers and are not acceptance
+evidence for this version.
 
-The recorded action checks used `qwen3.5-2b-text-generic-cpu:1` with Foundry
-runtime `generative-py-cpu:2.261102.2`, temperature 0, 256 generation tokens,
-four completions maximum, and one model-driven format correction. No GPU,
-model-output repair, or substituted tool result was used.
-
-| Path | Observed result and qualification |
-| --- | --- |
-| Direct camera actions | Left and right pans traversed the real MCP service, broker, and native ONVIF connector. Independent SOAP reads matched final `IDLE` positions, and actual simulator snapshots changed. Invalid duration was rejected without movement; an invalid-profile RPC surfaced the native ONVIF fault. |
-| Model-selected camera | The model called `camera-pan` once with left/one-second arguments and correctly reported the confirmed stop and `-0.35` position. Both completions terminated normally. |
-| Direct recommendation workflow | No delivery before approval or after denial/expiry. An independently authenticated subscriber received the exact approved JSON. Reused approvals were rejected, duplicate successful keys did not republish, and a forbidden-topic publish returned MQTT reason 135 (`Not authorized`). |
-| Model-generated recommendation | **Did not pass.** Observed failures included invalid nested argument types, malformed recommendation JSON, and a plain-text answer without a proposal. Another resource/recommendation question lost its stream when Foundry's liveness probe restarted the serving container. None produced an approved model-generated publication. |
-| Observation interpretation | Classification and empty-window checks passed, but a two-frame answer omitted requested frame IDs despite reporting the correct individual counts. Check every requested field against `toolActivity`. |
-
-These are integration checks, not a hardware or production qualification.
-The camera and movement were simulated; recommendation/telemetry fixtures were
-explicitly synthetic. Resource checks used actual registrations, including
-fictional equipment and the software camera. No physical camera or
-media/person-detection pipeline was exercised by these action checks.
-The native connector required the documented
-[numeric-user packaging workaround](camera-actions.md#numeric-non-root-image-compatibility);
-its official filesystem and entrypoint were unchanged.
-
-The tested authorization policy covered TLS listener **18884**. Another existing
-listener, **18883**, had no authorization policy, and the validation cluster did
-not enforce NetworkPolicy. Those checks do **not** establish cluster-wide
-isolation. Protect every reachable listener and use an enforcing CNI in your
-own deployment.
+The configured CPU model has previously omitted observation fields and failed
+to produce valid nested recommendation arguments. Direct tool success does
+not establish reliable model selection or interpretation. The conversational
+loop still uses temperature 0, 256 generation tokens, four completions maximum,
+and one model-driven format correction; it does not repair malformed model
+output or substitute an operator-authored answer.
 
 ### Accept a model-assisted result
 
@@ -101,13 +80,23 @@ retrying; failure of the final answer does not undo a completed action.
 ## Connect the actual components
 
 Local test doubles are confined to `tests/`; do not copy their scripted model
-answers, fixture assets, fake tokens, or replaced MQTT client into a deployed
+answers, fixture assets, fake tokens, or replaced frontend client into a deployed
 application. The [mock inventory](../README.md#real-components-mocks-and-replay-inputs)
 identifies each boundary. Use the following steps to exercise real dependencies.
 
 ### Connect resource queries to AIO
 
-Use an actual AIO installation with the namespaced Asset and Device APIs.
+Use an actual AIO installation with the built-in MCP frontend/backend and
+namespaced Asset and Device APIs. The frontend Service must expose HTTPS 443:
+
+```bash
+kubectl --context YOUR_CONTEXT -n YOUR_AIO_NAMESPACE get service aio-mcp-frontend
+```
+
+Have the platform owner confirm frontend audience/CA, role assignments,
+backend resource visibility, and backend MQTT permissions. Do not connect
+directly to the backend or change shared authorization to bypass a missing role.
+
 Register your equipment through the platform's supported asset/device management
 path or use existing registered equipment; a fixture copied into a test is not
 a registered device. Set `kubeContext` and `aioNamespace` in `config.json` to
@@ -121,8 +110,9 @@ python manage.py tool config.json list_devices '{"limit":5}'
 ```
 
 Use names returned by those calls with `get_asset` and `get_device`, and compare
-the sanitized fields with the same resources in AIO or the Kubernetes API. Empty
-lists are valid only when the real namespace has no corresponding resources;
+the returned configuration with the same registered resources in AIO. Lists
+contain names/descriptions, not full Kubernetes objects. Empty
+lists are valid only when the backend's authorized scope has no corresponding resources;
 they do not demonstrate access to a configured piece of equipment.
 
 ### Connect the agent to a real Foundry model
@@ -144,13 +134,13 @@ the selected node advertises `nvidia.com/gpu` after driver/device-plugin setup.
 Match `tokenAudience` to the existing installation and configure its public CA
 ConfigMap/key; do not replace TLS verification with an insecure HTTP client.
 
-Complete [identity, broker authorization, and workload deployment](../README.md#deploy-the-scenario),
+Complete [identity, frontend access, and workload deployment](../README.md#deploy-the-scenario),
 then call the real model through the agent:
 
 ```bash
 python manage.py check config.json
 python manage.py ask config.json \
-  "List up to five configured assets and identify their device references."
+  "List up to two configured assets and use named reads to identify their device references."
 ```
 
 Confirm that the result names the selected model and contains a real
@@ -166,8 +156,8 @@ For the predictive scenario, follow the companion sample's
 and [deployment sequence](../../edge-predictive-inference/README.md#deployment-and-operations).
 Configure its `cameraUrl` for an authorized physical RTSP camera and use its
 secret-backed `cameraAuthentication` settings. Do not embed credentials in a URL.
-Deploy the real media connector, AIO Apps-managed inference connector, graph,
-model, and shared storage as described there.
+Deploy the media connector, inference connector managed through AIO application
+resources, data flow graph, model, and shared storage as described there.
 
 A replay can exercise those same real components, but the camera input is still
 recorded or simulated. Label it as a replay in validation results and do not claim
@@ -187,10 +177,10 @@ Once the actual producer is publishing:
    `person`, respectively. Replace
    validation-topic names and synthetic source descriptions. Do not send raw
    JPEGs or tensors to the text model.
-3. Run `python manage.py render config.json`. Have the broker owner review the
-   generated rule, authorize those exact subscriptions on the configured TLS
-   port, and remove obsolete validation-topic grants. Preserve other clients'
-   policies and ports.
+3. Run `python manage.py render config.json`. Review the generated
+   `.generated/mcp-access.json` inventory with the platform owner and verify
+   that the existing backend may sample the selected topics. This file is
+   **not** a broker policy. Preserve other clients' policies and listeners.
 4. Run `python manage.py workloads config.json`, then collect real messages and
    ask an independent model question:
 
@@ -198,7 +188,7 @@ Once the actual producer is publishing:
 python manage.py tool config.json plant-telemetry \
   '{"stage":"inference","machine_id":"person","max_messages":2,"timeout_ms":5000}'
 python manage.py ask config.json \
-  "Use plant-telemetry with stage inference and machine_id person to read up to two messages. Report each frameId and personCount separately, with receivedAt. Do not sum counts across frames."
+  "Use plant-telemetry with stage inference and machine_id person to read up to two messages. Report each frameId and personCount separately, with sampledAt. Do not sum counts across frames."
 ```
 
 Compare the answer with the exact messages in that question's `toolActivity`,
@@ -224,8 +214,6 @@ MODEL=$(python -c 'from aio_mcp_ai_assistant.config import load_settings; from p
 kubectl --context "$CONTEXT" -n "$NAMESPACE" get pods
 kubectl --context "$CONTEXT" -n "$NAMESPACE" get events --sort-by=.lastTimestamp
 kubectl --context "$CONTEXT" -n "$NAMESPACE" logs deployment/edge-assistant -c agent --tail=100
-kubectl --context "$CONTEXT" -n "$NAMESPACE" logs deployment/edge-assistant -c mqtt-mcp --tail=100
-kubectl --context "$CONTEXT" -n "$NAMESPACE" logs deployment/edge-resource-mcp --tail=100
 kubectl --context "$CONTEXT" -n "$FOUNDRY_NAMESPACE" describe modeldeployment "$MODEL"
 ```
 
@@ -233,24 +221,28 @@ Use the model deployment's status and the platform owner's documented workload
 selection to find its serving logs. Do not assume a generated model Pod name.
 Logs and returned evidence can contain operational information; apply access
 controls and retention policies before sharing them.
+Ask the platform owner for frontend/backend logs using their actual installed
+workload names. Never print projected tokens, camera credentials, or private keys
+to troubleshoot authentication.
 
 | Symptom | Check |
 | --- | --- |
 | `prepare` refuses an existing resource | Namespace and sample-instance ownership labels. Choose a new namespace/model name rather than adopting unrelated resources. |
 | Missing CRDs or incompatible API version | Required preview installation and the registered `v1` APIs. This sample does not install AIO, Foundry, or cert-manager. |
 | Invalid/missing CA data | ConfigMap namespace/name/key and PEM contents. The bundle must trust the actual endpoint. Do not disable TLS verification. |
-| Certificate does not become Ready | cert-manager controllers, Certificate/Issuer events, secret-name conflicts, and admission/network restrictions. |
+| Frontend TLS or Service unavailable | Existing AIO frontend installation, Service port 443, DNS, CA bundle, and platform certificate readiness. The sample creates no MCP serving certificate. |
 | `ImagePullBackOff` | Published image/version, architecture, and registry pull secret in the sample namespace. The model's catalog access is managed separately by Foundry. |
-| Simulator image pull says `insufficient_scope` | The registry credential must cover the simulator repository as well as the assistant repository. The native connector's optional private-image pull Secret belongs in the AIO namespace. |
-| Native ONVIF Pod rejects named user `nonroot` | Use the [numeric-user compatibility image](camera-actions.md#numeric-non-root-image-compatibility) or a validated compatible official release. Do not disable non-root enforcement or patch controller-owned Pods. |
-| Resource MCP 401/403 | Projected token audience `edge-resource-mcp`, exact caller service-account namespace/name, TokenReview API reachability, and resource service permissions. |
-| Resource tool 403 | Reader Role/RoleBinding in `aioNamespace`; namespaced Asset/Device API group and version. |
+| Simulator image pull says `insufficient_scope` | The registry credential must cover the simulator repository as well as the assistant repository. The connector for ONVIF's optional private-image pull Secret belongs in the AIO namespace. |
+| Connector for ONVIF Pod rejects named user `nonroot` | Use the [numeric-user compatibility image](camera-actions.md#numeric-non-root-image-compatibility) or a validated compatible official release. Do not disable non-root enforcement or patch controller-owned Pods. |
+| Frontend 401/403 or missing tools | Frontend inbound audience, projected token, `aio-mcp-auth/roles` annotation, and platform authentication configuration. Reader/DataReader are required; publication also requires Admin. |
+| Resource tool denied | Backend's platform-owned Kubernetes identity and configured resource scope. Do not grant the assistant direct Asset/Device permissions as a fallback. |
 | Unknown asset/device | Use `list_assets`/`list_devices`; configured names and resource namespace must match. A Kubernetes 404 is not an empty success. |
-| MQTT connection or subscription rejected | TLS listener, SAT audience `aio-internal`, service-account authorization attribute, attached authorization policy, Connect grant, and exact Subscribe topics. |
+| MQTT connection or subscription rejected | Backend broker identity, configured listener/trust/audience, and its Connect/Subscribe permissions. The assistant has no broker token or direct MQTT connection. |
 | MQTT sample is empty | Producer enabled/running, exact topic/prefix, publication interval, backlog, and configured sampling window. Silence alone cannot locate a fault. |
 | Invalid or oversized MQTT payload | Select a bounded JSON-object observation topic, not JPEGs/tensors. Payload limit is 64 KiB; the total result limit is 256 KiB. |
-| Camera or publishing action disabled | Set only the intended action's enablement flag, review the generated exact-topic rule, and redeploy. An enablement flag alone does not grant broker access. |
-| Camera RPC times out or returns an ONVIF fault | Device/Asset synchronization, native connector readiness, camera credentials/profile, all three managed actions, request/reply grants, and camera connectivity. A timeout does not prove that motion stopped. |
+| Camera or publishing action disabled | Set only the intended flag, review `mcp-access.json` and frontend roles, rerun `prepare`, then redeploy. Camera checks additionally require configured/deployed `cameraGraphs`. |
+| Camera RPC times out or returns an ONVIF fault | Data flow graph configuration and WASM artifact pulls, backend publish/sample access, exact topics, matching Asset/ONVIF media profile, clock synchronization, Device/Asset readiness, managed actions, and camera connectivity. A timeout does not prove that motion stopped. |
+| Camera motion is unconfirmed | Do not blindly restart or repeat a pan. Reconcile camera state and queued commands with the platform/camera owner; a failed Stop/IDLE recovery latches further motion off in that agent process. |
 | Approval missing, expired, or already consumed | IDs are single-use, expire after 300 seconds, and are lost on agent restart. Review a new request rather than trying to reuse or modify an old approval. |
 | MQTT publication rejected | Inspect the negative PUBACK and the exact Publish grant on the configured listener. Reason 135 means `Not authorized`; it is not successful delivery. |
 | Published but consumer saw nothing | PUBACK confirms broker acceptance only. Check the consumer's separate identity, subscription acknowledgement, topic, connection window, and deduplication. Messages are not retained. |
@@ -263,7 +255,7 @@ controls and retention policies before sharing them.
 | Incomplete streamed response and serving-container restart | Check Foundry Pod events, previous logs, liveness failures, and CPU/memory pressure. Wait for recovery and inspect any earlier action before retrying. Do not disable health checks to conceal the failure. |
 | Completed answer contradicts the tool result | `completed` is not a semantic correctness guarantee. Inspect `toolActivity`; an empty error-topic window is neither zero detections nor evidence of a healthy pipeline. |
 | Model answered without evidence | The reference loop can return plain text without a tool read. Inspect `toolActivity`, reject it as operational acceptance, and use a concrete question naming an available tool and stage/machine binding. |
-| Catalog/schema mismatch | Deploy matching images and configuration to both Deployments and both agent containers; do not mix independently changed tool versions. |
+| Catalog/schema mismatch | Check required built-in tool names, argument types, and caller roles against a compatible AIO release. Extra platform tools are allowed but never passed through to the model. |
 | Busy or deadline exceeded | One active question per instance; four completions maximum, including any format-correction turn. Allow it to finish and narrow the next question. Inspect CPU pressure and Foundry latency. |
 
 If the workload rollout times out while the model is downloading, inspect the
@@ -287,7 +279,7 @@ companion predictive sample supplies additional semantics:
   cover every preprocessing, inference, or transport failure.
 - `frameId` correlates a processing attempt, not a persistent person identity.
   Do not sum counts across frames or claim unique-person tracking.
-- MQTT receipt time is not camera capture time. Delayed or duplicate delivery
+- `sampledAt` is the host's sample completion time, not receipt or capture time. Delayed or duplicate delivery
   can affect an apparent "latest" observation.
 
 There is no historical store, occupancy calculation, or unattended control loop.
@@ -309,52 +301,98 @@ tag:
 python manage.py render config.json
 python manage.py build config.json
 python manage.py push config.json
+python manage.py prepare config.json
 python manage.py workloads config.json
 ```
 
 The settings checksum triggers a rollout for changed configuration; changed
-image references also update the Pod template. Both MCP services must converge
-on the same tool schemas. Transient discovery failures during rollout are
-expected; retry after both Deployments are ready. The single agent Pod uses a
+image references also update the Pod template. `prepare` refreshes public trust
+and ServiceAccount roles; it does not update the platform MCP installation.
+The single agent Pod uses a
 Recreate update strategy, so an update interrupts an in-flight question.
-Agent restart discards pending approvals; sidecar restart clears the in-memory
-publication ledger. Check the consumer before resubmitting a previously approved
+Agent restart discards pending approvals and the in-memory publication ledger.
+Check the consumer before resubmitting a previously approved
 recommendation. Simulator image changes additionally require
 `python manage.py simulator config.json`; replacing its Pod resets PTZ state.
-Native connector and Device/Asset changes use their ARM templates, not
+Data flow graph, connector, and Device/Asset changes use their ARM templates, not
 `manage.py workloads`.
 
-Topic changes also require the broker owner to review and merge the new
-generated rule, and remove obsolete permissions. Changing a model name or
+Topic changes require review of the inventory and backend permissions with the
+platform owner. Changing a model name or
 namespace creates a different resource set; it is not migration or cleanup.
 Retain the previous configuration if those resources must be removed.
 
-Projected API, Foundry, resource-MCP, and broker tokens are reread for requests
-or new sampling connections. Public broker/Foundry CA bundles are **copied** at
-`prepare`; they are not continuously synchronized. The resource-MCP server also
-loads its serving certificate at startup.
+Projected API, Foundry, and frontend tokens are reread for requests or new
+sessions. Public frontend/Foundry CA bundles are **copied** at `prepare`;
+they are not continuously synchronized.
 
 After an owner-coordinated CA/certificate rotation, refresh the copied trust
-and explicitly restart both sample Deployments:
+and explicitly restart the agent:
 
 ```bash
 python manage.py prepare config.json
-kubectl --context "$CONTEXT" -n "$NAMESPACE" rollout restart deployment/edge-resource-mcp deployment/edge-assistant
-kubectl --context "$CONTEXT" -n "$NAMESPACE" rollout status deployment/edge-resource-mcp --timeout=180s
+kubectl --context "$CONTEXT" -n "$NAMESPACE" rollout restart deployment/edge-assistant
 kubectl --context "$CONTEXT" -n "$NAMESPACE" rollout status deployment/edge-assistant --timeout=180s
 python manage.py check config.json
 ```
 
 Use overlapping trust where your platform requires it. Do not change the
 shared operator audience, discard platform CAs, or copy server private keys to
-the agent to resolve a trust failure. Review the sample-local CA lifecycle with
-the cert-manager owner; these manifests are not a general certificate-rotation
-system.
+the agent to resolve a trust failure. These manifests are not a platform
+certificate-rotation system.
+
+## Migrate from the custom MCP version
+
+Preserve the previous configuration, image version, and validation evidence
+before migration. Keep the existing namespace and model name when updating the
+same owned instance; a new name creates a separate instance.
+
+1. Enable/qualify the platform's built-in frontend/backend. Replace the old
+   `broker` object with the `mcp` object from `config.example.json`, using the
+   actual frontend audience and public CA. Old broker settings are rejected
+   rather than silently ignored.
+2. Keep the existing sources and Foundry configuration. To retain camera
+   actions, follow the [camera-control data flow graph setup](camera-actions.md#5-deploy-the-camera-control-data-flow-graphs)
+   with movement disabled until GetStatus is qualified. Direct broker RPC from
+   the old sidecar is no longer available.
+3. Choose a new image version. Render, build, and push it; review
+   `.generated/mcp-access.json` and the generated ServiceAccount role annotation.
+   Run `prepare` and `workloads`. The updated Deployment has **one container**,
+   `agent`; no MQTT sidecar is retained.
+4. Run `check`, then direct list/get and telemetry calls against the real
+   frontend. Qualify GetStatus, controlled movement, and approved delivery
+   separately when enabled. Compare named-read configuration and `sampledAt`
+   with their [new contracts](architecture.md); do not expect the old
+   synthesized Kubernetes envelope or per-message receipt timestamp.
+5. After the new agent is ready and direct reads work, retire only the old
+   sample-owned server resources:
+
+```bash
+python manage.py remove-legacy-mcp config.json --yes
+```
+
+The helper requires the single-container agent, waits for rollout, checks its
+frontend/model readiness, and verifies all targeted ownership labels before
+deleting. It removes the old Resource MCP Deployment/Service/ServiceAccount,
+ingress policy, serving certificates/issuers/secrets, AIO reader binding, and
+TokenReview cluster binding/role. Missing objects are tolerated; ownership or
+API failures are not bypassed.
+
+The platform frontend/backend, AIO installation, model, simulator, namespaces,
+and registry credentials are preserved. The old broker rule is not automatically
+edited: have the broker owner remove only obsolete grants for the retired
+application broker identity. Protect the backend's own shared grants. Generated
+legacy broker-rule/certificate files are removed by rendering, but deletion of
+local files does not remove live resources.
+
+If qualification fails, stop and diagnose before removing legacy resources.
+Restoring an old image alone is insufficient: rollback also needs the old
+configuration, identities, certificates, and broker policy.
 
 ## Stop and remove this instance
 
 Stop issuing requests and disable optional actions. If the camera tutorial was
-deployed, first remove its owned Azure Device/control Asset using the
+deployed, first remove its data flow graphs and owned Azure Device/control Asset using the
 [camera cleanup steps](camera-actions.md#clean-up). Then run:
 
 ```bash
@@ -364,16 +402,19 @@ python manage.py cleanup config.json --yes
 The helper verifies both `app.kubernetes.io/part-of` and
 `app.kubernetes.io/instance` before deleting any target. It deletes explicitly
 named sample resources, including the dedicated Qwen model and the sample's
-cross-namespace/cluster RBAC bindings. It does not recursively delete a namespace.
+model-reader Role/Binding. It does not recursively delete a namespace.
 With the original `simulator` configuration present, it also removes the owned
 simulator workload and camera credential Secrets in both namespaces.
 
-The namespace, registry credentials and images, broker policy, AIO installation,
+For an upgraded instance, finish `remove-legacy-mcp` while the agent still
+exists; ordinary cleanup does not adopt responsibility for legacy servers.
+
+The namespace, registry credentials and images, broker policy, built-in MCP, AIO installation,
 Foundry operator, cert-manager, and all predictive-inference resources remain.
 Foundry-owned caches or retained storage follow the installed operator's
 policy; inspect them with the platform owner if further cleanup is required.
-Have the broker owner remove only this instance's authorization rule.
-The optional native connector template and its registry pull credentials are
+Have the platform owner retire only permissions no longer needed by this instance.
+The optional connector template for ONVIF and its registry pull credentials are
 not removed by this helper; retire them only after checking for other users.
 
 Separately provisioned node pools and added broker ports are not removed by the

@@ -1,16 +1,21 @@
-# Add camera control through the AIO ONVIF connector
+# Add camera control through the AIO connector for ONVIF
 
 This tutorial extends the [operations assistant](../README.md) with its
 `camera-pan` tool. You will build a camera simulator, connect it to the real
-AIO ONVIF connector, register a Device and a PTZ control Asset, and move its
+AIO connector for ONVIF, register a Device and a PTZ control Asset, and move its
 viewport through correlated MQTT managed-action requests.
 
 **What is simulated:** the camera, its calibration scene, and physical motion.
 The scene is generated at image-build time and contains no real people or
 equipment. The simulator implements ONVIF SOAP and H.264 RTSP; it is not a
-scripted MCP response. The MCP service, MQTT broker, AIO connector, and
+scripted MCP response. The built-in MCP frontend/backend, MQTT broker, AIO connector, and
 Device/Asset APIs are real. This tutorial does not deploy the separate media
 or person-detection pipeline.
+
+The assistant never opens a broker connection. Three AIO data flow graphs run
+custom WASM transforms that bridge JSON publication/sampling to the MQTT RPC
+properties required by ONVIF managed actions. Deploy and qualify the GetStatus
+data flow graph before enabling movement.
 
 ## Prerequisites
 
@@ -19,17 +24,24 @@ and workload deployment first. You also need:
 
 - Azure CLI with Bicep support and permission to deploy resources into the
   existing AIO instance, Azure Device Registry (ADR) namespace, and custom location.
-- An AIO installation supporting the supplied preview ARM APIs and the ONVIF
-  connector. The template pins native connector and metadata version `1.5.0`,
+- An AIO installation supporting the supplied preview ARM APIs and the
+  connector for ONVIF. The template pins connector and metadata version `1.5.0`,
   whose metadata requires AIO `1.3.38` or later.
 - Device/Asset resource synchronization between Azure and the cluster,
   configured by the platform owner. See
   [configure the connector for ONVIF](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-use-onvif-connector).
 - CPU capacity for the simulator (500m CPU/512 MiB requested, 2 CPU/1 GiB limit)
-  and the native connector. No GPU is required.
+  and the connector for ONVIF. No GPU is required.
+- Rust/rustup, the repository-pinned toolchain and `wasm32-wasip2` target, ORAS,
+  and registry push access for the WASM modules and graph definitions.
+- A compatible AIO WASM runtime (the graph definitions declare API 1.7.2/runtime 1.1.8)
+  and an existing registry endpoint with pull access to all six artifacts.
+- Platform approval for the frontend `Admin` role needed by
+  `aio_mqtt_publish`, including for harmless GetStatus requests. Admin is
+  broader than this application's tool/topic allowlist.
 
 Use unused Device/Asset names. Do not overwrite registrations for real cameras.
-If a suitable ONVIF connector template already exists, reuse it rather than
+If a suitable connector template for ONVIF already exists, reuse it rather than
 creating a second template for the same endpoint type.
 
 ## 1. Build the simulator image
@@ -101,7 +113,7 @@ kubectl --context "$CONTEXT" -n "$NAMESPACE" get deployment,service edge-assista
 The Service exposes ONVIF on port 2020 and RTSP on port 554. The default profiles
 are `profile_high` and `profile_standard`; both share the same PTZ state.
 
-## 3. Add the native ONVIF connector when needed
+## 3. Add the connector for ONVIF when needed
 
 Set these values for your existing installation; do not use names from another
 cluster. `ADR_LOCATION` is the ADR namespace's Azure region:
@@ -121,7 +133,7 @@ kubectl --context "$CONTEXT" -n "$AIO_NAMESPACE" get connectortemplates
 
 Have the platform owner inspect existing templates for `Microsoft.Onvif`.
 **Skip the following deployment if you will reuse an existing compatible
-template.** Otherwise, validate and deploy the supplied native template:
+template.** Otherwise, validate and deploy the supplied connector template:
 
 ```bash
 az deployment group validate \
@@ -139,7 +151,7 @@ az deployment group create \
     connectorTemplateName="$CONNECTOR_TEMPLATE"
 ```
 
-The native connector image comes from Microsoft Container Registry. ARM and
+The connector for ONVIF image comes from Microsoft Container Registry. ARM and
 AIO own its runtime reconciliation; the assistant does not directly create a
 connector Pod. An allocated connector may appear only after registering an
 enabled ONVIF Device. No Event Grid or cloud managed-action gateway is needed
@@ -155,10 +167,10 @@ explicit numeric UID can therefore fail with:
 image has non-numeric user (nonroot), cannot verify user is non-root
 ```
 
-The camera integration was exercised using the included
+The earlier custom-MCP camera integration used the included
 [`onvif-connector-compat/Dockerfile`](../onvif-connector-compat/Dockerfile).
 It pins the official `1.5.0` base digest and changes only `USER` to
-`65532:65532`; the native connector filesystem and entrypoint are unchanged.
+`65532:65532`; the connector filesystem and entrypoint are unchanged.
 This is a packaging workaround, **not a mocked or reimplemented connector**.
 It does not qualify the unmodified image on affected installations.
 
@@ -241,55 +253,129 @@ successful allocation/configuration. Inspect connector logs if discovery or
 authentication fails. An ARM deployment reporting `Succeeded` alone does not
 establish that the connector reached the camera.
 
-## 5. Enable only the configured action route
+## 5. Deploy the camera-control data flow graphs
 
-Set these values inside the existing `camera` object in `config.json`:
+Extend `config.json` with the following objects, using your actual Asset,
+registry, and existing AIO registry endpoint. Use a unique `topicPrefix` for
+each instance and **leave movement disabled**:
 
 ```json
 {
-  "enabled": true,
-  "assetName": "edge-assistant-camera-onvif",
-  "profileToken": "profile_high"
+  "camera": {
+    "enabled": false,
+    "assetName": "edge-assistant-camera-onvif",
+    "profileToken": "profile_high",
+    "topicPrefix": "edge/assistant/camera"
+  },
+  "cameraGraphs": {
+    "registry": "YOUR_REGISTRY",
+    "registryEndpointName": "YOUR_AIO_REGISTRY_ENDPOINT",
+    "artifactVersion": "0.1.0"
+  }
 }
 ```
 
-Use your actual control Asset name if different. Then rerender:
+Build and publish from the sample directory with its Python environment active.
+Authenticate ORAS to your registry using your approved process first:
 
 ```bash
 python manage.py render config.json
+bash native-camera-actions/build.sh
+bash native-camera-actions/publish.sh config.json
 ```
 
-Have the broker owner merge the generated rule into the authorization policy
-attached to the assistant's configured TLS listener. For the default Asset,
-camera enablement adds Publish on exactly:
+This builds three independent WASM modules and publishes them with three graph
+definitions, all under `azure-samples/aio-mcp-ai-assistant/camera-actions`.
+See the [camera-control data flow graph contracts](../native-camera-actions/README.md).
+The agent image-pull Secret does not grant AIO permission to pull graph artifacts;
+the existing **AIO registry endpoint** must do that independently.
 
-```text
-azure-iot-operations/asset-operations/edge-assistant-camera-onvif/PTZ/ContinuousMove
-azure-iot-operations/asset-operations/edge-assistant-camera-onvif/PTZ/Stop
-azure-iot-operations/asset-operations/edge-assistant-camera-onvif/PTZ/GetStatus
-```
-
-It adds Subscribe on
-`clients/edge-assistant-<sample-namespace>/camera/response`.
-Existing observation subscriptions remain unchanged. Preserve all unrelated
-broker rules, listener ports, and authentication settings.
-
-The native ONVIF connector uses its own platform-managed broker identity.
-Its listener/policy must independently allow the managed-action request
-subscriptions and replies to the sample's response topic. Do not grant the
-assistant wildcard Publish permission to compensate for a connector policy
-problem.
-
-Deploy the changed assistant settings:
+Rendering also creates `.generated/camera-actions.parameters.json`. The template
+uses a dedicated data flow profile named `edge-camera-<sample namespace>` and
+the existing `default` MQTT endpoint. Confirm that this is a new data flow
+profile, or one created exclusively for this same sample instance; never overwrite another application's
+data flow profile. Validate and deploy **GetStatus only**:
 
 ```bash
+az deployment group validate \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name edge-assistant-camera-actions \
+  --template-file bicep/camera-actions.bicep \
+  --parameters @.generated/camera-actions.parameters.json \
+    aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" \
+    actions=get-status
+
+az deployment group create \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name edge-assistant-camera-actions \
+  --template-file bicep/camera-actions.bicep \
+  --parameters @.generated/camera-actions.parameters.json \
+    aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" \
+    actions=get-status
+```
+
+The three `DataflowGraph` resources are independent, not three serial nodes.
+Each has an MQTT source, a custom WASM transform, and an MQTT destination.
+They do not persist requests to disk and do not use file stores. The SDK command
+invoker supplies MQTT correlation/response properties; its process-local
+request-ID ledger is not durable exactly-once execution.
+
+Have the platform owner review `.generated/mcp-access.json` and confirm:
+
+- The agent's frontend roles include `Reader`, `DataReader`, and `Admin`.
+- The backend can publish to `<topicPrefix>/requests/<Action>` and sample
+  `<topicPrefix>/responses/<Action>` for the configured actions.
+- The data flow graph and connector identities can exchange ONVIF managed-action
+  requests/replies for the configured Asset. Their identities are separate
+  from the agent's frontend identity.
+
+The inventory is not a broker ACL. Do not give the application a direct broker
+token or modify shared policies to hide an authorization failure.
+
+Apply the role annotation and single-container workload, then request harmless
+status through the complete built-in MCP/data flow graph/connector path:
+
+```bash
+python manage.py prepare config.json
 python manage.py workloads config.json
 python manage.py check config.json
+python manage.py camera-check config.json
 ```
 
-## 6. Run a direct action, then a model request
+Require the actual correlated GetStatus result, `stopConfirmed: true`,
+`moveStatus: "IDLE"`, and a finite normalized `finalPan`. Compare it with the
+simulator or an independently authorized camera status read. Readiness or an
+ARM deployment reporting success does not replace this check. Resolve schema,
+role, registry, graph, clock, and camera errors before continuing.
+
+## 6. Enable motion and run a direct action
+
+Confirm that no other controller owns the camera. Validate and deploy the
+Move and Stop data flow graphs alongside GetStatus:
 
 ```bash
+az deployment group validate \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name edge-assistant-camera-actions \
+  --template-file bicep/camera-actions.bicep \
+  --parameters @.generated/camera-actions.parameters.json \
+    aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" actions=all
+
+az deployment group create \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name edge-assistant-camera-actions \
+  --template-file bicep/camera-actions.bicep \
+  --parameters @.generated/camera-actions.parameters.json \
+    aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" actions=all
+```
+
+Wait for all three data flow graphs to become operational in AIO. Set
+`camera.enabled: true`, then update the agent:
+
+```bash
+python manage.py render config.json
+python manage.py prepare config.json
+python manage.py workloads config.json
 python manage.py tool config.json camera-pan \
   '{"direction":"right","duration_seconds":1}'
 ```
@@ -308,12 +394,14 @@ The successful result has this shape; the position shown is **illustrative**:
 }
 ```
 
-The sidecar subscribes to the response topic before sending a command, uses
-fresh correlation data for each request, requires successful MQTT
-acknowledgements, and ignores stale/uncorrelated replies. `ContinuousMove`
-includes a device-side timeout. An explicit `Stop` is attempted even if the
-move request fails, and a successful result requires `GetStatus` to report
-`IDLE` with a numeric pan position.
+The client begins sampling before publication, uses a fresh ID and issued
+timestamp, and validates the graph's correlated ONVIF managed-action response.
+The frontend has no subscription-ready acknowledgement, so missing replies can still time
+out. `ContinuousMove` includes a device-side timeout; there is no automatic
+retry of movement. An explicit Stop is attempted even after an uncertain Move,
+followed by GetStatus. Uncertain delivery triggers an additional 12-second
+fence and Stop/IDLE verification without turning failure into success.
+Unconfirmed recovery blocks further movement in that process.
 
 Inspect the simulator logs independently:
 
@@ -321,7 +409,7 @@ Inspect the simulator logs independently:
 kubectl --context "$CONTEXT" -n "$NAMESPACE" logs \
   deployment/edge-assistant-camera --tail=80
 kubectl --context "$CONTEXT" -n "$NAMESPACE" logs \
-  deployment/edge-assistant -c mqtt-mcp --tail=80
+  deployment/edge-assistant -c agent --tail=80
 
 python manage.py ask config.json \
   "Pan the configured simulated camera left for one second. Report the confirmed stopped state and final pan position."
@@ -338,7 +426,7 @@ Do not treat simulator success as hardware qualification. Obtain the camera
 owner's authorization and check the permitted direction, speed, duration,
 travel limits, and emergency-stop procedure before enabling movement.
 
-1. Keep `camera.enabled: false` and remove its Publish grants while preparing
+1. Keep `camera.enabled: false` and do not deploy its Move data flow graph while preparing
    the real target. Register the authorized camera's actual ONVIF endpoint,
    using HTTPS and an appropriate trust bundle where supported.
 2. Store real credentials in Key Vault and synchronize them through AIO. Set
@@ -352,9 +440,11 @@ travel limits, and emergency-stop procedure before enabling movement.
    is named `profile_high`.
 4. Create a separate control Asset using the verified Device/endpoint and
    the three managed actions. Set `camera.assetName` and `profileToken` to
-   that target. Omit `simulator` if no software camera is needed.
-5. In a controlled maintenance window, enable the exact-topic grants and
-   camera setting, deploy, and test the smallest permitted direct movement
+   that target. Use new, instance-specific bridge topics and regenerate graph
+   parameters. Omit `simulator` if no software camera is needed.
+5. Deploy only the GetStatus data flow graph and qualify `camera-check` before enabling
+   motion. In a controlled maintenance window, deploy all three data flow graphs, enable the
+   camera setting, and test the smallest permitted direct movement
    before model-assisted use. A fixed speed of 0.35 and a one-second minimum
    are built into this sample; do not use it on hardware for which these
    bounds are unsuitable.
@@ -367,7 +457,37 @@ observations from the real camera's stream.
 
 ## Clean up
 
-Disable camera actions and remove their exact-topic grants first. Delete only
+Stop issuing actions, confirm the camera is IDLE, set `camera.enabled: false`,
+and redeploy the agent. Remove the sample's camera-control data flow graphs before its
+camera registration or simulator. Changing an incremental ARM deployment back
+to `actions=get-status` **does not delete previously deployed Move/Stop graphs**.
+Removing `cameraGraphs` from local configuration also does not delete them.
+
+Derive the exact dedicated data flow profile and inspect its contents:
+
+```bash
+PROFILE=$(python -c 'from pathlib import Path; from aio_mcp_ai_assistant.config import load_settings; print(load_settings(Path("config.json")).camera_profile_name)')
+AIO_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.IoTOperations/instances/${AIO_INSTANCE}"
+PROFILE_ID="${AIO_ID}/dataflowProfiles/${PROFILE}"
+
+az resource show --ids "$PROFILE_ID" --api-version 2026-11-01-preview
+az rest --method get \
+  --url "https://management.azure.com${PROFILE_ID}/dataflowGraphs?api-version=2026-11-01-preview"
+```
+
+Verify that this is the dedicated sample data flow profile and contains no unrelated
+graphs. The following assumes all three were deployed; for GetStatus-only
+setup, delete only that existing graph and the profile:
+
+```bash
+az resource delete --ids "${PROFILE_ID}/dataflowGraphs/camera-continuous-move" --api-version 2026-11-01-preview
+az resource delete --ids "${PROFILE_ID}/dataflowGraphs/camera-stop" --api-version 2026-11-01-preview
+az resource delete --ids "${PROFILE_ID}/dataflowGraphs/camera-get-status" --api-version 2026-11-01-preview
+az resource delete --ids "$PROFILE_ID" --api-version 2026-11-01-preview
+```
+
+Have the platform owner retire only obsolete data flow graph/managed-action topic grants;
+preserve the shared backend and other graph/connector access. Delete only
 the Device/control Asset created for this tutorial, after checking their
 `sample` and `sampleInstance` tags:
 
@@ -388,3 +508,5 @@ images. If you created the ONVIF template exclusively for this tutorial, have
 the platform owner remove it only after confirming that no other Device uses it.
 The compatibility image and its registry pull Secret are also retained. Remove
 them separately only when no remaining connector uses them.
+The published graph/module artifacts are retained too; remove their exact
+versions separately after confirming no graph uses them.

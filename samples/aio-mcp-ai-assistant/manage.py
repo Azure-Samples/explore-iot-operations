@@ -25,6 +25,8 @@ def main() -> int:
         "simulator",
         "status",
         "check",
+        "camera-check",
+        "remove-legacy-mcp",
         "ask",
         "tool",
         "approve",
@@ -40,20 +42,20 @@ def main() -> int:
             child.add_argument("arguments", help="A JSON object matching the tool's input schema")
         elif command in {"approve", "deny"}:
             child.add_argument("approval_id")
-        elif command == "cleanup":
+        elif command in {"cleanup", "remove-legacy-mcp"}:
             child.add_argument(
                 "--yes", action="store_true", help="Confirm explicit resource deletion"
             )
     arguments = parser.parse_args()
-    if arguments.command == "cleanup" and not arguments.yes:
-        parser.error("cleanup requires --yes; it deletes the sample's explicit resources")
+    if arguments.command in {"cleanup", "remove-legacy-mcp"} and not arguments.yes:
+        parser.error(f"{arguments.command} requires --yes; it deletes explicit sample resources")
     try:
         settings = load_settings(arguments.config)
         manifests = render(settings, ROOT / "kubernetes")
         deployment = Deployment(settings, manifests)
         if arguments.command == "render":
             write_manifests(settings, manifests, ROOT / ".generated")
-            print("Wrote .generated/*.yaml and broker-rule.json. No cluster changes made.")
+            print("Wrote .generated manifests and MCP access inventory. No cluster changes made.")
         elif arguments.command in {"build", "push"}:
             if arguments.command == "build":
                 if "@sha256:" in settings.image:
@@ -71,8 +73,10 @@ def main() -> int:
                 )
             else:
                 subprocess.run(["docker", "push", settings.image], check=True)
-        elif arguments.command == "check":
-            deployment.client("check")
+        elif arguments.command in {"check", "camera-check"}:
+            deployment.client(arguments.command)
+        elif arguments.command == "remove-legacy-mcp":
+            deployment.remove_legacy_mcp()
         elif arguments.command == "ask":
             if not arguments.question.strip() or len(arguments.question) > 4000:
                 raise ValueError("question must contain 1-4000 characters")

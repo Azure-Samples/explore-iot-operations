@@ -1,11 +1,11 @@
 import asyncio
 
 import httpx
+from conftest import builtin_tools
 
 from aio_mcp_ai_assistant.common import SampleError
 from aio_mcp_ai_assistant.runtime import Runtime as AgentRuntime
 from aio_mcp_ai_assistant.server import create_agent_app
-from aio_mcp_ai_assistant.tools import catalog
 
 
 class Runtime:
@@ -82,24 +82,15 @@ def test_http_tool_cannot_bypass_publication_approval(action_settings, recommend
     calls = []
 
     class Tools:
-        def __init__(self, source):
-            self.source = source
-
         async def list_tools(self):
-            return [
-                {"name": tool.remote_name, "inputSchema": tool.schema}
-                for tool in catalog().values()
-                if tool.source == self.source
-            ]
+            return builtin_tools()
 
         async def call_tool(self, name, arguments):
             calls.append((name, arguments))
             return {"published": True}
 
     app = create_agent_app(action_settings)
-    app.state.runtime = AgentRuntime(
-        action_settings, Runtime(), {source: Tools(source) for source in ("resources", "mqtt")}
-    )
+    app.state.runtime = AgentRuntime(action_settings, Runtime(), Tools())
 
     async def run():
         async with httpx.AsyncClient(
@@ -128,4 +119,4 @@ def test_http_tool_cannot_bypass_publication_approval(action_settings, recommend
             assert repeated.status_code == 400
 
     asyncio.run(run())
-    assert calls == [("mq_publish", recommendation)]
+    assert calls == [("recommendation-publish", recommendation)]

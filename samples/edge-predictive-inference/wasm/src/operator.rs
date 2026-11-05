@@ -74,7 +74,7 @@ fn transform(
     logger::log(
         Level::Info,
         "edge-predictive-inference",
-        &format!("Prepared frame {id} for native inference"),
+        &format!("Prepared frame {id} for the inference connector"),
     );
     Ok(())
 }

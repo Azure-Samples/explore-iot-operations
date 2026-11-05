@@ -12,7 +12,7 @@ This project provides the following:
 * Edge modules: factory equipment simulator, MQTT historian
 * Samples for auth servers, WASM dataflow operators, custom RBAC, observability, and more
 * [Edge predictive inference scenario](./samples/edge-predictive-inference/README.md) — camera-based person detection with the media and inference connectors, Foundry Local, and inspectable model inputs and outputs (preview)
-* [MCP and AI assistant scenario](./samples/aio-mcp-ai-assistant/README.md) — custom MCP services connect AIO resource metadata and MQTT observations to a Foundry Local text model, with optional camera control and operator-approved recommendations (preview)
+* [MCP and AI assistant scenario](./samples/aio-mcp-ai-assistant/README.md) — the built-in AIO MCP frontend connects resource metadata and MQTT observations to a Foundry Local text model, with optional camera control and operator-approved recommendations (preview)
 
 > [!IMPORTANT]
 > Codespaces are easy to setup quickly and tear down later, but they're not suitable for performance evaluation or scale testing. For those scenarios, use the [IoT Operations Quickstart](./quickstart/readme.md) or a validated environment from the official documentation.

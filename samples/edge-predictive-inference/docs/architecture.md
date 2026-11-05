@@ -7,7 +7,7 @@ media connector. For environment configuration and resource deployment, see the
 
 ## Request sequence
 
-![Sequence of a JPEG entering the graph, writing a prepared request, invoking the native inference connector, reading and sending the tensor to Foundry Local, writing the raw response, decoding detections, and retrieving the named files.](../media/sequence.svg)
+![Sequence of a JPEG entering the data flow graph, writing a prepared request, invoking the inference connector, reading and sending the tensor to Foundry Local, writing the raw response, decoding detections, and retrieving the named files.](../media/sequence.svg)
 
 All MQTT messages, including inference RPC requests and replies, traverse the
 broker. The sequence omits a separate broker lifeline for readability.
@@ -19,7 +19,7 @@ broker. The sequence omits a separate broker lifeline for readability.
 3. The next node receives the **plain filename bytes**, with `application/json`
    content type. Image geometry, settings, UUID, and input filename travel in the
    reserved `edge-predictive-inference/context` MQTT user property.
-4. The built-in inference transform invokes the native connector's `predict`
+4. The built-in inference transform invokes the inference connector's `predict`
    command with `read_request_from_disk=true`.
 5. The connector reads the input file, calls the configured Foundry endpoint's
    `/v1/predict` API over HTTPS/SAT, and receives the model result.
@@ -120,7 +120,7 @@ processing-start time, and input file to one processing attempt. Source messages
 containing the reserved property are rejected. Duplicate/invalid contexts and
 inconsistent preprocessing/postprocessing settings are rejected.
 
-The built-in graph preserves the message's user properties and timestamp.
+The built-in inference transform preserves the message's user properties and timestamp.
 Postprocessing removes only the sample's reserved property, retains other
 metadata, replaces the payload with JSON, and changes the output topic suffix.
 
@@ -165,17 +165,17 @@ and available file-reference fields. This excerpt is not a complete payload.
 | Component | Selected contract |
 | --- | --- |
 | Media connector | `snapshot-to-mqtt`, complete JPEG payloads, and an image compatible with Akri's non-root policy. See the [media compatibility findings](deployment.md#media-connector-compatibility). |
-| Native connector | `mcr.microsoft.com/azureiotoperations/inference-connector:0.1.2` |
-| Microsoft inference graph | `azureiotoperations/graph-dataflow-inference:0.2.0-preview.0` |
-| Graph digest | `sha256:4a3ca352ad900e459785674c3a2648c9b5a1f73583e8dbdb73c653471704c52d` |
+| Inference connector | `mcr.microsoft.com/azureiotoperations/inference-connector:0.1.2` |
+| Built-in inference transform (graph definition) | `azureiotoperations/graph-dataflow-inference:0.2.0-preview.0` |
+| Inference transform graph digest | `sha256:4a3ca352ad900e459785674c3a2648c9b5a1f73583e8dbdb73c653471704c52d` |
 | Microsoft's referenced inference module | `azureiotoperations/module-inference-engine:0.2.0` |
 | Custom WASM SDK | `wasm_graph_sdk = 1.7.4`, preview Cargo feed; Rust 1.90 / WASI Preview 2. |
 | Custom graph requirements | Graph API `1.7.2`, runtime `1.1.8`, graph schema `1.1.0`. |
-| AIO ARM resources | `2026-09-03-preview` with AIO Apps and graph file stores. |
+| AIO ARM resources | `2026-09-03-preview` with application definitions/configurations and data flow graph file stores. |
 | ADR resources | `2026-04-01` namespaced devices/assets. |
 
-The selected inference graph returns **plain output-filename bytes**. A newer
-graph that returns an input/output JSON envelope is not a drop-in replacement.
+The selected inference transform returns **plain output-filename bytes**. A newer
+transform that returns an input/output JSON envelope is not a drop-in replacement.
 The postprocessing module deliberately rejects an incompatible content type or
 reference rather than producing a misleading zero-person result.
 

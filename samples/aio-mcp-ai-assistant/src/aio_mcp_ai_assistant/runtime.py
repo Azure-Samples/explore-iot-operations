@@ -10,6 +10,7 @@ from .approvals import ApprovalStore
 from .common import JsonObject, SampleError
 from .config import Settings
 from .foundry import Completion
+from .frontend import verify_catalog
 from .tool_parser import ToolCallFormatError, parse_tool_call
 from .tools import catalog, checked_tool
 
@@ -25,18 +26,18 @@ class ToolClient(Protocol):
 
     async def call_tool(self, name: str, arguments: JsonObject) -> JsonObject: ...
 
+    async def camera_status(self) -> JsonObject: ...
+
 
 class AgentBusy(SampleError):
     pass
 
 
 class Runtime:
-    def __init__(
-        self, settings: Settings, foundry: CompletionClient, clients: dict[str, ToolClient]
-    ) -> None:
+    def __init__(self, settings: Settings, foundry: CompletionClient, frontend: ToolClient) -> None:
         self.settings = settings
         self.foundry = foundry
-        self.clients = clients
+        self.frontend = frontend
         self.tools = catalog()
         self.prompt = (
             Path(__file__)
@@ -56,27 +57,11 @@ class Runtime:
         self.approvals = ApprovalStore()
 
     async def discover(self) -> JsonObject:
-        for source in ("resources", "mqtt"):
-            advertised = await self.clients[source].list_tools()
-            expected = {
-                tool.remote_name: tool.schema
-                for tool in self.tools.values()
-                if tool.source == source
-            }
-            received = {}
-            for tool in advertised:
-                name = tool.get("name")
-                if not isinstance(name, str) or name in received:
-                    raise SampleError(f"{source} MCP returned an invalid or duplicate tool name")
-                received[name] = tool.get("inputSchema")
-            if received != expected:
-                raise SampleError(
-                    f"{source} MCP tool names or input schemas differ from this sample"
-                )
-        return {"tools": sorted(self.tools)}
+        verify_catalog(await self.frontend.list_tools(), self.settings)
+        return {"tools": sorted(self.tools), "mcpEndpoint": self.settings.mcp_url}
 
     async def call_tool(self, name: str, arguments: JsonObject) -> JsonObject:
-        tool = checked_tool(self.tools, name, arguments)
+        checked_tool(self.tools, name, arguments)
         if name == "camera-pan" and not self.settings.camera.enabled:
             raise SampleError("Camera movement is disabled in this deployment")
         if name == "recommendation-publish":
@@ -94,7 +79,7 @@ class Runtime:
                 "answer": "Operator approval is required before publishing.",
                 "approval": approval.as_json(),
             }
-        return await self.clients[tool.source].call_tool(tool.remote_name, arguments)
+        return await self.frontend.call_tool(name, arguments)
 
     async def decide_approval(self, approval_id: str, decision: str) -> JsonObject:
         if decision not in {"approve", "deny"}:
@@ -105,10 +90,10 @@ class Runtime:
         if decision == "deny":
             return {"status": "denied", "published": False}
         checked_tool(self.tools, "recommendation-publish", approval.arguments)
-        result = await self.clients["mqtt"].call_tool("mq_publish", approval.arguments)
+        result = await self.frontend.call_tool("recommendation-publish", approval.arguments)
         published = result.get("published") is True
         if not published and result.get("duplicate") is not True:
-            raise SampleError("MQTT MCP did not confirm publication or a duplicate key")
+            raise SampleError("AIO frontend adapter did not confirm publication or a duplicate key")
         return {
             "status": "published" if published else "not_published",
             "published": published,

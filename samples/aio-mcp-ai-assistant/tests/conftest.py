@@ -4,8 +4,22 @@ from pathlib import Path
 import pytest
 
 from aio_mcp_ai_assistant.config import Settings
+from aio_mcp_ai_assistant.frontend import BUILTIN_SCHEMAS
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def builtin_tools():
+    return [
+        {
+            "name": name,
+            "inputSchema": {
+                "type": "object",
+                "properties": {field: {"type": kind} for field, kind in fields.items()},
+            },
+        }
+        for name, fields in BUILTIN_SCHEMAS.items()
+    ]
 
 
 @pytest.fixture
@@ -32,6 +46,11 @@ def template_dir():
 def action_settings(config):
     config["camera"]["enabled"] = True
     config["recommendations"]["enabled"] = True
+    config["cameraGraphs"] = {
+        "registry": "example.azurecr.io",
+        "registryEndpointName": "camera-registry",
+        "artifactVersion": "0.1.0",
+    }
     return Settings.model_validate(config)
 
 

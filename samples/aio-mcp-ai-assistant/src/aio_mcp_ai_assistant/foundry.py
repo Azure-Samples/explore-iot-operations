@@ -7,7 +7,7 @@ import httpx
 
 from .common import JsonObject, SampleError, loads, token_from
 from .config import FOUNDRY_TOKEN, Settings
-from .resources import KubernetesClient
+from .kubernetes import KubernetesClient
 
 MAX_COMPLETION_BYTES = 1024 * 1024
 LOGGER = logging.getLogger(__name__)

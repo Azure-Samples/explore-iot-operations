@@ -12,8 +12,8 @@ products:
 
 # Edge predictive inference: person-detection scenario
 
-This sample integrates the Azure IoT Operations (AIO) **media connector** and **native
-inference connector** to produce person detections from an RTSP camera. Foundry
+This sample integrates the Azure IoT Operations (AIO) **media connector** and
+**inference connector** to produce person detections from an RTSP camera. Foundry
 Local hosts the YOLOX-Nano ONNX model, while a data flow graph prepares images
 and converts model outputs into MQTT observations.
 
@@ -26,7 +26,7 @@ both an application-facing result and a way to inspect the data used for inferen
 [Test](#tests-and-validation) | [Stop and clean up](#stop-and-clean-up).
 
 > [!IMPORTANT]
-> **Preview environment required.** This scenario depends on compatible AIO Apps,
+> **Preview environment required.** This scenario depends on compatible AIO applications,
 > media connector, data flow graph/file-store, WASM, and Foundry Local operator
 > capabilities. Review the [compatibility requirements](docs/architecture.md#compatibility)
 > and [deployment prerequisites](docs/deployment.md#prerequisites).
@@ -58,7 +58,7 @@ failures.
 
 ## Architecture
 
-![Person-detection architecture showing the media connector, MQTT broker, data flow graph, native inference connector, Foundry Local model, shared tensor files, and read-only result consumer.](media/architecture.svg)
+![Person-detection architecture showing the media connector, MQTT broker, data flow graph, inference connector, Foundry Local model, shared tensor files, and read-only result consumer.](media/architecture.svg)
 
 The media connector publishes JPEGs to the MQTT broker. A single managed data
 flow graph contains five nodes:
@@ -67,18 +67,18 @@ flow graph contains five nodes:
 | --- | --- | --- |
 | Camera source | Subscribe to sampled camera images. | JPEG bytes and MQTT metadata. |
 | Preprocess | Validate and decode a complete JPEG, then resize, pad, and arrange it for YOLOX-Nano. | A prepared tensor file, its reference, and frame context. |
-| Inference (Preview) | Invoke the native inference connector through MQTT RPC. | The connector's response-file reference. |
+| Inference transform (preview) | Invoke the inference connector through MQTT RPC. | The connector's response-file reference. |
 | Postprocess | Decode model output, filter person detections, and suppress overlapping boxes. | An observation or a contextual postprocessing error. |
 | Observation destination | Publish JSON to the appropriate MQTT topic. | Results for downstream applications. |
 
 Two custom WebAssembly (WASM) components implement preprocessing and
-postprocessing. They do not host the model or call it over HTTP. The **native
-inference connector** reads the prepared request, calls Foundry Local over HTTPS
+postprocessing. They do not host the model or call it over HTTP. The
+**inference connector** reads the prepared request, calls Foundry Local over HTTPS
 with service-account-token authentication, and writes the raw response.
 
-The connector is managed through **AIO application definition and configuration
-resources**, deployed with Bicep. The camera and data flow are also managed
-through Azure Resource Manager (ARM). Kubernetes manifests configure the Foundry
+The connector is managed through **AIO application definition and application
+configuration resources**, deployed with Bicep. The camera and data flow graph
+are also managed through Azure Resource Manager (ARM). Kubernetes manifests configure the Foundry
 model, shared storage, reader, and cleanup job. The sample reuses the existing
 media connector installation.
 
@@ -158,7 +158,7 @@ failures can log and drop a message without producing an observation. See the
 
 ## Build and run locally
 
-Local execution requires Linux or WSL, Bash, Python 3.10+, Rustup, and native
+Local execution requires Linux or WSL, Bash, Python 3.10+, Rustup, and system
 build tools for Rust's linker. From the repository root:
 
 ```bash
@@ -171,7 +171,7 @@ python models/prepare.py
 ```
 
 `build.sh` checks Rust formatting, runs the core unit tests, and builds both WASM
-components and the native validation helper under `.build/`. Rustup installs the
+components and the local validation helper under `.build/`. Rustup installs the
 pinned toolchain when needed. `prepare.py` downloads and verifies the model and
 its license under `.assets/model/`.
 
@@ -186,7 +186,7 @@ raw response, frame context, and observation under `.build/local-inference/`.
 It uses the same Rust preprocessing and postprocessing as the deployed components,
 with ONNX Runtime on the local CPU.
 
-This local run does **not** use a camera stream, MQTT, the native inference
+This local run does **not** use a camera stream, MQTT, the inference
 connector, or Foundry Local. Deploy the pipeline below to exercise those
 integrations.
 
@@ -260,7 +260,7 @@ Wait for the model to report readiness. Confirm its HTTPS endpoint, CA trust, an
 token audience `aio-internal`; update `modelEndpoint` if the reported base URL
 differs. An accepted manifest alone does not mean the model is serving.
 
-### Deploy the connector and data flow
+### Deploy the connector and data flow graph
 
 ```bash
 ./deploy.sh definition config.json &&
@@ -274,7 +274,7 @@ differs. An accepted manifest alone does not mean the model is serving.
 The definition step waits for application metadata readiness before creating
 the application configuration. Confirm that the connector is running, both graph
 file stores are present, graph artifacts resolve, and the model and reader are
-ready. The camera and data flow remain disabled until explicitly enabled.
+ready. The camera and data flow graph remain disabled until explicitly enabled.
 
 ## Run and observe the pipeline
 

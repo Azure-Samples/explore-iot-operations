@@ -9,19 +9,18 @@ import uvicorn
 
 from .common import SampleError, loads
 from .config import SETTINGS_PATH, load_settings
-from .mcp_transport import create_mcp_app
 from .server import create_agent_app
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="AIO custom MCP and Foundry Local operations assistant"
+        description="Built-in AIO MCP and Foundry Local operations assistant"
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
-    for service in ("serve-agent", "serve-mqtt", "serve-resources"):
-        command = subcommands.add_parser(service)
-        command.add_argument("--config", type=Path, default=SETTINGS_PATH)
+    command = subcommands.add_parser("serve-agent")
+    command.add_argument("--config", type=Path, default=SETTINGS_PATH)
     subcommands.add_parser("check")
+    subcommands.add_parser("camera-check")
     ask = subcommands.add_parser("ask")
     ask.add_argument(
         "--stdin", action="store_true", required=True, help="Read a question from stdin"
@@ -35,38 +34,21 @@ def main() -> None:
     arguments = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     try:
-        if arguments.command.startswith("serve-"):
+        if arguments.command == "serve-agent":
             settings = load_settings(arguments.config)
-            if arguments.command == "serve-agent":
-                uvicorn.run(
-                    create_agent_app(settings),
-                    host="127.0.0.1",
-                    port=8080,
-                    access_log=False,
-                    limit_concurrency=8,
-                )
-            elif arguments.command == "serve-mqtt":
-                uvicorn.run(
-                    create_mcp_app(settings, "mqtt"),
-                    host="127.0.0.1",
-                    port=8081,
-                    access_log=False,
-                    limit_concurrency=8,
-                )
-            else:
-                uvicorn.run(
-                    create_mcp_app(settings, "resources"),
-                    host="0.0.0.0",
-                    port=8443,
-                    ssl_certfile="/tls/tls.crt",
-                    ssl_keyfile="/tls/tls.key",
-                    access_log=False,
-                    limit_concurrency=16,
-                )
+            uvicorn.run(
+                create_agent_app(settings),
+                host="127.0.0.1",
+                port=8080,
+                access_log=False,
+                limit_concurrency=8,
+            )
             return
         with httpx.Client(timeout=330, trust_env=False) as client:
             if arguments.command == "check":
                 response = client.get("http://127.0.0.1:8080/readyz")
+            elif arguments.command == "camera-check":
+                response = client.get("http://127.0.0.1:8080/camera")
             elif arguments.command == "ask":
                 question = sys.stdin.read(4001)
                 if not question.strip() or len(question) > 4000:

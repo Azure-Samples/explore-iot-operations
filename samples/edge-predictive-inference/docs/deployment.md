@@ -6,7 +6,7 @@ MQTT results and retrieving the associated model input and output files.
 The deployment uses one camera, one model, and one data flow graph.
 
 Review the [component compatibility requirements](architecture.md#compatibility)
-before deploying. The camera and data flow are created disabled and enabled only
+before deploying. The camera and data flow graph are created disabled and enabled only
 after their dependencies are ready.
 
 ## Prerequisites
@@ -19,7 +19,7 @@ application.
 | Requirement | Details |
 | --- | --- |
 | Workstation | Linux or WSL, Bash, Python 3.10+, Rustup, Azure CLI with Bicep, `kubectl`, `jq`, and ORAS 1.2+. The pinned Rust toolchain is installed by Rustup when building. |
-| AIO instance | AIO Apps support, graph file stores, and a compatible installed media connector. Exactly one ConnectorTemplate must match `Microsoft.Media`. |
+| AIO instance | AIO applications support, data flow graph file stores, and a compatible installed media connector. Exactly one ConnectorTemplate must match `Microsoft.Media`. |
 | Model hosting | Foundry Local Kubernetes operator with predictive ONNX CPU hosting, HTTPS, and SAT authentication. |
 | Azure resources | AIO instance, custom location, and Azure Device Registry (ADR) namespace in the configured resource group. Supply the ADR namespace's actual Azure region. |
 | Authorization | Permission to deploy the sample's ARM/Kubernetes resources; an explicit subscription and Kubernetes context. |
@@ -136,7 +136,7 @@ python -m pip install -r requirements.txt -r models/requirements.txt
 python models/prepare.py
 ```
 
-`build.sh` builds two separate WASI components and a native validation helper.
+`build.sh` builds two separate WASI components and a local validation helper.
 `prepare.py` downloads the unmodified YOLOX-Nano export from the upstream
 `0.1.1rc0` release and verifies its checksum, ONNX tensor contract, and
 Apache-2.0 license. Model assets and generated outputs are ignored by Git.
@@ -151,7 +151,7 @@ python models/verify.py --image /absolute/path/to/authorized-camera-image.jpg
 This uses the **same Rust preprocessing and postprocessing** as the WASM components
 and ONNX Runtime CPU inference. It saves the tensor request, raw tensor response,
 frame context, and final observation under `.build/local-inference`.
-It does not exercise the media connector, MQTT, the native connector, or Foundry
+It does not exercise the media connector, MQTT, the inference connector, or Foundry
 Local. Those integrations must be verified on the target cluster.
 
 ## Configure the deployment
@@ -174,8 +174,8 @@ base URL instead. Verify it after model deployment below. Do not append
 `/v1/predict`; the connector does that.
 
 The renderer validates configuration and creates `.generated/`:
-ARM parameter files, Kubernetes manifests, and two custom graph artifacts.
-The initial camera and data flow are **disabled**. Edit source configuration,
+ARM parameter files, Kubernetes manifests, and two custom WASM graph definitions.
+The initial camera and data flow graph are **disabled**. Edit source configuration,
 not generated files; subsequent commands render them again.
 
 ## Publish model and graph artifacts
@@ -195,7 +195,7 @@ This publishes five artifacts beneath
 | `preprocess-graph` / `postprocess-graph` | Their graph definitions and configuration contracts. |
 | `yolox-nano` | `model.onnx`, the upstream license, and checksum/tensor provenance. |
 
-The built-in Microsoft inference graph and its module are pulled separately from
+The built-in inference transform's graph definition and WASM module are pulled separately from
 MCR through the `default` registry endpoint. This sample does not republish or
 replace them. After changing code, run `build.sh` again before publishing; use a
 new artifact version rather than overwriting a version used by running workloads.
@@ -238,7 +238,7 @@ An accepted Kubernetes manifest alone is not evidence that the model is serving.
 ```
 
 The definition step waits for application metadata readiness before the
-configuration is created. The connector uses the generated AIO Apps identity,
+configuration is created. The connector uses the generated AIO application identity,
 Foundry CA trust, one mRPC worker, and the shared claim. It serves the configured
 model and persists responses to disk.
 

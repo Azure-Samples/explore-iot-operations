@@ -4,9 +4,8 @@
   "aioNamespace": "azure-iot-operations",
   "image": "REPLACE_WITH_REGISTRY.azurecr.io/azure-samples/aio-mcp-ai-assistant:0.1.0",
   "imagePullSecret": "REPLACE_WITH_PULL_SECRET_IN_SAMPLE_NAMESPACE",
-  "broker": {
-    "host": "aio-broker.azure-iot-operations.svc.cluster.local",
-    "port": 18883,
+  "mcp": {
+    "tokenAudience": "aio-mcp-frontend",
     "caConfigMap": "azure-iot-operations-aio-ca-trust-bundle",
     "caKey": "ca.crt"
   },
@@ -23,7 +22,8 @@
   "camera": {
     "enabled": false,
     "assetName": "edge-assistant-camera-onvif",
-    "profileToken": "profile_high"
+    "profileToken": "profile_high",
+    "topicPrefix": "edge/assistant/camera"
   },
   "recommendations": {
     "enabled": false,

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1140" viewBox="0 0 1280 1140"
      font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
      role="img" aria-labelledby="title description">
-  <title id="title">One JPEG snapshot through file-backed native inference</title>
-  <desc id="description">Six participants show a successful sample processing attempt. The media connector publishes a JPEG. The graph writes an input tensor, invokes the native inference connector with a filename, and preserves frame context. The connector reads the tensor, calls Foundry Local over HTTPS, stores its raw response, and returns a filename. The graph reads and decodes that response, then publishes an observation. A subscriber can retrieve both referenced files before cleanup. All blue messages traverse the MQTT broker, whose lifeline is omitted. Failed preprocessing or inference can produce no observation.</desc>
+  <title id="title">One JPEG snapshot through the inference connector with file-based payloads</title>
+  <desc id="description">Six participants show a successful sample processing attempt. The media connector publishes a JPEG. The data flow graph writes an input tensor, invokes the inference connector with a filename, and preserves frame context. The connector reads the tensor, calls Foundry Local over HTTPS, stores its raw response, and returns a filename. The data flow graph reads and decodes that response, then publishes an observation. A subscriber can retrieve both referenced files before cleanup. All blue messages traverse the MQTT broker, whose lifeline is omitted. Failed preprocessing or inference can produce no observation.</desc>
   <defs>
     <marker id="mqtt-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#0078D4"/></marker>
     <marker id="files-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#CA5010"/></marker>
@@ -36,9 +36,9 @@
   </g>
   <g text-anchor="middle" class="actor">
     <text x="110" y="137">Media</text><text x="110" y="162">connector</text>
-    <text x="322" y="130">Data flow</text><text x="322" y="153">pre / inference</text><text x="322" y="176">/ post</text>
+    <text x="322" y="130">Data flow graph</text><text x="322" y="153">pre / inference</text><text x="322" y="176">/ post</text>
     <text x="534" y="137">Shared</text><text x="534" y="162">scratch PVC</text>
-    <text x="746" y="137">Native inference</text><text x="746" y="162">connector</text>
+    <text x="746" y="137">Inference</text><text x="746" y="162">connector</text>
     <text x="958" y="137">Foundry Local</text><text x="958" y="162">YOLOX-Nano</text>
     <text x="1170" y="137">Result / file</text><text x="1170" y="162">reader</text>
   </g>

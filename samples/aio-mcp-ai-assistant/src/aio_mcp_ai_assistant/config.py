@@ -15,26 +15,27 @@ CATALOG_ASSET_ID = (
 )
 PART_OF = "aio-mcp-ai-assistant"
 AGENT = "edge-assistant"
-RESOURCES = "edge-resource-mcp"
-RESOURCE_AUDIENCE = "edge-resource-mcp"
 SETTINGS_PATH = Path("/etc/edge-assistant/config.json")
 KUBE_TOKEN = Path("/var/run/kubernetes/token")
 KUBE_CA = Path("/var/run/kubernetes/ca.crt")
 FOUNDRY_TOKEN = Path("/var/run/foundry/token")
 FOUNDRY_CA = Path("/var/run/trust/foundry.crt")
-BROKER_TOKEN = Path("/var/run/broker/token")
-BROKER_CA = Path("/var/run/trust/broker.crt")
-RESOURCE_TOKEN = Path("/var/run/resource-mcp/token")
-RESOURCE_CA = Path("/var/run/resource-ca/ca.crt")
+MCP_TOKEN = Path("/var/run/aio-mcp/token")
+MCP_CA = Path("/var/run/trust/aio-mcp.crt")
 
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, strict=True)
 
 
-class Broker(StrictModel):
-    host: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9][a-z0-9.-]*$")
-    port: int = Field(ge=1, le=65535)
+class Mcp(StrictModel):
+    token_audience: str = Field(
+        default="aio-mcp-frontend",
+        alias="tokenAudience",
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9:/._-]+$",
+    )
     ca_config_map: str = Field(alias="caConfigMap", max_length=63, pattern=NAME)
     ca_key: str = Field(alias="caKey", min_length=1, max_length=253, pattern=KEY)
 
@@ -90,11 +91,31 @@ class Camera(StrictModel):
     profile_token: str = Field(
         default="profile_high", alias="profileToken", min_length=1, max_length=128, pattern=KEY
     )
+    topic_prefix: str = Field(
+        default="edge/assistant/camera", alias="topicPrefix", max_length=160, pattern=TOPIC
+    )
 
-    def action_topic(self, action: str) -> str:
+    def topic(self, direction: Literal["requests", "responses"], action: str) -> str:
         if action not in {"ContinuousMove", "Stop", "GetStatus"}:
             raise ValueError("Unsupported camera action")
-        return f"azure-iot-operations/asset-operations/{self.asset_name}/PTZ/{action}"
+        return f"{self.topic_prefix}/{direction}/{action}"
+
+
+class CameraGraphs(StrictModel):
+    registry: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9][a-z0-9.-]*$")
+    registry_endpoint_name: str = Field(alias="registryEndpointName", max_length=63, pattern=NAME)
+    artifact_version: str = Field(
+        alias="artifactVersion",
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*$",
+    )
+
+    @model_validator(mode="after")
+    def validate_version(self) -> "CameraGraphs":
+        if self.artifact_version == "latest":
+            raise ValueError("cameraGraphs.artifactVersion must be an explicit version, not latest")
+        return self
 
 
 class Recommendations(StrictModel):
@@ -129,10 +150,11 @@ class Settings(StrictModel):
     aio_namespace: str = Field(alias="aioNamespace", max_length=63, pattern=NAME)
     image: str = Field(min_length=1, max_length=300, pattern=r"^\S+$")
     image_pull_secret: str = Field(alias="imagePullSecret", max_length=63, pattern=r"^[a-z0-9-]*$")
-    broker: Broker
+    mcp: Mcp
     foundry: Foundry
     sources: dict[str, Source] = Field(min_length=1, max_length=8)
     camera: Camera = Field(default_factory=Camera)
+    camera_graphs: CameraGraphs | None = Field(default=None, alias="cameraGraphs")
     recommendations: Recommendations = Field(default_factory=Recommendations)
     simulator: Simulator | None = None
 
@@ -158,34 +180,45 @@ class Settings(StrictModel):
         ):
             raise ValueError("Each source must have a distinct stage/machineId binding")
         reserved_topics = {
-            self.camera.action_topic(action) for action in ("ContinuousMove", "Stop", "GetStatus")
-        } | {self.camera_response_topic}
+            self.camera.topic(direction, action)
+            for direction in ("requests", "responses")
+            for action in ("ContinuousMove", "Stop", "GetStatus")
+        }
         if self.recommendations.topic in reserved_topics:
             raise ValueError(
                 "recommendations.topic must not overlap camera command or reply topics"
             )
         if self.recommendations.topic in {source.topic for source in self.sources.values()}:
             raise ValueError("recommendations.topic must not overwrite an observation source")
+        if reserved_topics & {source.topic for source in self.sources.values()}:
+            raise ValueError("Observation sources must not overlap camera bridge topics")
+        if self.camera.enabled and self.camera_graphs is None:
+            raise ValueError(
+                "camera.enabled requires cameraGraphs; deploy the camera-control data flow graphs first"
+            )
         validate_image(self.image)
         if self.image_pull_secret and not re.fullmatch(NAME, self.image_pull_secret):
             raise ValueError("imagePullSecret must be a Kubernetes name or an empty string")
         return self
 
     @property
-    def resource_url(self) -> str:
-        return f"https://{RESOURCES}.{self.namespace}.svc.cluster.local/mcp"
+    def mcp_url(self) -> str:
+        return f"https://aio-mcp-frontend.{self.aio_namespace}.svc.cluster.local/mcp"
+
+    @property
+    def mcp_roles(self) -> list[str]:
+        roles = ["Reader", "DataReader"]
+        if self.camera_graphs is not None or self.recommendations.enabled:
+            roles.append("Admin")
+        return roles
 
     @property
     def model_id(self) -> str:
         return f"{self.foundry.catalog_name}:{self.foundry.catalog_version}"
 
     @property
-    def cluster_role(self) -> str:
-        return f"{PART_OF}-{self.namespace}-token-reviewer"
-
-    @property
-    def camera_response_topic(self) -> str:
-        return f"clients/{AGENT}-{self.namespace}/camera/response"
+    def camera_profile_name(self) -> str:
+        return f"edge-camera-{self.namespace}"
 
     @property
     def camera_secret(self) -> str:

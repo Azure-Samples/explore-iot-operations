@@ -10,10 +10,11 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from .common import SampleError, loads, tls_context
-from .config import FOUNDRY_CA, KUBE_CA, Settings
+from .config import FOUNDRY_CA, KUBE_CA, MCP_CA, MCP_TOKEN, Settings
 from .foundry import FoundryClient
-from .mcp_transport import clients
-from .resources import KubernetesClient
+from .frontend import AioFrontend
+from .kubernetes import KubernetesClient
+from .mcp_transport import McpClient
 from .runtime import AgentBusy, Runtime
 
 LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,10 @@ def create_agent_app(settings: Settings) -> Starlette:
             app.state.runtime = Runtime(
                 settings,
                 FoundryClient(settings, app.state.kube, foundry_http),
-                clients(settings),
+                AioFrontend(
+                    settings,
+                    McpClient(settings.mcp_url, ca_path=MCP_CA, token_path=MCP_TOKEN),
+                ),
             )
             yield
 
@@ -88,6 +92,11 @@ def create_agent_app(settings: Settings) -> Starlette:
         runtime: Runtime = request.app.state.runtime
         return JSONResponse(await runtime.decide_approval(payload["id"], payload["decision"]))
 
+    async def camera(request: Request) -> JSONResponse:
+        runtime: Runtime = request.app.state.runtime
+        await runtime.discover()
+        return JSONResponse(await runtime.frontend.camera_status())
+
     async def failure(_: Request, error: Exception) -> JSONResponse:
         status = (
             409 if isinstance(error, AgentBusy) else 400 if isinstance(error, ValueError) else 502
@@ -103,6 +112,7 @@ def create_agent_app(settings: Settings) -> Starlette:
             Route("/chat", chat, methods=["POST"], max_body_size=20 * 1024),
             Route("/tool", tool, methods=["POST"], max_body_size=16 * 1024),
             Route("/approval", approval, methods=["POST"], max_body_size=1024),
+            Route("/camera", camera),
         ],
         exception_handlers={
             SampleError: failure,

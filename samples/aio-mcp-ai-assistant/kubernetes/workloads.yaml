@@ -61,49 +61,13 @@ spec:
             - {name: settings, mountPath: /etc/edge-assistant, readOnly: true}
             - {name: kubernetes, mountPath: /var/run/kubernetes, readOnly: true}
             - {name: foundry-token, mountPath: /var/run/foundry, readOnly: true}
-            - {name: resource-token, mountPath: /var/run/resource-mcp, readOnly: true}
-            - {name: resource-ca, mountPath: /var/run/resource-ca, readOnly: true}
-            - {name: trust, mountPath: /var/run/trust, readOnly: true}
-        - name: mqtt-mcp
-          image: ${image}
-          args: [serve-mqtt]
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities: {drop: [ALL]}
-          resources:
-            requests: {cpu: 50m, memory: 64Mi}
-            limits: {cpu: 500m, memory: 256Mi}
-          readinessProbe:
-            exec:
-              command:
-                - python
-                - -c
-                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/readyz', timeout=3)"
-            periodSeconds: 15
-            timeoutSeconds: 5
-          livenessProbe:
-            exec:
-              command:
-                - python
-                - -c
-                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz', timeout=3)"
-            periodSeconds: 15
-            timeoutSeconds: 5
-          volumeMounts:
-            - {name: settings, mountPath: /etc/edge-assistant, readOnly: true}
-            - {name: broker-token, mountPath: /var/run/broker, readOnly: true}
+            - {name: frontend-token, mountPath: /var/run/aio-mcp, readOnly: true}
             - {name: trust, mountPath: /var/run/trust, readOnly: true}
       volumes:
         - name: settings
           configMap: {name: edge-assistant-settings}
         - name: trust
           configMap: {name: edge-assistant-trust}
-        - name: resource-ca
-          secret:
-            secretName: edge-resource-tls
-            items:
-              - {key: ca.crt, path: ca.crt}
         - name: kubernetes
           projected:
             sources:
@@ -119,121 +83,13 @@ spec:
                   path: token
                   audience: ${foundryAudience}
                   expirationSeconds: 3600
-        - name: resource-token
+        - name: frontend-token
           projected:
             sources:
               - serviceAccountToken:
                   path: token
-                  audience: edge-resource-mcp
+                  audience: ${mcpAudience}
                   expirationSeconds: 3600
-        - name: broker-token
-          projected:
-            sources:
-              - serviceAccountToken:
-                  path: token
-                  audience: aio-internal
-                  expirationSeconds: 3600
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: edge-resource-mcp
-  namespace: ${namespace}
-  labels:
-    app.kubernetes.io/name: edge-resource-mcp
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: edge-resource-mcp
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: edge-resource-mcp
-        app.kubernetes.io/part-of: aio-mcp-ai-assistant
-      annotations:
-        checksum/settings: ${settingsChecksum}
-    spec:
-      serviceAccountName: edge-resource-mcp
-      automountServiceAccountToken: false
-      imagePullSecrets: ${pullSecrets}
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 65532
-        runAsGroup: 65532
-        fsGroup: 65532
-        seccompProfile: {type: RuntimeDefault}
-      containers:
-        - name: resources
-          image: ${image}
-          args: [serve-resources]
-          ports:
-            - {name: https, containerPort: 8443}
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities: {drop: [ALL]}
-          resources:
-            requests: {cpu: 50m, memory: 64Mi}
-            limits: {cpu: 500m, memory: 256Mi}
-          readinessProbe:
-            httpGet: {scheme: HTTPS, path: /readyz, port: https}
-            periodSeconds: 10
-          livenessProbe:
-            httpGet: {scheme: HTTPS, path: /healthz, port: https}
-            periodSeconds: 15
-          volumeMounts:
-            - {name: settings, mountPath: /etc/edge-assistant, readOnly: true}
-            - {name: kubernetes, mountPath: /var/run/kubernetes, readOnly: true}
-            - {name: tls, mountPath: /tls, readOnly: true}
-      volumes:
-        - name: settings
-          configMap: {name: edge-assistant-settings}
-        - name: tls
-          secret: {secretName: edge-resource-tls}
-        - name: kubernetes
-          projected:
-            sources:
-              - serviceAccountToken: {path: token, expirationSeconds: 3600}
-              - configMap:
-                  name: kube-root-ca.crt
-                  items:
-                    - {key: ca.crt, path: ca.crt}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: edge-resource-mcp
-  namespace: ${namespace}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: edge-resource-mcp
-  ports:
-    - {name: https, port: 443, targetPort: https}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: edge-resource-mcp-ingress
-  namespace: ${namespace}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: edge-resource-mcp
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: edge-assistant
-      ports:
-        - {protocol: TCP, port: 8443}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

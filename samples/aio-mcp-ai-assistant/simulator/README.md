@@ -8,7 +8,7 @@ move physical equipment.
 
 The image build generates a clearly labeled synthetic calibration scene. There
 are no real people, camera recordings, or vision-model results in this scene.
-The AIO ONVIF connector and the MQTT command/response path are real components.
+The AIO connector for ONVIF and the MQTT command/response path are real components.
 
 ## Build and use
 

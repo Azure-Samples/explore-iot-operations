@@ -1,126 +1,147 @@
 import asyncio
+import json
+import ssl
+from contextlib import asynccontextmanager
+from types import SimpleNamespace
 
 import httpx
 import pytest
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
 
+from aio_mcp_ai_assistant import mcp_transport
 from aio_mcp_ai_assistant.common import SampleError
-from aio_mcp_ai_assistant.mcp_transport import McpClient, create_mcp_app
+from aio_mcp_ai_assistant.mcp_transport import McpClient
 
 
-class Backend:
-    def __init__(self):
-        self.calls = []
+@pytest.fixture
+def frontend(settings, tmp_path, monkeypatch):
+    token = tmp_path / "token"
+    token.write_text("test-frontend-token")
+    requests = []
+    result = {"structuredContent": {}, "content": []}
+    tools = [{"name": "aio_list_assets", "inputSchema": {"type": "object"}}]
 
-    async def call(self, name, arguments):
-        self.calls.append((name, arguments))
-        if arguments.get("limit") == 2:
-            raise SampleError("Explicit backend failure")
-        return {"items": [], "count": 0, "truncated": False}
+    def respond(request):
+        requests.append(request)
+        if request.method == "GET":
+            return httpx.Response(405)
+        if request.method == "DELETE":
+            return httpx.Response(200)
+        body = json.loads(request.content)
+        if "id" not in body:
+            return httpx.Response(202)
+        method = body["method"]
+        if method == "initialize":
+            payload = {
+                "protocolVersion": body["params"]["protocolVersion"],
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "frontend-fixture", "version": "0"},
+            }
+        elif method == "tools/list":
+            payload = {"tools": tools}
+            if not body.get("params", {}).get("cursor"):
+                payload["nextCursor"] = "second-page"
+            else:
+                payload["tools"] = [{"name": "extra_builtin", "inputSchema": {"type": "object"}}]
+        else:
+            payload = result
+        response = {"jsonrpc": "2.0", "id": body["id"], "result": payload}
+        return httpx.Response(
+            200,
+            headers={"Content-Type": "text/event-stream", "Mcp-Session-Id": "fixture-session"},
+            content="event: message\ndata: " + json.dumps(response) + "\n\n",
+        )
 
-
-class Reviewer:
-    async def authenticate(self, token, settings):
-        return token == "test-authorized-token"
-
-
-def test_official_mcp_initialization_discovery_and_tool_contracts(settings):
-    backend = Backend()
-    app = create_mcp_app(settings, "resources", backend=backend, reviewer=Reviewer())
-
-    async def run():
-        async with app.router.lifespan_context(app):
-            async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(app),
-                headers={"Authorization": "Bearer test-authorized-token"},
-            ) as http:
-                async with streamable_http_client(settings.resource_url, http_client=http) as (
-                    read,
-                    write,
-                    _,
-                ):
-                    async with ClientSession(read, write) as session:
-                        await session.initialize()
-                        tools = await session.list_tools()
-                        assert {tool.name for tool in tools.tools} == {
-                            "list_assets",
-                            "get_asset",
-                            "list_devices",
-                            "get_device",
-                        }
-                        result = await session.call_tool("list_assets", {"limit": 1})
-                        assert result.structuredContent == {
-                            "items": [],
-                            "count": 0,
-                            "truncated": False,
-                        }
-                        assert not result.isError
-                        invalid = await session.call_tool("list_assets", {"limit": 1000})
-                        assert invalid.isError
-                        denied = await session.call_tool("publish", {})
-                        assert denied.isError
-                        failure = await session.call_tool("list_assets", {"limit": 2})
-                        assert failure.isError
-        assert backend.calls == [("list_assets", {"limit": 1}), ("list_assets", {"limit": 2})]
-
-    asyncio.run(run())
+    monkeypatch.setattr(mcp_transport, "tls_context", lambda _: ssl.create_default_context())
+    monkeypatch.setattr(httpx, "AsyncHTTPTransport", lambda **_: httpx.MockTransport(respond))
+    client = McpClient(settings.mcp_url, ca_path=tmp_path / "ca", token_path=token)
+    return client, requests, result, token
 
 
-def test_resource_endpoint_requires_authorized_token_and_trusted_host(settings):
-    app = create_mcp_app(settings, "resources", backend=Backend(), reviewer=Reviewer())
+def test_sdk_initialization_sse_pagination_and_token_refresh(frontend):
+    client, requests, result, token = frontend
 
     async def run():
-        async with app.router.lifespan_context(app):
-            async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(app),
-                base_url=settings.resource_url.removesuffix("/mcp"),
-            ) as client:
-                assert (await client.get("/mcp")).status_code == 401
-                assert (
-                    await client.get("/mcp", headers={"Authorization": "Bearer " + "wrong-token"})
-                ).status_code == 403
-                assert (
-                    await client.get(
-                        "/mcp",
-                        headers={
-                            "Authorization": "Bearer " + "test-authorized-token",
-                            "Host": "unexpected.example",
-                        },
-                    )
-                ).status_code == 421
+        assert [tool["name"] for tool in await client.list_tools()] == [
+            "aio_list_assets",
+            "extra_builtin",
+        ]
+        token.write_text("rotated-test-token")
+        result["structuredContent"] = {"camera": "Synthetic resource fixture"}
+        assert await client.call_tool("aio_list_assets", {}) == result["structuredContent"]
 
     asyncio.run(run())
+    posts = [request for request in requests if request.method == "POST"]
+    assert posts[0].headers["Authorization"] == "Bearer test-frontend-token"
+    assert posts[-1].headers["Authorization"] == "Bearer rotated-test-token"
+    assert any(request.headers.get("Mcp-Session-Id") == "fixture-session" for request in posts)
 
 
-def test_client_surfaces_transport_errors(settings, monkeypatch):
-    original = httpx.AsyncClient
+@pytest.mark.parametrize("structured", [True, False])
+def test_accepts_builtin_structured_or_text_json(frontend, structured):
+    client, _, result, _ = frontend
+    result.clear()
+    if structured:
+        result.update({"structuredContent": {"messages": []}, "content": []})
+    else:
+        result["content"] = [{"type": "text", "text": '{"messages":[]}'}]
+    assert asyncio.run(client.call_tool("aio_mq_messages", {})) == {"messages": []}
 
-    def client(**kwargs):
-        return original(transport=httpx.MockTransport(lambda _: httpx.Response(503)), **kwargs)
 
-    monkeypatch.setattr(httpx, "AsyncClient", client)
-    with pytest.raises(SampleError, match="MCP"):
-        asyncio.run(McpClient("http://127.0.0.1:8081/mcp").list_tools())
+@pytest.mark.parametrize(
+    "result",
+    [
+        {"isError": True, "content": [{"type": "text", "text": "Forbidden"}]},
+        {"content": [{"type": "text", "text": "not JSON"}]},
+        {"content": [{"type": "text", "text": "[]"}]},
+        {"content": [{"type": "text", "text": '{"x":1,"x":2}'}]},
+        {"content": []},
+        {"content": [{"type": "text", "text": "x" * (600 * 1024)}]},
+    ],
+)
+def test_mcp_failures_never_become_empty_success(frontend, result):
+    client, _, response, _ = frontend
+    response.clear()
+    response.update(result)
+    with pytest.raises(SampleError):
+        asyncio.run(client.call_tool("aio_mqtt_publish", {}))
 
 
-def test_mqtt_mcp_advertises_actions_as_writes(settings):
-    app = create_mcp_app(settings, "mqtt", backend=Backend())
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "http://127.0.0.1:8081/mcp",
+        "https://edge-resource-mcp.sample.svc.cluster.local/mcp",
+        "https://aio-mcp.azure-iot-operations.svc/mcp",
+        "https://aio-mcp-frontend.azure-iot-operations.svc/mcp?token=unsafe",
+        "https://aio-mcp-frontend.azure-iot-operations.svc:8443/mcp",
+        "https://aio-mcp-frontend.azure-iot-operations.svc/other",
+    ],
+)
+def test_only_builtin_frontend_is_accepted(endpoint, tmp_path):
+    with pytest.raises(ValueError):
+        McpClient(endpoint, ca_path=tmp_path / "ca", token_path=tmp_path / "token")
 
-    async def run():
-        async with app.router.lifespan_context(app):
-            async with httpx.AsyncClient(transport=httpx.ASGITransport(app)) as http:
-                async with streamable_http_client(
-                    "http://127.0.0.1:8081/mcp", http_client=http
-                ) as (read, write, _):
-                    async with ClientSession(read, write) as session:
-                        await session.initialize()
-                        response = await session.list_tools()
-                        tools = {tool.name: tool for tool in response.tools}
-                        assert set(tools) == {"mq_messages", "mq_camera_pan", "mq_publish"}
-                        assert tools["mq_messages"].annotations.readOnlyHint is True
-                        for name in ("mq_camera_pan", "mq_publish"):
-                            assert tools[name].annotations.readOnlyHint is False
-                            assert tools[name].annotations.destructiveHint is True
 
-    asyncio.run(run())
+@pytest.mark.parametrize(
+    "cursors, message",
+    [
+        ([""], "pagination cursor"),
+        (["same", "same"], "pagination cursor"),
+        ([str(page) for page in range(256)], "256 pages"),
+    ],
+)
+def test_catalog_cannot_loop_over_empty_or_repeated_pages(frontend, monkeypatch, cursors, message):
+    client, _, _, _ = frontend
+    pages = iter(cursors)
+
+    class Session:
+        async def list_tools(self, cursor):
+            return SimpleNamespace(tools=[], nextCursor=next(pages))
+
+    @asynccontextmanager
+    async def session():
+        yield Session()
+
+    monkeypatch.setattr(client, "session", session)
+    with pytest.raises(SampleError, match=message):
+        asyncio.run(client.list_tools())

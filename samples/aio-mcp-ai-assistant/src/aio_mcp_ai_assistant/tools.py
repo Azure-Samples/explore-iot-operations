@@ -12,7 +12,7 @@ class ToolSpec:
     name: str
     description: str
     schema: JsonObject
-    source: Literal["resources", "mqtt"]
+    source: Literal["aio-frontend"]
     remote_name: str
     read_only: bool = True
 
@@ -77,8 +77,8 @@ def catalog() -> dict[str, ToolSpec]:
                 },
                 "additionalProperties": False,
             },
-            "resources",
-            name,
+            "aio-frontend",
+            f"aio_{name}",
         )
         name = f"get_{singular}"
         tools[name] = ToolSpec(
@@ -96,8 +96,8 @@ def catalog() -> dict[str, ToolSpec]:
                 "required": ["name"],
                 "additionalProperties": False,
             },
-            "resources",
-            name,
+            "aio-frontend",
+            f"aio_{name}",
         )
     tools["plant-telemetry"] = ToolSpec(
         "plant-telemetry",
@@ -124,13 +124,14 @@ def catalog() -> dict[str, ToolSpec]:
             },
             "additionalProperties": False,
         },
-        "mqtt",
-        "mq_messages",
+        "aio-frontend",
+        "aio_mq_messages",
     )
     tools["camera-pan"] = ToolSpec(
         "camera-pan",
         "Pan the fixed ONVIF demo camera left or right for 1 to 6 seconds. "
-        "The sidecar attempts an explicit stop; success requires verified IDLE status.",
+        "AIO data flow graphs invoke the connector for ONVIF. "
+        "An explicit stop is attempted; success requires verified IDLE status.",
         {
             "type": "object",
             "properties": {
@@ -145,8 +146,8 @@ def catalog() -> dict[str, ToolSpec]:
             "required": ["direction"],
             "additionalProperties": False,
         },
-        "mqtt",
-        "mq_camera_pan",
+        "aio-frontend",
+        "aio_mqtt_publish",
         read_only=False,
     )
     tools["recommendation-publish"] = ToolSpec(
@@ -190,8 +191,8 @@ def catalog() -> dict[str, ToolSpec]:
             "required": ["idempotency_key", "recommendation"],
             "additionalProperties": False,
         },
-        "mqtt",
-        "mq_publish",
+        "aio-frontend",
+        "aio_mqtt_publish",
         read_only=False,
     )
     return tools

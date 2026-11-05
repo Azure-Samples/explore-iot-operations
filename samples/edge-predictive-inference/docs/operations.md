@@ -17,8 +17,9 @@ kubectl --context "$CONTEXT" get pods -n azure-iot-operations
 kubectl --context "$CONTEXT" get events -n azure-iot-operations --sort-by=.lastTimestamp
 ```
 
-Select the actual connector, media, or data flow pod from that output and inspect
-its logs with `kubectl --context "$CONTEXT" logs -n azure-iot-operations <pod>`.
+Select the actual inference connector, media connector, or data flow runtime pod
+from that output and inspect its logs with
+`kubectl --context "$CONTEXT" logs -n azure-iot-operations <pod>`.
 Do not assume the managed connector's pod is named `aio-inference-connector`.
 
 | Symptom | Check |
@@ -27,13 +28,13 @@ Do not assume the managed connector's pod is named `aio-inference-connector`.
 | Media pod has `CreateContainerConfigError` for a non-numeric user | Use a [compatible media image](deployment.md#media-connector-compatibility) through its managed connector template. Keep non-root enforcement enabled; do not patch the generated StatefulSet. |
 | `Invalid or incomplete JPEG`, `No more bytes`, or missing frames | Capture actual MQTT payloads and fully decode them. Empty/truncated frames are a media-input problem, not a valid zero-person result. Review the [media compatibility findings](deployment.md#media-connector-compatibility); do not relax decoding or append missing bytes. |
 | JPEGs arrive but no observations | Graph enabled/available state, all five nodes, artifact pulls, file stores, graph logs, and connector/model readiness. |
-| `no file store configured` | The parent data flow must keep both file-store entries. A mounted connector PVC alone is insufficient. Redeploy the Bicep graph if a portal edit removed them. |
+| `no file store configured` | The data flow graph must keep both file-store entries. A mounted connector PVC alone is insufficient. Redeploy the Bicep graph if a portal edit removed them. |
 | Input write or response read errors | Same claim and subpaths in graph and connector, RWX support, permissions, free space, and cleanup age versus processing delays. |
 | Foundry returns 401/403 | Audience `aio-internal`, model authorization for the generated application service account, and the actual model base URL. |
 | TLS failure | Secret in the AIO namespace with correct `ca.crt`, certificate hostname, and CA rotation. Do not disable certificate verification. |
 | Model does not load | Foundry status/events, registry credentials and expiry, registry permissions, model artifact version, and predictive ONNX runtime support. |
 | Updated model remains pending with `InsufficientCPU` | A rolling update can require capacity for both old and new model pods. An old ready pod does not prove the replacement is ready; see the update guidance below. |
-| Wrong response contract | Keep the pinned 0.2 inference graph. The 0.3 envelope is not a filename. |
+| Wrong response contract | Keep the pinned 0.2 inference transform. The 0.3 envelope is not a filename. |
 | Valid zero-person observations | Inspect authorized scene data, field of view, preprocessing, threshold, and the generic model's domain limitations. Zero detections is not proof of no people. |
 | Increasing delays or missing frames | Start at 0.2 snapshots/sec, then assess model latency, graph capacity, MQTT limits, CPU/memory, and storage. This sample is not a throughput sizing result. |
 

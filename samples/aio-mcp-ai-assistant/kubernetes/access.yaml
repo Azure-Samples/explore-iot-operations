@@ -1,60 +1,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: ${resourceRole}
-  namespace: ${aioNamespace}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-rules:
-  - apiGroups: [namespaces.deviceregistry.microsoft.com]
-    resources: [assets, devices]
-    verbs: [get, list]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: ${resourceRole}
-  namespace: ${aioNamespace}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: ${resourceRole}
-subjects:
-  - kind: ServiceAccount
-    name: edge-resource-mcp
-    namespace: ${namespace}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: ${tokenReviewerRole}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-rules:
-  - apiGroups: [authentication.k8s.io]
-    resources: [tokenreviews]
-    verbs: [create]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: ${tokenReviewerRole}
-  labels:
-    app.kubernetes.io/part-of: aio-mcp-ai-assistant
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: ${tokenReviewerRole}
-subjects:
-  - kind: ServiceAccount
-    name: edge-resource-mcp
-    namespace: ${namespace}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
   name: ${modelReaderRole}
   namespace: ${foundryNamespace}
   labels:
