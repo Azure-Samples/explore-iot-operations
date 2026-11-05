@@ -1,0 +1,1381 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Asset is the Schema for the assets API.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "AssetSpec defines the desired state of Asset.",
+      "properties": {
+        "assetTypeRefs": {
+          "description": "URIs or type definition IDs.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1,
+          "type": "array"
+        },
+        "attributes": {
+          "description": "A set of key-value pairs that contain custom attributes set by the customer.",
+          "type": "object",
+          "x-kubernetes-preserve-unknown-fields": true
+        },
+        "datasets": {
+          "description": "Array of data sets that are part of the asset. Each data set describes the data points that make up the set.",
+          "items": {
+            "properties": {
+              "dataPoints": {
+                "description": "Array of data points that are part of the dataset. Each data point can have per-data point configuration.",
+                "items": {
+                  "properties": {
+                    "dataPointConfiguration": {
+                      "description": "Stringified JSON that contains connector-specific configuration for the data point. For OPC UA, this could include configuration like, publishingInterval, samplingInterval, and queueSize.",
+                      "type": "string"
+                    },
+                    "dataSource": {
+                      "description": "The address of the source of the data in the asset (e.g. URL) so that a client can access the data source on the asset.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The name of the data point.",
+                      "type": "string"
+                    },
+                    "typeRef": {
+                      "description": "URI or type definition ID.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              "dataSource": {
+                "description": "Reference to a data source for a given dataset.",
+                "type": "string"
+              },
+              "datasetConfiguration": {
+                "description": "Stringified JSON that contains connector-specific JSON string that describes configuration for the specific dataset.",
+                "type": "string"
+              },
+              "destinations": {
+                "description": "Destinations for a dataset.",
+                "items": {
+                  "properties": {
+                    "configuration": {
+                      "description": "The destination configuration.",
+                      "properties": {
+                        "key": {
+                          "description": "The BrokerStateStore destination configuration key.",
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "The Storage destination configuration path.",
+                          "type": "string"
+                        },
+                        "qos": {
+                          "description": "The MQTT QoS setting.",
+                          "enum": [
+                            "Qos0",
+                            "Qos1"
+                          ],
+                          "type": "string"
+                        },
+                        "retain": {
+                          "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                          "enum": [
+                            "Keep",
+                            "Never"
+                          ],
+                          "type": "string"
+                        },
+                        "topic": {
+                          "description": "The MQTT topic.",
+                          "type": "string"
+                        },
+                        "ttl": {
+                          "description": "The MQTT TTL setting.",
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "target": {
+                      "description": "The target destination.",
+                      "enum": [
+                        "Mqtt",
+                        "BrokerStateStore",
+                        "Storage"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "configuration",
+                    "target"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "Invalid dataset destination",
+                      "rule": "self.target == 'Mqtt' ? has(self.configuration.topic) && !has(self.configuration.key) && !has(self.configuration.path) : self.target == 'Storage' ? has(self.configuration.path) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.key) : self.target == 'BrokerStateStore' ? has(self.configuration.key) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.path) : false"
+                    }
+                  ]
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "name": {
+                "description": "Name of the dataset.",
+                "type": "string"
+              },
+              "typeRef": {
+                "description": "URI or type definition ID.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 1000,
+          "type": "array"
+        },
+        "defaultDatasetsConfiguration": {
+          "description": "Stringified JSON that contains connector-specific default configuration for all datasets. Each dataset can have its own configuration that overrides the default settings here.",
+          "type": "string"
+        },
+        "defaultDatasetsDestinations": {
+          "description": "Default destinations for a dataset.",
+          "items": {
+            "properties": {
+              "configuration": {
+                "description": "The destination configuration.",
+                "properties": {
+                  "key": {
+                    "description": "The BrokerStateStore destination configuration key.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "The Storage destination configuration path.",
+                    "type": "string"
+                  },
+                  "qos": {
+                    "description": "The MQTT QoS setting.",
+                    "enum": [
+                      "Qos0",
+                      "Qos1"
+                    ],
+                    "type": "string"
+                  },
+                  "retain": {
+                    "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                    "enum": [
+                      "Keep",
+                      "Never"
+                    ],
+                    "type": "string"
+                  },
+                  "topic": {
+                    "description": "The MQTT topic.",
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "description": "The MQTT TTL setting.",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "target": {
+                "description": "The target destination.",
+                "enum": [
+                  "Mqtt",
+                  "BrokerStateStore",
+                  "Storage"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "configuration",
+              "target"
+            ],
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "Invalid dataset destination",
+                "rule": "self.target == 'Mqtt' ? has(self.configuration.topic) && !has(self.configuration.key) && !has(self.configuration.path) : self.target == 'Storage' ? has(self.configuration.path) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.key) : self.target == 'BrokerStateStore' ? has(self.configuration.key) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.path) : false"
+              }
+            ]
+          },
+          "maxItems": 1,
+          "type": "array"
+        },
+        "defaultEventsConfiguration": {
+          "description": "Stringified JSON that contains connector-specific default configuration for all events. Each event can have its own configuration that overrides the default settings here.",
+          "type": "string"
+        },
+        "defaultEventsDestinations": {
+          "description": "Default destinations for an event.",
+          "items": {
+            "properties": {
+              "configuration": {
+                "description": "The destination configuration.",
+                "properties": {
+                  "key": {
+                    "description": "The BrokerStateStore destination configuration key.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "The Storage destination configuration path.",
+                    "type": "string"
+                  },
+                  "qos": {
+                    "description": "The MQTT QoS setting.",
+                    "enum": [
+                      "Qos0",
+                      "Qos1"
+                    ],
+                    "type": "string"
+                  },
+                  "retain": {
+                    "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                    "enum": [
+                      "Keep",
+                      "Never"
+                    ],
+                    "type": "string"
+                  },
+                  "topic": {
+                    "description": "The MQTT topic.",
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "description": "The MQTT TTL setting.",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "target": {
+                "description": "The target destination.",
+                "enum": [
+                  "Mqtt",
+                  "Storage"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "configuration",
+              "target"
+            ],
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "Invalid event destination. Mqtt destinations must have topic configured",
+                "rule": "self.target != 'Mqtt' || has(self.configuration.topic)"
+              },
+              {
+                "message": "Invalid event destination. Mqtt destinations cannot have key",
+                "rule": "self.target != 'Mqtt' || (!has(self.configuration.key))"
+              },
+              {
+                "message": "Invalid event destination. Mqtt destinations cannot have path",
+                "rule": "self.target != 'Mqtt' || (!has(self.configuration.path))"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations must have path configured",
+                "rule": "self.target != 'Storage' || has(self.configuration.path)"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations cannot have topic",
+                "rule": "self.target != 'Storage' || (!has(self.configuration.topic))"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations cannot have retain",
+                "rule": "self.target != 'Storage' || (!has(self.configuration.retain))"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations cannot have qos",
+                "rule": "self.target != 'Storage' || (!has(self.configuration.qos))"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations cannot have ttl",
+                "rule": "self.target != 'Storage' || (!has(self.configuration.ttl))"
+              },
+              {
+                "message": "Invalid event destination. Storage destinations cannot have key",
+                "rule": "self.target != 'Storage' || (!has(self.configuration.key))"
+              }
+            ]
+          },
+          "maxItems": 1,
+          "type": "array"
+        },
+        "defaultManagementGroupsConfiguration": {
+          "description": "Stringified JSON that contains connector-specific default configuration for all management groups. Each management group can have its own configuration that overrides the default settings here.",
+          "type": "string"
+        },
+        "defaultStreamsConfiguration": {
+          "description": "Stringified JSON that contains connector-specific default configuration for all streams. Each stream can have its own configuration that overrides the default settings here.",
+          "type": "string"
+        },
+        "defaultStreamsDestinations": {
+          "description": "Default destinations for a stream.",
+          "items": {
+            "properties": {
+              "configuration": {
+                "description": "The destination configuration.",
+                "properties": {
+                  "key": {
+                    "description": "The BrokerStateStore destination configuration key.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "The Storage destination configuration path.",
+                    "type": "string"
+                  },
+                  "qos": {
+                    "description": "The MQTT QoS setting.",
+                    "enum": [
+                      "Qos0",
+                      "Qos1"
+                    ],
+                    "type": "string"
+                  },
+                  "retain": {
+                    "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                    "enum": [
+                      "Keep",
+                      "Never"
+                    ],
+                    "type": "string"
+                  },
+                  "topic": {
+                    "description": "The MQTT topic.",
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "description": "The MQTT TTL setting.",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "target": {
+                "description": "The target destination.",
+                "enum": [
+                  "Mqtt",
+                  "Storage"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "configuration",
+              "target"
+            ],
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "Invalid stream destination",
+                "rule": "self.target == 'Mqtt' ? has(self.configuration.topic) && !has(self.configuration.key) && !has(self.configuration.path) : self.target == 'Storage' ? has(self.configuration.path) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.key) : false"
+              }
+            ]
+          },
+          "maxItems": 1,
+          "type": "array"
+        },
+        "description": {
+          "description": "Human-readable description of the asset.",
+          "type": "string"
+        },
+        "deviceRef": {
+          "description": "Reference to the device that provides data for this asset. Must provide device name & endpoint on the device to use.",
+          "properties": {
+            "deviceName": {
+              "description": "Name of the device resource.",
+              "type": "string"
+            },
+            "endpointName": {
+              "description": "The name of endpoint to use.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "deviceName",
+            "endpointName"
+          ],
+          "type": "object"
+        },
+        "discoveredAssetRefs": {
+          "description": "Reference to a list of discovered assets. Populated only if the asset has been created from discovery flow. Discovered asset names must be provided.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "displayName": {
+          "description": "Human-readable display name.",
+          "type": "string"
+        },
+        "documentationUri": {
+          "description": "Asset documentation reference.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Enabled/Disabled status of the asset.",
+          "type": "boolean"
+        },
+        "eventGroups": {
+          "description": "Array of events that are part of the asset. Each event can have per-event configuration.",
+          "items": {
+            "properties": {
+              "dataSource": {
+                "description": "The address of the notifier of the event in the asset (e.g. URL) so that a client can access the event on the asset.",
+                "type": "string"
+              },
+              "defaultEventsDestinations": {
+                "description": "Default destinations for an event.",
+                "items": {
+                  "properties": {
+                    "configuration": {
+                      "description": "The destination configuration.",
+                      "properties": {
+                        "key": {
+                          "description": "The BrokerStateStore destination configuration key.",
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "The Storage destination configuration path.",
+                          "type": "string"
+                        },
+                        "qos": {
+                          "description": "The MQTT QoS setting.",
+                          "enum": [
+                            "Qos0",
+                            "Qos1"
+                          ],
+                          "type": "string"
+                        },
+                        "retain": {
+                          "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                          "enum": [
+                            "Keep",
+                            "Never"
+                          ],
+                          "type": "string"
+                        },
+                        "topic": {
+                          "description": "The MQTT topic.",
+                          "type": "string"
+                        },
+                        "ttl": {
+                          "description": "The MQTT TTL setting.",
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "target": {
+                      "description": "The target destination.",
+                      "enum": [
+                        "Mqtt",
+                        "Storage"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "configuration",
+                    "target"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "Invalid event destination. Mqtt destinations must have topic configured",
+                      "rule": "self.target != 'Mqtt' || has(self.configuration.topic)"
+                    },
+                    {
+                      "message": "Invalid event destination. Mqtt destinations cannot have key",
+                      "rule": "self.target != 'Mqtt' || (!has(self.configuration.key))"
+                    },
+                    {
+                      "message": "Invalid event destination. Mqtt destinations cannot have path",
+                      "rule": "self.target != 'Mqtt' || (!has(self.configuration.path))"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations must have path configured",
+                      "rule": "self.target != 'Storage' || has(self.configuration.path)"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations cannot have topic",
+                      "rule": "self.target != 'Storage' || (!has(self.configuration.topic))"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations cannot have retain",
+                      "rule": "self.target != 'Storage' || (!has(self.configuration.retain))"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations cannot have qos",
+                      "rule": "self.target != 'Storage' || (!has(self.configuration.qos))"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations cannot have ttl",
+                      "rule": "self.target != 'Storage' || (!has(self.configuration.ttl))"
+                    },
+                    {
+                      "message": "Invalid event destination. Storage destinations cannot have key",
+                      "rule": "self.target != 'Storage' || (!has(self.configuration.key))"
+                    }
+                  ]
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "eventGroupConfiguration": {
+                "description": "Stringified JSON that contains connector-specific configuration for the event. For OPC UA, this could include configuration like, publishingInterval, samplingInterval, and queueSize.",
+                "type": "string"
+              },
+              "events": {
+                "description": "Array of events that are part of the asset. Each event can have per-event configuration.",
+                "items": {
+                  "properties": {
+                    "dataSource": {
+                      "description": "Reference to a data source for a given event.",
+                      "type": "string"
+                    },
+                    "destinations": {
+                      "description": "Destinations for an event.",
+                      "items": {
+                        "properties": {
+                          "configuration": {
+                            "description": "The destination configuration.",
+                            "properties": {
+                              "key": {
+                                "description": "The BrokerStateStore destination configuration key.",
+                                "type": "string"
+                              },
+                              "path": {
+                                "description": "The Storage destination configuration path.",
+                                "type": "string"
+                              },
+                              "qos": {
+                                "description": "The MQTT QoS setting.",
+                                "enum": [
+                                  "Qos0",
+                                  "Qos1"
+                                ],
+                                "type": "string"
+                              },
+                              "retain": {
+                                "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                                "enum": [
+                                  "Keep",
+                                  "Never"
+                                ],
+                                "type": "string"
+                              },
+                              "topic": {
+                                "description": "The MQTT topic.",
+                                "type": "string"
+                              },
+                              "ttl": {
+                                "description": "The MQTT TTL setting.",
+                                "format": "int64",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "target": {
+                            "description": "The target destination.",
+                            "enum": [
+                              "Mqtt",
+                              "Storage"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "configuration",
+                          "target"
+                        ],
+                        "type": "object",
+                        "x-kubernetes-validations": [
+                          {
+                            "message": "Invalid event destination. Mqtt destinations must have topic configured",
+                            "rule": "self.target != 'Mqtt' || has(self.configuration.topic)"
+                          },
+                          {
+                            "message": "Invalid event destination. Mqtt destinations cannot have key",
+                            "rule": "self.target != 'Mqtt' || (!has(self.configuration.key))"
+                          },
+                          {
+                            "message": "Invalid event destination. Mqtt destinations cannot have path",
+                            "rule": "self.target != 'Mqtt' || (!has(self.configuration.path))"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations must have path configured",
+                            "rule": "self.target != 'Storage' || has(self.configuration.path)"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations cannot have topic",
+                            "rule": "self.target != 'Storage' || (!has(self.configuration.topic))"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations cannot have retain",
+                            "rule": "self.target != 'Storage' || (!has(self.configuration.retain))"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations cannot have qos",
+                            "rule": "self.target != 'Storage' || (!has(self.configuration.qos))"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations cannot have ttl",
+                            "rule": "self.target != 'Storage' || (!has(self.configuration.ttl))"
+                          },
+                          {
+                            "message": "Invalid event destination. Storage destinations cannot have key",
+                            "rule": "self.target != 'Storage' || (!has(self.configuration.key))"
+                          }
+                        ]
+                      },
+                      "maxItems": 1,
+                      "type": "array"
+                    },
+                    "eventConfiguration": {
+                      "description": "Stringified JSON that contains connector-specific configuration for the event. For OPC UA, this could include configuration like, publishingInterval, samplingInterval, and queueSize.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The name of the event.",
+                      "type": "string"
+                    },
+                    "typeRef": {
+                      "description": "URI or type definition ID.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              "name": {
+                "description": "Name of the event group.",
+                "type": "string"
+              },
+              "typeRef": {
+                "description": "URI or type definition ID.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 1000,
+          "type": "array"
+        },
+        "externalAssetId": {
+          "description": "Asset ID provided by the customer.",
+          "type": "string"
+        },
+        "hardwareRevision": {
+          "description": "Asset hardware revision number.",
+          "type": "string"
+        },
+        "lastTransitionTime": {
+          "description": "A timestamp (in UTC) that is updated each time the resource is modified.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "managementGroups": {
+          "description": "Array of management groups that are part of the asset. Each management group can have a per-group configuration.",
+          "items": {
+            "properties": {
+              "actions": {
+                "description": "Array of actions that are part of the management group. Each action can have an individual configuration.",
+                "items": {
+                  "properties": {
+                    "actionConfiguration": {
+                      "description": "Stringified JSON that contains connector-specific configuration for the action.",
+                      "type": "string"
+                    },
+                    "actionType": {
+                      "default": "Call",
+                      "description": "Type of the action. Default: 'Call'.",
+                      "enum": [
+                        "Read",
+                        "Write",
+                        "Call"
+                      ],
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the action.",
+                      "type": "string"
+                    },
+                    "targetUri": {
+                      "description": "The target URI on which a client can invoke the specific action.",
+                      "type": "string"
+                    },
+                    "timeoutInSeconds": {
+                      "description": "Response timeout for the action.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "topic": {
+                      "description": "The MQTT topic path on which a client will receive the request for the action.",
+                      "type": "string"
+                    },
+                    "typeRef": {
+                      "description": "URI or type definition ID.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "actionType",
+                    "name",
+                    "targetUri"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              "dataSource": {
+                "description": "Reference to a data source for a given management group.",
+                "type": "string"
+              },
+              "defaultTimeoutInSeconds": {
+                "description": "Default response timeout for all actions that are part of the management group.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "defaultTopic": {
+                "description": "Default MQTT topic path on which a client will receive the request for all actions that are part of the management group.",
+                "type": "string"
+              },
+              "managementGroupConfiguration": {
+                "description": "Stringified JSON that contains connector-specific configuration for the management group.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of the management group.",
+                "type": "string"
+              },
+              "typeRef": {
+                "description": "URI or type definition ID.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 1000,
+          "type": "array"
+        },
+        "manufacturer": {
+          "description": "Asset manufacturer.",
+          "type": "string"
+        },
+        "manufacturerUri": {
+          "description": "Asset manufacturer URI.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Asset model.",
+          "type": "string"
+        },
+        "productCode": {
+          "description": "Asset product code.",
+          "type": "string"
+        },
+        "serialNumber": {
+          "description": "Asset serial number.",
+          "type": "string"
+        },
+        "softwareRevision": {
+          "description": "Asset software revision number.",
+          "type": "string"
+        },
+        "streams": {
+          "description": "Array of streams that are part of the asset. Each stream can have per-stream configuration.",
+          "items": {
+            "properties": {
+              "destinations": {
+                "description": "Destinations for a Stream.",
+                "items": {
+                  "properties": {
+                    "configuration": {
+                      "description": "The destination configuration.",
+                      "properties": {
+                        "key": {
+                          "description": "The BrokerStateStore destination configuration key.",
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "The Storage destination configuration path.",
+                          "type": "string"
+                        },
+                        "qos": {
+                          "description": "The MQTT QoS setting.",
+                          "enum": [
+                            "Qos0",
+                            "Qos1"
+                          ],
+                          "type": "string"
+                        },
+                        "retain": {
+                          "description": "When set to 'Keep', messages published to an MQTT broker will have the retain flag set.",
+                          "enum": [
+                            "Keep",
+                            "Never"
+                          ],
+                          "type": "string"
+                        },
+                        "topic": {
+                          "description": "The MQTT topic.",
+                          "type": "string"
+                        },
+                        "ttl": {
+                          "description": "The MQTT TTL setting.",
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "target": {
+                      "description": "The target destination.",
+                      "enum": [
+                        "Mqtt",
+                        "Storage"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "configuration",
+                    "target"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "Invalid stream destination",
+                      "rule": "self.target == 'Mqtt' ? has(self.configuration.topic) && !has(self.configuration.key) && !has(self.configuration.path) : self.target == 'Storage' ? has(self.configuration.path) && !has(self.configuration.topic) && !has(self.configuration.retain) && !has(self.configuration.qos) && !has(self.configuration.ttl) && !has(self.configuration.key) : false"
+                    }
+                  ]
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "name": {
+                "description": "Name of the stream definition.",
+                "type": "string"
+              },
+              "streamConfiguration": {
+                "description": "Stringified JSON that contains connector-specific JSON string that describes configuration for the specific stream.",
+                "type": "string"
+              },
+              "typeRef": {
+                "description": "URI or type definition ID.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 1000,
+          "type": "array"
+        },
+        "uuid": {
+          "description": "Globally unique, immutable, non-reusable id.",
+          "type": "string"
+        },
+        "version": {
+          "description": "A read-only integer that is incremented each time the resource is modified the cloud.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "deviceRef"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "description": "AssetStatus defines the observed state of Asset.",
+      "properties": {
+        "config": {
+          "description": "Defines the asset status config properties.",
+          "properties": {
+            "error": {
+              "nullable": true,
+              "properties": {
+                "code": {
+                  "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                  "type": "string"
+                },
+                "details": {
+                  "description": "Array of error details that describe the status of each error.",
+                  "items": {
+                    "description": "Defines the status config error details properties.",
+                    "properties": {
+                      "code": {
+                        "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                        "type": "string"
+                      },
+                      "correlationId": {
+                        "description": "Unique identifier for the transaction to aid in debugging.",
+                        "type": "string"
+                      },
+                      "info": {
+                        "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                        "type": "string"
+                      },
+                      "message": {
+                        "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "message": {
+                  "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "lastTransitionTime": {
+              "description": "A read only timestamp indicating the last time the configuration has been modified from the perspective of the current actual (Edge) state of the CRD. Edge would be the only writer of this value and would sync back up to the cloud.",
+              "format": "date-time",
+              "type": "string"
+            },
+            "version": {
+              "description": "A read only incremental counter indicating the number of times the configuration has been modified from the perspective of the current actual (Edge) state of the CRD. Edge would be the only writer of this value and would sync back up to the cloud. In steady state, this should equal version.",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "datasets": {
+          "description": "Array of dataset statuses that describe the status of each dataset.",
+          "items": {
+            "properties": {
+              "error": {
+                "description": "The configuration error of the dataset.",
+                "nullable": true,
+                "properties": {
+                  "code": {
+                    "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                    "type": "string"
+                  },
+                  "details": {
+                    "description": "Array of error details that describe the status of each error.",
+                    "items": {
+                      "description": "Defines the status config error details properties.",
+                      "properties": {
+                        "code": {
+                          "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                          "type": "string"
+                        },
+                        "correlationId": {
+                          "description": "Unique identifier for the transaction to aid in debugging.",
+                          "type": "string"
+                        },
+                        "info": {
+                          "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                          "type": "string"
+                        },
+                        "message": {
+                          "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "message": {
+                    "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "messageSchemaReference": {
+                "description": "The message schema reference object.",
+                "properties": {
+                  "schemaName": {
+                    "description": "The reference to the message schema name.",
+                    "type": "string"
+                  },
+                  "schemaRegistryNamespace": {
+                    "description": "The reference to the message schema registry namespace.",
+                    "type": "string"
+                  },
+                  "schemaVersion": {
+                    "description": "The reference to the message schema version.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "schemaName",
+                  "schemaRegistryNamespace",
+                  "schemaVersion"
+                ],
+                "type": "object"
+              },
+              "name": {
+                "description": "The name of the dataset. Must be unique within the status.datasets array. This name is used to correlate between the spec and status dataset information.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "eventGroups": {
+          "description": "Array of event group statuses that describe the status of each event group.",
+          "items": {
+            "properties": {
+              "events": {
+                "description": "Array of event statuses that describe the status of each event in the event group.",
+                "items": {
+                  "properties": {
+                    "error": {
+                      "description": "The configuration error of the event.",
+                      "nullable": true,
+                      "properties": {
+                        "code": {
+                          "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                          "type": "string"
+                        },
+                        "details": {
+                          "description": "Array of error details that describe the status of each error.",
+                          "items": {
+                            "description": "Defines the status config error details properties.",
+                            "properties": {
+                              "code": {
+                                "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                                "type": "string"
+                              },
+                              "correlationId": {
+                                "description": "Unique identifier for the transaction to aid in debugging.",
+                                "type": "string"
+                              },
+                              "info": {
+                                "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                                "type": "string"
+                              },
+                              "message": {
+                                "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "message": {
+                          "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "messageSchemaReference": {
+                      "description": "The message schema reference object.",
+                      "properties": {
+                        "schemaName": {
+                          "description": "The reference to the message schema name.",
+                          "type": "string"
+                        },
+                        "schemaRegistryNamespace": {
+                          "description": "The reference to the message schema registry namespace.",
+                          "type": "string"
+                        },
+                        "schemaVersion": {
+                          "description": "The reference to the message schema version.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "schemaName",
+                        "schemaRegistryNamespace",
+                        "schemaVersion"
+                      ],
+                      "type": "object"
+                    },
+                    "name": {
+                      "description": "The name of the event. Must be unique within the status.events array. This name is used to correlate between the spec and status event information.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "The name of the event group. Must be unique within the status.eventGroups array. This name is used to correlate between the spec and status event group information.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "managementGroups": {
+          "description": "Array of management group statuses that describe the status of each management group.",
+          "items": {
+            "properties": {
+              "actions": {
+                "description": "The message schema reference object.",
+                "items": {
+                  "properties": {
+                    "error": {
+                      "description": "The configuration error of the management group action.",
+                      "nullable": true,
+                      "properties": {
+                        "code": {
+                          "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                          "type": "string"
+                        },
+                        "details": {
+                          "description": "Array of error details that describe the status of each error.",
+                          "items": {
+                            "description": "Defines the status config error details properties.",
+                            "properties": {
+                              "code": {
+                                "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                                "type": "string"
+                              },
+                              "correlationId": {
+                                "description": "Unique identifier for the transaction to aid in debugging.",
+                                "type": "string"
+                              },
+                              "info": {
+                                "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                                "type": "string"
+                              },
+                              "message": {
+                                "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "message": {
+                          "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": {
+                      "description": "The name of the action. Must be unique within the status.managementGroup[i].actions array. This name is used to correlate between the spec and status management group action information.",
+                      "type": "string"
+                    },
+                    "requestMessageSchemaReference": {
+                      "description": "The request message schema reference object.",
+                      "properties": {
+                        "schemaName": {
+                          "description": "The reference to the message schema name.",
+                          "type": "string"
+                        },
+                        "schemaRegistryNamespace": {
+                          "description": "The reference to the message schema registry namespace.",
+                          "type": "string"
+                        },
+                        "schemaVersion": {
+                          "description": "The reference to the message schema version.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "schemaName",
+                        "schemaRegistryNamespace",
+                        "schemaVersion"
+                      ],
+                      "type": "object"
+                    },
+                    "responseMessageSchemaReference": {
+                      "description": "The response message schema reference object.",
+                      "properties": {
+                        "schemaName": {
+                          "description": "The reference to the message schema name.",
+                          "type": "string"
+                        },
+                        "schemaRegistryNamespace": {
+                          "description": "The reference to the message schema registry namespace.",
+                          "type": "string"
+                        },
+                        "schemaVersion": {
+                          "description": "The reference to the message schema version.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "schemaName",
+                        "schemaRegistryNamespace",
+                        "schemaVersion"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "The name of the managementgroup. Must be unique within the status.managementGroup array. This name is used to correlate between the spec and status management group information.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "streams": {
+          "description": "Array of stream statuses that describe the status of each stream.",
+          "items": {
+            "properties": {
+              "error": {
+                "description": "The configuration error of the stream.",
+                "nullable": true,
+                "properties": {
+                  "code": {
+                    "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                    "type": "string"
+                  },
+                  "details": {
+                    "description": "Array of error details that describe the status of each error.",
+                    "items": {
+                      "description": "Defines the status config error details properties.",
+                      "properties": {
+                        "code": {
+                          "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                          "type": "string"
+                        },
+                        "correlationId": {
+                          "description": "Unique identifier for the transaction to aid in debugging.",
+                          "type": "string"
+                        },
+                        "info": {
+                          "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                          "type": "string"
+                        },
+                        "message": {
+                          "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "message": {
+                    "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "messageSchemaReference": {
+                "description": "The message schema reference object.",
+                "properties": {
+                  "schemaName": {
+                    "description": "The reference to the message schema name.",
+                    "type": "string"
+                  },
+                  "schemaRegistryNamespace": {
+                    "description": "The reference to the message schema registry namespace.",
+                    "type": "string"
+                  },
+                  "schemaVersion": {
+                    "description": "The reference to the message schema version.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "schemaName",
+                  "schemaRegistryNamespace",
+                  "schemaVersion"
+                ],
+                "type": "object"
+              },
+              "name": {
+                "description": "The name of the stream. Must be unique within the status.streams array. This name is used to correlate between the spec and status event information.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "title": "assets.namespaces.deviceregistry.microsoft.com",
+  "type": "object",
+  "x-kubernetes-group-version-kind.group": "namespaces.deviceregistry.microsoft.com",
+  "x-kubernetes-group-version-kind.kind": "Asset",
+  "x-kubernetes-group-version-kind.version": "v1"
+}

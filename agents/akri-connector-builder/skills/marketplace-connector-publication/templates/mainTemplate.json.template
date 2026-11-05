@@ -1,0 +1,46 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "extensionResourceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the cluster extension."
+            }
+        },
+        "clusterResourceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the existing Arc-connected Kubernetes cluster to install the extension on. The cluster is expected to already have Azure IoT Operations (AIO) installed."
+            }
+        }
+    },
+    "variables": {
+        "plan-name": "DONOTMODIFY",
+        "plan-publisher": "DONOTMODIFY",
+        "plan-offerID": "DONOTMODIFY",
+        "releaseTrain": "DONOTMODIFY",
+        "clusterExtensionTypeName": "DONOTMODIFY"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.KubernetesConfiguration/extensions",
+            "apiVersion": "2025-03-01",
+            "name": "[parameters('extensionResourceName')]",
+            "properties": {
+                "extensionType": "[variables('clusterExtensionTypeName')]",
+                "autoUpgradeMinorVersion": <auto-upgrade-minor-version-json>,
+                "releaseTrain": "[variables('releaseTrain')]",
+                "configurationSettings": {},
+                "configurationProtectedSettings": {}
+            },
+            "plan": {
+                "name": "[variables('plan-name')]",
+                "publisher": "[variables('plan-publisher')]",
+                "product": "[variables('plan-offerID')]"
+            },
+            "scope": "[concat('Microsoft.Kubernetes/connectedClusters/', parameters('clusterResourceName'))]"
+        }
+    ],
+    "outputs": {}
+}

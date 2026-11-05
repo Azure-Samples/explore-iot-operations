@@ -1,0 +1,8 @@
+apiVersion: v2
+name: <connector-name>-helm-chart
+description: <connector-short-description-yaml>
+type: application
+version: <chart-version>
+appVersion: <application-version-yaml>
+keywords:
+<keywords-yaml>

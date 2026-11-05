@@ -1,0 +1,72 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+	"handler": "Microsoft.Azure.CreateUIDef",
+	"version": "0.1.2-preview",
+	"parameters": {
+		"config": {
+			"isWizard": false,
+			"basics": {
+				"location": {
+					"visible": false
+				},
+				"resourceGroup": {
+					"allowExisting": true,
+					"allowedMode": "UseExisting"
+				}
+			}
+		},
+		"basics": [
+			{
+				"name": "introText",
+				"type": "Microsoft.Common.InfoBox",
+				"visible": true,
+				"options": {
+					"icon": "Info",
+					"text": "Select the existing Arc-connected Kubernetes cluster (in the chosen resource group and region) where the <connector-name> extension will be installed. The cluster is expected to already have Azure IoT Operations (AIO) installed."
+				}
+			}
+		],
+		"steps": [
+			{
+				"name": "clusterDetails",
+				"label": "Cluster",
+				"elements": [
+					{
+						"name": "clusterLookupControl",
+						"type": "Microsoft.Solutions.ArmApiControl",
+						"request": {
+							"method": "GET",
+							"path": "[concat(subscription().id, '/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Kubernetes/connectedClusters?api-version=2026-05-01')]"
+						}
+					},
+					{
+						"name": "existingClusterResourceName",
+						"type": "Microsoft.Common.DropDown",
+						"label": "Arc-connected cluster name",
+						"toolTip": "The existing Arc-connected Kubernetes cluster in this resource group to install the extension on.",
+						"constraints": {
+							"allowedValues": "[map(steps('clusterDetails').clusterLookupControl.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]",
+							"required": true
+						}
+					},
+					{
+						"name": "extensionResourceName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Cluster extension resource name",
+						"defaultValue": "",
+						"toolTip": "Only lowercase alphanumeric characters are allowed, and the value must be 6-30 characters long.",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-z0-9]{6,30}$",
+							"validationMessage": "Only lowercase alphanumeric characters are allowed, and the value must be 6-30 characters long."
+						}
+					}
+				]
+			}
+		],
+		"outputs": {
+			"clusterResourceName": "[steps('clusterDetails').existingClusterResourceName]",
+			"extensionResourceName": "[steps('clusterDetails').extensionResourceName]"
+		}
+	}
+}

@@ -1,0 +1,350 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Device is the Schema for the devices API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "EDIT THIS FILE! THIS IS SCAFFOLDING FOR YOU TO OWN!\nNOTE: json tags are required. Any new fields you add must have json tags for the fields to be serialized.\nDeviceSpec defines the desired state of Device.",
+      "properties": {
+        "attributes": {
+          "description": "A set of key-value pairs that contain custom attributes set by the customer.",
+          "type": "object",
+          "x-kubernetes-preserve-unknown-fields": true
+        },
+        "discoveredDeviceRef": {
+          "description": "Reference to a device. Populated only if the device had been created from discovery flow. Discovered device name must be provided.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates if the resource is enabled or not.",
+          "type": "boolean"
+        },
+        "endpoints": {
+          "description": "Connection endpoint url a device can use to connect to a service.",
+          "properties": {
+            "inbound": {
+              "additionalProperties": {
+                "description": "An endpoint to connect to the device.",
+                "properties": {
+                  "additionalConfiguration": {
+                    "description": "Stringified JSON that contains configuration to be used by the connector (e.g., OPC UA, ONVIF).",
+                    "type": "string"
+                  },
+                  "address": {
+                    "description": "The endpoint address & port. This can be either an IP address (e.g., 192.168.1.1) or a fully qualified domain name (FQDN, e.g., server.example.com).",
+                    "type": "string"
+                  },
+                  "authentication": {
+                    "description": "Defines the client authentication mechanism to the server.",
+                    "properties": {
+                      "method": {
+                        "default": "Certificate",
+                        "description": "Defines the method to authenticate the user of the client at the server.",
+                        "enum": [
+                          "Anonymous",
+                          "Certificate",
+                          "UsernamePassword"
+                        ],
+                        "type": "string"
+                      },
+                      "usernamePasswordCredentials": {
+                        "description": "The credentials for authentication mode UsernamePassword.",
+                        "properties": {
+                          "passwordSecretName": {
+                            "description": "The name of the secret containing the password.",
+                            "type": "string"
+                          },
+                          "usernameSecretName": {
+                            "description": "The name of the secret containing the username.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "passwordSecretName",
+                          "usernameSecretName"
+                        ],
+                        "type": "object"
+                      },
+                      "x509Credentials": {
+                        "description": "The x509 certificate for authentication mode Certificate.",
+                        "properties": {
+                          "certificateSecretName": {
+                            "description": "The name of the secret containing the certificate and private key (e.g. stored as .der/.pem or .der/.pfx).",
+                            "type": "string"
+                          },
+                          "intermediateCertificatesSecretName": {
+                            "description": "A reference to the secret containing the combined intermediate certificates in PEM format.",
+                            "type": "string"
+                          },
+                          "keySecretName": {
+                            "description": "A reference to the secret containing the certificate private key in PEM or DER format.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "certificateSecretName"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "method"
+                    ],
+                    "type": "object"
+                  },
+                  "endpointType": {
+                    "description": "Type of connection endpoint.",
+                    "type": "string"
+                  },
+                  "trustSettings": {
+                    "description": "Defines server trust settings for the endpoint.",
+                    "properties": {
+                      "trustList": {
+                        "description": "Secret reference to certificates list to trust.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "version": {
+                    "description": "Protocol version associated with the endpoint e.g. 1 or 2 for endpointType Microsoft.HTTP, and 3.5 or 5.0 for endpointType Microsoft.Mqtt etc.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "address",
+                  "endpointType"
+                ],
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "outbound": {
+              "description": "Set of endpoints for device to connect to.",
+              "properties": {
+                "assigned": {
+                  "additionalProperties": {
+                    "description": "Device messaging endpoint model.",
+                    "properties": {
+                      "address": {
+                        "description": "The endpoint address to connect to.",
+                        "type": "string"
+                      },
+                      "endpointType": {
+                        "description": "Type of connection used for the messaging endpoint.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "address"
+                    ],
+                    "type": "object"
+                  },
+                  "description": "Endpoints the device can connect to.",
+                  "type": "object"
+                },
+                "unassigned": {
+                  "additionalProperties": {
+                    "description": "Device messaging endpoint model.",
+                    "properties": {
+                      "address": {
+                        "description": "The endpoint address to connect to.",
+                        "type": "string"
+                      },
+                      "endpointType": {
+                        "description": "Type of connection used for the messaging endpoint.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "address"
+                    ],
+                    "type": "object"
+                  },
+                  "description": "Set of most recently removed endpoints.",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "assigned"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "externalDeviceId": {
+          "description": "The Device ID provided by the customer.",
+          "type": "string"
+        },
+        "lastTransitionTime": {
+          "description": "A timestamp (in UTC) that is updated each time the resource is modified.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "manufacturer": {
+          "description": "Device manufacturer.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Device model.",
+          "type": "string"
+        },
+        "operatingSystem": {
+          "description": "Device operating system.",
+          "type": "string"
+        },
+        "operatingSystemVersion": {
+          "description": "\"Device operating system version.",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "A unique identifier for the device.",
+          "type": "string"
+        },
+        "version": {
+          "description": "An integer that is incremented each time the resource is modified.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "description": "DeviceStatus defines the observed state of Device.",
+      "properties": {
+        "config": {
+          "description": "Defines the status config properties.",
+          "properties": {
+            "error": {
+              "description": "Defines the status config error properties.",
+              "nullable": true,
+              "properties": {
+                "code": {
+                  "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                  "type": "string"
+                },
+                "details": {
+                  "description": "Array of error details that describe the status of each error.",
+                  "items": {
+                    "description": "Defines the status config error details properties.",
+                    "properties": {
+                      "code": {
+                        "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                        "type": "string"
+                      },
+                      "correlationId": {
+                        "description": "Unique identifier for the transaction to aid in debugging.",
+                        "type": "string"
+                      },
+                      "info": {
+                        "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                        "type": "string"
+                      },
+                      "message": {
+                        "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "message": {
+                  "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "lastTransitionTime": {
+              "description": "A read only timestamp indicating the last time the configuration has been modified from the perspective of the current actual (Edge) state of the CRD. Edge would be the only writer of this value and would sync back up to the cloud.",
+              "format": "date-time",
+              "type": "string"
+            },
+            "version": {
+              "description": "A read only incremental counter indicating the number of times the configuration has been modified from the perspective of the current actual (Edge) state of the CRD. Edge would be the only writer of this value and would sync back up to the cloud. In steady state, this should equal version.",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "endpoints": {
+          "description": "Defines the device status for inbound/outbound endpoints.",
+          "properties": {
+            "inbound": {
+              "additionalProperties": {
+                "description": "Defines the device status for specific endpoint.",
+                "properties": {
+                  "error": {
+                    "description": "Defines error object for device status.",
+                    "nullable": true,
+                    "properties": {
+                      "code": {
+                        "description": "Error code for classification of errors (ex: '400', '404', '500', etc.).",
+                        "type": "string"
+                      },
+                      "details": {
+                        "description": "Array of error details that describe the status of each error.",
+                        "items": {
+                          "description": "Defines the status config error details properties.",
+                          "properties": {
+                            "code": {
+                              "description": "Multi-part error code for classification and root causing of errors (ex: 400.200.100.432).",
+                              "type": "string"
+                            },
+                            "correlationId": {
+                              "description": "Unique identifier for the transaction to aid in debugging.",
+                              "type": "string"
+                            },
+                            "info": {
+                              "description": "Human readable helpful detailed text context for debugging (ex: “The following mechanisms are supported...”).",
+                              "type": "string"
+                            },
+                            "message": {
+                              "description": "Human readable helpful error message to provide additional context for error (ex: “Authentication method not supported”).",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "message": {
+                        "description": "Human readable helpful error message to provide additional context for error (ex: “capability Id 'foo' does not exist”).",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": "KeyValue pair representing status of inbound endpoints.",
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "title": "devices.namespaces.deviceregistry.microsoft.com",
+  "type": "object",
+  "x-kubernetes-group-version-kind.group": "namespaces.deviceregistry.microsoft.com",
+  "x-kubernetes-group-version-kind.kind": "Device",
+  "x-kubernetes-group-version-kind.version": "v1"
+}
