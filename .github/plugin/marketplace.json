@@ -1,0 +1,19 @@
+{
+  "name": "explore-iot-operations",
+  "owner": {
+    "name": "Microsoft Corporation"
+  },
+  "metadata": {
+    "description": "GitHub Copilot plugins for Azure IoT Operations."
+  },
+  "plugins": [
+    {
+      "name": "akri-connector-builder",
+      "description": "Build production-quality third-party Akri connectors for Azure IoT Operations from specifications using an ordered, autonomous pipeline and the Akri Connectors MCP server.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://github.com/Azure-Samples/explore-iot-operations",
+      "source": "./agents/akri-connector-builder"
+    }
+  ]
+}

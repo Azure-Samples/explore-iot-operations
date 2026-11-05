@@ -21,10 +21,12 @@ source, tests, connector metadata, and documentation.
 - A **Git repository** for your connector and specification files. Initialize one with `git init`
   if needed. No Azure subscription or deployed Azure IoT Operations instance is needed for local generation.
 
-Run these commands in PowerShell to install the released plugin and prepare the local runtime:
+Run these commands in PowerShell to add this repository's Copilot plugin marketplace, install
+the plugin, and prepare the local runtime:
 
 ```powershell
-copilot plugin install Azure-Samples/explore-iot-operations:agents/akri-connector-builder
+copilot plugin marketplace add Azure-Samples/explore-iot-operations
+copilot plugin install akri-connector-builder@explore-iot-operations
 docker pull mcr.microsoft.com/azureiotoperations/devx-runtime:0.1.13
 docker tag mcr.microsoft.com/azureiotoperations/devx-runtime:0.1.13 devx-runtime
 ```
@@ -32,8 +34,9 @@ docker tag mcr.microsoft.com/azureiotoperations/devx-runtime:0.1.13 devx-runtime
 From inside **your connector's Git repository**, launch:
 
 ```powershell
-copilot --agent "akri-connector-builder:akri-connector-builder"
+copilot --agent "akri-connector-builder:akri-connector-builder" -i "Start the Akri connector builder workflow."
 ```
+Optionally, add `--allow-all` to skip permission prompts; use it only in a trusted environment.
 
 The selected agent starts its **bundled MCP server automatically**: no npm installation, manual
 MCP build, environment-variable setup, or global MCP registration is needed. Inspect its connection
