@@ -13,7 +13,7 @@
       "version": "0.1.0",
       "license": "MIT",
       "homepage": "https://github.com/Azure-Samples/explore-iot-operations",
-      "source": "./agents/akri-connector-builder"
+      "source": "./samples/plugins/akri-connector-builder"
     }
   ]
 }

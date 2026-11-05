@@ -6,7 +6,7 @@
   "author": {
     "name": "Microsoft Corporation"
   },
-  "homepage": "https://github.com/Azure-Samples/explore-iot-operations/tree/main/agents/akri-connector-builder",
+  "homepage": "https://github.com/Azure-Samples/explore-iot-operations/tree/main/samples/plugins/akri-connector-builder",
   "repository": "https://github.com/Azure-Samples/explore-iot-operations",
   "license": "MIT",
   "keywords": [
