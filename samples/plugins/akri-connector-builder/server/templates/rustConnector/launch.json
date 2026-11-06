@@ -1,0 +1,74 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug an Akri Connector",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/build/target/debug/%CONNECTOR_NAME%",
+            "preLaunchTask": "Launch %CONNECTOR_NAME%_debug container",
+            "cwd": "/build",
+            "MIMode": "gdb",
+            "pipeTransport": {
+                "pipeCwd": "",
+                "pipeProgram": "docker",
+                "pipeArgs": [
+                    "exec",
+                    "-i",
+                    "%CONNECTOR_NAME%_debug",
+                    "sh",
+                    "-c"
+                ],
+                "debuggerPath": "/usr/bin/gdb"
+            },
+            "setupCommands": [
+                {
+                    "description": "Set extended-remote for gdb",
+                    "text": "target extended-remote localhost:2000",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/build": "${workspaceFolder}/%CONNECTOR_NAME%"
+            },
+            "postDebugTask": "aio-akri-connectors-post-debug-task: Cleanup Runtime for Akri Connector"
+        },
+
+        {
+            "name": "Run an Akri Connector",
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "aio-akri-connectors-pre-launch-task: Configure Runtime for Akri Connector",
+            "runtimeExecutable": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "--network", "%CUSTOM_NETWORK_NAME%",
+                "--name", "%CONNECTOR_NAME%_release",
+                "-v", "%AKRI_MOUNT_VAL%",
+                "-e", "AZURE_EXTENSION_RESOURCEID=%AZURE_EXTENSION_RESOURCE_ID%",
+                "-e", "CONNECTOR_NAMESPACE=%CONNECTOR_NAMESPACE%",
+                "-e", "CONNECTOR_ID=%CONNECTOR_NAME%%CONNECTOR_ID_SUFFIX%",
+                "-e", "CONNECTOR_CONFIGURATION_MOUNT_PATH=/etc/akri/config/connector_configuration",
+                "-e", "ADR_RESOURCES_NAME_MOUNT_PATH=/etc/akri/config/adr_resources_names",
+                "%IMAGE_NAME%:release"
+            ],
+            "console": "integratedTerminal",
+            "postDebugTask": "aio-akri-connectors-post-debug-task: Cleanup Runtime for Akri Connector"
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+version: 1
+
+# Exact domains and their subdomains are allowed for fetch-url. This list does not
+# restrict URL literals in repository configuration or connector runtime arguments.
+# Add another entry before starting the plugin when an additional HTTPS
+# documentation or dependency host is required.
+allowedUrlDomains:
+  - microsoft.com
+  - microsoftonline.com
+  - azure.com
+  - azurecr.io
+  - github.com
+  - nuget.org
+  - schemastore.org
+  - crates.io
+  - visualstudio.com
+  - raw.githubusercontent.com
+  
+# File extensions are case-insensitive. Add another extension before starting the
+# workflow only when the Dev Kit has a safe extractor for that document type.
+allowedDocumentExtensions:
+  - .pdf
+  - .txt
+  - .docx
+  - .md
+  - .markdown
+  - .htm
+  - .html

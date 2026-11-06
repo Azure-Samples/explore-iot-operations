@@ -1,0 +1,25 @@
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
+
+# If build mode is Debug, install debugging tools and vsdbg
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip procps curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    useradd -ms /bin/bash moduleuser && \
+    su moduleuser -c "curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l ~/vsdbg"
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+WORKDIR /build
+
+COPY . .
+
+RUN dotnet restore
+
+RUN dotnet publish -c Debug -o out
+
+# Build runtime image
+FROM base
+WORKDIR /app
+COPY --from=build-env /build/out .
+
+# Set the entry point for the container
+ENTRYPOINT ["dotnet", "%CONNECTOR_NAME%.dll"]

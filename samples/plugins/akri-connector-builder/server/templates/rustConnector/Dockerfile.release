@@ -1,0 +1,32 @@
+FROM mcr.microsoft.com/azurelinux/distroless/debug:3.0@sha256:824d396e1c531eb7471400c7a6aef645717bd44040b13711c55b5d5ab617df12 AS debug
+
+# Add busybox shortcuts for rational debugging
+RUN ["busybox", "--install"]
+
+# Add a symlink to enable SSL certs
+RUN mkdir /etc/ssl && ln -s /etc/pki/tls/certs /etc/ssl/certs
+
+FROM mcr.microsoft.com/azurelinux/base/rust:1.90 AS build-env
+WORKDIR /build
+
+ARG RUST_VERSION=%RUST_VERSION%
+
+RUN tdnf update -y && tdnf install -y openssl-devel pkgconfig curl && tdnf clean all && \
+    tdnf remove -y rust && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Create src directory and copy source files
+COPY . .
+
+RUN cargo build --release --target-dir target
+
+FROM mcr.microsoft.com/azurelinux/distroless/base:3.0@sha256:6b85a86416a29cdcfd404e9fbd9c5ef49cc0612882cecc702535dcac39c9446c
+
+COPY --from=debug /etc/ssl/certs /etc/ssl/certs
+COPY --from=build-env /build/target/release/%CONNECTOR_NAME% .
+
+# Switch to non-root user (nonroot == 65532)
+USER nonroot
+
+CMD ["./%CONNECTOR_NAME%"]

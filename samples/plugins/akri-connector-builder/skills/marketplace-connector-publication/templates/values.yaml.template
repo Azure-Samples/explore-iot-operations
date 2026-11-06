@@ -1,0 +1,26 @@
+# Values for the <connector-name> Akri connector Marketplace source chart.
+
+# Required fixed classifications for a Marketplace connector chart.
+# Do not change these values or their casing.
+applicationSource: Marketplace
+applicationType: Connector
+
+global:
+  azure:
+    # Registry host plus any namespace prefix. Marketplace rewrites this
+    # field to a Microsoft-owned ACR path when the offer is deployed.
+    #
+    # This is the PRIVATE publisher ACR (anonymous pull disabled). The
+    # Marketplace service principal has AcrPull on it.
+    images:
+      connectorImage:
+        registry: <connector-registry-yaml>
+        image: <connector-image-yaml>
+        tagDigestType: <connector-image-reference-type>
+        <connector-image-reference-key>: <connector-image-reference-yaml>
+      connectorMetadata:
+        registry: <metadata-registry-yaml>
+        image: <metadata-image-yaml>
+        tag: <metadata-tag-yaml>
+
+<resources-values-yaml>
