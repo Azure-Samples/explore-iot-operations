@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aio-mcp-ai-assistant"
+version = "0.1.0"
+description = "Edge operations assistant using the built-in AIO MCP frontend and approved actions"
+requires-python = ">=3.10"
+dependencies = [
+    "anyio==4.15.1",
+    "exceptiongroup==1.3.1; python_version < '3.11'",
+    "httpx==0.28.1",
+    "jsonschema==4.26.0",
+    "mcp==1.30.0",
+    "pydantic==2.14.2",
+    "PyYAML==6.0.3",
+    "starlette==1.7.0",
+    "uvicorn==0.54.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.2.0", "ruff==0.17.3"]
+
+[project.scripts]
+aio-edge-assistant = "aio_mcp_ai_assistant.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aio_mcp_ai_assistant"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = [".generated", ".build"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
