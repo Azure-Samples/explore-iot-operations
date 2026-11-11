@@ -1,0 +1,40 @@
+{{- $global := default (dict) .Values.global -}}
+{{- $azure := default (dict) $global.azure -}}
+{{- $images := required "global.azure.images is required" $azure.images -}}
+{{- $applicationSource := required "applicationSource is required" .Values.applicationSource -}}
+{{- if ne $applicationSource "Marketplace" -}}
+{{- fail "applicationSource must be Marketplace" -}}
+{{- end -}}
+{{- $applicationType := required "applicationType is required" .Values.applicationType -}}
+{{- if ne $applicationType "Connector" -}}
+{{- fail "applicationType must be Connector" -}}
+{{- end -}}
+{{- $connectorImage := required "global.azure.images.connectorImage is required" $images.connectorImage -}}
+{{- $connectorMetadata := required "global.azure.images.connectorMetadata is required" $images.connectorMetadata -}}
+apiVersion: akri.iotoperations.azure.com/v1beta1
+kind: AioApplicationDefinition
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  applicationMetadataRef: "{{ $connectorMetadata.registry }}/{{ $connectorMetadata.image }}:{{ $connectorMetadata.tag }}"
+  applicationSource: {{ $applicationSource | quote }}
+  applicationType: {{ $applicationType | quote }}
+  imageDetails:
+    imageName: {{ $connectorImage.image | quote }}
+    registrySettings:
+      registrySettingsType: ContainerRegistry
+      containerRegistrySettings:
+        registry: {{ $connectorImage.registry | quote }}
+    tagDigestSettings:
+      tagDigestType: {{ required "global.azure.images.connectorImage.tagDigestType is required" $connectorImage.tagDigestType }}
+{{ if eq $connectorImage.tagDigestType "Tag" }}      tag: {{ required "global.azure.images.connectorImage.tag is required when tagDigestType is Tag" $connectorImage.tag | quote }}
+{{ else if eq $connectorImage.tagDigestType "Digest" }}      digest: {{ required "global.azure.images.connectorImage.digest is required when tagDigestType is Digest" $connectorImage.digest | quote }}
+{{ else }}{{ fail "global.azure.images.connectorImage.tagDigestType must be Tag or Digest" }}
+{{ end -}}
+{{ with .Values.aioMetadata }}  aioMetadata:
+    {{- toYaml . | nindent 4 }}
+{{ end -}}
+{{ with .Values.resources }}  resources:
+    {{- toYaml . | nindent 4 }}
+{{ end }}

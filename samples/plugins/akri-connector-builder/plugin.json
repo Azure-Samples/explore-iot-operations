@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "akri-connector-builder",
+  "description": "Build production-quality third-party Akri connectors for Azure IoT Operations from specifications using an ordered, autonomous pipeline and the Akri Connectors MCP server.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Microsoft Corporation"
+  },
+  "homepage": "https://github.com/Azure-Samples/explore-iot-operations/tree/main/samples/plugins/akri-connector-builder",
+  "repository": "https://github.com/Azure-Samples/explore-iot-operations",
+  "license": "MIT",
+  "keywords": [
+    "akri",
+    "azure-iot-operations",
+    "connectors",
+    "industrial-iot"
+  ]
+}

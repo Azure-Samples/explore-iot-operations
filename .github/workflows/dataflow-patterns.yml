@@ -1,0 +1,229 @@
+name: Dataflow pattern WASM samples
+
+on:
+  pull_request:
+    paths:
+      - samples/wasm/dataflow-patterns/**
+      - samples/wasm/.cargo/config.toml
+      - .github/workflows/dataflow-patterns.yml
+  push:
+    branches: [main, huguesBouvier/dataflow-pattern-samples]
+    paths:
+      - samples/wasm/dataflow-patterns/**
+      - samples/wasm/.cargo/config.toml
+      - .github/workflows/dataflow-patterns.yml
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Immutable version for 11 graph/module/Helm OCI artifacts and the separate ticker image (no build metadata)
+        type: string
+        required: true
+        default: 1.0.0-rc.4
+      publish:
+        description: Publish from main or the explicit maintainer review branch
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # Do not cancel or overlap releases that may have partially published an immutable set.
+  group: dataflow-patterns-${{ github.event_name == 'pull_request' && github.ref || 'release' }}
+  cancel-in-progress: false
+
+env:
+  SAMPLE: samples/wasm/dataflow-patterns
+  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.4' }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v3.17.3
+      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+        with:
+          version: 1.3.0
+      - name: Install pinned Rust and Python YAML parser
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal --component rustfmt --component clippy --target wasm32-wasip2
+          cargo +1.90.0 install --locked wasm-tools --version 1.230.0
+          python3 -m venv "$SAMPLE/scripts/.work/venv"
+          "$SAMPLE/scripts/.work/venv/bin/pip" install --disable-pip-version-check PyYAML==6.0.2
+          echo "$GITHUB_WORKSPACE/$SAMPLE/scripts/.work/venv/bin" >> "$GITHUB_PATH"
+      - name: Unit, formatting, clippy and chart/schema checks
+        working-directory: samples/wasm/dataflow-patterns
+        run: |
+          set -euo pipefail
+          cargo +1.90.0 fmt --all --check
+          cargo +1.90.0 test --workspace --locked
+          # SDK 1.1.3 generates an unsafe WIT trait without a Safety doc section.
+          cargo +1.90.0 clippy --workspace --locked --all-targets -- -D warnings -A clippy::missing_safety_doc
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+          python3 -m unittest discover -s ticker -v
+          python3 scripts/check-chart.py chart --version 1.0.0-rc.4
+          for script in scripts/*.sh; do bash -n "$script"; done
+          shellcheck scripts/*.sh
+      - name: Build a version-stamped copy with the locked public SDK
+        working-directory: samples/wasm/dataflow-patterns
+        run: |
+          set -euo pipefail
+          python3 scripts/prepare-release.py --version "$RELEASE_VERSION" --revision "$GITHUB_SHA" --output scripts/.work/release
+          (
+            cd scripts/.work/release/source
+            cargo +1.90.0 build --workspace --lib --locked --release --target wasm32-wasip2
+            cp target/wasm32-wasip2/release/module_dataflow_patterns.wasm \
+              target/wasm32-wasip2/release/module_dataflow_pattern_filter.wasm ../artifacts/
+          )
+          python3 scripts/check-components.py scripts/.work/release/artifacts
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
+          bash scripts/publish.sh scripts/.work/release --stage-only
+      - name: Build and smoke-test the exact ticker image candidate
+        working-directory: samples/wasm/dataflow-patterns
+        run: |
+          set -euo pipefail
+          image="ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker:$RELEASE_VERSION"
+          docker build --provenance=false --tag "$image" \
+            --label "org.opencontainers.image.source=https://github.com/Azure-Samples/explore-iot-operations" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.opencontainers.image.version=$RELEASE_VERSION" \
+            --label "org.opencontainers.image.url=https://github.com/Azure-Samples/explore-iot-operations/tree/$GITHUB_SHA" ticker
+          docker run --rm --entrypoint python "$image" -c 'import ticker; import paho.mqtt.client'
+          docker run --rm --entrypoint python \
+            --workdir /health --env PYTHONPATH=/app \
+            --mount "type=bind,source=$PWD/ticker/test_ticker.py,target=/health/test_ticker.py,readonly" \
+            "$image" -m unittest discover -s /health -v
+          docker save --output scripts/.work/release/ticker-image.tar "$image"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dataflow-patterns-candidate
+          path: |
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/chart/
+            samples/wasm/dataflow-patterns/scripts/.work/release/release.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/layouts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.tsv
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/ticker-image.tar
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: test
+    if: >-
+      github.repository == 'Azure-Samples/explore-iot-operations' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/huguesBouvier/dataflow-pattern-samples')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+      chart_ref: ${{ steps.publish.outputs.chart_ref }}
+      chart_digest: ${{ steps.publish.outputs.chart_digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v3.17.3
+      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+        with:
+          version: 1.3.0
+      - name: Set up isolated workspace credentials and Python
+        run: |
+          umask 077
+          mkdir -p "$SAMPLE/scripts/.work/auth"
+          echo "DOCKER_CONFIG=$GITHUB_WORKSPACE/$SAMPLE/scripts/.work/auth" >> "$GITHUB_ENV"
+          python3 -m venv "$SAMPLE/scripts/.work/venv"
+          "$SAMPLE/scripts/.work/venv/bin/pip" install --disable-pip-version-check PyYAML==6.0.2
+          echo "$GITHUB_WORKSPACE/$SAMPLE/scripts/.work/venv/bin" >> "$GITHUB_PATH"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$GITHUB_SHA")" >> "$GITHUB_ENV"
+      - name: Download this run's tested candidate
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dataflow-patterns-candidate
+          path: samples/wasm/dataflow-patterns/scripts/.work/release
+      - name: Authenticate only to the existing repository GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Publish immutable candidates and verify anonymous full pulls
+        id: publish
+        run: |
+          set -euo pipefail
+          release="$SAMPLE/scripts/.work/release"
+          test "$(jq -r .revision "$release/release.json")" = "$GITHUB_SHA"
+          test "$(jq -r .version "$release/release.json")" = "$RELEASE_VERSION"
+          bash "$SAMPLE/scripts/publish.sh" "$release"
+          bash "$SAMPLE/scripts/publish-ticker.sh" "$release"
+          {
+            echo "version=$RELEASE_VERSION"
+            echo "chart_ref=oci://ghcr.io/azure-samples/explore-iot-operations/helm/dataflow-patterns"
+            echo "chart_digest=$(awk -F '\t' '$1 == "dataflow-patterns" { print $3 }' "$release/artifacts.tsv")"
+          } >> "$GITHUB_OUTPUT"
+      - name: Report release ledger and explicit qualification boundary
+        if: always()
+        run: |
+          release="$SAMPLE/scripts/.work/release"
+          {
+            if test -f "$release/verification.json"; then
+              echo 'Anonymous full pulls and packaged Helm checks passed for all 11 graph/module/Helm OCI artifacts.'
+            else
+              echo 'Release verification incomplete. New GHCR packages may need an administrator to set public visibility; anonymous verification is mandatory.'
+            fi
+            if test -f "$release/ticker-image-verification.json"; then
+              echo 'The separate 12th artifact, the exact tested ticker image, passed anonymous config and full-layer digest verification.'
+              jq -r '"Ticker image: `" + .digestReference + "`"' "$release/ticker-image.json"
+            else
+              echo 'Separate ticker image publication/anonymous verification incomplete; no image or runtime success is claimed.'
+            fi
+            if test -f "$release/artifacts.tsv"; then
+              echo ''
+              echo '| Artifact | Repository | Manifest digest | Payload |'
+              echo '| --- | --- | --- | --- |'
+              awk -F '\t' '{printf "| %s | %s | %s | %s |\n", $1, $2, $3, $4}' "$release/artifacts.tsv"
+            fi
+            echo ''
+            echo 'Each graph uses the operation-specific map and filter modules at the same release version; no external module dependencies are allowed.'
+            echo 'Real AIO runtime integration was NOT run. Use verify-deployed.sh with an explicitly selected kubeconfig and fresh release.'
+            echo 'artifacts.json contains digest-pinned references and payload SHA256; verification.json exists only after anonymous checks pass.'
+            echo 'ticker-image.json and ticker-image-verification.json are separate image ledgers; Docker layers are not graph artifacts.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve release payloads and digest ledger for independent post-publish validation
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dataflow-patterns-release
+          path: |
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/chart/
+            samples/wasm/dataflow-patterns/scripts/.work/release/release.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.tsv
+            samples/wasm/dataflow-patterns/scripts/.work/release/artifacts.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/verification.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/ticker-image.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/ticker-image-verification.json
+            samples/wasm/dataflow-patterns/scripts/.work/release/ticker-anonymous/
+            samples/wasm/dataflow-patterns/scripts/.work/release/layouts/
+            samples/wasm/dataflow-patterns/scripts/.work/release/anonymous/
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Remove registry credentials
+        if: always()
+        run: rm -f -- "$SAMPLE/scripts/.work/auth/config.json"

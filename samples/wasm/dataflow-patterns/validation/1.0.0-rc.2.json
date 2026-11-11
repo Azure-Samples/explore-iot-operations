@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0-rc.2",
+  "sourceRevision": "512381d6bbea45643a58c13ef11b8632c51081a8",
+  "workflow": "https://github.com/Azure-Samples/explore-iot-operations/actions/runs/39487748744",
+  "artifactVerification": {
+    "anonymousFullPulls": true,
+    "artifacts": 6,
+    "chartDigest": "sha256:6e669197f14d5d3b3cb38dbc455f136ae768150bcec14ce62c74a95828e549d6",
+    "mapModuleDigest": "sha256:ce8dbff9999c4259464b59fe2aa21c8b48a81b82be786592796e2c623edb98a6",
+    "filterModuleDigest": "sha256:5eee08efef6b5403cf68dda773888befa9ac44ebea9c2cb60ba25670bddc5e05"
+  },
+  "runtime": {
+    "productVersion": "1.6.0",
+    "image": "mcr.microsoft.com/azureiotoperations/dataflow@sha256:8616413d82f4afae727f3bc5362f99dab892c0a4ba5058aab8ff3001833ae01d",
+    "environment": "Isolated local k3d cluster with published AIO broker, operator and runtime",
+    "privateImagesOrNativeChanges": false,
+    "registryAuthentication": "Anonymous",
+    "profileInstances": 1,
+    "graphComponentsAvailable": 9,
+    "mqttStartedAt": "2026-10-20T20:06:46.874360+00:00",
+    "mqttFinishedAt": "2026-10-20T20:07:27.348369+00:00",
+    "observedMessages": 64,
+    "exactDestinationOutputs": 7,
+    "passed": true,
+    "cases": [
+      "Timestamp selection excludes future context",
+      "Multiple ready aligned readings are emitted in batch envelopes",
+      "Missing-context diagnostics do not become data records",
+      "Prediction-first and measurement-first ID correlation preserve original features",
+      "Duplicate and conflicting records do not produce duplicate matches",
+      "Bootstrap model v7 predicts 205",
+      "Approved contiguous model v8 predicts 203",
+      "Duplicate, conflicting, stale and version-gap updates are rejected",
+      "Update-only messages do not generate predictions or feedback-loop outputs"
+    ],
+    "packagedVerifierSha256": "4f1100cf73fb6676f7fb29fbb25a174ac32ad6fbf66221c61c57c1962f95c7bf",
+    "executedVerifierMatchesPublishedChart": true
+  },
+  "helmTest": {
+    "freshRelease": true,
+    "chartSource": "Anonymous pull of published OCI chart, not a local rebuild",
+    "nonRootTestPod": true,
+    "pinnedPahoInstalledFromPyPI": true,
+    "phase": "Succeeded",
+    "completedAt": "2026-10-20T20:10:53Z",
+    "passed": true
+  },
+  "limitations": [
+    "Finite functional qualification, not a throughput or reliability certification",
+    "All sample state is volatile; external durable approval and recovery are required",
+    "No exactly-once or equipment-safety guarantee",
+    "Wait for actual worker and graph readiness before running MQTT fixtures",
+    "Version 1.0.0-rc.1 failed initialization and is not qualified"
+  ]
+}

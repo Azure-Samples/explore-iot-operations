@@ -1,0 +1,494 @@
+#requires -Version 7.0
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:AkriDocumentPlaceholderValues = @('none', 'omit', 'not-applicable', 'generated', 'derive-from-build')
+
+function Get-AkriContentPolicyPath {
+    return [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\content-policy.yaml'))
+}
+
+function Read-AkriContentPolicy {
+    param([string]$PolicyPath = (Get-AkriContentPolicyPath))
+
+    if (-not (Test-Path -LiteralPath $PolicyPath -PathType Leaf)) {
+        throw "Content policy does not exist: '$PolicyPath'."
+    }
+
+    $version = $null
+    $currentList = $null
+    $values = @{
+        allowedUrlDomains = [System.Collections.Generic.List[string]]::new()
+        allowedDocumentExtensions = [System.Collections.Generic.List[string]]::new()
+    }
+    foreach ($rawLine in (Get-Content -LiteralPath $PolicyPath)) {
+        if ($rawLine -match '^\s*#') {
+            continue
+        }
+        $line = ($rawLine -replace '\s+#.*$', '').Trim()
+        if (-not $line) {
+            continue
+        }
+        if ($line -match '^version:\s*(\d+)\s*$') {
+            $version = [int]$Matches[1]
+            $currentList = $null
+            continue
+        }
+        if ($line -match '^(allowedUrlDomains|allowedDocumentExtensions):\s*$') {
+            $currentList = $Matches[1]
+            continue
+        }
+        if ($line -match '^-\s+(.+?)\s*$' -and $currentList) {
+            $value = $Matches[1].Trim().Trim('"', "'").ToLowerInvariant()
+            if (-not $value) {
+                throw "Content policy '$PolicyPath' contains an empty value in '$currentList'."
+            }
+            $values[$currentList].Add($value)
+            continue
+        }
+        throw "Content policy '$PolicyPath' contains unsupported YAML: '$rawLine'."
+    }
+
+    if ($version -ne 1) {
+        throw "Content policy '$PolicyPath' must declare version 1."
+    }
+    if ($values.allowedUrlDomains.Count -eq 0 -or $values.allowedDocumentExtensions.Count -eq 0) {
+        throw "Content policy '$PolicyPath' must contain non-empty URL-domain and document-extension lists."
+    }
+
+    $domains = @($values.allowedUrlDomains | Select-Object -Unique)
+    foreach ($domain in $domains) {
+        if ($domain -notmatch '^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$') {
+            throw "Content policy domain '$domain' is invalid."
+        }
+    }
+    $extensions = @($values.allowedDocumentExtensions | Select-Object -Unique)
+    foreach ($extension in $extensions) {
+        if ($extension -notmatch '^\.[a-z0-9]+$') {
+            throw "Content policy extension '$extension' is invalid."
+        }
+    }
+
+    return [pscustomobject]@{
+        version = $version
+        allowedUrlDomains = $domains
+        allowedDocumentExtensions = $extensions
+    }
+}
+
+function Resolve-AkriPhysicalPath {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $unresolvedSegments = [System.Collections.Generic.List[string]]::new()
+    $candidate = [System.IO.Path]::GetFullPath($Path)
+    while (-not (Test-Path -LiteralPath $candidate)) {
+        $leaf = Split-Path -Leaf $candidate
+        if (-not $leaf) {
+            return $candidate
+        }
+        $unresolvedSegments.Insert(0, $leaf)
+        $parent = Split-Path -Parent $candidate
+        if (-not $parent -or $parent -eq $candidate) {
+            return $candidate
+        }
+        $candidate = $parent
+    }
+
+    $item = Get-Item -LiteralPath $candidate -Force
+    $resolvedTarget = $item.ResolveLinkTarget($true)
+    $resolved = if ($null -ne $resolvedTarget) {
+        $resolvedTarget.FullName
+    } else {
+        $item.FullName
+    }
+    foreach ($segment in $unresolvedSegments) {
+        $resolved = Join-Path $resolved $segment
+    }
+    return [System.IO.Path]::GetFullPath($resolved)
+}
+
+function Get-AkriRepositoryRoot {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $root = @(& git -C $Path rev-parse --show-toplevel 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $root.Count -ne 1) {
+        throw "Path '$Path' is not inside a Git repository."
+    }
+    return Resolve-AkriPhysicalPath $root[0]
+}
+
+function Test-AkriPathWithinRoot {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Root
+    )
+
+    $comparison = if ($IsWindows) {
+        [System.StringComparison]::OrdinalIgnoreCase
+    } else {
+        [System.StringComparison]::Ordinal
+    }
+    $rootWithSeparator = $Root.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    return $Path.Equals($Root, $comparison) -or $Path.StartsWith($rootWithSeparator, $comparison)
+}
+
+function Test-AkriReservedInstructionPath {
+    param([Parameter(Mandatory)][string]$RelativePath)
+
+    $normalizedPath = $RelativePath.Replace('\', '/').TrimStart('/').ToLowerInvariant()
+    $fileName = [System.IO.Path]::GetFileName($normalizedPath)
+    if ($fileName -in @('agents.md', 'claude.md', 'gemini.md')) {
+        return $true
+    }
+    if ($normalizedPath -eq '.github/copilot-instructions.md') {
+        return $true
+    }
+    return $normalizedPath.StartsWith('.github/instructions/') -or
+        $normalizedPath.StartsWith('.github/agents/') -or
+        $normalizedPath.StartsWith('.github/skills/') -or
+        $normalizedPath.StartsWith('.github/hooks/') -or
+        $normalizedPath.StartsWith('.github/copilot/') -or
+        $normalizedPath.StartsWith('.copilot/') -or
+        $normalizedPath.StartsWith('com.github.copilot/')
+}
+
+function Read-AkriIntakeValues {
+    param([Parameter(Mandatory)][string]$IntakePath)
+
+    $values = @{}
+    foreach ($line in ((Get-Content -LiteralPath $IntakePath -Raw) -split "`r?`n")) {
+        if ($line -notmatch '^([^:#][^:]*):\s*(\S.*)$') {
+            continue
+        }
+        $key = $Matches[1].Trim()
+        if ($values.ContainsKey($key)) {
+            throw "Intake manifest contains duplicate key '$key'."
+        }
+        $values[$key] = $Matches[2].Trim()
+    }
+    return $values
+}
+
+function Get-AkriDeclaredDocuments {
+    param(
+        [Parameter(Mandatory)][string]$IntakePath,
+        [Parameter(Mandatory)][string]$RepositoryRoot
+    )
+
+    $values = Read-AkriIntakeValues $IntakePath
+    $contentPolicy = Read-AkriContentPolicy
+    $declaredPaths = [System.Collections.Generic.List[string]]::new()
+    foreach ($key in @('SpecificationPaths', 'AdditionalInputPaths')) {
+        if (-not $values.ContainsKey($key) -or
+            $values[$key].ToLowerInvariant() -in $script:AkriDocumentPlaceholderValues) {
+            continue
+        }
+        foreach ($value in ($values[$key] -split '\s*;\s*')) {
+            if (-not [string]::IsNullOrWhiteSpace($value)) {
+                $declaredPaths.Add($value)
+            }
+        }
+    }
+    if ($declaredPaths.Count -eq 0) {
+        throw "Intake manifest '$IntakePath' does not declare any input documents."
+    }
+
+    $documents = foreach ($relativePath in @($declaredPaths | Select-Object -Unique)) {
+        if ([System.IO.Path]::IsPathFullyQualified($relativePath)) {
+            throw "Input document path '$relativePath' must be relative to the active Git repository."
+        }
+        if (Test-AkriReservedInstructionPath $relativePath) {
+            throw "Input document path '$relativePath' is in a Copilot instruction or configuration location. Move it to a neutral repository path before using it as data."
+        }
+        $fullPath = Resolve-AkriPhysicalPath (Join-Path $RepositoryRoot $relativePath)
+        if (-not (Test-AkriPathWithinRoot $fullPath $RepositoryRoot)) {
+            throw "Input document path '$relativePath' resolves outside the active Git repository."
+        }
+        if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
+            throw "Input document path '$relativePath' does not identify an existing file."
+        }
+        $extension = [System.IO.Path]::GetExtension($fullPath).ToLowerInvariant()
+        if ($extension -notin $contentPolicy.allowedDocumentExtensions) {
+            throw "Input document path '$relativePath' has extension '$extension', which is not allowed by '$((Get-AkriContentPolicyPath))'."
+        }
+        [pscustomobject]@{
+            relativePath = [System.IO.Path]::GetRelativePath($RepositoryRoot, $fullPath)
+            fullPath = $fullPath
+            sha256 = (Get-FileHash -LiteralPath $fullPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+    }
+    return @($documents)
+}
+
+function Get-AkriDocumentPolicyPath {
+    param([Parameter(Mandatory)][string]$RepositoryRoot)
+
+    $gitPath = @(& git -C $RepositoryRoot rev-parse --git-path akri-connector-builder/document-policy.json 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $gitPath.Count -ne 1) {
+        throw "Unable to resolve the Git metadata path for '$RepositoryRoot'."
+    }
+    if (-not [System.IO.Path]::IsPathFullyQualified($gitPath[0])) {
+        return [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot $gitPath[0]))
+    }
+    return [System.IO.Path]::GetFullPath($gitPath[0])
+}
+
+function Write-AkriDocumentPolicy {
+    param(
+        [Parameter(Mandatory)][string]$IntakePath,
+        [Parameter(Mandatory)][string]$RepositoryRoot,
+        [Parameter(Mandatory)][object[]]$Documents
+    )
+
+    $policyPath = Get-AkriDocumentPolicyPath $RepositoryRoot
+    $policyDirectory = Split-Path -Parent $policyPath
+    New-Item -ItemType Directory -Path $policyDirectory -Force | Out-Null
+    $temporaryPath = "$policyPath.$PID.tmp"
+    try {
+        [pscustomobject]@{
+            version = 1
+            classification = 'untrusted-document-data'
+            instructionAuthority = 'none'
+            repositoryRoot = $RepositoryRoot
+            intakePath = $IntakePath
+            documents = $Documents
+        } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $temporaryPath -Encoding utf8NoBOM
+        Move-Item -LiteralPath $temporaryPath -Destination $policyPath -Force
+    } finally {
+        Remove-Item -LiteralPath $temporaryPath -Force -ErrorAction SilentlyContinue
+    }
+    return $policyPath
+}
+
+function Read-AkriDocumentPolicy {
+    param([Parameter(Mandatory)][string]$RepositoryRoot)
+
+    $policyPath = Get-AkriDocumentPolicyPath $RepositoryRoot
+    if (-not (Test-Path -LiteralPath $policyPath -PathType Leaf)) {
+        return $null
+    }
+    $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
+    if ($policy.version -ne 1 -or
+        $policy.classification -ne 'untrusted-document-data' -or
+        $policy.instructionAuthority -ne 'none') {
+        throw "Document policy '$policyPath' is invalid."
+    }
+    if ((Resolve-AkriPhysicalPath $policy.repositoryRoot) -ne $RepositoryRoot) {
+        throw "Document policy '$policyPath' belongs to a different repository."
+    }
+    return $policy
+}
+
+# SIG # Begin signature block
+# MIInOgYJKoZIhvcNAQcCoIInKzCCJycCAQExDzANBglghkgBZQMEAgEFADB5Bgor
+# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDTeWx9Z6sAxwBc
+# sZ7kQNQWAd3dQ0e7cytG68LtltuJEKCCDMkwggYEMIID7KADAgECAhMzAAACHPrN
+# xZvoL37EAAAAAAIcMA0GCSqGSIb3DQEBCwUAMFcxCzAJBgNVBAYTAlVTMR4wHAYD
+# VQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKDAmBgNVBAMTH01pY3Jvc29mdCBD
+# b2RlIFNpZ25pbmcgUENBIDIwMjQwHhcNMjYwNDE2MTg1OTQxWhcNMjcwNDE1MTg1
+# OTQxWjB0MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UE
+# BxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMR4wHAYD
+# VQQDExVNaWNyb3NvZnQgQ29ycG9yYXRpb24wggEiMA0GCSqGSIb3DQEBAQUAA4IB
+# DwAwggEKAoIBAQDVsZfgOKmM31HPfoWOoNEiw0SlCiIxUMC0I9NMWbucKOw/e9lP
+# oAoehQVu6SG65V4EPzrYsnBnFPNoi4/HoOdjhz1qkrEt4I6tEcxXU6oOeY9zGveC
+# /3iBeuhLYxM3M/PkcUoebF+Nednm8OkdSPoDu8imViHPQq/8CQUu0WRR4rE+dMRf
+# rpVqfmNi2qWCX94T4MsepijGVkwE//tJg0ryAiYdHT34LSnlG/RSBZmQRGWZ5g8j
+# qnKjRParSqMft1gvjuUTVgtWNZfgcLFSK5Wa0myrq8OPcgTGGsRgun+tnSS+IxDT
+# xVsAPH1OzvPjwomguByhUe/OcvUN0D5Wmp7xAgMBAAGjggGqMIIBpjAOBgNVHQ8B
+# Af8EBAMCB4AwHwYDVR0lBBgwFgYKKwYBBAGCN0wIAQYIKwYBBQUHAwMwHQYDVR0O
+# BBYEFNoH7a2YDjOSwpkp6DHcmUS7J+0yMFQGA1UdEQRNMEukSTBHMS0wKwYDVQQL
+# EyRNaWNyb3NvZnQgSXJlbGFuZCBPcGVyYXRpb25zIExpbWl0ZWQxFjAUBgNVBAUT
+# DTIzMDAxMis1MDc1NjkwHwYDVR0jBBgwFoAUf1k/VCHarU/vBeXmo9ctBpQSCDEw
+# YAYDVR0fBFkwVzBVoFOgUYZPaHR0cDovL3d3dy5taWNyb3NvZnQuY29tL3BraW9w
+# cy9jcmwvTWljcm9zb2Z0JTIwQ29kZSUyMFNpZ25pbmclMjBQQ0ElMjAyMDI0LmNy
+# bDBtBggrBgEFBQcBAQRhMF8wXQYIKwYBBQUHMAKGUWh0dHA6Ly93d3cubWljcm9z
+# b2Z0LmNvbS9wa2lvcHMvY2VydHMvTWljcm9zb2Z0JTIwQ29kZSUyMFNpZ25pbmcl
+# MjBQQ0ElMjAyMDI0LmNydDAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IC
+# AQAUnEqhaRXe0T3hIJjvdQErEkrA/7bByjn6t5IArODkkRjzkYwtKMc2yYj2quaN
+# rLutWw2YZcngKPy1b71YyDJQTy4NDRwaSh9Tw5thrk3NmcPrAHia5vtcBJ1CgtKK
+# 7mQbIcQ22d/N3813ayCDDFewu1+jsZmX+r/aTEqaOM4TVxVtRSkuCy8nAXKuChOK
+# Li/zA4XuH8iEYqIsj2YoNaeSxVmeGiERXpKdo3dDmYi0kO5w2D8VS4c3+9h6gElY
+# BaAAg/dYErBg27qT3vv0zRDJhJufvCNylA8S7/+8H5E/PV5cng6na9VV/w9OV3qu
+# uND6zdGa2EX38Glp50F9AIQk3p2xXmcvorDeM4XJ7UlWYBi6g80J1SSOQnInCYFE
+# msfUNn3+1AaTJKSJL83quKArTac2pKhu0Yzzzrzo6HrsRiQKzpnRBb1/dMa6P3hz
+# 75XbMRBctNsFhZC07WCmjExdLg2eHW5uV0TY8D5+6wozJf7vF3+WHkYPO85Z+BC6
+# U4FkNbYNycZ9cE4j1tXRdyDCfml6c0HWPHjNVDObrv9lKt3qUqFpX38VCqVCyNOO
+# 1UcXfQiVjJw32U2WUKZjt/neJKHEBsm9kFsLuWzkQ53+qcaSaytmsCnk2gOglrlD
+# 5d3kKyvvAw+rzm0lT8K38P6PLxfZQHhu4W8dV7Av8N2ZmDCCBr0wggSloAMCAQIC
+# EzMAAAA5O7Y3Gb8GHWcAAAAAADkwDQYJKoZIhvcNAQEMBQAwgYgxCzAJBgNVBAYT
+# AlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdSZWRtb25kMR4wHAYD
+# VQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xMjAwBgNVBAMTKU1pY3Jvc29mdCBS
+# b290IENlcnRpZmljYXRlIEF1dGhvcml0eSAyMDExMB4XDTI0MDgwODIwNTQxOFoX
+# DTM2MDMyMjIyMTMwNFowVzELMAkGA1UEBhMCVVMxHjAcBgNVBAoTFU1pY3Jvc29m
+# dCBDb3Jwb3JhdGlvbjEoMCYGA1UEAxMfTWljcm9zb2Z0IENvZGUgU2lnbmluZyBQ
+# Q0EgMjAyNDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANgBnB7jOMeq
+# lRYHNa265v4IY9fH8TKhemHfPINe1gpLaV3dhg324WwH06LcHbpnsBukCDNitryo
+# 0dtS/EW6I/yEL/bLSY8hKpbfQuWusBPr9qazYcDxCW/qnjb5JsI1s8bNOg3bVATv
+# QVL4tcf03aTycsz8QeCdM0l/yHRObJ9QqazM1r6VPEOJ7LL+uEEb73w6QCuhs89a
+# 1uv1zerOYMnsneRRwCbpyW11IcggU0cRKDDq1pjVJzIbIF6+oiXXbReOsgeI8zu1
+# FyQfK0fVkaya8SmVHQ/tOf23mZ4W9k0Ri22QW9p3UgSC5OUDktKxxcCmGL6tXLfO
+# GSWHIIV4YrTJTT6PNty5REojHJuZHArkF9VnHTERWoTjAzfI3kP+5b4alUdhgAZ7
+# ttOu1bVnXfHaqPYl2rPs20ji03LOVWsh/radgE17es5hL+t6lV0eVHrVhsssROWJ
+# uz2MXMCt7iw7lFPG9LXKGjsmonn2gotGdHIuEg5JnJMJVmixd5LRlkmgYRZKzhxS
+# CwyoGIq0PhaA7Y+VPct5pCHkijcIIDm0nlkK+0KyepolcqGm0T/GYQRMhHJlGOOm
+# VQop36wUVUYklUy++vDWeEgEo4s7hxN6mIbf2MSIQ/iIfMZgJxC69oukMUXCrOC3
+# SkE/xIkgpfl22MM1itkZ35nNXkMolU1lAgMBAAGjggFOMIIBSjAOBgNVHQ8BAf8E
+# BAMCAYYwEAYJKwYBBAGCNxUBBAMCAQAwHQYDVR0OBBYEFH9ZP1Qh2q1P7wXl5qPX
+# LQaUEggxMBkGCSsGAQQBgjcUAgQMHgoAUwB1AGIAQwBBMA8GA1UdEwEB/wQFMAMB
+# Af8wHwYDVR0jBBgwFoAUci06AjGQQ7kUBU7h6qfHMdEjiTQwWgYDVR0fBFMwUTBP
+# oE2gS4ZJaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraS9jcmwvcHJvZHVjdHMv
+# TWljUm9vQ2VyQXV0MjAxMV8yMDExXzAzXzIyLmNybDBeBggrBgEFBQcBAQRSMFAw
+# TgYIKwYBBQUHMAKGQmh0dHA6Ly93d3cubWljcm9zb2Z0LmNvbS9wa2kvY2VydHMv
+# TWljUm9vQ2VyQXV0MjAxMV8yMDExXzAzXzIyLmNydDANBgkqhkiG9w0BAQwFAAOC
+# AgEAFJQfOChP7onn6fLIMKrSlN1WYKwDFgAddymOUO3FrM8d7B/W/iQ6DxXsDn7D
+# 5W4wMwYeLystcEqfkjz4NURRgazyMu5yRzQh4LqjA4tStTcJh1opExo7nn5PuPBY
+# nbu0+THSuVHTe0VTTPVhily/piFrDo3axQ9P4C+Ol5yet+2gTfekICS5xS+cYfSI
+# vgn0JksVBVMYVI5QFu/qhnLhsEFEUzG8fvv0hjgkO+lkpV9ty6GkN4vdnd7ya6Q6
+# aR9y34aiM1qmxaxBi6OUnyNl6fkuun/diTFnYDLTppOkr/mg5WSfCiDVMNCxtj4w
+# PKC5OmHm1DQIt/MNokbbH3UGsFP1QbzsLocuSqLCvH09Io3fDPTmscR9Y75G4qX7
+# RTX8AdBPo0I6OEojf39zuFZt0qOHm65YWQE69cZM2ueE1MB05dNNgHK9gTE7zKvK
+# /fg8B2qjW88MT/WF5V5uvZGtqa9FSL2RazArA+rDPuf6JGYz4HpgMZHB4S6szWSK
+# YBv0VisCzfxgeU+dquXW9bd0auYlOB58DPcOYKdc3Se94g+xL4pcEhbB54JOgAkw
+# YTu/9dLeH2pDqeJZAABVDWRQCaXfO5LgyKwKCLYXpigrZYCjUSBcr+Ve8PFWMhVT
+# Ql0v4q8J/AUmQN5W4n101cY2L4A7GTQG1h32HHAvfQESWP0xghnHMIIZwwIBATBu
+# MFcxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24x
+# KDAmBgNVBAMTH01pY3Jvc29mdCBDb2RlIFNpZ25pbmcgUENBIDIwMjQCEzMAAAIc
+# +s3Fm+gvfsQAAAAAAhwwDQYJYIZIAWUDBAIBBQCggZAwGQYJKoZIhvcNAQkDMQwG
+# CisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEIGutJSf7QM4RPOB2dGrSlDQkKs4P
+# kn4FVMw6hIjWjEebMEIGCisGAQQBgjcCAQwxNDAyoBSAEgBNAGkAYwByAG8AcwBv
+# AGYAdKEagBhodHRwOi8vd3d3Lm1pY3Jvc29mdC5jb20wDQYJKoZIhvcNAQEBBQAE
+# ggEAwSs0mnPLH/n+pzA3zGKRqTQnkJim/yhdmjiko/GO7LsCdtrSbtHNyDm6RrwJ
+# uqafx9jFubADT8UtPZT+l8l2HIERFwCvZDcVdU/0s/eJmmnBUTCbyD5FHo6mx1n/
+# /fRCsItN13WIalLsTz5WmeUpHOdfuo2ut3/PMUaR1OaPMZlQ4DUEVbmRVqSpFzk2
+# GoVkT5jhghOhOoQsXNWiDFz7M18XOlXrVbOhUMlF2EfJHpCbdeefoHy2XYuHTBNK
+# Bs0A2hGhNpcPIeCbtBlBHO6pDFyxVaj1lW1WlvV5hjFBcdoyTNdbOMY9gpV7slJs
+# MlOYLTF/CSfAetEKfU1m4k+cPaGCF5cwgheTBgorBgEEAYI3AwMBMYIXgzCCF38G
+# CSqGSIb3DQEHAqCCF3AwghdsAgEDMQ8wDQYJYIZIAWUDBAIBBQAwggFSBgsqhkiG
+# 9w0BCRABBKCCAUEEggE9MIIBOQIBAQYKKwYBBAGEWQoDATAxMA0GCWCGSAFlAwQC
+# AQUABCDcTcf4EnNZXvQFo6XPQmzDhG4W480BoksCdBbgKymvVgIGatlMFH9EGBMy
+# MDI2MTEwNTIxNTg1MC42ODhaMASAAgH0oIHRpIHOMIHLMQswCQYDVQQGEwJVUzET
+# MBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMV
+# TWljcm9zb2Z0IENvcnBvcmF0aW9uMSUwIwYDVQQLExxNaWNyb3NvZnQgQW1lcmlj
+# YSBPcGVyYXRpb25zMScwJQYDVQQLEx5uU2hpZWxkIFRTUyBFU046OEQwMC0wNUUw
+# LUQ5NDcxJTAjBgNVBAMTHE1pY3Jvc29mdCBUaW1lLVN0YW1wIFNlcnZpY2WgghHt
+# MIIHIDCCBQigAwIBAgITMwAAAiorAhXd3Fx0NAABAAACKjANBgkqhkiG9w0BAQsF
+# ADB8MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMH
+# UmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSYwJAYDVQQD
+# Ex1NaWNyb3NvZnQgVGltZS1TdGFtcCBQQ0EgMjAxMDAeFw0yNjAyMTkxOTQwMDla
+# Fw0yNzA1MTcxOTQwMDlaMIHLMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGlu
+# Z3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBv
+# cmF0aW9uMSUwIwYDVQQLExxNaWNyb3NvZnQgQW1lcmljYSBPcGVyYXRpb25zMScw
+# JQYDVQQLEx5uU2hpZWxkIFRTUyBFU046OEQwMC0wNUUwLUQ5NDcxJTAjBgNVBAMT
+# HE1pY3Jvc29mdCBUaW1lLVN0YW1wIFNlcnZpY2UwggIiMA0GCSqGSIb3DQEBAQUA
+# A4ICDwAwggIKAoICAQDzPfCBALZdNkf52bWmCNH/CWVuEUUcOXzDCYR98YuodL3s
+# Wlcm1NQjyKSzgLnAC4iWnX+e7eOtEg/poePlCbaxn7DDHIs+C7ApiXeYJnJpDzgo
+# xpWN94QAphh4SYs+rWzZcqtA4q0O0Q+4CXVXlTjIbgNdO0UDlqeM2bI++zEd1rmX
+# 46mCPtFo0N9U0d8/PsPEyn1llTU9q7LGVChCz/Q5od8YPzqOT+f4OjBw7PDsKS2D
+# 8EzdEpn25ppjrx4lyAGexF87QeWkD1cmTn1SVtjQXJvj8LVYstVeA/k6Y7IE8ZD1
+# P62BiuQIBrqF7B3IlddpNelDgnn+5H9XQMoW5rcYh1g1lSh/4/yuulwT2uSufvxI
+# vLV6NGgnl5LlPU0ZlRMHMDzadU5jPcUIQqXK+FlrR966FcWq+UQFcyZPKIJHrKQi
+# yryIr6KcDWp27+ADsHJKMASE1QBqZfqgQZhmUXmyXZR+cazdJmIsdAJrwrpRXS9E
+# 2HIs+FR+xaYB+GVJ9fmtHnTaYT5LNhGURFx02QPpl96817tFGM4vrovYH00qCBus
+# zUALOFADT9VL+1IJoWM9DsRtxWsqE1apM/ou4PII6gQEjP9YtQQmSpUSolpXNk79
+# xE23YpdedBJs8Gx9T9bqmukezNlpHsc4LBufwdAprRJNWMw0Q2pNfERsj1FT+QID
+# AQABo4IBSTCCAUUwHQYDVR0OBBYEFBiNf4XD+sZ0GWEhgDttwfhUWzosMB8GA1Ud
+# IwQYMBaAFJ+nFV0AXmJdg/Tl0mWnG1M1GelyMF8GA1UdHwRYMFYwVKBSoFCGTmh0
+# dHA6Ly93d3cubWljcm9zb2Z0LmNvbS9wa2lvcHMvY3JsL01pY3Jvc29mdCUyMFRp
+# bWUtU3RhbXAlMjBQQ0ElMjAyMDEwKDEpLmNybDBsBggrBgEFBQcBAQRgMF4wXAYI
+# KwYBBQUHMAKGUGh0dHA6Ly93d3cubWljcm9zb2Z0LmNvbS9wa2lvcHMvY2VydHMv
+# TWljcm9zb2Z0JTIwVGltZS1TdGFtcCUyMFBDQSUyMDIwMTAoMSkuY3J0MAwGA1Ud
+# EwEB/wQCMAAwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwgwDgYDVR0PAQH/BAQDAgeA
+# MA0GCSqGSIb3DQEBCwUAA4ICAQCbKTsUJNVDrY32V6UTxoOzvAMEMmwQB8Os/umq
+# k5xmjohVswdpPcJyxg4nZOgSFuCVdol5EhF6bQcLuJWZDaNIit7zV29rqDS42sgl
+# e67tcQWP3IrEIlNh36N9wygQOnue8NW3UFghGTODnKT3J0oGJ/8MYX9D7gMgpANc
+# 3d48WjVZ0cbscVK7LdeficY+ui9Rsi2JvdG7IfD9GDoSlXgx/qO+8AnuwF4ZBPNQ
+# QzTe0wVifVIDVw0BBDlb1xyx5OsubuOxJMBUcCpJRTImftz8jp80+cnNCoppLeoh
+# mJlcAUMDwFqbYvURXCokThtHYFZrUdyj/HiKNHdBVARd44aXAkbiE9KAo13Ldd//
+# CWgiOzUxs73as2j1J3wr7xnS7HzJak5vlqrYHjQ1nGuicmsNJYaCLkEiHJvSQMfX
+# y4oYLFLXDrYMTSz/6ogSaUF4EtPJbqDT1DxuOXneSCBprO+EsZ4zeY3JcmHvF+r9
+# ZJ5JSNToPNy6Ya/u8U5ftR+/noGjieiXwnvYaBEnT86Iv7hEeIbPlaa5GFDHY9NH
+# hGTSN1oHfTsvXvSXA6V6jw3yZczCLGLe2LxVsdjh5RYJhkX7GeqiIlZgeoWOo8+0
+# Jr+I+hB26BTOc50IjreOrTDBHyyt4wsyrxwBnTfgJV6ACJnw/Dx1Qj6hHNf1kW9R
+# w+M1UDCCB3EwggVZoAMCAQICEzMAAAAVxedrngKbSZkAAAAAABUwDQYJKoZIhvcN
+# AQELBQAwgYgxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYD
+# VQQHEwdSZWRtb25kMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xMjAw
+# BgNVBAMTKU1pY3Jvc29mdCBSb290IENlcnRpZmljYXRlIEF1dGhvcml0eSAyMDEw
+# MB4XDTIxMDkzMDE4MjIyNVoXDTMwMDkzMDE4MzIyNVowfDELMAkGA1UEBhMCVVMx
+# EzARBgNVBAgTCldhc2hpbmd0b24xEDAOBgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoT
+# FU1pY3Jvc29mdCBDb3Jwb3JhdGlvbjEmMCQGA1UEAxMdTWljcm9zb2Z0IFRpbWUt
+# U3RhbXAgUENBIDIwMTAwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDk
+# 4aZM57RyIQt5osvXJHm9DtWC0/3unAcH0qlsTnXIyjVX9gF/bErg4r25PhdgM/9c
+# T8dm95VTcVrifkpa/rg2Z4VGIwy1jRPPdzLAEBjoYH1qUoNEt6aORmsHFPPFdvWG
+# UNzBRMhxXFExN6AKOG6N7dcP2CZTfDlhAnrEqv1yaa8dq6z2Nr41JmTamDu6Gnsz
+# rYBbfowQHJ1S/rboYiXcag/PXfT+jlPP1uyFVk3v3byNpOORj7I5LFGc6XBpDco2
+# LXCOMcg1KL3jtIckw+DJj361VI/c+gVVmG1oO5pGve2krnopN6zL64NF50ZuyjLV
+# wIYwXE8s4mKyzbnijYjklqwBSru+cakXW2dg3viSkR4dPf0gz3N9QZpGdc3EXzTd
+# EonW/aUgfX782Z5F37ZyL9t9X4C626p+Nuw2TPYrbqgSUei/BQOj0XOmTTd0lBw0
+# gg/wEPK3Rxjtp+iZfD9M269ewvPV2HM9Q07BMzlMjgK8QmguEOqEUUbi0b1qGFph
+# AXPKZ6Je1yh2AuIzGHLXpyDwwvoSCtdjbwzJNmSLW6CmgyFdXzB0kZSU2LlQ+QuJ
+# YfM2BjUYhEfb3BvR/bLUHMVr9lxSUV0S2yW6r1AFemzFER1y7435UsSFF5PAPBXb
+# GjfHCBUYP3irRbb1Hode2o+eFnJpxq57t7c+auIurQIDAQABo4IB3TCCAdkwEgYJ
+# KwYBBAGCNxUBBAUCAwEAATAjBgkrBgEEAYI3FQIEFgQUKqdS/mTEmr6CkTxGNSnP
+# EP8vBO4wHQYDVR0OBBYEFJ+nFV0AXmJdg/Tl0mWnG1M1GelyMFwGA1UdIARVMFMw
+# UQYMKwYBBAGCN0yDfQEBMEEwPwYIKwYBBQUHAgEWM2h0dHA6Ly93d3cubWljcm9z
+# b2Z0LmNvbS9wa2lvcHMvRG9jcy9SZXBvc2l0b3J5Lmh0bTATBgNVHSUEDDAKBggr
+# BgEFBQcDCDAZBgkrBgEEAYI3FAIEDB4KAFMAdQBiAEMAQTALBgNVHQ8EBAMCAYYw
+# DwYDVR0TAQH/BAUwAwEB/zAfBgNVHSMEGDAWgBTV9lbLj+iiXGJo0T2UkFvXzpoY
+# xDBWBgNVHR8ETzBNMEugSaBHhkVodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtp
+# L2NybC9wcm9kdWN0cy9NaWNSb29DZXJBdXRfMjAxMC0wNi0yMy5jcmwwWgYIKwYB
+# BQUHAQEETjBMMEoGCCsGAQUFBzAChj5odHRwOi8vd3d3Lm1pY3Jvc29mdC5jb20v
+# cGtpL2NlcnRzL01pY1Jvb0NlckF1dF8yMDEwLTA2LTIzLmNydDANBgkqhkiG9w0B
+# AQsFAAOCAgEAnVV9/Cqt4SwfZwExJFvhnnJL/Klv6lwUtj5OR2R4sQaTlz0xM7U5
+# 18JxNj/aZGx80HU5bbsPMeTCj/ts0aGUGCLu6WZnOlNN3Zi6th542DYunKmCVgAD
+# sAW+iehp4LoJ7nvfam++Kctu2D9IdQHZGN5tggz1bSNU5HhTdSRXud2f8449xvNo
+# 32X2pFaq95W2KFUn0CS9QKC/GbYSEhFdPSfgQJY4rPf5KYnDvBewVIVCs/wMnosZ
+# iefwC2qBwoEZQhlSdYo2wh3DYXMuLGt7bj8sCXgU6ZGyqVvfSaN0DLzskYDSPeZK
+# PmY7T7uG+jIa2Zb0j/aRAfbOxnT99kxybxCrdTDFNLB62FD+CljdQDzHVG2dY3RI
+# LLFORy3BFARxv2T5JL5zbcqOCb2zAVdJVGTZc9d/HltEAY5aGZFrDZ+kKNxnGSgk
+# ujhLmm77IVRrakURR6nxt67I6IleT53S0Ex2tVdUCbFpAUR+fKFhbHP+CrvsQWY9
+# af3LwUFJfn6Tvsv4O+S3Fb+0zj6lMVGEvL8CwYKiexcdFYmNcP7ntdAoGokLjzba
+# ukz5m/8K6TT4JDVnK+ANuOaMmdbhIurwJ0I9JZTmdHRbatGePu1+oDEzfbzL6Xu/
+# OHBE0ZDxyKs6ijoIYn/ZcGNTTY3ugm2lBRDBcQZqELQdVTNYs6FwZvKhggNQMIIC
+# OAIBATCB+aGB0aSBzjCByzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCldhc2hpbmd0
+# b24xEDAOBgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29mdCBDb3Jwb3Jh
+# dGlvbjElMCMGA1UECxMcTWljcm9zb2Z0IEFtZXJpY2EgT3BlcmF0aW9uczEnMCUG
+# A1UECxMeblNoaWVsZCBUU1MgRVNOOjhEMDAtMDVFMC1EOTQ3MSUwIwYDVQQDExxN
+# aWNyb3NvZnQgVGltZS1TdGFtcCBTZXJ2aWNloiMKAQEwBwYFKw4DAhoDFQAz8Eo/
+# z8JJc4wkBjU+FEYBPjSq/aCBgzCBgKR+MHwxCzAJBgNVBAYTAlVTMRMwEQYDVQQI
+# EwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdSZWRtb25kMR4wHAYDVQQKExVNaWNyb3Nv
+# ZnQgQ29ycG9yYXRpb24xJjAkBgNVBAMTHU1pY3Jvc29mdCBUaW1lLVN0YW1wIFBD
+# QSAyMDEwMA0GCSqGSIb3DQEBCwUAAgUA7pbm2DAiGA8yMDI2MTEwNTExMjgyNFoY
+# DzIwMjYxMTA2MTEyODI0WjB3MD0GCisGAQQBhFkKBAExLzAtMAoCBQDulubYAgEA
+# MAoCAQACAhFNAgH/MAcCAQACAhPKMAoCBQDumDhYAgEAMDYGCisGAQQBhFkKBAIx
+# KDAmMAwGCisGAQQBhFkKAwKgCjAIAgEAAgMHoSChCjAIAgEAAgMBhqAwDQYJKoZI
+# hvcNAQELBQADggEBAKz0e+h1lRYjOs5bNIXsfGu86aQMlAnMqkNz44d8qXXh97MK
+# GGgYKZj367JaMvjrb2afnlXvRDnXRgExT8p8EDrDV7hahmMk0fi+pw+nWHhNvwaI
+# NH8B74WKmXGdzsQmgjpZR2bScJRppCApVmiTOs5WCeo4MDTnh5F+2MzgHtd/cjPx
+# pauKUABwxkwdXv19dRnIO41CmifhRV1BCg6WNwwLnzOc51F90VODOkFR5LXuxiQW
+# qtf8gGTJudq65wkabeUq1ltC6p9LltkuHNu5TG4MrY30F9eNPe8KAlk649RC7Lyf
+# 6x02yVQWW5OecP5RiIx9hJeA2uDZ7AKWWMi++AExggQNMIIECQIBATCBkzB8MQsw
+# CQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9u
+# ZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSYwJAYDVQQDEx1NaWNy
+# b3NvZnQgVGltZS1TdGFtcCBQQ0EgMjAxMAITMwAAAiorAhXd3Fx0NAABAAACKjAN
+# BglghkgBZQMEAgEFAKCCAUowGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMC8G
+# CSqGSIb3DQEJBDEiBCDDRtA9L6A2B/wmrS4xKkQ/KpkbluruLcu497a6iPhxmjCB
+# +gYLKoZIhvcNAQkQAi8xgeowgecwgeQwgb0EIMpLg2mURY/WrRXyRt5mfX47Yh2R
+# YxetFfiHOLICI/zlMIGYMIGApH4wfDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCldh
+# c2hpbmd0b24xEDAOBgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29mdCBD
+# b3Jwb3JhdGlvbjEmMCQGA1UEAxMdTWljcm9zb2Z0IFRpbWUtU3RhbXAgUENBIDIw
+# MTACEzMAAAIqKwIV3dxcdDQAAQAAAiowIgQgZ8yon+L3C+xVSBHZh9zjVgQ2891b
+# ZNIveTB5BZ8y0ZEwDQYJKoZIhvcNAQELBQAEggIAmYkrJQ/6Xmsod8mjqNnsO81m
+# NcWoNGzN4cRV9Udo99PS9f57A2W4+4WdAKBm5XVPYbAc7yahI8zyF/3428LNUlwO
+# 9VYY2Oom4QEYDfZ4JOw2+PS4nDD7c7hD3pEGGQB4tYT9ZkQJwjxiCJh7Ui5qp9/E
+# tEuOpTUi1KI5DGpWXkVlT5O4kDe6BZTv8PsIoeA/gh0k9UuoGaKO/Pk3xUNkUWC2
+# yeWHDaVnVXKoPvcZqUUscm9Vxs1H+9o/GG1NWmgTaOcKqUh5/xgmz8CmMn4cA7Mr
+# 32z5Yw/Hhgi3+Nq1oE3s2S8Dcs1Y7hbvhW+jLCLXIG5qdXIbxSzGrnKd5SJ2jDFN
+# FGKr4+TgAoF/O01CeTgmFYCSe/TGpBhFm00uud6u6GgNJud3e8XLVlung35UoDkX
+# rLBEAHRNtoLd/vlYjKKooEudX5G2PlaYEfRTw06MTDlbrjEH+krwcuXOhK6Uc9IL
+# 7xHYYV0Lp5J1bsoFhCyQj/Qviptb2hZOmXhYWa9HK8dRsZfdosvmNH6qAL477GHc
+# I/mHZh+V9YVhxBKQoZ8D0Y/vIfih1OmT7yyXO4PJhVprHfR8OaSw/c/30YmjAjWW
+# 9nFPItu4BLCZLLmyKpTdlX3Ihr8e/UGfc6/ePtFW620Q3dF82nIHEKkN4DAylqgU
+# mRG37ZReVqNI6wxiTuQ=
+# SIG # End signature block

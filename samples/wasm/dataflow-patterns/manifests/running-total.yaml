@@ -1,0 +1,32 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: running-total
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/total-readings, factory/total-resets]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-running-total:1.0.0-rc.4
+        configuration:
+          - key: settings
+            value: '{"role":"running-total","inputTopics":{"reading":"factory/total-readings","reset":"factory/total-resets"},"initialStates":[{"assetId":"sensor-1","total":0,"stateVersion":0,"epoch":0,"lastSequence":0}]}'
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/totals
+  nodeConnections:
+    - from: {name: source}
+      to: {name: processor}
+    - from: {name: processor}
+      to: {name: destination}

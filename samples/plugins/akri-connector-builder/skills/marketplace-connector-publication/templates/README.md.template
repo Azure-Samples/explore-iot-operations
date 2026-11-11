@@ -1,0 +1,74 @@
+# `<connector-name>` Marketplace Bundle
+
+This directory contains the Azure Marketplace source artifacts for the
+`<connector-name>` connector.
+
+## Contents
+
+- `manifest.yaml` — CNAB bundle manifest.
+- `CreateUiDefinition.json` — Azure portal deployment experience.
+- `mainTemplate.json` — ARM deployment template.
+- `<connector-name>-helm-chart/` — Helm chart containing the
+  `AioApplicationDefinition` resource.
+
+## Versions
+
+These values are independently versioned:
+
+- Helm chart: `<chart-version>`
+- Application: `<application-version>`
+- Marketplace manifest: `<manifest-version>`
+
+## Prerequisites
+
+- Acknowledge that Marketplace deep-copies package images to a public
+  Microsoft-managed container registry. Images can be publicly accessible even
+  for private plans. Do not package proprietary or sensitive image content that
+  must remain private.
+- Authenticate to the publishing tenant with Azure CLI.
+- Grant the Microsoft packaging service principal `AcrPull` access to the ACR.
+- Test the chart in a staging Arc-enabled Kubernetes cluster with Azure IoT
+  Operations installed.
+- Never place passwords, tokens, client secrets, Docker credentials,
+  kubeconfigs, or pull-secret contents in this bundle or support messages.
+
+## Assurance
+
+The generator rendered these source files and ran its local structural checks.
+This does not mean the bundle is CPA-verified, Marketplace-validated, approved,
+or deployment-validated. Record those states only after the corresponding
+external tool or service succeeds and its evidence is retained.
+
+## Definition Classifications
+
+The generated chart uses `applicationSource: Marketplace` and
+`applicationType: Connector`. These are required fixed values for this
+Marketplace connector chart and must not be changed. The chart rejects other
+values and casing variants.
+
+## Validate And Package
+
+Review all generated values, then follow the current Microsoft procedure for
+`cpa verify` and `cpa buildbundle`. Use an organization-approved immutable CPA
+image digest in a disposable isolated VM or runner with least-privilege,
+host-managed authentication. Docker daemon access is host-equivalent privilege;
+do not mount the host Docker socket into an unpinned or untrusted image. Require
+explicit human approval immediately before building or uploading the package.
+
+## Partner Center Handoff
+
+Assign an owner and completion state for each external item:
+
+- Listing text and media assets
+- Support, privacy, and legal URLs or terms
+- Availability, pricing, plan, and billing configuration
+- Preview audience and certification contacts
+- Technical configuration and ACR access
+- CPA verification/build evidence
+- Marketplace preview ingestion evidence
+- Staging installation and AIO reconciliation evidence
+
+Submit the resulting CNAB bundle through Partner Center only after the required
+external checks pass. See
+[Prepare your Azure container technical assets for a Kubernetes application](https://learn.microsoft.com/partner-center/marketplace-offers/azure-container-technical-assets-kubernetes)
+for the complete publication workflow.

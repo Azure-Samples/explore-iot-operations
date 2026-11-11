@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "execution": {
+    "workerTimeoutSeconds": 43200,
+    "reviewPassLimit": 10,
+    "remediation": {
+      "maximumAttemptsPerStep": 2,
+      "repairableCodes": ["sdk-composition-missing", "implementation-defect", "review-changes-required"]
+    }
+  },
+  "modelFallback": "auto",
+  "sessionState": {
+    "snapshotPath": "AIO-CONNECTOR-SESSION-STATE.md",
+    "historyPath": "AIO-CONNECTOR-SESSION-HISTORY.md",
+    "maximumSnapshotBytes": 16384,
+    "requiredHeadings": [
+      "# AIO Connector Session State",
+      "## Current Phase",
+      "## Active Decisions",
+      "## Open Findings and Blockers",
+      "## Validation and Artifact Pointers",
+      "## Next Actions"
+    ]
+  },
+  "intents": {
+    "CreateConnectorE2E": {
+      "stepIds": [
+        "scaffolding",
+        "core-implementation",
+        "cross-check",
+        "readability",
+        "performance",
+        "final-cross-check",
+        "metadata",
+        "security",
+        "test-environment",
+        "local-validation",
+        "user-documentation",
+        "technical-documentation",
+        "convergence",
+        "ai-notice",
+        "session-close"
+      ]
+    },
+    "CreateConnectorE2EAndRunLocalTest": {
+      "stepIds": [
+        "scaffolding",
+        "core-implementation",
+        "cross-check",
+        "readability",
+        "performance",
+        "final-cross-check",
+        "metadata",
+        "security",
+        "test-environment",
+        "local-validation",
+        "user-documentation",
+        "technical-documentation",
+        "convergence",
+        "ai-notice",
+        "local-live-testing",
+        "session-close"
+      ]
+    }
+  },
+  "standaloneWorkflows": {
+    "marketplace-connector-publication": {
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" }
+    }
+  },
+  "steps": [
+    {
+      "order": 1,
+      "id": "scaffolding",
+      "name": "Source Code Scaffolding",
+      "skill": "aio-connector-scaffolding",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" },
+      "reviewer": null,
+      "gates": ["workspace-created", "mcp-create-succeeded"],
+      "languageGates": { "Rust": ["rust-toolchain-pinned"] },
+      "requiredPaths": [".vscode/launch.json", ".vscode/tasks.json", ".spec/grounding-index.json"]
+    },
+    {
+      "order": 2,
+      "id": "core-implementation",
+      "name": "Core Implementation",
+      "skill": "aio-connector-core-implementation",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "full",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": [
+        "implementation-complete",
+        "required-sdk-integrations-complete",
+        "adr-sourced-configuration",
+        "reliability-requirements-satisfied",
+        "observability-integrated",
+        "build-passed",
+        "tests-passed",
+        "review-passed"
+      ],
+      "languageGates": { "Rust": ["rust-toolchain-pinned"] },
+      "requiredPaths": ["invariants.md", "examples.md", ".spec/protocol.txt", "conformance"]
+    },
+    {
+      "order": 3,
+      "id": "cross-check",
+      "name": "Cross-Check Alignment",
+      "skill": "aio-connector-cross-check",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "full",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": ["review-passed", "build-passed", "tests-passed", "adr-sourced-configuration"],
+      "requiredPaths": [".spec/protocol.txt", "conformance"]
+    },
+    {
+      "order": 4,
+      "id": "readability",
+      "name": "Readability Refactoring",
+      "skill": "aio-connector-readability-refactoring",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "medium" },
+      "adaptiveReasoning": { "initial": "low" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "delta",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": ["review-passed", "build-passed", "tests-passed"],
+      "requiredPaths": []
+    },
+    {
+      "order": 5,
+      "id": "performance",
+      "name": "Performance Optimization",
+      "skill": "aio-connector-performance-optimization",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "delta",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": ["review-passed", "build-passed", "tests-passed"],
+      "requiredPaths": []
+    },
+    {
+      "order": 6,
+      "id": "final-cross-check",
+      "name": "Final Cross-Check",
+      "skill": "aio-connector-final-cross-check",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "full",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": ["review-passed", "conformance-zero-gaps", "build-passed", "tests-passed", "adr-sourced-configuration"],
+      "requiredPaths": []
+    },
+    {
+      "order": 7,
+      "id": "metadata",
+      "name": "Connector Metadata Authoring",
+      "skill": "aio-connector-metadata-authoring",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "delta",
+      "gates": ["metadata-schema-valid", "review-passed", "adr-sourced-configuration"],
+      "requiredPaths": ["ConnectorMetadata/connector-metadata.json", ".spec/aio-connector-metadata-11.0-preview.schema.json"]
+    },
+    {
+      "order": 8,
+      "id": "security",
+      "name": "Security Review",
+      "skill": "aio-connector-security-review",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "full",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": ["security-review-passed", "build-passed", "tests-passed", "adr-sourced-configuration"],
+      "requiredPaths": ["SECURITY-REVIEW.md"]
+    },
+    {
+      "order": 9,
+      "id": "test-environment",
+      "name": "Test Environment Authoring",
+      "skill": "aio-connector-test-environment",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "delta",
+      "gates": ["test-environment-valid", "crds-schema-valid", "review-passed", "adr-sourced-configuration"],
+      "requiredPaths": [".test-environment", ".spec/device-crd-schema.json", ".spec/asset-crd-schema.json", "Devices", "Assets"]
+    },
+    {
+      "order": 10,
+      "id": "local-validation",
+      "name": "Local Integration Validation",
+      "skill": "aio-connector-local-validation",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": null,
+      "gates": ["local-validation-passed", "diagnostics-clean", "cleanup-passed", "adr-sourced-configuration", "connector-startup-survived"],
+      "requiredPaths": []
+    },
+    {
+      "order": 11,
+      "id": "user-documentation",
+      "name": "End-User Documentation",
+      "skill": "aio-connector-user-documentation",
+      "worker": { "recommendedModel": "gpt-5.6-terra", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "delta",
+      "gates": ["documentation-grounded", "review-passed"],
+      "requiredPaths": ["user-docs"]
+    },
+    {
+      "order": 12,
+      "id": "technical-documentation",
+      "name": "Technical Documentation",
+      "skill": "aio-connector-technical-documentation",
+      "worker": { "recommendedModel": "gpt-5.6-terra", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "delta",
+      "gates": ["documentation-grounded", "review-passed"],
+      "requiredPaths": ["tech-docs"]
+    },
+    {
+      "order": 13,
+      "id": "convergence",
+      "name": "Adversarial Convergence",
+      "skill": "orchestrated-adversarial-convergence",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "xhigh" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "max" },
+      "reviewScope": "full",
+      "gates": ["zero-findings", "production-ready", "dependent-reruns-complete", "conformance-zero-gaps", "adr-sourced-configuration"],
+      "requiredPaths": []
+    },
+    {
+      "order": 14,
+      "id": "ai-notice",
+      "name": "AI Generation Notice",
+      "skill": "aio-connector-ai-notice",
+      "worker": { "recommendedModel": "gpt-5.3-codex", "reasoning": "high" },
+      "adaptiveReasoning": { "initial": "medium" },
+      "reviewer": { "recommendedModel": "claude-opus-5", "reasoning": "high" },
+      "reviewScope": "full",
+      "parallelVerification": true,
+      "validationCache": true,
+      "gates": [
+        "notice-inventory-complete",
+        "notices-format-safe",
+        "structured-files-valid",
+        "build-passed",
+        "tests-passed",
+        "review-passed"
+      ],
+      "requiredPaths": ["AI-NOTICE-MANIFEST.md"]
+    },
+    {
+      "order": 15,
+      "id": "local-live-testing",
+      "name": "Optional Docker Desktop Live Testing",
+      "skill": "aio-connector-local-live-testing",
+      "worker": { "recommendedModel": "gpt-5.6-terra", "reasoning": "high" },
+      "reviewer": null,
+      "gates": [
+        "local-runtime-started",
+        "test-server-running",
+        "connector-running",
+        "adr-sourced-configuration",
+        "connector-startup-survived",
+        "mqtt-observer-running",
+        "selected-runtime-behavior-observed",
+        "resource-health-observed",
+        "cleanup-deferred"
+      ],
+      "requiredPaths": ["local-live-test.md"]
+    },
+    {
+      "order": 16,
+      "id": "session-close",
+      "name": "Session Close and Review Loop",
+      "skill": "orchestrated-session-close",
+      "worker": { "recommendedModel": "gpt-5.6-terra", "reasoning": "medium" },
+      "adaptiveReasoning": { "initial": "low" },
+      "reviewer": null,
+      "gates": ["session-state-current", "user-review-complete"],
+      "requiredPaths": ["AIO-CONNECTOR-SESSION-STATE.md", "what-was-done.md"]
+    }
+  ]
+}

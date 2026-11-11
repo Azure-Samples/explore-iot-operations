@@ -1,0 +1,20 @@
+# The base/rust image provides ca-certificates and build tools pre-installed;
+# the bundled Rust toolchain is removed and replaced via rustup to pin the exact version.
+FROM mcr.microsoft.com/azurelinux/base/rust:1.90 AS build-env
+WORKDIR /build
+
+ARG RUST_VERSION=%RUST_VERSION%
+
+RUN tdnf update -y && tdnf install -y openssl-devel pkgconfig gdb curl && tdnf clean all && \
+    tdnf remove -y rust && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Create src directory and copy source files
+COPY . .
+
+RUN cargo build --target-dir target
+
+EXPOSE 2000
+
+CMD ["gdbserver", "--once", "localhost:2000", "./target/debug/%CONNECTOR_NAME%"]

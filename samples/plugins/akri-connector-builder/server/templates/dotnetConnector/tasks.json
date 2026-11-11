@@ -1,0 +1,33 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Launch %CONNECTOR_NAME%_debug container",
+            "type": "process",
+            "command": "docker",
+            "args": [
+                "run", "-d", "--rm",
+                "--network", "%CUSTOM_NETWORK_NAME%",
+                "--name", "%CONNECTOR_NAME%_debug",
+                "-v", "%AKRI_MOUNT_VAL%",
+                "-e", "AZURE_EXTENSION_RESOURCEID=%AZURE_EXTENSION_RESOURCE_ID%",
+                "-e", "CONNECTOR_NAMESPACE=%CONNECTOR_NAMESPACE%",
+                "-e", "CONNECTOR_ID=%CONNECTOR_NAME%%CONNECTOR_ID_SUFFIX%",
+                "-e", "CONNECTOR_CONFIGURATION_MOUNT_PATH=/etc/akri/config/connector_configuration",
+                "-e", "ADR_RESOURCES_NAME_MOUNT_PATH=/etc/akri/config/adr_resources_names",
+                "%IMAGE_NAME%:debug"
+            ],
+            "problemMatcher": [],
+            "isBackground": false,
+            "dependsOn": [
+                "aio-akri-connectors-pre-launch-task: Configure Runtime for Akri Connector"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}

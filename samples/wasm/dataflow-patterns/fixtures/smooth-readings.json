@@ -1,0 +1,55 @@
+{
+  "configuration": {"role":"smooth-readings","alpha":0.25,"maxHistoryPerAsset":2},
+  "steps": [
+    {
+      "topic":"factory/readings","nowMs":0,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r0","sequence":0,"value":10,"units":"C","trace":{"source":"synthetic"}},
+      "expected":{"kind":"smoothed","assetId":"sensor-1","messageId":"r0","sequence":0,"value":10,"units":"C","trace":{"source":"synthetic"},"smoothedValue":10.0,"emittedAtMs":0}
+    },
+    {
+      "topic":"factory/readings","nowMs":100,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":1,"value":11},
+      "expected":{"kind":"smoothed","assetId":"sensor-1","messageId":"r1","sequence":1,"value":11,"smoothedValue":10.25,"emittedAtMs":100}
+    },
+    {
+      "topic":"factory/readings","nowMs":200,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":1,"value":11},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":300,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r1","sequence":2,"value":100},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":400,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"stale","sequence":0,"value":100},
+      "expected":null
+    },
+    {
+      "topic":"factory/ticks","nowMs":500,
+      "input":{"kind":"tick","assetId":"sensor-1"},
+      "expected":null
+    },
+    {
+      "topic":"factory/readings","nowMs":600,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r2","sequence":2,"value":10},
+      "expected":{"kind":"smoothed","assetId":"sensor-1","messageId":"r2","sequence":2,"value":10,"smoothedValue":10.1875,"emittedAtMs":600}
+    },
+    {
+      "topic":"factory/readings","nowMs":700,
+      "input":{"kind":"reading","assetId":"sensor-2","messageId":"r0","sequence":0,"value":-8},
+      "expected":{"kind":"smoothed","assetId":"sensor-2","messageId":"r0","sequence":0,"value":-8,"smoothedValue":-8.0,"emittedAtMs":700}
+    },
+    {
+      "topic":"factory/readings","nowMs":800,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r3","sequence":3,"value":10},
+      "expected":{"kind":"smoothed","assetId":"sensor-1","messageId":"r3","sequence":3,"value":10,"smoothedValue":10.140625,"emittedAtMs":800}
+    },
+    {
+      "topic":"factory/readings","nowMs":900,
+      "input":{"kind":"reading","assetId":"sensor-1","messageId":"r0","sequence":0,"value":10,"units":"C","trace":{"source":"synthetic"}},
+      "expected":null
+    }
+  ]
+}

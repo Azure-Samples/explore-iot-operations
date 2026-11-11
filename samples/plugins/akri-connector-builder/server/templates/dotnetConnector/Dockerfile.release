@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0.203-bookworm-slim AS build-env
+WORKDIR /build
+
+COPY . .
+
+RUN dotnet restore
+
+RUN dotnet publish -c Release --no-restore -o out
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/runtime:9.0.4-bookworm-slim@sha256:9d42d7d4d892e2afc571884e9b67f3b1ebb361166ee14151fc6d1bd539cbfeb3 AS base
+WORKDIR /app
+COPY --from=build-env /build/out .
+
+# Switch to non-root user
+# app (UID 1654) is the named non-root user baked into mcr.microsoft.com/dotnet/runtime.
+USER app
+
+# Set the entry point for the container
+ENTRYPOINT ["dotnet", "%CONNECTOR_NAME%.dll"]

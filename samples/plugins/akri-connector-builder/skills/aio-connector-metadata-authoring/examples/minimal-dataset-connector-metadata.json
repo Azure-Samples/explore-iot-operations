@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json.schemastore.org/aio-connector-metadata-11.0-preview.json",
+  "name": "ExampleDatasetConnector",
+  "description": "Structural example for a connector that publishes polled datasets.",
+  "version": "1.0.0",
+  "isPreview": true,
+  "imageConfigurationSettings": {
+    "imageName": "examples/dataset-connector",
+    "tag": "1.0.0"
+  },
+  "supportedArchitectures": [
+    "linux/amd64"
+  ],
+  "sourceCode": {
+    "language": "C#",
+    "languageVersion": "8.0"
+  },
+  "aioMetadata": {
+    "aioMinVersion": "1.2.37"
+  },
+  "endpointsEnabledByDefault": true,
+  "inboundEndpoints": [
+    {
+      "description": "Example endpoint shape; replace every value with implementation evidence.",
+      "endpointType": "Contoso.Sensor",
+      "version": "1.0",
+      "supportedAuthenticationTypes": [
+        "anonymous"
+      ],
+      "assetsEnabledByDefault": true,
+      "fields": {
+        "address": {
+          "input": "required",
+          "exampleValue": "sensor.example:443"
+        }
+      },
+      "datasets": {
+        "limits": {
+          "minimum": 0
+        },
+        "fields": {
+          "dataSource": {
+            "input": "required",
+            "exampleValue": "temperature"
+          },
+          "typeRef": {
+            "input": "unsupported"
+          }
+        },
+        "destinations": {
+          "supportedDestinations": [
+            "Mqtt"
+          ],
+          "defaultDestination": {
+            "destination": "Mqtt",
+            "topic": "telemetry/{deviceName}/{assetName}/{datasetName}",
+            "qos": 1,
+            "ttl": 60,
+            "retain": "never"
+          }
+        }
+      }
+    }
+  ],
+  "recommendedAllocationPolicy": "bucketized",
+  "recommendedReplicas": 2
+}

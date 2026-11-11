@@ -1,0 +1,62 @@
+# Install with --namespace azure-iot-operations into an existing AIO installation.
+# Requires DataflowGraph, DataflowProfile and RegistryEndpoint CRDs and an MQTT endpoint.
+endpointRef: default
+profile:
+  # Dedicated release-scoped profile; the operator supplies its native runtime image.
+  create: true
+# With profile.create=false, name an existing profile with spec.instanceCount=1.
+# Helm must be connected to the target cluster to verify it; it is never modified.
+profileRef: ""
+# Anonymous by default. If the target runtime requires credentials, explicitly
+# reference an existing pull secret after qualifying registry access.
+# The chart never creates a Secret or changes registry hosts.
+registryPullSecret: ""
+# Empty uses dataflow-patterns/<release>; never share a prefix between installations.
+topicPrefix: ""
+artifactVersion: "1.0.0-rc.4"
+artifactRepository: azure-samples/explore-iot-operations/dataflow-patterns
+# Disable individual graphs to reduce native runtime compilation memory.
+# Reading samples explicitly use 1s report heartbeats, a 1s offline timeout,
+# and alarm high/low 80/70, raise/clear 1s/0.5s, observation gap 1.5s.
+# These demonstration settings do not change graph artifact/core defaults.
+patterns:
+  align-by-time: true
+  correlate-by-id: true
+  versioned-predictor: true
+  report-by-exception: true
+  stable-alarm: true
+  offline-detection: true
+  running-total: true
+  smooth-readings: true
+# Trusted clocks are opt-in: configure assets, host and broker authorization.
+ticker:
+  enabled: false
+  mqttHost: ""
+  mqttPort: 8883
+  tls: true
+  # Existing ConfigMap containing ca.crt; empty uses system trust roots.
+  caConfigMap: ""
+  assets: []
+  intervalSeconds: 1
+  targets:
+    report: true
+    alarm: true
+    availability: true
+  auth:
+    mode: serviceAccountToken
+    username: "K8S-SAT"
+    audience: aio-internal
+    existingSecret: ""
+    usernameKey: username
+    passwordKey: password
+  image:
+    repository: ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker
+    tag: "1.0.0-rc.4"
+    pullPolicy: IfNotPresent
+tests:
+  enabled: false
+  # A reachable real MQTT broker serving endpointRef, not a second test broker.
+  mqttHost: ""
+  mqttPort: 1883
+  tls: false
+  image: python:3.12-slim

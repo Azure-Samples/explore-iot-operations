@@ -1,0 +1,16 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: RegistryEndpoint
+metadata:
+  name: {{ include "patterns.registry" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: ghcr.io
+  authentication:
+    {{- if .Values.registryPullSecret }}
+    method: ArtifactPullSecret
+    artifactPullSecretSettings:
+      secretRef: {{ .Values.registryPullSecret | quote }}
+    {{- else }}
+    method: Anonymous
+    anonymousSettings: {}
+    {{- end }}

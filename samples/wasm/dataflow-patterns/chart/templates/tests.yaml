@@ -1,0 +1,63 @@
+{{- if .Values.tests.enabled }}
+{{- $host := required "tests.mqttHost must address the real broker serving endpointRef" .Values.tests.mqttHost }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "patterns.name" . }}-tests
+  namespace: {{ .Release.Namespace }}
+data:
+  verify_runtime.py: |
+{{ .Files.Get "files/verify_runtime.py" | indent 4 }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "patterns.name" . }}-tests
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 180
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: mqtt-test
+      image: {{ .Values.tests.image | quote }}
+      command: ["/bin/sh", "-ec"]
+      args:
+        - >-
+          python -m pip install --disable-pip-version-check --no-cache-dir --target /work/deps paho-mqtt==2.1.0 &&
+          PYTHONPATH=/work/deps python /tests/verify_runtime.py
+      env:
+        - {name: HOME, value: /work}
+        - {name: TMPDIR, value: /work}
+        - {name: MQTT_HOST, value: {{ $host | quote }}}
+        - {name: MQTT_PORT, value: {{ .Values.tests.mqttPort | quote }}}
+        - {name: MQTT_TLS, value: {{ .Values.tests.tls | quote }}}
+        - {name: TOPIC_PREFIX, value: {{ include "patterns.prefix" . | quote }}}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests: {cpu: 50m, memory: 64Mi}
+        limits: {cpu: 250m, memory: 128Mi}
+      volumeMounts:
+        - {name: tests, mountPath: /tests, readOnly: true}
+        - {name: work, mountPath: /work}
+  volumes:
+    - name: tests
+      configMap:
+        name: {{ include "patterns.name" . }}-tests
+    - name: work
+      emptyDir: {}
+{{- end }}

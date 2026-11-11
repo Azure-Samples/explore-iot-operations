@@ -1,0 +1,45 @@
+# CNAB bundle manifest for the <connector-name> connector marketplace offer.
+# Consumed by container-package-app (`cpa`) or the supported Partner Center package tooling.
+#
+# Field references (helmChart / clusterArmTemplate / uiDefinition) are relative to this file
+# and are case-sensitive — they must match the on-disk names.
+
+# Reverse-DNS application identifier. Must be unique and match your Partner Center offer.
+applicationName: <application-name>
+
+# Publisher display name as it appears in the Azure Marketplace.
+publisher: <publisher-yaml>
+
+# Short description of the connector offer (1-2 sentences).
+description: <connector-short-description-yaml>
+
+# Marketplace offer version. Must be in the format #.#.#.
+version: <manifest-version>
+
+# Relative path to the Helm chart directory packaged into the bundle.
+# The chart contains Chart.yaml, values.yaml, and templates/.
+helmChart: "./<connector-name>-helm-chart"
+
+# Relative path to the ARM deployment template.
+clusterArmTemplate: "./mainTemplate.json"
+
+# Relative path to the portal Create UI definition.
+uiDefinition: "./CreateUiDefinition.json"
+
+# Azure Container Registry where the final CNAB bundle will be pushed.
+registryServer: <registry-server-yaml>
+
+# Extension registration parameters.
+extensionRegistrationParameters:
+  # Default scope for this extension: always 'cluster' for Akri connectors.
+  defaultScope: cluster
+
+  # Namespace where the connector will be deployed.
+  namespace: azure-iot-operations
+
+  # Supported cluster types: Arc-Enabled Kubernetes (connectedClusters) only.
+  supportedClusterTypes:
+    connectedClusters:
+      - distribution: ["All"]
+        distributionSupported: true
+        unsupportedVersions: null
