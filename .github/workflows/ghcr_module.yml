@@ -68,6 +68,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          moduleTag="${{ inputs.module-tag }}"
+          moduleTag="${moduleTag:-1.0.0}"
 
           source $HOME/.cargo/env
 
@@ -78,7 +80,7 @@ jobs:
             echo "Building specific module: ${{ inputs.module-name }}"
 
             cd graphs/wasm-modules
-            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.module-name }}:${{ inputs.module-tag }} ./${{ inputs.module-name }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+            oras push ghcr.io/$owner/explore-iot-operations/${{ inputs.module-name }}:$moduleTag ./${{ inputs.module-name }}.wasm:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
           else
             echo "Building all modules"
 
@@ -86,6 +88,6 @@ jobs:
             for moduleFile in *.wasm; do
               moduleName=$(basename "$moduleFile" .wasm)
               echo "Pushing module: $moduleName"
-              oras push ghcr.io/$owner/explore-iot-operations/$moduleName:${{ inputs.module-tag }} ./$moduleFile:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
+              oras push ghcr.io/$owner/explore-iot-operations/$moduleName:$moduleTag ./$moduleFile:application/vnd.wasm.content.layer.v1+wasm --disable-path-validation
             done
           fi

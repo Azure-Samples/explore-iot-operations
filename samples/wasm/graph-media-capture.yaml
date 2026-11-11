@@ -1,0 +1,41 @@
+metadata:
+  name: "Media capture graph"
+  description: "Calls the ExtractClip action of a media connector asset for each message, and outputs the response"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.7.2"
+  runtimeVersion: "1.1.8"
+
+moduleConfigurations:
+  - name: module-media-capture/map
+    parameters:
+      action_topic:
+        name: action_topic
+        description: "The request topic of the asset's ExtractClip action"
+        required: true
+      stream_configuration_name:
+        name: stream_configuration_name
+        description: "The name of the asset's snapshot-to-fs stream"
+        required: true
+
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-media-capture/map"
+    module: "azure-samples/explore-iot-operations/media-capture:1.0.0"
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-media-capture/map"
+  - from:
+      name: "module-media-capture/map"
+    to:
+      name: "sink"
