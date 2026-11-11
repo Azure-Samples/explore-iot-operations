@@ -1,0 +1,13 @@
+{
+  "configuration": {
+    "role": "bounded-recommendation",
+    "recommendation": {"epoch": 1, "modelVersion": 7, "gain": -0.5, "minValue": 0, "maxValue": 10, "maxStep": 2, "maxAgeMs": 1000}
+  },
+  "steps": [
+    {"nowMs": 1000, "input": {"kind": "decision", "assetId": "sensor-a", "decisionId": "d-1", "epoch": 1, "sequence": 1, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "currentValue": 5, "error": 100}, "expected": {
+      "kind": "recommendation", "assetId": "sensor-a", "decisionId": "d-1", "epoch": 1, "sequence": 1, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z",
+      "evaluatedAtMs": 1000, "currentValue": 5, "error": 100, "recommendedValue": 3, "delta": -2, "limited": true, "approved": false, "actuation": false
+    }},
+    {"nowMs": 1001, "input": {"kind": "decision", "assetId": "sensor-a", "decisionId": "d-1", "epoch": 1, "sequence": 1, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "currentValue": 5, "error": 100}, "expected": null}
+  ]
+}

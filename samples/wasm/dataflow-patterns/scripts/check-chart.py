@@ -133,6 +133,26 @@ def check(chart, version, revision=None):
         "--set", "patterns.stable-alarm=false",
     ], text=True)))
     assert len([r for r in selected if r["kind"] == "DataflowGraph"]) == 6
+    learned = list(yaml.safe_load_all(subprocess.check_output([
+        "helm", "template", "sample", str(chart),
+        "--set", "artifactVersion=1.0.0-rc.5",
+        "--set", "patterns.fit-linear-model=true",
+        "--set", "patterns.bounded-recommendation=true",
+    ], text=True)))
+    assert len([r for r in learned if r["kind"] == "DataflowGraph"]) == 10
+    for role, binding in (("fit-linear-model", {"sample": "training-samples"}),
+                          ("bounded-recommendation", {"decision": "decision-inputs"})):
+        graph = next(r for r in learned if r["metadata"]["name"].endswith("-" + role))
+        nodes = {n["name"]: n for n in graph["spec"]["nodes"]}
+        configured = json.loads(nodes["transform"]["graphSettings"]["configuration"][0]["value"])
+        assert configured["role"] == role
+        assert configured["inputTopics"] == {
+            kind: f"dataflow-patterns/sample/{topic}" for kind, topic in binding.items()}
+        definition = yaml.safe_load((Path(__file__).resolve().parents[1] /
+                                     f"graph-{role}.yaml").read_text())
+        defaults = json.loads(definition["moduleConfigurations"][0]["parameters"]["settings"]["default"])
+        defaults["inputTopics"] = configured["inputTopics"]
+        assert configured == defaults
     for mode in ("serviceAccountToken", "existingSecret", "anonymous"):
         ticked = list(yaml.safe_load_all(subprocess.check_output([
             "helm", "template", "sample", str(chart), "--set", "ticker.enabled=true",

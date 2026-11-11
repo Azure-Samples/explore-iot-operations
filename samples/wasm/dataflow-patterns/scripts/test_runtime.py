@@ -205,8 +205,18 @@ class CoreReplayTests(unittest.TestCase):
                 fixture = json.loads(path.read_text())
                 outputs = self.replay(fixture, f"fixture-{path.stem}")
                 for step, core in zip(fixture["steps"], outputs):
-                    self.assertEqual(graph_projection(fixture["configuration"]["role"], core),
-                                     step["expected"])
+                    actual = graph_projection(fixture["configuration"]["role"], core)
+                    expected = step["expected"]
+                    if path.stem == "fit-linear-model" and expected is not None:
+                        expected = dict(expected)
+                        for field in ("intercept", "rmse", "rSquared", "conditionNumber"):
+                            self.assertAlmostEqual(actual[field], expected[field], delta=1e-8)
+                            expected[field] = actual[field]
+                        self.assertEqual(len(actual["coefficients"]), len(expected["coefficients"]))
+                        for value, reference in zip(actual["coefficients"], expected["coefficients"]):
+                            self.assertAlmostEqual(value, reference, delta=1e-8)
+                        expected["coefficients"] = actual["coefficients"]
+                    self.assertEqual(actual, expected)
 
     def test_sample_scenarios_with_full_topic_bindings_against_core(self):
         prefix = f"isolated/runtime-{uuid.uuid4().hex}"

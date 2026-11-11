@@ -1,0 +1,36 @@
+metadata:
+  name: Fit a linear model candidate
+  description: Bounded lookback multivariate least squares; emits unapproved candidates only.
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: Azure Samples
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+moduleConfigurations:
+  - name: patterns
+    parameters:
+      settings:
+        name: settings
+        description: Complete JSON settings with fit dimensions, epoch, sample and conditioning bounds.
+        default: '{"role":"fit-linear-model","maxAssets":8,"fit":{"epoch":1,"featureCount":2,"minSamples":6,"maxSamples":64,"lookbackMs":60000,"maxCondition":1000000},"inputTopics":{"sample":"factory/training-samples"}}'
+operations:
+  - operationType: source
+    name: input
+    arity: 1
+  - operationType: map
+    name: patterns
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+  - operationType: filter
+    name: suppress-internal
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter:1.0.0
+  - operationType: sink
+    name: output
+    arity: 1
+connections:
+  - from: {name: input}
+    to: {name: patterns}
+  - from: {name: patterns}
+    to: {name: suppress-internal}
+  - from: {name: suppress-internal}
+    to: {name: output}

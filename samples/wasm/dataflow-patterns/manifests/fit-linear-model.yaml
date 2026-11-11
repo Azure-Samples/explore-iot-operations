@@ -1,0 +1,32 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: fit-linear-model
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/training-samples]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-fit-linear-model:1.0.0-rc.5
+        configuration:
+          - key: settings
+            value: '{"role":"fit-linear-model","maxAssets":8,"fit":{"epoch":1,"featureCount":2,"minSamples":6,"maxSamples":64,"lookbackMs":60000,"maxCondition":1000000},"inputTopics":{"sample":"factory/training-samples"}}'
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/model-candidates
+  nodeConnections:
+    - from: {name: source}
+      to: {name: processor}
+    - from: {name: processor}
+      to: {name: destination}

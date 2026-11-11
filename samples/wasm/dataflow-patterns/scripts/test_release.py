@@ -23,6 +23,7 @@ class ReleaseTests(unittest.TestCase):
             "graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor",
             "graph-report-by-exception", "graph-stable-alarm", "graph-offline-detection",
             "graph-running-total", "graph-smooth-readings",
+            "graph-fit-linear-model", "graph-bounded-recommendation",
         })
         self.assertEqual(len(prepare.GRAPHS), len(set(prepare.GRAPHS)))
 

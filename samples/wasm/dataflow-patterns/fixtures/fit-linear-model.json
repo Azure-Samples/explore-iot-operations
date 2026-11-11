@@ -1,0 +1,17 @@
+{
+  "configuration": {
+    "role": "fit-linear-model",
+    "fit": {"epoch": 1, "featureCount": 2, "minSamples": 4, "maxSamples": 8, "lookbackMs": 60000, "maxCondition": 1000000}
+  },
+  "steps": [
+    {"nowMs": 1000, "input": {"kind": "sample", "assetId": "sensor-a", "sampleId": "s-1", "epoch": 1, "sequence": 1, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "features": [-1, -1], "target": 4}, "expected": null},
+    {"nowMs": 1000, "input": {"kind": "sample", "assetId": "sensor-a", "sampleId": "s-2", "epoch": 1, "sequence": 2, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "features": [-1, 1], "target": 0}, "expected": null},
+    {"nowMs": 1000, "input": {"kind": "sample", "assetId": "sensor-a", "sampleId": "s-3", "epoch": 1, "sequence": 3, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "features": [1, -1], "target": 10}, "expected": null},
+    {"nowMs": 1000, "input": {"kind": "sample", "assetId": "sensor-a", "sampleId": "s-4", "epoch": 1, "sequence": 4, "modelVersion": 7, "sampledAt": "1970-01-01T00:00:01Z", "features": [1, 1], "target": 6}, "expected": {
+      "kind": "modelCandidate", "approved": false, "assetId": "sensor-a", "candidateId": "1:4", "epoch": 1, "basisModelVersion": 7, "lastSequence": 4,
+      "featureCount": 2, "sampleCount": 4, "sampleIds": ["s-1", "s-2", "s-3", "s-4"],
+      "firstSampledAt": "1970-01-01T00:00:01Z", "lastSampledAt": "1970-01-01T00:00:01Z", "fittedAtMs": 1000,
+      "coefficients": [3, -2], "intercept": 5, "rmse": 0, "rSquared": 1, "conditionNumber": 1
+    }}
+  ]
+}

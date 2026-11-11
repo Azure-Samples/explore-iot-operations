@@ -4,6 +4,7 @@
 pub mod align;
 pub mod common;
 pub mod correlate;
+pub mod learning;
 pub mod predictor;
 mod readings;
 #[cfg(any(target_arch = "wasm32", test))]
@@ -22,6 +23,7 @@ enum State {
     Correlate(correlate::Correlator),
     Predict(predictor::Predictor),
     Readings(readings::Readings),
+    Learning(learning::Learning),
 }
 
 impl Engine {
@@ -32,6 +34,9 @@ impl Engine {
             Role::AlignByTime => State::Align(align::Aligner::new(config)),
             Role::CorrelateById => State::Correlate(correlate::Correlator::new(config)),
             Role::VersionedPredictor => State::Predict(predictor::Predictor::new(config)?),
+            Role::FitLinearModel | Role::BoundedRecommendation => {
+                State::Learning(learning::Learning::new(config))
+            }
             _ => State::Readings(readings::Readings::new(config)),
         };
         Ok(Self {
@@ -57,6 +62,7 @@ impl Engine {
             State::Correlate(s) => s.process(v, now_ms),
             State::Predict(s) => s.process(v, now_ms),
             State::Readings(s) => s.process(v, now_ms),
+            State::Learning(s) => s.process(v, now_ms),
         }
     }
 }

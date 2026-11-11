@@ -15,10 +15,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Immutable version for 11 graph/module/Helm OCI artifacts and the separate ticker image (no build metadata)
+        description: Immutable version for graph/module/Helm OCI artifacts and the separate ticker image (no build metadata)
         type: string
         required: true
-        default: 1.0.0-rc.4
+        default: 1.0.0-rc.5
       publish:
         description: Publish from main or the explicit maintainer review branch
         type: boolean
@@ -35,7 +35,7 @@ concurrency:
 
 env:
   SAMPLE: samples/wasm/dataflow-patterns
-  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.4' }}
+  RELEASE_VERSION: ${{ inputs.version || '1.0.0-rc.5' }}
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -182,12 +182,12 @@ jobs:
           release="$SAMPLE/scripts/.work/release"
           {
             if test -f "$release/verification.json"; then
-              echo 'Anonymous full pulls and packaged Helm checks passed for all 11 graph/module/Helm OCI artifacts.'
+              echo 'Anonymous full pulls and packaged Helm checks passed for all graph/module/Helm OCI artifacts.'
             else
               echo 'Release verification incomplete. New GHCR packages may need an administrator to set public visibility; anonymous verification is mandatory.'
             fi
             if test -f "$release/ticker-image-verification.json"; then
-              echo 'The separate 12th artifact, the exact tested ticker image, passed anonymous config and full-layer digest verification.'
+              echo 'The separate exact tested ticker image passed anonymous config and full-layer digest verification.'
               jq -r '"Ticker image: `" + .digestReference + "`"' "$release/ticker-image.json"
             else
               echo 'Separate ticker image publication/anonymous verification incomplete; no image or runtime success is claimed.'

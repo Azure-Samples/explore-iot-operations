@@ -88,6 +88,10 @@ Output lands under `operators/<name>/bin/<arch>/<mode>/`. CI uses the `Makefile`
 The [`dataflow-patterns/`](dataflow-patterns/) sample provides custom Rust graphs
 for correlation, prediction, and stateful reading processing.
 
+The source also includes opt-in [model-candidate fitting and bounded
+recommendations](dataflow-patterns/README.md). These additions require a newly
+built release; they are not part of the published `1.0.0-rc.4` artifacts.
+
 All fixture messages, identifiers, coefficients, and numerical results are
 synthetic or illustrative. They aren't customer telemetry, customer-calibrated
 models, or evidence of a customer's process behavior.

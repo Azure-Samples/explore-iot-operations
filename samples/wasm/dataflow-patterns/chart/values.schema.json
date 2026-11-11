@@ -23,7 +23,9 @@
         "stable-alarm": {"type": "boolean"},
         "offline-detection": {"type": "boolean"},
         "running-total": {"type": "boolean"},
-        "smooth-readings": {"type": "boolean"}
+        "smooth-readings": {"type": "boolean"},
+        "fit-linear-model": {"type": "boolean"},
+        "bounded-recommendation": {"type": "boolean"}
       }
     },
     "ticker": {

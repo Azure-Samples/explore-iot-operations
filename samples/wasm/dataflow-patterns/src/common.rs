@@ -58,6 +58,10 @@ pub struct Config {
     pub alpha: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub initial_states: Vec<InitialState>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fit: Option<crate::learning::FitConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recommendation: Option<crate::learning::RecommendationConfig>,
 }
 
 fn deserialize_input_topics<'de, D>(
@@ -129,6 +133,8 @@ pub enum Role {
     OfflineDetection,
     RunningTotal,
     SmoothReadings,
+    FitLinearModel,
+    BoundedRecommendation,
 }
 
 impl Role {
@@ -138,6 +144,8 @@ impl Role {
             Self::OfflineDetection => &["reading", "tick", "register"],
             Self::RunningTotal => &["reading", "reset"],
             Self::SmoothReadings => &["reading"],
+            Self::FitLinearModel => &["sample"],
+            Self::BoundedRecommendation => &["decision"],
             _ => &[],
         }
     }
@@ -197,6 +205,8 @@ impl Config {
             }
         }
         for field in [
+            "fit",
+            "recommendation",
             "deadband",
             "heartbeatIntervalMs",
             "high",
@@ -214,6 +224,7 @@ impl Config {
         if supplied.get("initialStates").is_some() && c.role != Role::RunningTotal {
             return Err("initialStates is only valid for running-total".into());
         }
+        crate::learning::validate_config(&c)?;
         for (name, value, max) in [
             ("maxAssets", c.max_assets, 1024),
             ("maxPendingPerAsset", c.max_pending_per_asset, 4096),
