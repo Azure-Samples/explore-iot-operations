@@ -1,0 +1,45 @@
+metadata:
+  name: "YOLOv8 detections graph"
+  description: "Converts the YOLOv8 model output that the inference connector writes into labeled detections"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.7.2"
+  runtimeVersion: "1.1.8"
+
+moduleConfigurations:
+  - name: module-yolov8-detections/map
+    parameters:
+      model_name:
+        name: model_name
+        description: "The name of the model in the inference connector configuration"
+        required: true
+      output_name:
+        name: output_name
+        description: "The name of the model output that contains the detections"
+        required: true
+      confidence_threshold:
+        name: confidence_threshold
+        description: "The minimum confidence of the detections to output, from 0 to 1. The default is 0.55"
+        required: false
+
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-yolov8-detections/map"
+    module: "azure-samples/explore-iot-operations/yolov8-detections:1.0.0"
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-yolov8-detections/map"
+  - from:
+      name: "module-yolov8-detections/map"
+    to:
+      name: "sink"

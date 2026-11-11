@@ -1,0 +1,29 @@
+metadata:
+  name: "Select snapshot graph"
+  description: "Selects the snapshot nearest to the event time from an ExtractClip response, and outputs its path"
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.7.2"
+  runtimeVersion: "1.1.8"
+
+operations:
+  - operationType: "source"
+    name: "source"
+  - operationType: "map"
+    name: "module-select-snapshot/map"
+    module: "azure-samples/explore-iot-operations/select-snapshot:1.0.0"
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-select-snapshot/map"
+  - from:
+      name: "module-select-snapshot/map"
+    to:
+      name: "sink"

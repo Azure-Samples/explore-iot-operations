@@ -1,0 +1,14 @@
+[package]
+name = "select-snapshot"
+version = "1.0.0"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = "0.38"
+wasm_graph_sdk = { version = "=1.7.4", registry = "aio-wg" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lib]
+crate-type = ["cdylib"]

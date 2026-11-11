@@ -113,6 +113,28 @@ docker run --rm -v "$(pwd):/workspace" ghcr.io/azure-samples/explore-iot-operati
   - Image processing
   - surveillance systems
 
+### Media connector and inference connector processing
+
+These operators implement the capture, pre-processing, and post-processing transforms of a pipeline that runs inference on camera images that the media connector captures when an event happens. They use `wasm_graph_sdk` 1.7.4 and Rust 1.90, which each operator's `rust-toolchain.toml` selects.
+
+#### media-capture - Media connector ExtractClip call
+- Path: `media-capture/`
+- Operator Type: Map
+- Purpose: For each message, call the `ExtractClip` management action of a media connector asset through the command invoker, for the snapshots stored in the second before the message timestamp, and output the response
+- Graph definition: `graph-media-capture.yaml`, with the required `action_topic` and `stream_configuration_name` parameters
+
+#### select-snapshot - Snapshot selection
+- Path: `select-snapshot/`
+- Operator Type: Map
+- Purpose: Select the copied snapshot nearest to the event time from an `ExtractClip` response, and output its path relative to the media connector's `localSharedPath`
+- Graph definition: `graph-select-snapshot.yaml`
+
+#### yolov8-detections - YOLOv8 output conversion
+- Path: `yolov8-detections/`
+- Operator Type: Map
+- Purpose: Read the YOLOv8 model output that the inference connector writes, from the `responses` file store, and convert it into labeled detections above a confidence threshold. Gets the labels with the inference connector's `getModelInfo` command
+- Graph definition: `graph-yolov8-detections.yaml`, with the required `model_name` and `output_name` parameters, and the optional `confidence_threshold` parameter
+
 ## Architecture Patterns
 
 ### Operator Type Implementations
