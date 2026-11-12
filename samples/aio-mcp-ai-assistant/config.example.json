@@ -1,0 +1,46 @@
+{
+  "kubeContext": "REPLACE_WITH_KUBERNETES_CONTEXT",
+  "namespace": "aio-mcp-ai-assistant",
+  "aioNamespace": "azure-iot-operations",
+  "image": "REPLACE_WITH_REGISTRY.azurecr.io/azure-samples/aio-mcp-ai-assistant:0.1.0",
+  "imagePullSecret": "REPLACE_WITH_PULL_SECRET_IN_SAMPLE_NAMESPACE",
+  "mcp": {
+    "tokenAudience": "aio-mcp-frontend",
+    "caConfigMap": "azure-iot-operations-aio-ca-trust-bundle",
+    "caKey": "ca.crt"
+  },
+  "foundry": {
+    "namespace": "foundry-local-operator",
+    "deploymentName": "edge-assistant-qwen",
+    "catalogName": "qwen3.5-2b-text-generic-cpu",
+    "catalogVersion": "1",
+    "compute": "cpu",
+    "tokenAudience": "REPLACE_WITH_FOUNDRY_TOKEN_AUDIENCE",
+    "caConfigMap": "foundry-local-operator-ca-bundle",
+    "caKey": "ca.crt"
+  },
+  "camera": {
+    "enabled": false,
+    "assetName": "edge-assistant-camera-onvif",
+    "profileToken": "profile_high",
+    "topicPrefix": "edge/assistant/camera"
+  },
+  "recommendations": {
+    "enabled": false,
+    "topic": "edge/assistant/recommendations"
+  },
+  "sources": {
+    "person-detections": {
+      "stage": "inference",
+      "machineId": "person",
+      "topic": "edge/predictive-inference/person/results",
+      "description": "Successful frame-level person detections from the edge predictive inference sample."
+    },
+    "person-errors": {
+      "stage": "errors",
+      "machineId": "person",
+      "topic": "edge/predictive-inference/person/errors",
+      "description": "Contextual postprocessing failures; this topic does not cover every failed frame."
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subscriptionId", "resourceGroup", "aioInstanceName", "customLocationName", "kubeContext",
+    "adrNamespaceName", "adrNamespaceLocation", "cameraId", "cameraUrl", "cameraAuthentication",
+    "topicPrefix", "foundryNamespace", "modelName", "modelEndpoint", "foundryTrustSecret",
+    "modelRegistrySecret", "registry", "registryEndpointName", "artifactVersion", "dataClaimName",
+    "storageClassName", "scoreThreshold", "nmsThreshold"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "subscriptionId": {"type": "string", "format": "uuid"},
+    "resourceGroup": {"$ref": "#/$defs/text"},
+    "aioInstanceName": {"$ref": "#/$defs/name"},
+    "customLocationName": {"$ref": "#/$defs/name"},
+    "kubeContext": {"$ref": "#/$defs/text"},
+    "adrNamespaceName": {"$ref": "#/$defs/name"},
+    "adrNamespaceLocation": {"type": "string", "pattern": "^[a-z0-9]+$"},
+    "cameraId": {"$ref": "#/$defs/name"},
+    "cameraUrl": {"type": "string", "format": "uri", "pattern": "^rtsps?://"},
+    "cameraAuthentication": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["method"],
+          "properties": {"method": {"const": "Anonymous"}}
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["method", "usernamePasswordCredentials"],
+          "properties": {
+            "method": {"const": "UsernamePassword"},
+            "usernamePasswordCredentials": {
+              "type": "object", "additionalProperties": false,
+              "required": ["usernameSecretName", "passwordSecretName"],
+              "properties": {
+                "usernameSecretName": {"$ref": "#/$defs/secretReference"},
+                "passwordSecretName": {"$ref": "#/$defs/secretReference"}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "topicPrefix": {
+      "type": "string", "maxLength": 180,
+      "pattern": "^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$"
+    },
+    "foundryNamespace": {"$ref": "#/$defs/name"},
+    "modelName": {"$ref": "#/$defs/name"},
+    "modelEndpoint": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "foundryTrustSecret": {"$ref": "#/$defs/name"},
+    "modelRegistrySecret": {"$ref": "#/$defs/name"},
+    "registry": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?::[0-9]{1,5})?$"
+    },
+    "registryEndpointName": {"$ref": "#/$defs/name"},
+    "artifactVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "dataClaimName": {"$ref": "#/$defs/name"},
+    "storageClassName": {"$ref": "#/$defs/name"},
+    "scoreThreshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+    "nmsThreshold": {"type": "number", "minimum": 0, "maximum": 1}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 253, "pattern": "^[^\\s]+$"},
+    "name": {
+      "type": "string", "maxLength": 63,
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+    },
+    "secretReference": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/[A-Za-z0-9._-]+$"
+    }
+  }
+}
