@@ -9,9 +9,14 @@
   (dict "name" "offline-detection" "inputs" (list "availability-readings" "availability-ticks" "availability-registers") "bindings" (dict "reading" "availability-readings" "tick" "availability-ticks" "register" "availability-registers") "settings" (dict "timeoutMs" 1000) "output" "availability")
   (dict "name" "running-total" "inputs" (list "total-readings" "total-resets") "bindings" (dict "reading" "total-readings" "reset" "total-resets") "output" "totals")
   (dict "name" "smooth-readings" "inputs" (list "smoothing-readings") "bindings" (dict "reading" "smoothing-readings") "output" "smoothed")
+  (dict "name" "fit-linear-model" "inputs" (list "training-samples") "bindings" (dict "sample" "training-samples") "settings" (dict "maxAssets" 8 "fit" (dict "epoch" 1 "featureCount" 2 "minSamples" 6 "maxSamples" 64 "lookbackMs" 60000 "maxCondition" 1000000)) "output" "model-candidates")
+  (dict "name" "bounded-recommendation" "inputs" (list "decision-inputs") "bindings" (dict "decision" "decision-inputs") "settings" (dict "maxAssets" 8 "recommendation" (dict "epoch" 1 "modelVersion" 7 "gain" -0.5 "minValue" 0 "maxValue" 10 "maxStep" 2 "maxAgeMs" 5000)) "output" "recommendations")
 -}}
 {{- range $pattern := $patterns }}
 {{- if index $root.Values.patterns $pattern.name }}
+{{- if and (has $pattern.name (list "fit-linear-model" "bounded-recommendation")) (eq $root.Values.artifactVersion "1.0.0-rc.4") }}
+{{- fail "Learning graphs require a new release built from this source, not published rc.4" }}
+{{- end }}
 ---
 apiVersion: connectivity.iotoperations.azure.com/v1
 kind: DataflowGraph

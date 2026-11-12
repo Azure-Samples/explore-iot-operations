@@ -13,6 +13,7 @@ GRAPHS = (
     "graph-align-by-time", "graph-correlate-by-id", "graph-versioned-predictor",
     "graph-report-by-exception", "graph-stable-alarm", "graph-offline-detection",
     "graph-running-total", "graph-smooth-readings",
+    "graph-fit-linear-model", "graph-bounded-recommendation",
 )
 REPOSITORY = "azure-samples/explore-iot-operations/dataflow-patterns"
 TICKER_REPOSITORY = "ghcr.io/azure-samples/explore-iot-operations/dataflow-pattern-ticker"

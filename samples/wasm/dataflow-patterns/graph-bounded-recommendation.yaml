@@ -1,0 +1,36 @@
+metadata:
+  name: Produce a bounded recommendation
+  description: Fresh version-matched errors become bounded recommendations, never equipment commands.
+  version: "1.0.0"
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.1.0.json"
+  vendor: Azure Samples
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+moduleConfigurations:
+  - name: patterns
+    parameters:
+      settings:
+        name: settings
+        description: Complete JSON settings with pinned external model version, epoch, freshness and bounds.
+        default: '{"role":"bounded-recommendation","maxAssets":8,"recommendation":{"epoch":1,"modelVersion":7,"gain":-0.5,"minValue":0,"maxValue":10,"maxStep":2,"maxAgeMs":5000},"inputTopics":{"decision":"factory/decision-inputs"}}'
+operations:
+  - operationType: source
+    name: input
+    arity: 1
+  - operationType: map
+    name: patterns
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-patterns:1.0.0
+  - operationType: filter
+    name: suppress-internal
+    module: azure-samples/explore-iot-operations/dataflow-patterns/module-dataflow-pattern-filter:1.0.0
+  - operationType: sink
+    name: output
+    arity: 1
+connections:
+  - from: {name: input}
+    to: {name: patterns}
+  - from: {name: patterns}
+    to: {name: suppress-internal}
+  - from: {name: suppress-internal}
+    to: {name: output}

@@ -28,6 +28,9 @@ patterns:
   offline-detection: true
   running-total: true
   smooth-readings: true
+  # Opt-in additions: require a newly built release, not the published rc.4.
+  fit-linear-model: false
+  bounded-recommendation: false
 # Trusted clocks are opt-in: configure assets, host and broker authorization.
 ticker:
   enabled: false

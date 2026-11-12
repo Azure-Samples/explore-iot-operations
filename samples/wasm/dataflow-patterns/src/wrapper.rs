@@ -268,6 +268,41 @@ mod tests {
     }
 
     #[test]
+    fn learning_fixtures_execute_through_sdk_map_and_separate_filter() {
+        for text in [
+            include_str!("../fixtures/fit-linear-model.json"),
+            include_str!("../fixtures/bounded-recommendation.json"),
+        ] {
+            let mut fixture: Value = serde_json::from_str(text).unwrap();
+            let kind = if fixture["configuration"]["role"] == "fit-linear-model" {
+                "sample"
+            } else {
+                "decision"
+            };
+            fixture["configuration"]["inputTopics"] = json!({kind:"test/learning-input"});
+            assert!(init(&fixture["configuration"].to_string()));
+            for step in fixture["steps"].as_array().unwrap() {
+                assert!(process_at(
+                    message_on("other/learning-input", step["input"].clone()),
+                    1000
+                )
+                .is_err());
+                let DataModel::Message(m) = process_at(
+                    message_on("test/learning-input", step["input"].clone()),
+                    step["nowMs"].as_u64().unwrap(),
+                )
+                .unwrap() else {
+                    panic!()
+                };
+                assert_eq!(
+                    module_dataflow_pattern_filter::process_payload(&m.payload.read()).unwrap(),
+                    !step["expected"].is_null()
+                );
+            }
+        }
+    }
+
+    #[test]
     fn fixture_payloads_survive_map_and_filter_unchanged() {
         for text in [
             include_str!("../fixtures/align-by-time.json"),

@@ -1,0 +1,32 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: bounded-recommendation
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  nodes:
+    - name: source
+      nodeType: Source
+      sourceSettings:
+        endpointRef: factory-mqtt
+        dataSources: [factory/decision-inputs]
+    - name: processor
+      nodeType: Graph
+      graphSettings:
+        registryEndpointRef: factory-artifacts
+        artifact: azure-samples/explore-iot-operations/dataflow-patterns/graph-bounded-recommendation:1.0.0-rc.5
+        configuration:
+          - key: settings
+            value: '{"role":"bounded-recommendation","maxAssets":8,"recommendation":{"epoch":1,"modelVersion":7,"gain":-0.5,"minValue":0,"maxValue":10,"maxStep":2,"maxAgeMs":5000},"inputTopics":{"decision":"factory/decision-inputs"}}'
+    - name: destination
+      nodeType: Destination
+      destinationSettings:
+        endpointRef: factory-mqtt
+        dataDestination: factory/recommendations
+  nodeConnections:
+    - from: {name: source}
+      to: {name: processor}
+    - from: {name: processor}
+      to: {name: destination}

@@ -4,7 +4,7 @@
   "artifacts":{
     "registry":"ghcr.io",
     "repository":"azure-samples/explore-iot-operations/dataflow-patterns",
-    "names":["module-dataflow-patterns","module-dataflow-pattern-filter","graph-align-by-time","graph-correlate-by-id","graph-versioned-predictor","graph-report-by-exception","graph-stable-alarm","graph-offline-detection","graph-running-total","graph-smooth-readings"],
+    "names":["module-dataflow-patterns","module-dataflow-pattern-filter","graph-align-by-time","graph-correlate-by-id","graph-versioned-predictor","graph-report-by-exception","graph-stable-alarm","graph-offline-detection","graph-running-total","graph-smooth-readings","graph-fit-linear-model","graph-bounded-recommendation"],
     "tag":"1.0.0",
     "componentExports":{"module-dataflow-patterns":["wasm-graph:processor/map@1.1.0"],"module-dataflow-pattern-filter":["wasm-graph:processor/filter@1.1.0"]},
     "qualification":"Module compiled and validated locally; publication and real AIO registry resolution/deployment must be verified separately."
@@ -22,10 +22,20 @@
     "format":"A complete JSON object; graph defaults supply role, the predictor demo bootstrap, and full factory inputTopics for the five reading roles (including the running-total sensor-1 bootstrap). Overrides replace the entire object.",
     "graphSettingsShape":{"configuration":[{"key":"settings","value":"<complete JSON settings object encoded as a string>"}]},
     "graphConfigurationSchema":"https://github.com/Azure/azure-rest-api-specs/blob/main/specification/iotoperations/resource-manager/Microsoft.IoTOperations/IoTOperations/models/dataflows/dataflowGraphs.tsp",
-    "roles":["align-by-time","correlate-by-id","versioned-predictor","report-by-exception","stable-alarm","offline-detection","running-total","smooth-readings"],
+    "roles":["align-by-time","correlate-by-id","versioned-predictor","report-by-exception","stable-alarm","offline-detection","running-total","smooth-readings","fit-linear-model","bounded-recommendation"],
     "defaults":{"maxAssets":128,"maxPendingPerAsset":256,"maxHistoryPerAsset":256,"maxCompletedPerAsset":512,"maxUpdatesPerAsset":512,"pendingTtlMs":60000,"completedTtlMs":60000,"allowedLatenessMs":2000,"maxContextAgeMs":5000,"maxFutureSkewMs":30000,"initialModels":[]},
     "limits":"Counts must be positive: maxAssets <=1024, other counts <=4096. Non-lateness durations in 1..86400000 ms; allowedLatenessMs in 0..60000 and less than pendingTtlMs. Counts bound records, not a fixed memory budget; size limits and payload size must be chosen for runtime memory.",
     "validation":"Unknown configuration fields, duplicate bootstrap assets, non-finite coefficients and version 0 bootstrap are rejected. Identifiers are 1..128 bytes without control characters; input JSON objects are at most 65536 bytes. Configurations are immutable for one operator initialization."
+  },
+  "learningPatterns":{
+    "release":"Opt-in source additions; not included in published rc.4. Candidate manifests target a new immutable rc.5; publication must be verified separately.",
+    "documentation":"README.md",
+    "inputTopics":{"fit-linear-model":{"sample":"PREFIX/training-samples"},"bounded-recommendation":{"decision":"PREFIX/decision-inputs"}},
+    "strictSchema":"All fixture input fields are required; unknown fields including approved are rejected. Numeric inputs are finite and abs(value)<=1e100. Exact literal topic/kind binding is required at the SDK wrapper, not authentication.",
+    "fit":{"requiredConfiguration":["epoch:positive u64","featureCount:1..8","minSamples:featureCount+1..maxSamples","maxSamples:<=1024","lookbackMs:1..86400000","maxCondition:1..1e8"],"inputFixture":"fixtures/fit-linear-model.json","output":"modelCandidate; approved=false, coefficients ordered by feature, intercept, training rmse/rSquared (null for constant target), standardized conditionNumber and complete training identity/time provenance. No model activation.","algorithm":"Center/scale design columns, center target and solve directly with public nalgebra bounded-iteration SVD. Constant features, deficient rank or conditionNumber>=maxCondition withhold candidates. Accepted samples expire by event time at the next accepted arrival and oldest records drop above maxSamples."},
+    "recommendation":{"requiredConfiguration":["epoch:positive u64","modelVersion:positive u64","gain:finite","minValue<maxValue","maxStep:positive finite","maxAgeMs:1..86400000"],"inputFixture":"fixtures/bounded-recommendation.json","output":"recommendation; approved=false, actuation=false, input identity, recommendedValue, actual delta, limited and evaluatedAtMs.","algorithm":"clamp(currentValue+clamp(gain*error,-maxStep,maxStep),minValue,maxValue). Require observed currentValue within bounds and pinned modelVersion. Reject if floating-point actual abs(delta)>maxStep. Per-decision bounds are not a slew-rate/stability/safety guarantee."},
+    "state":"At most maxAssets<=128, never evicted; strict per-asset sequence increase and nondecreasing sampledAt. Required sampledAt must be nonfuture and within configured lookback/age. Fit basis version cannot change within an asset epoch. Training retains maxSamples IDs/payloads, recommendations only the last ID/payload; retained identical/conflicting IDs diagnose without refresh. Rejected inputs do not mutate role state. No idle timers.",
+    "restart":"Volatile training and replay watermarks. Coordinate a new externally allocated configured epoch and drain old inputs on reset, feature-schema or basis-model change. Same-epoch restart is NOT replay safe. External durable recovery/deduplication, independent model approval and broker ACLs are required. No actuation or automatic candidate approval."
   },
   "alignment":{
     "inputs":{"temperature":{"required":["kind=temperature","assetId","sampledAt","temperature:number"]},"speed":{"required":["kind=speed","assetId","sampledAt","speed:number"],"optional":["pieceId","runId"]},"tick":{"required":["kind=tick","assetId","sampledAt"]}},
