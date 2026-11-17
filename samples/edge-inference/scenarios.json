@@ -1,0 +1,34 @@
+[
+  {
+    "name": "pcb-quality",
+    "description": "Screen PCB images for visible defect candidates for an operator to review.",
+    "assetName": "edge-pcb-camera",
+    "deviceName": "edge-pcb-camera",
+    "modelName": "edge-pcb-quality",
+    "topicPrefix": "edge-inference/pcb-quality",
+    "confidenceThreshold": "0.55",
+    "imageSize": [640, 640],
+    "outputRows": 300,
+    "policy": {
+      "type": "defect-review",
+      "labels": ["missing_hole", "mouse_bite", "open_circuit", "short", "spur", "spurious_copper"]
+    }
+  },
+  {
+    "name": "equipment-area",
+    "description": "Observe people inside a configured image region around equipment; collect evidence for review.",
+    "assetName": "edge-area-camera",
+    "deviceName": "edge-area-camera",
+    "modelName": "edge-equipment-area",
+    "topicPrefix": "edge-inference/equipment-area",
+    "confidenceThreshold": "0.55",
+    "imageSize": [640, 640],
+    "outputRows": 300,
+    "policy": {
+      "type": "area-review",
+      "label": "person",
+      "region": [0.15, 0.15, 0.95, 0.90],
+      "point": "box-center"
+    }
+  }
+]

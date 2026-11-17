@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Edge inference sample deployment",
+  "description": "Deployment settings for the PCB quality and equipment-area scenarios. Store secret references, never credentials.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subscriptionId", "resourceGroup", "aioInstanceName", "customLocationName",
+    "kubeContext", "dataClaimName", "stateClaimName", "foundryNamespace",
+    "foundryTrustSecret", "modelRegistry", "modelRegistrySecret", "modelTag",
+    "collectorImage", "imagePullSecret", "inferenceImage", "mediaImage",
+    "mediaTemplateName", "useExistingMediaTemplate", "graphRegistryEndpointName",
+    "graphs", "enabledScenarios", "cameras"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "subscriptionId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      "description": "Azure subscription UUID containing the existing IoT Operations instance."
+    },
+    "resourceGroup": {
+      "$ref": "#/$defs/nonEmptyString",
+      "maxLength": 90,
+      "pattern": "^[-\\w.()]+$",
+      "description": "Resource group containing the instance and custom location."
+    },
+    "aioInstanceName": {"$ref": "#/$defs/dnsLabel"},
+    "customLocationName": {"$ref": "#/$defs/dnsLabel"},
+    "kubeContext": {
+      "$ref": "#/$defs/nonEmptyString",
+      "description": "An explicit context from kubectl config get-contexts."
+    },
+    "dataClaimName": {"$ref": "#/$defs/dnsLabel"},
+    "stateClaimName": {"$ref": "#/$defs/dnsLabel"},
+    "foundryNamespace": {"$ref": "#/$defs/dnsLabel"},
+    "foundryTrustSecret": {
+      "$ref": "#/$defs/dnsLabel",
+      "description": "Existing Secret in azure-iot-operations containing the Foundry CA chain in ca.crt."
+    },
+    "modelRegistry": {"$ref": "#/$defs/registry"},
+    "modelRegistrySecret": {
+      "$ref": "#/$defs/dnsLabel",
+      "description": "Existing Secret in the Foundry namespace with username and password keys."
+    },
+    "modelTag": {"$ref": "#/$defs/versionedTag"},
+    "collectorImage": {
+      "$ref": "#/$defs/imageReference",
+      "description": "Published observer image, including a registry, repository, and versioned tag or SHA-256 digest."
+    },
+    "imagePullSecret": {
+      "$ref": "#/$defs/dnsLabel",
+      "description": "Existing Kubernetes image pull Secret in azure-iot-operations."
+    },
+    "inferenceImage": {"$ref": "#/$defs/connectorImage"},
+    "mediaImage": {"$ref": "#/$defs/connectorImage"},
+    "mediaTemplateName": {"$ref": "#/$defs/dnsLabel"},
+    "useExistingMediaTemplate": {
+      "type": "boolean",
+      "description": "Reuse and validate the existing Microsoft.Media template without modifying it."
+    },
+    "graphRegistryEndpointName": {"$ref": "#/$defs/dnsLabel"},
+    "graphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture", "preprocessing", "inference", "postprocessing"],
+      "properties": {
+        "capture": {"$ref": "#/$defs/artifactReference"},
+        "preprocessing": {"$ref": "#/$defs/artifactReference"},
+        "inference": {"$ref": "#/$defs/artifactReference"},
+        "postprocessing": {"$ref": "#/$defs/artifactReference"}
+      }
+    },
+    "enabledScenarios": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {"enum": ["pcb-quality", "equipment-area"]}
+    },
+    "cameras": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "pcb-quality": {"$ref": "#/$defs/camera"},
+        "equipment-area": {"$ref": "#/$defs/camera"}
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+    },
+    "dnsLabel": {
+      "type": "string",
+      "maxLength": 63,
+      "pattern": "^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$",
+      "description": "A lowercase DNS label of at most 63 characters."
+    },
+    "registry": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?(?::[0-9]{1,5})?$",
+      "description": "Registry hostname and optional port, without a URL scheme or repository."
+    },
+    "versionedTag": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$",
+      "not": {"const": "latest"},
+      "description": "An explicit OCI version tag; latest is not supported."
+    },
+    "imageReference": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9.:-]*/[a-z0-9][a-z0-9._/-]*(?::[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}|@sha256:[a-f0-9]{64})$",
+      "not": {"pattern": ":latest$"}
+    },
+    "artifactReference": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._/-]*(?::[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}|@sha256:[a-f0-9]{64})$",
+      "not": {"pattern": ":latest$"},
+      "description": "Graph repository/path:tag or repository/path@sha256:digest, relative to the registry endpoint."
+    },
+    "connectorImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry", "name", "tag"],
+      "properties": {
+        "registry": {"$ref": "#/$defs/registry"},
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]*$"
+        },
+        "tag": {"$ref": "#/$defs/versionedTag"}
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address", "authentication"],
+      "properties": {
+        "address": {
+          "type": "string",
+          "pattern": "^rtsps?://[^\\s]+$",
+          "description": "Camera URL without embedded credentials. Configure TLS trust in the media template for RTSPS."
+        },
+        "authentication": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["method"],
+              "properties": {"method": {"const": "Anonymous"}}
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["method", "usernamePasswordCredentials"],
+              "properties": {
+                "method": {"const": "UsernamePassword"},
+                "usernamePasswordCredentials": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["usernameSecretName", "passwordSecretName"],
+                  "properties": {
+                    "usernameSecretName": {"$ref": "#/$defs/dnsLabel"},
+                    "passwordSecretName": {"$ref": "#/$defs/dnsLabel"}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

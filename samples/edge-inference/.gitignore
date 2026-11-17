@@ -1,0 +1,8 @@
+.venv/
+.assets/
+.generated/
+.state/
+.ruff_cache/
+config.json
+__pycache__/
+*.pyc
