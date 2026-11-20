@@ -17,7 +17,7 @@ wasm_graph_sdk = { version = "=1.1.3", registry = "aio-wg" }
 wit-bindgen = "=0.22.0"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.145"
-time = { version = "=0.3.44", features = ["parsing", "formatting"] }
+time = { version = "=0.3.47", features = ["parsing", "formatting"] }
 
 [dev-dependencies]
 module-dataflow-pattern-filter = { path = "filter" }
