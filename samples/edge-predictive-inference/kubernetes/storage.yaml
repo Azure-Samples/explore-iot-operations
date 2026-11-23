@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${dataClaimName}
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ${storageClassName}
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: edge-predictive-storage-init
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: initialize
+          image: mcr.microsoft.com/azurelinux/busybox:1.36
+          command: [/bin/sh, -ec]
+          args:
+            - |
+              umask 0007
+              mkdir -p /data/edge-predictive-inference/inputs /data/edge-predictive-inference/responses
+              chmod 2770 /data/edge-predictive-inference/inputs /data/edge-predictive-inference/responses
+              echo "Prepared shared directories for group 65532"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 32Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ${dataClaimName}

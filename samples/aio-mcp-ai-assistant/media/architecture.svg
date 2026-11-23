@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1244" viewBox="0 0 1280 1244"
+     font-family="'Segoe UI', 'Segoe UI Web (West European)', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+     role="img" aria-labelledby="title description">
+  <title id="title">AIO MCP and AI assistant: runtime architecture</title>
+  <desc id="description">An operator outside the edge cluster uses authenticated kubectl exec to ask questions, inspect tools, and approve or deny recommendations. The single-container agent validates calls, holds publication for approval, and calls a Foundry Local Qwen text model. All AIO tools go through the built-in HTTPS MCP frontend and platform backend, which owns resource reads and broker connections. There is no custom MCP server, sidecar, or agent broker token. The AIO MQTT broker receives observation JSON from a separate producer and delivers approved recommendation JSON to a separate consumer. Optional camera-control data flow graphs receive JSON requests and run custom WASM transforms that invoke ONVIF managed actions through the same broker. The connector for ONVIF exchanges MQTT RPC with that broker and calls the software camera over SOAP and HTTP. Three independent DataflowGraph resources handle GetStatus, ContinuousMove, and Stop. The simulator uses a synthetic scene and is not automatically connected to a media or vision pipeline. Dashed outlines mark optional integrations; actions are opt-in. The model receives text and JSON, not images. This is a source-defined runtime overview, not a live deployment or end-to-end validation result. Auxiliary model endpoint lookup and platform authentication calls are omitted.</desc>
+  <metadata>Hand-editable SVG. Source map and deployment ownership: ../docs/architecture.md. Azure Foundry and Fluent icon notices: THIRD-PARTY-NOTICES.md.</metadata>
+  <defs>
+    <marker id="other-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M10,0 L0,5 L10,10 Z" fill="#605E5C"/>
+    </marker>
+    <marker id="other-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#605E5C"/>
+    </marker>
+    <marker id="mqtt-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M10,0 L0,5 L10,10 Z" fill="#0078D4"/>
+    </marker>
+    <marker id="mqtt-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#0078D4"/>
+    </marker>
+    <linearGradient id="foundry-pink" x1="-603.563" y1="-218.378" x2="-606.6" y2="-206.22" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#712575"/><stop offset=".09" stop-color="#9a2884"/><stop offset=".18" stop-color="#bf2c92"/><stop offset=".27" stop-color="#da2e9c"/><stop offset=".34" stop-color="#eb30a2"/><stop offset=".4" stop-color="#f131a5"/><stop offset=".5" stop-color="#ec30a3"/><stop offset=".61" stop-color="#df2f9e"/><stop offset=".72" stop-color="#c92d96"/><stop offset=".83" stop-color="#aa2a8a"/><stop offset=".95" stop-color="#83267c"/><stop offset="1" stop-color="#712575"/>
+    </linearGradient>
+    <linearGradient id="foundry-blue" x1="-602.412" y1="-206.025" x2="-602.412" y2="-223.175" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#da7ed0"/><stop offset=".08" stop-color="#b17bd5"/><stop offset=".19" stop-color="#8778db"/><stop offset=".3" stop-color="#6276e1"/><stop offset=".41" stop-color="#4574e5"/><stop offset=".54" stop-color="#2e72e8"/><stop offset=".67" stop-color="#1d71eb"/><stop offset=".81" stop-color="#1471ec"/><stop offset="1" stop-color="#1171ed"/>
+    </linearGradient>
+    <linearGradient id="foundry-body" x1="-603.438" y1="-206.414" x2="-614.807" y2="-224.644" gradientTransform="translate(617.126 -205.758) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#da7ed0"/><stop offset=".05" stop-color="#b77bd4"/><stop offset=".11" stop-color="#9079da"/><stop offset=".18" stop-color="#6e77df"/><stop offset=".25" stop-color="#5175e3"/><stop offset=".33" stop-color="#3973e7"/><stop offset=".42" stop-color="#2772e9"/><stop offset=".54" stop-color="#1a71eb"/><stop offset=".68" stop-color="#1371ec"/><stop offset="1" stop-color="#1171ed"/>
+    </linearGradient>
+    <symbol id="foundry-icon" viewBox="0 0 18 18">
+      <path d="m12.061.012c.534,0,1.008.401,1.178.984s1.166,4.19,1.166,4.19v7.166h-3.607l.073-12.352h1.19v.012Z" fill="url(#foundry-pink)" fill-rule="evenodd"/>
+      <path d="m17.356,5.611c0-.255-.206-.449-.449-.449h-2.126c-1.494,0-2.709,1.215-2.709,2.709v4.494h2.575c1.494,0,2.709-1.215,2.709-2.709v-4.045Z" fill="url(#foundry-blue)"/>
+      <path d="m12.061.012c-.413,0-.741.328-.741.741l-.073,13.64c0,1.992-1.615,3.607-3.607,3.607H1.093c-.316,0-.522-.304-.425-.595L5.915,2.429C6.425.984,7.785.012,9.316.012h2.757-.012Z" fill="url(#foundry-body)" fill-rule="evenodd"/>
+    </symbol>
+    <symbol id="application-icon" viewBox="0 0 24 24">
+      <path d="M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V6.5H19.5V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25ZM4.5 17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V8H4.5V17.75ZM6.85 9.5H10.15C10.6194 9.5 11 9.88056 11 10.35V17.15C11 17.6194 10.6194 18 10.15 18H6.85C6.38056 18 6 17.6194 6 17.15V10.35C6 9.88056 6.38056 9.5 6.85 9.5ZM7.5 16.5H9.5V11H7.5V16.5ZM12 10.25C12 9.83579 12.3358 9.5 12.75 9.5H17.25C17.6642 9.5 18 9.83579 18 10.25C18 10.6642 17.6642 11 17.25 11H12.75C12.3358 11 12 10.6642 12 10.25ZM12.75 12.5C12.3358 12.5 12 12.8358 12 13.25C12 13.6642 12.3358 14 12.75 14H16.25C16.6642 14 17 13.6642 17 13.25C17 12.8358 16.6642 12.5 16.25 12.5H12.75Z" fill="#605E5C"/>
+    </symbol>
+    <symbol id="camera-icon" viewBox="0 0 24 24">
+      <path d="M5.25 5C3.45507 5 2 6.45507 2 8.25V15.75C2 17.5449 3.45507 19 5.25 19H12.75C14.5449 19 16 17.5449 16 15.75V15.438L19.2575 17.6872C20.4183 18.4887 22.0018 17.6578 22.0018 16.2471V7.75204C22.0018 6.34137 20.4183 5.51044 19.2575 6.31197L16 8.56118V8.25C16 6.45507 14.5449 5 12.75 5H5.25ZM16 10.384L20.1098 7.54632C20.2756 7.43181 20.5018 7.55051 20.5018 7.75204V16.2471C20.5018 16.4486 20.2756 16.5673 20.1098 16.4528L16 13.6151V10.384ZM3.5 8.25C3.5 7.2835 4.2835 6.5 5.25 6.5H12.75C13.7165 6.5 14.5 7.2835 14.5 8.25V15.75C14.5 16.7165 13.7165 17.5 12.75 17.5H5.25C4.2835 17.5 3.5 16.7165 3.5 15.75V8.25Z" fill="#605E5C"/>
+    </symbol>
+    <symbol id="agent-icon" viewBox="0 0 24 24">
+      <g fill="none" stroke="#0078D4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="6" width="16" height="14" rx="3"/>
+        <path d="M12,3 V6 M1,11 V15 M23,11 V15 M9,16 H15"/>
+        <circle cx="8.5" cy="11" r="1"/><circle cx="15.5" cy="11" r="1"/>
+      </g>
+    </symbol>
+    <symbol id="api-icon" viewBox="0 0 24 24">
+      <g fill="none" stroke="#605E5C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7,4 H5 V9 L2,12 L5,15 V20 H7 M17,4 H19 V9 L22,12 L19,15 V20 H17 M13.5,8 L10.5,16"/>
+      </g>
+    </symbol>
+    <symbol id="broker-icon" viewBox="0 0 24 24">
+      <g fill="none" stroke="#0078D4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="7" y="6" width="10" height="12" rx="2"/>
+        <path d="M1,8 H7 M1,16 H7 M17,8 H23 M17,16 H23 M10,10 H14 M10,14 H14"/>
+      </g>
+    </symbol>
+    <style>
+      text { fill: #242424; }
+      .title { font-size: 24px; font-weight: 600; }
+      .heading { font-size: 18px; font-weight: 600; }
+      .label { font-size: 17px; font-weight: 600; }
+      .detail { font-size: 15px; fill: #605E5C; }
+      .small { font-size: 14px; fill: #605E5C; }
+      .badge { font-size: 14px; font-weight: 600; fill: #0F548C; }
+      .approval { font-size: 14px; font-weight: 600; fill: #6D4C00; }
+      .card { fill: #FFFFFF; stroke: #8A8886; stroke-width: 1; }
+      .external { fill: #F3F2F1; stroke: #C8C6C4; stroke-width: 1; }
+      .optional { stroke-dasharray: 6 4; }
+      .exchange, .mqtt, .rpc { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+      .exchange { stroke: #605E5C; marker-start: url(#other-start); marker-end: url(#other-end); }
+      .mqtt { stroke: #0078D4; marker-end: url(#mqtt-end); }
+      .rpc { stroke: #0078D4; marker-start: url(#mqtt-start); marker-end: url(#mqtt-end); }
+    </style>
+  </defs>
+  <rect width="1280" height="1244" fill="#FFFFFF"/>
+  <text x="32" y="44" class="title">AIO MCP + AI assistant</text>
+  <text x="32" y="72" class="detail">Ask about equipment, inspect observations, and enable controlled actions.</text>
+  <rect x="1020" y="24" width="228" height="32" rx="4" fill="#DEECF9"/>
+  <text x="1134" y="45" text-anchor="middle" class="badge">Actions are opt-in</text>
+
+  <g id="boundaries">
+    <rect x="248" y="104" width="1016" height="1046" rx="6" fill="#F3F8FD" stroke="#A9C9EE"/>
+    <text x="272" y="134" class="heading">Edge Kubernetes cluster</text>
+    <rect x="276" y="250" width="300" height="334" rx="6" fill="#DEECF9" stroke="#71AFE5"/>
+    <text x="296" y="278" class="heading">Sample agent Pod</text>
+    <rect x="642" y="780" width="614" height="350" rx="6" fill="#F3F8FD" stroke="#A9C9EE" class="optional"/>
+    <text x="666" y="810" class="label">Camera control (opt-in)</text>
+  </g>
+
+  <g id="connections">
+    <path d="M214,368 H294" class="exchange"/>
+    <rect x="213" y="338" width="82" height="19" rx="2" fill="#FFFFFF"/>
+    <text x="254" y="351" text-anchor="middle" class="small">kubectl exec</text>
+    <rect x="213" y="380" width="82" height="19" rx="2" fill="#FFFFFF"/>
+    <text x="254" y="393" text-anchor="middle" class="small">via K8s API</text>
+
+    <path d="M540,298 L540,216 H664" class="exchange"/>
+    <text x="602" y="203" text-anchor="middle" class="small">HTTPS</text>
+    <path d="M558,368 H664" class="exchange"/>
+    <text x="611" y="351" text-anchor="middle" class="small">MCP / HTTPS</text>
+    <path d="M795,428 L795,492" class="exchange"/>
+    <text x="811" y="464" class="small">Platform MCP</text>
+    <path d="M926,539 H968 V372 H1014" class="exchange"/>
+    <text x="986" y="484" class="small">Resource reads</text>
+    <path d="M795,586 L795,648" class="rpc"/>
+    <text x="811" y="622" class="small">MQTT 5 / TLS</text>
+
+    <path d="M294,690 H236 V894 H214" class="mqtt"/>
+    <text x="32" y="652" class="detail">Approved recommendation</text>
+    <text x="32" y="676" class="detail">JSON</text>
+    <path d="M426,838 L426,742" class="mqtt"/>
+    <text x="442" y="798" class="small">Observation JSON</text>
+
+    <path d="M900,742 L900,838" class="rpc"/>
+    <text x="884" y="765" text-anchor="end" class="small">JSON + MQTT RPC</text>
+    <path d="M1128,742 L1128,838" class="rpc"/>
+    <text x="1142" y="765" class="small">MQTT RPC</text>
+    <path d="M1128,950 L1128,1018" class="exchange"/>
+    <text x="1142" y="988" class="small">SOAP / HTTP</text>
+  </g>
+
+  <g id="operator">
+    <rect x="24" y="300" width="188" height="138" rx="4" class="external"/>
+    <use href="#application-icon" x="40" y="316" width="26" height="26"/>
+    <text x="76" y="336" class="label">Operator CLI</text>
+    <text x="42" y="366" class="detail">Ask / inspect</text>
+    <text x="42" y="390" class="detail">Approve / deny</text>
+    <text x="42" y="416" class="small">Authenticated kubectl</text>
+    <text x="42" y="466" class="small">Your workstation</text>
+    <text x="42" y="488" class="small">No public chat endpoint</text>
+  </g>
+
+  <g id="agent">
+    <rect x="296" y="300" width="260" height="266" rx="4" class="card"/>
+    <use href="#agent-icon" x="312" y="316" width="26" height="26"/>
+    <text x="348" y="336" class="label">Agent + tool policy</text>
+    <text x="314" y="374" class="detail">Validate calls / collect evidence</text>
+    <text x="314" y="406" class="detail">Fixed tools / exact topics</text>
+    <text x="314" y="438" class="detail">Built-in MCP client</text>
+    <path d="M314,458 H538" stroke="#E1DFDD"/>
+    <rect x="314" y="482" width="224" height="30" rx="4" fill="#FFF4CE" stroke="#E6C875"/>
+    <text x="426" y="503" text-anchor="middle" class="approval">Operator approves publishing</text>
+    <text x="314" y="542" class="small">One container / loopback API</text>
+  </g>
+
+  <g id="foundry">
+    <rect x="666" y="162" width="258" height="108" rx="4" class="card"/>
+    <use href="#foundry-icon" x="684" y="178" width="30" height="30"/>
+    <text x="724" y="198" class="label">Foundry Local</text>
+    <text x="684" y="228" class="detail">Qwen text model / CPU</text>
+    <text x="684" y="252" class="small">Foundry-operator managed</text>
+  </g>
+
+  <g id="mcp-frontend">
+    <rect x="666" y="318" width="258" height="108" rx="4" class="card"/>
+    <use href="#application-icon" x="682" y="334" width="26" height="26"/>
+    <text x="720" y="354" class="label">AIO MCP frontend</text>
+    <text x="684" y="382" class="detail">TLS / SAT / role-filtered tools</text>
+    <text x="684" y="406" class="small">Built-in / platform managed</text>
+  </g>
+
+  <g id="kubernetes-api">
+    <rect x="1016" y="318" width="224" height="108" rx="4" class="card"/>
+    <use href="#api-icon" x="1032" y="334" width="26" height="26"/>
+    <text x="1068" y="354" class="label">Kubernetes API</text>
+    <text x="1034" y="382" class="detail">AIO Assets + Devices</text>
+    <text x="1034" y="406" class="small">Backend-owned reads</text>
+  </g>
+
+  <g id="mcp-backend">
+    <rect x="666" y="494" width="258" height="90" rx="4" class="card"/>
+    <use href="#application-icon" x="682" y="510" width="26" height="26"/>
+    <text x="720" y="530" class="label">AIO MCP backend</text>
+    <text x="684" y="560" class="detail">Resource + MQTT tools</text>
+  </g>
+
+  <g id="broker">
+    <rect x="296" y="650" width="944" height="90" rx="4" class="card"/>
+    <use href="#broker-icon" x="312" y="670" width="26" height="26"/>
+    <text x="348" y="690" class="label">AIO MQTT broker</text>
+    <text x="600" y="690" class="detail">Observations / recommendations / ONVIF managed actions</text>
+    <text x="314" y="720" class="small">Platform-managed connections; the agent has no broker token.</text>
+  </g>
+
+  <g id="camera-control-dataflow-graphs">
+    <rect x="666" y="840" width="258" height="108" rx="4" class="card"/>
+    <use href="#application-icon" x="682" y="856" width="26" height="26"/>
+    <text x="720" y="876" class="label">Data flow graphs</text>
+    <text x="684" y="906" class="detail">GetStatus / Move / Stop</text>
+    <text x="684" y="930" class="small">3 DataflowGraph resources</text>
+    <text x="666" y="1012" class="detail">WASM transforms add RPC properties.</text>
+    <text x="666" y="1040" class="detail">No automatic link to vision pipeline.</text>
+  </g>
+
+  <g id="onvif-connector">
+    <rect x="1016" y="840" width="224" height="108" rx="4" class="card"/>
+    <use href="#application-icon" x="1032" y="856" width="26" height="26"/>
+    <text x="1068" y="870" class="label">Connector for</text>
+    <text x="1068" y="892" class="label">ONVIF</text>
+    <text x="1034" y="916" class="detail">PTZ managed actions</text>
+    <text x="1034" y="938" class="small">ARM / AIO managed</text>
+  </g>
+
+  <g id="recommendation-consumer">
+    <rect x="24" y="840" width="188" height="108" rx="4" class="external optional"/>
+    <text x="42" y="870" class="label">Recommendation</text>
+    <text x="42" y="894" class="label">consumer</text>
+    <text x="42" y="920" class="detail">Your MQTT client</text>
+    <text x="42" y="940" class="small">Deployed separately</text>
+  </g>
+
+  <g id="observation-producer">
+    <rect x="296" y="840" width="260" height="108" rx="4" class="card optional"/>
+    <use href="#application-icon" x="312" y="854" width="28" height="28"/>
+    <text x="352" y="872" class="label">Observation producer</text>
+    <text x="314" y="906" class="detail">Media / vision or JSON publisher</text>
+    <text x="314" y="930" class="small">Deployed separately</text>
+  </g>
+
+  <g id="camera-simulator">
+    <rect x="1016" y="1020" width="224" height="90" rx="4" class="card"/>
+    <use href="#camera-icon" x="1032" y="1034" width="26" height="26"/>
+    <text x="1068" y="1054" class="label">Camera simulator</text>
+    <text x="1034" y="1080" class="detail">Synthetic scene / virtual PTZ</text>
+    <text x="1034" y="1100" class="small">Sample-managed</text>
+  </g>
+
+  <g id="legend">
+    <path d="M32,1188 H74" class="exchange"/>
+    <text x="92" y="1193" class="detail">HTTPS / MCP / ONVIF</text>
+    <path d="M390,1188 H432" class="rpc"/>
+    <text x="450" y="1193" class="detail">MQTT messages / RPC</text>
+    <rect x="800" y="1177" width="30" height="22" rx="3" class="card optional"/>
+    <text x="848" y="1193" class="detail">Optional / separately deployed</text>
+    <text x="32" y="1228" class="small">The text model receives JSON, not images. Camera motion is simulated; publishing requires operator approval.</text>
+  </g>
+</svg>

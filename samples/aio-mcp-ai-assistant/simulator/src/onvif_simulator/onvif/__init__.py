@@ -1,0 +1,1 @@
+"""ONVIF SOAP protocol implementation."""

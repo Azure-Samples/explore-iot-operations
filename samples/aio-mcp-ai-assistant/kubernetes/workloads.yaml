@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-assistant
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/name: edge-assistant
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: edge-assistant
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: edge-assistant
+        app.kubernetes.io/part-of: aio-mcp-ai-assistant
+      annotations:
+        checksum/settings: ${settingsChecksum}
+    spec:
+      serviceAccountName: edge-assistant
+      automountServiceAccountToken: false
+      imagePullSecrets: ${pullSecrets}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: agent
+          image: ${image}
+          args: [serve-agent]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/readyz', timeout=30)"
+            periodSeconds: 30
+            timeoutSeconds: 35
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+          volumeMounts:
+            - {name: settings, mountPath: /etc/edge-assistant, readOnly: true}
+            - {name: kubernetes, mountPath: /var/run/kubernetes, readOnly: true}
+            - {name: foundry-token, mountPath: /var/run/foundry, readOnly: true}
+            - {name: frontend-token, mountPath: /var/run/aio-mcp, readOnly: true}
+            - {name: trust, mountPath: /var/run/trust, readOnly: true}
+      volumes:
+        - name: settings
+          configMap: {name: edge-assistant-settings}
+        - name: trust
+          configMap: {name: edge-assistant-trust}
+        - name: kubernetes
+          projected:
+            sources:
+              - serviceAccountToken: {path: token, expirationSeconds: 3600}
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - {key: ca.crt, path: ca.crt}
+        - name: foundry-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: ${foundryAudience}
+                  expirationSeconds: 3600
+        - name: frontend-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: ${mcpAudience}
+                  expirationSeconds: 3600
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edge-assistant-ingress
+  namespace: ${namespace}
+  labels:
+    app.kubernetes.io/part-of: aio-mcp-ai-assistant
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: edge-assistant
+  policyTypes: [Ingress]
+  ingress: []
