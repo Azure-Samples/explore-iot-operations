@@ -1,0 +1,209 @@
+name: Edge AI samples
+
+on:
+  pull_request:
+    paths:
+      - samples/edge-predictive-inference/**
+      - samples/aio-mcp-ai-assistant/**
+      - tools/edge-ai-release/**
+      - docs/edge-ai-samples-release.md
+      - docs/edge-ai-samples-validation.md
+      - .github/workflows/edge-ai-samples.yml
+  push:
+    branches: [main]
+    paths:
+      - samples/edge-predictive-inference/**
+      - samples/aio-mcp-ai-assistant/**
+      - tools/edge-ai-release/**
+      - docs/edge-ai-samples-release.md
+      - docs/edge-ai-samples-validation.md
+      - .github/workflows/edge-ai-samples.yml
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Unused immutable version (empty uses tools/edge-ai-release/release-spec.json)
+        type: string
+        required: false
+      publish:
+        description: Publish this manual run (upstream main pushes publish automatically)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+        with:
+          version: 1.3.0
+      - name: Restore test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/assistant-venv"
+          "$RUNNER_TEMP/assistant-venv/bin/python" -m pip install \
+            -e 'samples/aio-mcp-ai-assistant[dev]' \
+            -r samples/edge-predictive-inference/models/requirements.txt
+          python -m venv "$RUNNER_TEMP/inference-venv"
+          "$RUNNER_TEMP/inference-venv/bin/python" -m pip install \
+            -r samples/edge-predictive-inference/requirements.txt \
+            -r samples/edge-predictive-inference/requirements-dev.txt
+          echo "$RUNNER_TEMP/assistant-venv/bin" >> "$GITHUB_PATH"
+          rustup toolchain install 1.90.0 --profile minimal \
+            --component rustfmt --component clippy --target wasm32-wasip2
+          cargo +1.90.0 install wasm-tools --version 1.230.0 --locked
+      - name: Select release version
+        id: release
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(python -c 'import os,runpy; r=runpy.run_path("tools/edge-ai-release/release.py"); print(r["version"](os.environ["REQUESTED_VERSION"] or r["SPEC"]["version"]))')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+      - name: Test predictive inference
+        working-directory: samples/edge-predictive-inference
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/inference-venv/bin/python" -m unittest discover -s tests -v
+          "$RUNNER_TEMP/inference-venv/bin/ruff" check .
+          "$RUNNER_TEMP/inference-venv/bin/ruff" format --check .
+          shellcheck build.sh publish.sh deploy.sh
+          bash build.sh
+          (cd wasm && cargo clippy --locked --all-targets --target-dir ../.build/target -- -D warnings)
+          python models/prepare.py
+      - name: Test assistant and release coordination
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest samples/aio-mcp-ai-assistant/tests
+          python -m pytest tools/edge-ai-release
+          ruff check samples/aio-mcp-ai-assistant/src samples/aio-mcp-ai-assistant/tests \
+            samples/aio-mcp-ai-assistant/manage.py tools/edge-ai-release
+          ruff format --check samples/aio-mcp-ai-assistant/src samples/aio-mcp-ai-assistant/tests \
+            samples/aio-mcp-ai-assistant/manage.py tools/edge-ai-release
+          shellcheck samples/aio-mcp-ai-assistant/native-camera-actions/*.sh
+          bash samples/aio-mcp-ai-assistant/native-camera-actions/build.sh
+      - name: Validate WASM components and deployment templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in samples/edge-predictive-inference/.build/*.wasm \
+                        samples/aio-mcp-ai-assistant/.build/camera-*.wasm; do
+            wasm-tools validate "$module"
+          done
+          for template in samples/edge-predictive-inference/bicep/*.bicep \
+                          samples/aio-mcp-ai-assistant/bicep/*.bicep; do
+            az bicep build --file "$template" --stdout > /dev/null
+          done
+      - name: Test simulator and build the exact release images
+        run: python tools/edge-ai-release/release.py build-images --version "$RELEASE_VERSION"
+      - name: Stage coordinated OCI candidate
+        run: >-
+          python tools/edge-ai-release/release.py stage --version "$RELEASE_VERSION"
+          --output "$RUNNER_TEMP/edge-ai-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: edge-ai-candidate
+          path: ${{ runner.temp }}/edge-ai-candidate/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Record qualification boundary
+        run: |
+          echo "Candidate $RELEASE_VERSION built from $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"
+          echo "Nothing published by this job. Live AIO/Foundry integration NOT validated." >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    needs: candidate
+    if: >-
+      github.repository == 'Azure-Samples/explore-iot-operations' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' && inputs.publish))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: edge-ai-release
+    concurrency:
+      group: edge-ai-samples-publish
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_VERSION: ${{ needs.candidate.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+        with:
+          version: 1.3.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: edge-ai-candidate
+          path: ${{ runner.temp }}/edge-ai-candidate
+      - name: Prepare isolated publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/publisher-venv"
+          "$RUNNER_TEMP/publisher-venv/bin/python" -m pip install PyYAML==6.0.3
+          echo "$RUNNER_TEMP/publisher-venv/bin" >> "$GITHUB_PATH"
+          mkdir -m 700 "$RUNNER_TEMP/edge-ai-registry-auth"
+          echo "DOCKER_CONFIG=$RUNNER_TEMP/edge-ai-registry-auth" >> "$GITHUB_ENV"
+      - name: Authenticate to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Publish exact candidate and verify anonymous full pulls
+        run: >-
+          python tools/edge-ai-release/release.py publish "$RUNNER_TEMP/edge-ai-candidate"
+          --version "$RELEASE_VERSION" --revision "$GITHUB_SHA"
+      - name: Create the coordinated preview release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "edge-ai-v$RELEASE_VERSION" \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Edge AI samples $RELEASE_VERSION" --prerelease --latest=false \
+            --notes "Versioned inference and MCP sample artifacts. All 13 GHCR artifacts passed anonymous full-content verification. Live AIO/Foundry qualification is separate: check the exact release and revision in https://github.com/Azure-Samples/explore-iot-operations/blob/main/docs/edge-ai-samples-validation.md before deployment. No Microsoft connector or Qwen model is redistributed." \
+            "$RUNNER_TEMP/edge-ai-candidate/release.json" \
+            "$RUNNER_TEMP/edge-ai-candidate/verification.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: edge-ai-release-verification
+          path: |
+            ${{ runner.temp }}/edge-ai-candidate/release.json
+            ${{ runner.temp }}/edge-ai-candidate/verification.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Record publication result
+        run: |
+          echo "Published $RELEASE_VERSION from $GITHUB_SHA; all 13 artifacts passed anonymous full pulls." >> "$GITHUB_STEP_SUMMARY"
+          echo "Live AIO/Foundry integration NOT validated by CI. See docs/edge-ai-samples-validation.md." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove registry credentials
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${DOCKER_CONFIG:-}" ]]; then
+            docker logout ghcr.io || true
+            rm -f -- "$DOCKER_CONFIG/config.json"
+          fi

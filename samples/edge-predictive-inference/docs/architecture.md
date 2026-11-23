@@ -20,7 +20,9 @@ broker. The sequence omits a separate broker lifeline for readability.
    content type. Image geometry, settings, UUID, and input filename travel in the
    reserved `edge-predictive-inference/context` MQTT user property.
 4. The built-in inference transform invokes the inference connector's `predict`
-   command with `read_request_from_disk=true`.
+   command with `read_request_from_disk=true`. See the
+   [command reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-commands#predict)
+   for the request, response, and error contracts.
 5. The connector reads the input file, calls the configured Foundry endpoint's
    `/v1/predict` API over HTTPS/SAT, and receives the model result.
 6. With `write-response-to-disk=true`, it writes a response file and returns that
@@ -107,6 +109,9 @@ Requests are named `<frameId>.json`. Responses have connector-generated names,
 normally UUIDs without extensions. Both references are included in observations.
 The application accepts only single safe relative filenames, never absolute
 paths, nested paths, or `..`.
+
+The [connector file settings reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-configuration#file-settings)
+describes the volume, mount path, and read/write subpaths behind this contract.
 
 The claim is scratch storage. The original JPEG, complete RPC/HTTP envelopes,
 and final observation history are **not** retained on it. The model is stored and

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 from PIL import Image
 from pydantic import SecretStr
 
+from onvif_simulator.authentication import REALM
 from onvif_simulator.config import Settings, StreamProfile
 
 
@@ -56,3 +59,35 @@ def settings(image_dir: Path, tmp_path: Path) -> Settings:
             ),
         },
     )
+
+
+@pytest.fixture
+def digest_header(settings: Settings) -> Callable[..., str]:
+    def create(
+        nonce: str,
+        *,
+        method: str = "POST",
+        uri: str = "/onvif/ptz_service",
+        nc: str = "00000001",
+        cnonce: str = "test-client",
+        qop: str | None = "auth",
+    ) -> str:
+        def md5(value: str) -> str:
+            return hashlib.md5(value.encode()).hexdigest()  # noqa: S324 - Digest protocol.
+
+        ha1 = md5(
+            f"{settings.camera_username}:{REALM}:{settings.camera_password.get_secret_value()}"
+        )
+        ha2 = md5(f"{method}:{uri}")
+        response = md5(
+            f"{ha1}:{nonce}:{nc}:{cnonce}:{qop}:{ha2}" if qop else f"{ha1}:{nonce}:{ha2}"
+        )
+        header = (
+            f'Digest username="{settings.camera_username}", realm="{REALM}", '
+            f'nonce="{nonce}", uri="{uri}", response="{response}", algorithm=MD5'
+        )
+        if qop is not None:
+            header += f', qop="{qop}", nc={nc}, cnonce="{cnonce}"'
+        return header
+
+    return create

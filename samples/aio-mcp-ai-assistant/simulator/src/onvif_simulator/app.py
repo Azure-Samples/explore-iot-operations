@@ -6,15 +6,13 @@ import hmac
 import io
 import logging
 import re
-import secrets
 from typing import Final
 
 from aiohttp import web
 
 from onvif_simulator.authentication import (
-    digest_challenge,
+    DigestAuthenticator,
     is_basic_authorized,
-    is_digest_authorized,
 )
 from onvif_simulator.config import Settings
 from onvif_simulator.discovery import DiscoveryServer
@@ -59,7 +57,7 @@ class Simulator:
         }
         self.rtsp = RtspServer(settings, self.pipelines)
         self.discovery = DiscoveryServer(settings) if settings.discovery_enabled else None
-        self._http_digest_nonce = secrets.token_hex(16)
+        self._http_digest = DigestAuthenticator()
         self.web_app = self._create_web_app()
         self._runner: web.AppRunner | None = None
         self._motion_task: asyncio.Task[None] | None = None
@@ -138,11 +136,10 @@ class Simulator:
         if action is None:
             match = ACTION_PARAMETER.search(request.headers.get("Content-Type", ""))
             action = (match.group(1) or match.group(2)) if match else None
-        transport_authenticated = is_digest_authorized(
+        transport_authenticated = self._http_digest.authorize(
             request.headers.get("Authorization", ""),
             method=request.method,
             uri=request.path_qs,
-            nonce=self._http_digest_nonce,
             username=self.settings.camera_username,
             password=self.settings.camera_password.get_secret_value(),
         )
@@ -153,7 +150,7 @@ class Simulator:
             transport_authenticated=transport_authenticated,
         )
         headers = (
-            {"WWW-Authenticate": digest_challenge(self._http_digest_nonce)}
+            {"WWW-Authenticate": self._http_digest.challenge()}
             if result.status == 401 and not transport_authenticated
             else None
         )

@@ -3,6 +3,7 @@ param customLocationName string
 param dataClaimName string
 param registryEndpointName string
 param artifactVersion string
+param artifactRepository string = 'azure-samples/edge-predictive-inference'
 param cameraId string
 param modelName string
 param topicPrefix string
@@ -76,7 +77,7 @@ resource graph 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflowGraph
         name: 'preprocess'
         graphSettings: {
           registryEndpointRef: registryEndpointName
-          artifact: 'azure-samples/edge-predictive-inference/preprocess-graph:${artifactVersion}'
+          artifact: '${artifactRepository}/preprocess-graph:${artifactVersion}'
           configuration: configuration
         }
       }
@@ -97,7 +98,7 @@ resource graph 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflowGraph
         name: 'postprocess'
         graphSettings: {
           registryEndpointRef: registryEndpointName
-          artifact: 'azure-samples/edge-predictive-inference/postprocess-graph:${artifactVersion}'
+          artifact: '${artifactRepository}/postprocess-graph:${artifactVersion}'
           configuration: configuration
         }
       }

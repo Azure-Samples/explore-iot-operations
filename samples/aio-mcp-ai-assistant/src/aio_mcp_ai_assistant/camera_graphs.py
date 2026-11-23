@@ -10,7 +10,7 @@ REPOSITORY = "azure-samples/aio-mcp-ai-assistant/camera-actions"
 STAGES = {"get-status": "GetStatus", "continuous-move": "ContinuousMove", "stop": "Stop"}
 
 
-def graph(stage: str, version: str) -> JsonObject:
+def graph(stage: str, version: str, repository: str = REPOSITORY) -> JsonObject:
     return {
         "metadata": {
             "name": f"Camera {STAGES[stage]}",
@@ -39,7 +39,7 @@ def graph(stage: str, version: str) -> JsonObject:
         ],
         "operations": [
             {"operationType": "source", "name": "input"},
-            {"operationType": "map", "name": "invoke", "module": f"{REPOSITORY}/{stage}:{version}"},
+            {"operationType": "map", "name": "invoke", "module": f"{repository}/{stage}:{version}"},
             {"operationType": "sink", "name": "output"},
         ],
         "connections": [
@@ -55,13 +55,17 @@ def write_camera_graphs(settings: Settings, destination: Path) -> None:
         raise SampleError("cameraGraphs must be configured")
     for stage in STAGES:
         (destination / f"camera-{stage}-graph.yaml").write_text(
-            yaml.safe_dump(graph(stage, artifacts.artifact_version), sort_keys=False),
+            yaml.safe_dump(
+                graph(stage, artifacts.artifact_version, artifacts.artifact_repository),
+                sort_keys=False,
+            ),
             encoding="utf-8",
         )
     parameters = {
         "dataflowProfileName": settings.camera_profile_name,
         "registryEndpointName": artifacts.registry_endpoint_name,
         "artifactVersion": artifacts.artifact_version,
+        "artifactRepository": artifacts.artifact_repository,
         "cameraAssetName": settings.camera.asset_name,
         "profileToken": settings.camera.profile_token,
         "topicPrefix": settings.camera.topic_prefix,

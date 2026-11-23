@@ -7,7 +7,11 @@ CONFIG="$(realpath "$CONFIG")"
 python "$ROOT/render.py" "$CONFIG"
 REGISTRY="$(jq -er '.registry' "$CONFIG")"
 VERSION="$(jq -er '.artifactVersion' "$CONFIG")"
-REPOSITORY="$REGISTRY/azure-samples/edge-predictive-inference"
+REPOSITORY="$REGISTRY/$(jq -er '.artifactRepository // "azure-samples/edge-predictive-inference"' "$CONFIG")"
+if [[ "$REPOSITORY" == ghcr.io/azure-samples/explore-iot-operations/* ]]; then
+    echo "Official GHCR artifacts are published by the Edge AI samples workflow. Use your own repository for customization." >&2
+    exit 1
+fi
 
 for stage in preprocess postprocess; do
     test -s "$ROOT/.build/$stage.wasm" || { echo "Run ./build.sh first" >&2; exit 1; }

@@ -7,6 +7,7 @@ param dataflowProfileName string
 @description('Existing registry endpoint with pull access to the camera artifacts.')
 param registryEndpointName string
 param artifactVersion string
+param artifactRepository string = 'azure-samples/aio-mcp-ai-assistant/camera-actions'
 param cameraAssetName string
 param profileToken string
 param topicPrefix string
@@ -71,7 +72,7 @@ resource graphs 'Microsoft.IoTOperations/instances/dataflowProfiles/dataflowGrap
         name: 'action'
         graphSettings: {
           registryEndpointRef: registryEndpointName
-          artifact: 'azure-samples/aio-mcp-ai-assistant/camera-actions/${stage.stage}-graph:${artifactVersion}'
+          artifact: '${artifactRepository}/${stage.stage}-graph:${artifactVersion}'
           configuration: [
             { key: 'asset_name', value: cameraAssetName }
             { key: 'profile_token', value: profileToken }

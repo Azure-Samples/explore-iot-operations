@@ -9,6 +9,11 @@ it does not change global defaults.
 
 ## Inspect readiness and missing results
 
+Use the [connector troubleshooting guide](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/troubleshoot-inference-connector)
+for startup, authentication, and missing-result diagnostics, and the
+[metrics reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-metrics)
+to interpret connector request, latency, and error metrics alongside these checks.
+
 ```bash
 ./deploy.sh status config.json
 CONTEXT=$(jq -er '.kubeContext' config.json)
@@ -83,8 +88,9 @@ this sample. Update an existing application through its managed configuration.
 For a deliberate update to this sample's existing application:
 
 1. Disable the sample and confirm reconciliation.
-2. Edit configuration, build changed WASM, publish a new artifact version if
-   needed, and render again.
+2. Select a newer coordinated release, update configuration, and render again.
+   For custom code, build and publish a new version to your own repository
+   instead; do not overwrite official release artifacts.
 3. Inspect the changes with ARM what-if and update the **same** application
    configuration, not its generated ConfigMap/Deployment/StatefulSet.
 
@@ -192,7 +198,8 @@ revoke sample-specific topic permissions separately with their owners.
 
 ## Related documentation
 
-- [Deploy the inference connector](https://learn.microsoft.com/azure/iot-operations/ai/inference-connector/howto-deploy-inference-connector)
-- [Inference configuration reference](https://learn.microsoft.com/azure/iot-operations/ai/inference-connector/reference-inference-connector-configuration)
-- [Inference in data flow graphs](https://learn.microsoft.com/azure/iot-operations/ai/inference-connector/howto-inference-connector-dataflow-graph)
-- [Inference command reference](https://learn.microsoft.com/azure/iot-operations/ai/inference-connector/reference-inference-connector-commands)
+- [Inference connector overview](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/overview-inference-connector)
+- [Deploy the inference connector](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/howto-deploy-inference-connector)
+- [Inference configuration reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-configuration)
+- [Inference in data flow graphs](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/howto-inference-connector-dataflow-graph)
+- [Inference command reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-commands)

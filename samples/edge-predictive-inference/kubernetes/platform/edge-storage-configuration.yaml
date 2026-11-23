@@ -1,0 +1,8 @@
+apiVersion: arccontainerstorage.azure.net/v1
+kind: EdgeStorageConfiguration
+metadata:
+  name: edge-storage-configuration
+spec:
+  defaultDiskStorageClasses:
+    - default
+    - local-path

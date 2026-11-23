@@ -427,3 +427,4 @@ install.sh
 
 */config/aio_config.json
 docs/branding/*
+/.edge-ai-release/

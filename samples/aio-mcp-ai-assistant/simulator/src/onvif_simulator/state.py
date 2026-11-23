@@ -196,7 +196,8 @@ class CameraState:
                 tilt=0.0 if pan_tilt else self.velocity.tilt,
                 zoom=0.0 if zoom else self.velocity.zoom,
             )
-            self._continuous_move_remaining_seconds = None
+            if not self.velocity.moving:
+                self._continuous_move_remaining_seconds = None
             self.last_update = datetime.now(UTC)
             self.persist()
 

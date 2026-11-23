@@ -9,7 +9,7 @@ spec:
   model:
     custom:
       registry: ${registry}
-      repository: azure-samples/edge-predictive-inference/yolox-nano
+      repository: ${modelRepository}
       tag: ${artifactVersion}
       task: object-detection
       credentials:

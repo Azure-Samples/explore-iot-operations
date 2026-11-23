@@ -1,7 +1,7 @@
 # Add camera control through the AIO connector for ONVIF
 
 This tutorial extends the [operations assistant](../README.md) with its
-`camera-pan` tool. You will build a camera simulator, connect it to the real
+`camera-pan` tool. You will deploy the prebuilt camera simulator, connect it to the real
 AIO connector for ONVIF, register a Device and a PTZ control Asset, and move its
 viewport through correlated MQTT managed-action requests.
 
@@ -16,6 +16,12 @@ The assistant never opens a broker connection. Three AIO data flow graphs run
 custom WASM transforms that bridge JSON publication/sampling to the MQTT RPC
 properties required by ONVIF managed actions. Deploy and qualify the GetStatus
 data flow graph before enabling movement.
+Use the simulator and all six graph/module artifacts from the same
+[coordinated release](../../../docs/edge-ai-samples-release.md) as the assistant.
+The [2026-11-11 private qualification](../../../docs/edge-ai-samples-validation.md)
+passed GetStatus and direct bounded pan with the official `1.6.5` connector.
+Consult that record separately for model-selected behavior. Public GHCR
+publication remains pending; the example tag is not an available release.
 
 ## Prerequisites
 
@@ -25,15 +31,16 @@ and workload deployment first. You also need:
 - Azure CLI with Bicep support and permission to deploy resources into the
   existing AIO instance, Azure Device Registry (ADR) namespace, and custom location.
 - An AIO installation supporting the supplied preview ARM APIs and the
-  connector for ONVIF. The template pins connector and metadata version `1.5.0`,
+  connector for ONVIF. The template pins connector and metadata version `1.6.5`,
   whose metadata requires AIO `1.3.38` or later.
 - Device/Asset resource synchronization between Azure and the cluster,
   configured by the platform owner. See
   [configure the connector for ONVIF](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-use-onvif-connector).
 - CPU capacity for the simulator (500m CPU/512 MiB requested, 2 CPU/1 GiB limit)
   and the connector for ONVIF. No GPU is required.
-- Rust/rustup, the repository-pinned toolchain and `wasm32-wasip2` target, ORAS,
-  and registry push access for the WASM modules and graph definitions.
+- Pull access to the published simulator and camera-control graph/module
+  artifacts. Rust, Docker builds, and registry push access are only needed for
+  [customization](#customize-the-camera-components).
 - A compatible AIO WASM runtime (the graph definitions declare API 1.7.2/runtime 1.1.8)
   and an existing registry endpoint with pull access to all six artifacts.
 - Platform approval for the frontend `Admin` role needed by
@@ -44,38 +51,27 @@ Use unused Device/Asset names. Do not overwrite registrations for real cameras.
 If a suitable connector template for ONVIF already exists, reuse it rather than
 creating a second template for the same endpoint type.
 
-## 1. Build the simulator image
+## 1. Select the published simulator image
 
 From `samples/aio-mcp-ai-assistant`, with the main virtual environment active:
 
-```bash
-SIMULATOR_IMAGE="YOUR_REGISTRY/azure-samples/onvif-simulator:0.1.0"
-docker build --target test --tag aio-onvif-simulator-test ./simulator
-docker build --tag "$SIMULATOR_IMAGE" ./simulator
-docker push "$SIMULATOR_IMAGE"
-```
-
-Authenticate to your registry using your approved process before pushing.
-The configured `imagePullSecret` must permit pulling **both** the assistant
-and simulator image repositories. Repository-scoped credentials for only the
-assistant do not automatically cover a separate simulator repository.
-The simulator uses Python 3.12 inside the container; you do not need to change
-your workstation's Python version. Its tests use generated images and local
-protocol fixtures, not a physical camera.
-
 Add the following object to the existing `config.json`, substituting your
-published image. Leave `camera.enabled` false while preparing the integration:
+verified release version. Leave `camera.enabled` false while preparing the integration:
 
 ```json
 {
   "simulator": {
-    "image": "YOUR_REGISTRY/azure-samples/onvif-simulator:0.1.0"
+    "image": "ghcr.io/azure-samples/explore-iot-operations/onvif-simulator:REPLACE_WITH_PUBLISHED_VERSION"
   }
 }
 ```
 
 This fragment is not a replacement for the complete configuration. The image
 must use a valid lowercase registry/repository and a non-`latest` version tag.
+Keep `imagePullSecret: ""` for public GHCR images. For a private mirror, the
+Secret must cover **both** assistant and simulator repositories; access to one
+does not authorize the other. The simulator uses Python 3.12 inside the image;
+your workstation does not need to build it or change its Python version.
 
 ## 2. Deploy the software camera
 
@@ -159,7 +155,12 @@ for this local broker-to-connector path.
 
 ### Numeric non-root image compatibility
 
-The published `1.5.0` image declares its existing UID/GID 65532 account by the
+The unmodified Microsoft `1.6.5` image declares numeric UID `65532` and passed
+startup, Device/Asset discovery, action registration, and correlated GetStatus
+in the [private qualification run](../../../docs/edge-ai-samples-validation.md).
+No compatibility image or generated-workload patch was required.
+
+The older `1.5.0` image declares its existing UID/GID 65532 account by the
 name `nonroot`. An operator-generated Pod with `runAsNonRoot: true` and no
 explicit numeric UID can therefore fail with:
 
@@ -174,43 +175,11 @@ It pins the official `1.5.0` base digest and changes only `USER` to
 This is a packaging workaround, **not a mocked or reimplemented connector**.
 It does not qualify the unmodified image on affected installations.
 
-If your installation has this issue, build the wrapper and provide pull access
-in the **AIO namespace**, separate from the sample namespace's pull Secret:
-
-```bash
-ONVIF_REGISTRY="YOUR_REGISTRY"
-ONVIF_IMAGE_NAME="azure-samples/onvif-connector"
-ONVIF_IMAGE_TAG="1.5.0-numeric-user.1"
-ONVIF_PULL_SECRET="YOUR_AIO_NAMESPACE_PULL_SECRET"
-ONVIF_IMAGE="${ONVIF_REGISTRY}/${ONVIF_IMAGE_NAME}:${ONVIF_IMAGE_TAG}"
-
-docker build --platform linux/amd64 --tag "$ONVIF_IMAGE" ./onvif-connector-compat
-docker push "$ONVIF_IMAGE"
-
-kubectl --context "$CONTEXT" -n "$AIO_NAMESPACE" get secret "$ONVIF_PULL_SECRET" -o name
-
-az deployment group validate \
-  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
-  --name edge-assistant-onvif --template-file bicep/onvif-connector.bicep \
-  --parameters aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" \
-    connectorTemplateName="$CONNECTOR_TEMPLATE" connectorRegistry="$ONVIF_REGISTRY" \
-    connectorImageName="$ONVIF_IMAGE_NAME" connectorImageTag="$ONVIF_IMAGE_TAG" \
-    connectorImagePullSecretName="$ONVIF_PULL_SECRET"
-
-az deployment group create \
-  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
-  --name edge-assistant-onvif --template-file bicep/onvif-connector.bicep \
-  --parameters aioInstanceName="$AIO_INSTANCE" customLocationName="$CUSTOM_LOCATION" \
-    connectorTemplateName="$CONNECTOR_TEMPLATE" connectorRegistry="$ONVIF_REGISTRY" \
-    connectorImageName="$ONVIF_IMAGE_NAME" connectorImageTag="$ONVIF_IMAGE_TAG" \
-    connectorImagePullSecretName="$ONVIF_PULL_SECRET"
-```
-
-Have the registry/platform owner create that pull Secret through the approved
-credential workflow with read access to the selected repository. Do not put
-registry passwords in this template or configuration. Keep `runAsNonRoot`
-enabled; do not patch generated Pods or disable admission controls.
-Use a compatible official image instead when one is available and validated.
+The wrapper is historical development material, not a prerequisite for this
+tutorial. Use the compatible official image. If another image/operator
+combination cannot start, record a blocked prerequisite and resolve it with the
+platform owner. Keep `runAsNonRoot` enabled; do not patch generated Pods or
+disable admission controls.
 
 ## 4. Register the camera and its managed actions
 
@@ -256,7 +225,7 @@ establish that the connector reached the camera.
 ## 5. Deploy the camera-control data flow graphs
 
 Extend `config.json` with the following objects, using your actual Asset,
-registry, and existing AIO registry endpoint. Use a unique `topicPrefix` for
+release version, and dedicated AIO GHCR registry endpoint. Use a unique `topicPrefix` for
 each instance and **leave movement disabled**:
 
 ```json
@@ -268,27 +237,29 @@ each instance and **leave movement disabled**:
     "topicPrefix": "edge/assistant/camera"
   },
   "cameraGraphs": {
-    "registry": "YOUR_REGISTRY",
+    "registry": "ghcr.io",
+    "artifactRepository": "azure-samples/explore-iot-operations/aio-mcp-ai-assistant/camera-actions",
     "registryEndpointName": "YOUR_AIO_REGISTRY_ENDPOINT",
-    "artifactVersion": "0.1.0"
+    "artifactVersion": "REPLACE_WITH_PUBLISHED_VERSION"
   }
 }
 ```
 
-Build and publish from the sample directory with its Python environment active.
-Authenticate ORAS to your registry using your approved process first:
+Set `artifactVersion` to the same release as the assistant and simulator.
+Render from the sample directory with its Python environment active:
 
 ```bash
 python manage.py render config.json
-bash native-camera-actions/build.sh
-bash native-camera-actions/publish.sh config.json
 ```
 
-This builds three independent WASM modules and publishes them with three graph
-definitions, all under `azure-samples/aio-mcp-ai-assistant/camera-actions`.
+This renders the graph parameters; it does not build or publish anything.
+AIO pulls three graph definitions and their three matching WASM modules beneath
+`ghcr.io/azure-samples/explore-iot-operations/aio-mcp-ai-assistant/camera-actions`.
 See the [camera-control data flow graph contracts](../native-camera-actions/README.md).
 The agent image-pull Secret does not grant AIO permission to pull graph artifacts;
 the existing **AIO registry endpoint** must do that independently.
+Follow the [registry setup](../../../docs/edge-ai-samples-release.md#2-configure-the-independent-registry-consumers)
+and keep the platform's `default` MCR registry endpoint unchanged.
 
 Rendering also creates `.generated/camera-actions.parameters.json`. The template
 uses a dedicated data flow profile named `edge-camera-<sample namespace>` and
@@ -347,6 +318,13 @@ Require the actual correlated GetStatus result, `stopConfirmed: true`,
 simulator or an independently authorized camera status read. Readiness or an
 ARM deployment reporting success does not replace this check. Resolve schema,
 role, registry, graph, clock, and camera errors before continuing.
+
+After a graph update, an existing `Available` condition can precede completion
+of the new graph/module downloads. The private run encountered an initial
+GetStatus timeout during this transition; the check succeeded after the new
+artifacts loaded. Confirm the selected artifact version in controller/runtime
+logs and repeat only the harmless status check. Do not use movement or retry a
+timed-out Move as a readiness probe.
 
 ## 6. Enable motion and run a direct action
 
@@ -455,6 +433,37 @@ The independently configured device timeout and hardware safeguards remain
 essential. A separate media/inference deployment is required to produce
 observations from the real camera's stream.
 
+## Customize the camera components
+
+Skip this section when using the coordinated release. To change the simulator,
+use Docker and publish to your own repository with a new explicit version:
+
+```bash
+SIMULATOR_IMAGE="YOUR_REGISTRY/azure-samples/onvif-simulator:0.1.1"
+docker build --target test --tag aio-onvif-simulator-test ./simulator
+docker build --platform linux/amd64 --tag "$SIMULATOR_IMAGE" ./simulator
+docker push "$SIMULATOR_IMAGE"
+```
+
+Update `simulator.image` and its pull access. The tests cover authentication
+replay and device-side timeouts with protocol fixtures; they do not qualify a
+physical camera. See the [simulator behavior](../simulator/README.md#authentication-and-movement-behavior).
+
+For WASM changes, install Rust/rustup with the pinned toolchain and
+`wasm32-wasip2` target, plus ORAS. Set `cameraGraphs.registry` and
+`artifactRepository` to your own repository prefix and choose a new
+`artifactVersion`. Authenticate ORAS using your approved process, then run:
+
+```bash
+bash native-camera-actions/build.sh
+bash native-camera-actions/publish.sh config.json
+```
+
+The publisher uploads all three modules and all three graph definitions. It
+refuses the official GHCR namespace, which is reserved for the coordinated
+workflow. Update AIO registry pull access as needed and repeat GetStatus
+qualification before enabling movement with the changed graphs.
+
 ## Clean up
 
 Stop issuing actions, confirm the camera is IDLE, set `camera.enabled: false`,
@@ -506,7 +515,8 @@ Deployment, Service, NetworkPolicy, and both credential Secrets. It does not
 remove unrelated camera registrations, a shared connector template, or registry
 images. If you created the ONVIF template exclusively for this tutorial, have
 the platform owner remove it only after confirming that no other Device uses it.
-The compatibility image and its registry pull Secret are also retained. Remove
-them separately only when no remaining connector uses them.
-The published graph/module artifacts are retained too; remove their exact
-versions separately after confirming no graph uses them.
+If you created a development compatibility image, it and its registry pull
+Secret are retained. Remove them separately only when no remaining connector
+uses them. Published release artifacts are shared and are not part of cleanup.
+Only consider deleting versions you published to your own registry, after
+confirming that no other deployment uses them.

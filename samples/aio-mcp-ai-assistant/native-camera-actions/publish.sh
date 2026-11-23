@@ -14,7 +14,11 @@ if graphs is None:
 print(graphs.registry)
 ' "$CONFIG")"
 VERSION="$(python -c 'from pathlib import Path; import sys; from aio_mcp_ai_assistant.config import load_settings; s=load_settings(Path(sys.argv[1])); print(s.camera_graphs.artifact_version)' "$CONFIG")"
-REPOSITORY="$REGISTRY/azure-samples/aio-mcp-ai-assistant/camera-actions"
+REPOSITORY="$REGISTRY/$(python -c 'from pathlib import Path; import sys; from aio_mcp_ai_assistant.config import load_settings; print(load_settings(Path(sys.argv[1])).camera_graphs.artifact_repository)' "$CONFIG")"
+if [[ "$REPOSITORY" == ghcr.io/azure-samples/explore-iot-operations/* ]]; then
+    echo "Official GHCR artifacts are published by the Edge AI samples workflow. Use your own repository for customization." >&2
+    exit 1
+fi
 for stage in get-status continuous-move stop; do
     test -s "$ROOT/.build/camera-$stage.wasm" || { echo "Build camera actions first" >&2; exit 1; }
 done

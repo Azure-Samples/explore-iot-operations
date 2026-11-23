@@ -1,13 +1,17 @@
 # Deploy and inspect the person-detection scenario
 
 This guide covers initial deployment of the
-[person-detection scenario](../README.md), from artifact preparation to observing
+[person-detection scenario](../README.md), from selecting prebuilt artifacts to observing
 MQTT results and retrieving the associated model input and output files.
 The deployment uses one camera, one model, and one data flow graph.
 
 Review the [component compatibility requirements](architecture.md#compatibility)
 before deploying. The camera and data flow graph are created disabled and enabled only
 after their dependencies are ready.
+Start with the [coordinated release and registry setup](../../../docs/edge-ai-samples-release.md).
+The [AIO/Foundry baseline and E2E record](../../../docs/edge-ai-samples-validation.md)
+distinguishes successful private-registry qualification from the pending public
+release. Do not treat the example candidate tag as a published, qualified release.
 
 ## Prerequisites
 
@@ -18,13 +22,13 @@ application.
 
 | Requirement | Details |
 | --- | --- |
-| Workstation | Linux or WSL, Bash, Python 3.10+, Rustup, Azure CLI with Bicep, `kubectl`, `jq`, and ORAS 1.2+. The pinned Rust toolchain is installed by Rustup when building. |
+| Workstation | Linux or WSL, Bash, Python 3.10+, Azure CLI with Bicep, `kubectl`, `jq`, and ORAS 1.3+. Rust is only needed for customization. |
 | AIO instance | AIO applications support, data flow graph file stores, and a compatible installed media connector. Exactly one ConnectorTemplate must match `Microsoft.Media`. |
 | Model hosting | Foundry Local Kubernetes operator with predictive ONNX CPU hosting, HTTPS, and SAT authentication. |
 | Azure resources | AIO instance, custom location, and Azure Device Registry (ADR) namespace in the configured resource group. Supply the ADR namespace's actual Azure region. |
 | Authorization | Permission to deploy the sample's ARM/Kubernetes resources; an explicit subscription and Kubernetes context. |
 | Camera | An authorized RTSP/RTSPS stream reachable by the media connector. Start with a modest resolution such as 640 x 360. Maximum accepted JPEG: 8 MiB and 4096 pixels per dimension. |
-| Registry | A writable OCI registry and an existing AIO registry endpoint that can pull its graphs **and modules**. The `default` endpoint must resolve `mcr.microsoft.com`. |
+| Registry | Read access to the published GHCR release, a dedicated AIO endpoint that can pull its graphs **and modules**, and separate Foundry custom-model credentials. No push access is needed. The `default` endpoint must resolve `mcr.microsoft.com`. |
 | Storage | A dedicated 2 GiB ReadWriteMany (RWX) claim on a storage class supporting concurrent graph, connector, and reader access. See [storage permissions](operations.md#storage-and-retention). |
 
 > [!IMPORTANT]
@@ -44,39 +48,50 @@ the cluster's default Azure Disk or local-path RWO class.
 provides [local shared edge volumes](https://learn.microsoft.com/azure/azure-arc/container-storage/howto-configure-local-shared-edge-volumes)
 through `unbacked-sc`. Install and configure the extension before running the
 sample preflight, then set `"storageClassName": "unbacked-sc"` in `config.json`.
-The sample creates its own 2 GiB RWX claim; it does not install ACSA or change
-the cluster's default storage class.
+Follow the [ACSA setup and cross-node verification sample](shared-storage.md),
+including its platform configuration manifest. The deployment helper creates
+its own 2 GiB RWX claim; it does not install ACSA or change the cluster's default
+storage class.
 
 `Bound` and `ReadWriteMany` alone do not prove cross-node access. Before enabling
 the camera, verify concurrent writes and reciprocal checksum reads from two pods
 on different nodes, using UID/GID `65532` and this sample's input/response
-directories. Keep `runAsNonRoot` enabled and remove the verification files and pods
-afterward. See [storage permissions and retention](operations.md#storage-and-retention).
+directories. Run `./deploy.sh storage-check config.json` after storage
+initialization on a multi-node cluster. It keeps `runAsNonRoot` enabled and removes
+its files, job, and pods after success. See
+[storage permissions and retention](operations.md#storage-and-retention).
 
 ### Media connector compatibility
 
 This scenario requires `snapshot-to-mqtt`, not clip extraction or media-file
-storage. The media connector must both start under Akri's non-root policy and
+storage. The [media connector](https://learn.microsoft.com/en-us/azure/iot-operations/discover-manage-assets/howto-use-media-connector)
+must both start under Akri's non-root policy and
 publish complete JPEG payloads. If the instance needs a media template, use the supported
 [connector template management commands](https://learn.microsoft.com/azure/iot-operations/discover-manage-assets/howto-manage-connector-templates)
 with a compatible metadata reference. Keep exactly one template for `Microsoft.Media`.
 
-Validation with Akri `1.4.0-preview.9` identified these compatibility constraints:
+Private-cluster qualification on 2026-11-11 used the **official media connector
+`1.6.5`** with Akri `1.4.0-preview.9`. Its numeric UID `65532` starts under the
+operator's non-root policy without repackaging the image or patching generated
+Pods. Nine actual MQTT JPEGs decoded completely at 640 x 360 across the empty,
+person-containing, and recovered-source tests. The complete pipeline reported
+zero people for the calibration scene and one person for each of three
+observations of a licensed photograph. Interrupting the sample-owned RTSP source
+produced no fresh observations, and processing recovered when the source returned
+without restarting the media connector.
 
-- Media images `1.4.0`, `1.5.0`, and `1.6.1` declare the named user `nonroot`.
-  Without a numeric `runAsUser` in the generated workload, Kubernetes rejects
-  them with `CreateContainerConfigError`.
-- Media `1.3.4` starts with numeric UID `65532`, but testing captured empty and
-  truncated JPEGs on MQTT. Do not select it merely to avoid the startup error.
-- A test-only AMD64 repackaging of the official `1.6.1` image, changing only
-  `USER` to `65532:65532`, emitted complete JPEGs in validation. Its filesystem
-  layers were unchanged, and it was deployed through the managed template.
-  This is a validation workaround, **not an official connector release**.
+These are software-source integration results, not physical-camera or detection
+accuracy qualification. See the [version and evidence record](../../../docs/edge-ai-samples-validation.md)
+before selecting your platform combination.
 
-Resolve the supported image/operator combination with the platform owner before
-customer deployment. Do not disable non-root checks, patch generated workloads,
-or weaken JPEG validation. A private validation image is not a replacement for
-an officially supported prerequisite. The CLI does not allow metadata
+Earlier tests of images `1.4.0`, `1.5.0`, and `1.6.1` encountered named-user
+startup failures; `1.3.4` produced empty or truncated JPEGs. A historical private
+`1.6.1` wrapper is not required for the recorded `1.6.5` path and is not an
+official dependency. Do not select an older image merely because it starts.
+
+Resolve other image/operator combinations with the platform owner. Do not
+disable non-root checks, patch generated workloads, or weaken JPEG validation.
+The CLI does not allow metadata
 downgrades; stopping affected consumers is required before replacing a
 sample-owned template.
 
@@ -122,7 +137,7 @@ The sample uses MQTT TLS and projected `K8S-SAT` authentication. It does not add
 an anonymous listener, expose a broker port, replace authorization policies, or
 grant unrestricted topic access.
 
-## Prepare the model and build artifacts
+## Select prebuilt artifacts and prepare tools
 
 Start from the repository root. Run subsequent commands in the sample directory
 with its virtual environment active:
@@ -131,28 +146,15 @@ with its virtual environment active:
 cd samples/edge-predictive-inference
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt -r models/requirements.txt
-./build.sh
-python models/prepare.py
+python -m pip install -r requirements.txt
 ```
 
-`build.sh` builds two separate WASI components and a local validation helper.
-`prepare.py` downloads the unmodified YOLOX-Nano export from the upstream
-`0.1.1rc0` release and verifies its checksum, ONNX tensor contract, and
-Apache-2.0 license. Model assets and generated outputs are ignored by Git.
-Review [third-party notices](../THIRD-PARTY-NOTICES.md) before redistribution.
-
-Optionally run local model inference with an authorized JPEG:
-
-```bash
-python models/verify.py --image /absolute/path/to/authorized-camera-image.jpg
-```
-
-This uses the **same Rust preprocessing and postprocessing** as the WASM components
-and ONNX Runtime CPU inference. It saves the tensor request, raw tensor response,
-frame context, and final observation under `.build/local-inference`.
-It does not exercise the media connector, MQTT, the inference connector, or Foundry
-Local. Those integrations must be verified on the target cluster.
+Use one [verified coordinated release](../../../docs/edge-ai-samples-release.md#1-select-and-verify-a-release)
+for the model, graph definitions, and modules. CI verifies the unmodified YOLOX
+`0.1.1rc0` export's checksum, ONNX tensor contract, and Apache-2.0 license before
+packaging. Review [third-party notices](../THIRD-PARTY-NOTICES.md) before redistribution.
+Local building/model execution is an
+[optional customization path](../README.md#build-and-run-locally), not a deployment step.
 
 ## Configure the deployment
 
@@ -166,6 +168,10 @@ Replace every `REPLACE_WITH_` value. Choose a **new camera/asset name** for this
 sample and a dedicated data claim; do not reuse unrelated resources.
 `registryEndpointName` is the AIO registry endpoint's **name**, while `registry`
 is the registry's **host**.
+For public releases, use `ghcr.io` and
+`artifactRepository: azure-samples/explore-iot-operations/edge-predictive-inference`.
+Set `artifactVersion` to the version in the release ledger. The model manifest,
+ARM graph references, and graph-to-module references use this same prefix/version.
 
 `modelEndpoint` must be the actual HTTPS **base URL** of the new Foundry model.
 The example uses the documented per-model Service on port 5000. If your operator
@@ -178,16 +184,15 @@ ARM parameter files, Kubernetes manifests, and two custom WASM graph definitions
 The initial camera and data flow graph are **disabled**. Edit source configuration,
 not generated files; subsequent commands render them again.
 
-## Publish model and graph artifacts
+For the endpoint, authentication, trust, and file settings in the generated
+application configuration, see the
+[inference connector configuration reference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/reference-inference-connector-configuration).
 
-Authenticate ORAS to your registry using your approved credential workflow, then:
+## Artifact resolution
 
-```bash
-./publish.sh config.json
-```
-
-This publishes five artifacts beneath
-`<registry>/azure-samples/edge-predictive-inference`, using `artifactVersion`:
+The release contains five artifacts beneath
+`ghcr.io/azure-samples/explore-iot-operations/edge-predictive-inference`,
+using `artifactVersion`:
 
 | Artifact | Contents |
 | --- | --- |
@@ -197,8 +202,9 @@ This publishes five artifacts beneath
 
 The built-in inference transform's graph definition and WASM module are pulled separately from
 MCR through the `default` registry endpoint. This sample does not republish or
-replace them. After changing code, run `build.sh` again before publishing; use a
-new artifact version rather than overwriting a version used by running workloads.
+replace them. No `publish.sh` command is needed here. If you change code, follow
+the [customization instructions](../README.md#build-and-run-locally) and use a
+new version in your own repository.
 
 ## Prepare storage and deploy the model
 
@@ -227,6 +233,10 @@ audience. Update `modelEndpoint` in `config.json` if the reported base URL diffe
 An accepted Kubernetes manifest alone is not evidence that the model is serving.
 
 ## Deploy the application and disabled pipeline
+
+The [product deployment guide](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/howto-deploy-inference-connector)
+explains the application definition and configuration resources used by these
+commands. Use this sample's templates and configuration for this scenario.
 
 ```bash
 ./deploy.sh definition config.json
@@ -286,6 +296,7 @@ Capture one successful observation:
 ```bash
 CONTEXT=$(jq -er '.kubeContext' config.json)
 PREFIX=$(jq -er '.topicPrefix' config.json)
+mkdir -p .build
 kubectl --context "$CONTEXT" exec -n azure-iot-operations edge-predictive-reader -- \
   sh -ec 'exec mosquitto_sub -h aio-broker -p 18883 -V mqttv5 -q 1 \
     -t "$1/results" -C 1 -W 60 -F "%p" \
@@ -309,9 +320,11 @@ kubectl --context "$CONTEXT" cp \
 Copy promptly: the cleanup job selects files with `find -mmin +5` once per minute.
 This is short-lived scratch storage, not permanent evidence retention.
 
-Inspect tensor shapes without printing hundreds of thousands of values:
+Install the optional inspection dependencies and inspect tensor shapes without
+printing hundreds of thousands of values:
 
 ```bash
+python -m pip install -r models/requirements.txt
 python - <<'PY'
 import json
 import numpy as np

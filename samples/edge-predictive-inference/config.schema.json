@@ -58,7 +58,14 @@
       "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?::[0-9]{1,5})?$"
     },
     "registryEndpointName": {"$ref": "#/$defs/name"},
-    "artifactVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "artifactRepository": {
+      "type": "string", "maxLength": 200,
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)*$"
+    },
+    "artifactVersion": {
+      "type": "string", "maxLength": 128,
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$"
+    },
     "dataClaimName": {"$ref": "#/$defs/name"},
     "storageClassName": {"$ref": "#/$defs/name"},
     "scoreThreshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},

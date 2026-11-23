@@ -3,7 +3,7 @@ param customLocationName string
 param connectorTemplateName string = 'edge-assistant-onvif'
 param connectorRegistry string = 'mcr.microsoft.com'
 param connectorImageName string = 'azureiotoperations/akri-connectors/onvif'
-param connectorImageTag string = '1.5.0'
+param connectorImageTag string = '1.6.5'
 param connectorImagePullSecretName string = ''
 
 resource customLocation 'Microsoft.ExtendedLocation/customLocations@2021-08-31-preview' existing = {
@@ -28,7 +28,7 @@ resource connector 'Microsoft.IoTOperations/instances/akriConnectorTemplates@202
     aioMetadata: {
       aioMinVersion: '1.3.38'
     }
-    connectorMetadataRef: 'mcr.microsoft.com/azureiotoperations/akri-connectors/onvif-metadata:1.5.0'
+    connectorMetadataRef: 'mcr.microsoft.com/azureiotoperations/akri-connectors/onvif-metadata:1.6.5'
     deviceInboundEndpointTypes: [
       {
         endpointType: 'Microsoft.Onvif'

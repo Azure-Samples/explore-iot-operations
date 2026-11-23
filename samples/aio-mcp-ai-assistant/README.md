@@ -27,7 +27,7 @@ pan an ONVIF camera simulator, and publish a recommendation **only after an
 operator approves it**. Both actions are disabled in the default configuration.
 
 **Use the sample:** [Scenario](#scenario) | [Architecture](#architecture) |
-[Prerequisites](#prerequisites) | [Build](#build-and-test-locally) |
+[Prerequisites](#prerequisites) | [Prebuilt release](../../docs/edge-ai-samples-release.md) |
 [Configure](#configure-the-instance) | [Deploy](#deploy-the-scenario) |
 [Run](#run-and-observe) | [Validate](#validate-the-integrations) |
 [Camera actions](docs/camera-actions.md) |
@@ -41,9 +41,17 @@ operator approves it**. Both actions are disabled in the default configuration.
 > with TLS, service-account-token authentication, and the required tools.
 > Upgrading an earlier custom-MCP deployment? Follow the
 > [migration steps](docs/operations.md#migrate-from-the-custom-mcp-version).
+> The [private-cluster qualification record](../../docs/edge-ai-samples-validation.md)
+> identifies the observed AIO/Foundry combination, passing scenarios, and model
+> limitations. Public GHCR publication remains pending; the example
+> `0.1.0-rc.1` tag is not an available release.
 
 This is an evaluation sample, not an autonomous monitoring or safety system.
 Review the [limitations](#limitations) before using its answers operationally.
+The tested CPU model has **not passed observation or error interpretation**:
+it omitted requested fields and incorrectly described an empty error window as
+a healthy pipeline. Use the direct tools to inspect authoritative data; the
+model questions below are acceptance exercises, not a guarantee of correct answers.
 
 ## Scenario
 
@@ -66,7 +74,8 @@ This sample adds a conversational interface to those existing data sources:
 
 Use the [edge predictive inference sample](../edge-predictive-inference/README.md)
 to supply the camera observations. Its media connector, data flow graph,
-inference connector, and YOLOX-Nano model produce frame-level person detections.
+[inference connector](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/overview-inference-connector),
+and YOLOX-Nano model produce frame-level person detections.
 The assistant reads that **result JSON**; it does not process images or run the
 person-detection model.
 
@@ -157,13 +166,13 @@ publisher sends no recommendation. The text model cannot approve its own request
 
 | Requirement | Expected capability |
 | --- | --- |
-| Development machine | Linux or WSL, Python 3.10+, Docker with Linux/amd64 image builds, and `kubectl`. |
+| Deployment machine | Linux or WSL, Python 3.10+, and `kubectl`. ORAS 1.3+ is used to independently verify the release. Docker/Rust are only needed for customization. |
 | AIO installation | Built-in MCP frontend/backend enabled; the frontend Service exposes HTTPS port 443 and accepts projected SATs. Its catalog must provide `aio_list_assets`, `aio_get_asset`, `aio_list_devices`, `aio_get_device`, and `aio_mq_messages`; actions also require `aio_mqtt_publish`. |
 | Foundry Local operator | `foundrylocal.azure.com/v1` `ModelDeployment`, internal HTTPS endpoints, SAT authorization, and the generative `onnx-genai` runtime for the selected compute. |
 | Model catalog | Access to `qwen3.5-2b-text-generic-cpu:1`, the CPU text model used by the example configuration, and acceptance of its terms. The sample does not redistribute model weights. |
 | TLS and networking | Public AIO frontend and Foundry CA bundles; standard `cluster.local` DNS; a CNI enforcing NetworkPolicy. Platform certificates are reused; the sample creates no MCP server certificate. |
 | Permissions | An installer able to create sample resources and the scoped Foundry model-reader binding; a platform owner to approve MCP role assignments and backend access. |
-| Container registry | A registry you can push to, and pull access for the sample namespace. |
+| Container registry | Pull access to the versioned public GHCR assistant image, plus the simulator/graphs if enabled. No registry push permission is required. |
 | Observation producer | Required for MQTT questions: a running publisher of JSON objects on the selected topics. The companion person-detection pipeline is one supported input scenario. |
 
 The default CPU model requests **4 CPUs and 4 GiB**, with limits of 8 CPUs and 8 GiB,
@@ -181,24 +190,21 @@ authorization mechanism. Do not grant it to untrusted users.
 For platform setup and connecting existing resources, see
 [connect the actual components](docs/operations.md#connect-the-actual-components).
 
-## Build and test locally
+## Prepare the deployment tools
 
-From the repository root:
+First [select and verify a release](../../docs/edge-ai-samples-release.md).
+From that source revision, prepare a virtual environment used only by this sample:
 
 ```bash
 cd samples/aio-mcp-ai-assistant
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev]'
-
-python -m pytest
-ruff check src tests manage.py
-ruff format --check src tests manage.py
+python -m pip install .
 ```
 
-The local tests use [mocks and fixtures](#real-components-mocks-and-replay-inputs);
-they do not contact a cluster, subscribe to MQTT, or run the text model.
-Continue with deployment to exercise the real integrations.
+This installs the workstation deployment/CLI helpers; the cluster runs the
+prebuilt assistant image. It does not build an image or publish anything.
+For code changes, use [local customization](#customize-and-test-locally).
 
 ## Configure the instance
 
@@ -214,7 +220,7 @@ Edit `config.json` before running the next commands. Replace every
 | `kubeContext` | An explicit context from `kubectl config get-contexts`. Helpers never switch the global context. |
 | `namespace` | A new, dedicated namespace. The helper creates it and refuses to adopt unrelated existing resources. |
 | `aioNamespace` | The namespace containing the built-in MCP frontend and its public CA ConfigMap. Resource visibility is controlled by the platform backend, not a custom reader Role. |
-| `image` | Your registry/repository and a new explicit version tag. `latest` and unqualified image names are rejected. |
+| `image` | The published GHCR assistant image at the selected release version or verified digest. `latest` and unqualified image names are rejected. |
 | `imagePullSecret` | An existing or planned registry pull secret in the sample namespace. Use `""` only when no secret is needed. |
 | `mcp.tokenAudience` | The built-in frontend's inbound SAT audience, normally `aio-mcp-frontend`. This is not the backend's audience or the broker's `aio-internal` audience. |
 | `mcp.caConfigMap` / `caKey` | The public CA bundle trusting the built-in frontend in `aioNamespace`. Confirm the actual key, such as `trust-bundle.pem` or `ca.crt`. |
@@ -228,15 +234,15 @@ Edit `config.json` before running the next commands. Replace every
 | `foundry.caConfigMap` / `caKey` | The public CA bundle for the model's internal HTTPS endpoint, in the configured Foundry namespace. |
 | `sources` | One to eight distinct, exact JSON topics. Each has a `stage`, optional `machineId`, and meaningful `description`. Stage/machine bindings must be unique; wildcards are not allowed. |
 | `camera` | After [camera setup](docs/camera-actions.md), set `enabled: true`, the control `assetName`, discovered `profileToken`, and an instance-specific `topicPrefix`. |
-| `cameraGraphs` | Registry settings for the camera-control data flow graphs' WASM modules and graph definitions: artifact registry, existing `registryEndpointName`, and explicit `artifactVersion`. Required for camera checks and movement. Configuring it adds the frontend `Admin` role even while movement is disabled, because GetStatus requests use the publish tool. |
+| `cameraGraphs` | Registry settings for the camera-control data flow graphs: `registry`, `artifactRepository`, existing `registryEndpointName`, and explicit `artifactVersion`. Use the release paths in the camera tutorial. Required for camera checks and movement. Configuring it adds the frontend `Admin` role even while movement is disabled, because GetStatus requests use the publish tool. |
 | `recommendations` | Disabled by default. Set `enabled: true` and a dedicated exact `topic` only when an operator and intended consumer are ready. See [recommendation publishing](#review-and-publish-a-recommendation). |
-| `simulator` | Omit for read-only use or real equipment. For the camera tutorial, add an `image` with your explicitly versioned simulator image. |
+| `simulator` | Omit for read-only use or real equipment. For the camera tutorial, add the simulator `image` from the same coordinated release. |
 
 ### Select the text model
 
 The example selects `qwen3.5-2b-text-generic-cpu`, version `1`, with `compute`
-set to `cpu`. For Foundry 2.x, add the following property **inside the existing
-`foundry` object**, after confirming the entry in your installed catalog:
+set to `cpu`. The example already includes the following Foundry 2.x property
+**inside the `foundry` object**. Confirm that exact entry in the installed catalog:
 
 ```json
 {
@@ -257,6 +263,9 @@ For camera observations, deploy the companion
 with an authorized RTSP camera. Use its
 [result reader](../edge-predictive-inference/README.md#run-and-observe-the-pipeline)
 to confirm that it publishes observations before asking the assistant about them.
+Its [ACSA setup and cross-node storage check](../edge-predictive-inference/docs/shared-storage.md)
+provide the shared tensor storage needed by that inference pipeline. The MCP
+assistant itself does not mount that claim or require ACSA for resource questions.
 
 The default `sources` configuration connects these topics:
 
@@ -286,25 +295,19 @@ Run the following steps in order from the sample directory with `.venv`
 active and the populated `config.json` available. All cluster commands use
 `kubeContext`; the helper does not change your global Kubernetes context.
 
-### Build and publish the image
+### Render and review the configuration
 
 ```bash
 python manage.py render config.json
-python manage.py build config.json
 ```
 
 `render` validates configuration and writes reviewable YAML plus
 `mcp-access.json` under `.generated/`, without contacting the cluster. The JSON
 is a review inventory, **not an authorization policy**. Optional graph artifacts
-are rendered when `cameraGraphs` is configured. `build` creates the Linux/amd64
+are rendered when `cameraGraphs` is configured. Kubernetes will pull the prebuilt
 agent image identified by `image`; there are no custom MCP server containers.
-
-Authenticate Docker to your registry using your organization's approved flow,
-then publish:
-
-```bash
-python manage.py push config.json
-```
+For public GHCR images, keep `imagePullSecret: ""`. Do not run `build` or `push`
+as part of this deployment path.
 
 Keep `config.json`, generated files, and credentials out of commits. The sample
 ignores local configuration and build output.
@@ -409,8 +412,8 @@ python manage.py tool config.json get_device '{"name":"edge-person-camera"}'
 ```
 
 The returned `item` contains the backend's redacted resource configuration, not
-a synthesized Kubernetes envelope. Inspect its actual device-reference fields
-and compare them with the Device you retrieved.
+a synthesized Kubernetes envelope. Inspect `item.spec.deviceRef.deviceName`
+and `endpointName`, and compare them with the Device and endpoint you retrieved.
 
 Now ask the assistant to interpret the configuration:
 
@@ -421,6 +424,8 @@ python manage.py ask config.json \
 
 The answer should identify resources actually returned by its tool calls.
 Configuration, including an `enabled` flag, does not establish device health.
+The tested model sometimes added unsupported health claims even when it read
+the correct reference fields. Treat those answers as failed checks.
 
 ### Read and explain a person-detection observation
 
@@ -450,6 +455,9 @@ direct read: each call opens a separate sampling window. Subscriptions can
 receive retained messages, so inspect producer timestamps; `sampledAt` does not
 establish freshness. The companion producer normally samples every five seconds; a
 five-second window may return fewer messages than requested.
+The recorded CPU-model answer omitted the requested fields and incorrectly
+equated zero detections with an empty physical scene. This acceptance check
+remains failed; use the direct result rather than that interpretation.
 
 ### Inspect the error topic
 
@@ -464,6 +472,8 @@ python manage.py ask config.json \
 An empty result means no messages were received in that window. It does not
 prove that the pipeline is healthy or that no people were detected. The
 companion pipeline's error topic does not cover every processing failure.
+The recorded model answer incorrectly claimed health from an empty window;
+`status: "completed"` did not make that answer valid.
 
 Each `ask` command starts an independent question, not a shared chat session.
 Only one question runs at a time, with a five-minute deadline. Use direct tools
@@ -473,7 +483,7 @@ interpretation.
 ### Pan the simulated camera
 
 Complete the [camera deployment tutorial](docs/camera-actions.md) first. It
-includes the simulator build, connector for ONVIF, Device/control Asset,
+includes the prebuilt simulator, connector for ONVIF, Device/control Asset,
 camera-control data flow graphs, platform access, and real-hardware replacement steps.
 
 Call the action directly before testing model-selected movement:
@@ -537,9 +547,12 @@ To let the model propose the request instead:
 
 > [!IMPORTANT]
 > The configured CPU model has **not passed this recommendation-proposal
-> flow** in the recorded checks: it returned invalid arguments or no proposal.
-> Those recorded checks used the previous custom-MCP transport; validate the
-> migrated direct workflow independently before trying model-generated proposals.
+> flow**. In the 2026-11-11 built-in MCP run, its tool markup was rejected with
+> `Tool call contains text outside a parameter`; no approval request or
+> publication followed. The direct operator-authored workflow passed approval,
+> denial, duplicate, reuse, and real five-minute expiry checks. Those results do
+> not establish model-generated proposal correctness; see the
+> [qualification record](../../docs/edge-ai-samples-validation.md).
 
 ```bash
 python manage.py ask config.json \
@@ -613,6 +626,10 @@ diagnostics for [troubleshooting](docs/operations.md#inspect-logs-and-events).
 
 ## Validate the integrations
 
+Record the release, exact platform versions, and observed outcomes in the
+[shared qualification record](../../docs/edge-ai-samples-validation.md).
+CI and artifact verification do not establish this live baseline.
+
 Use these checks to establish what is working in your environment:
 
 | Check | Expected outcome |
@@ -649,7 +666,7 @@ identified below:
 | [`test_foundry.py`](tests/test_foundry.py), [`test_runtime.py`](tests/test_runtime.py), [`test_server.py`](tests/test_server.py) | Model streams, answers, and selected HTTP/tool backends. | Deploy the model and run `manage.py ask`; inspect actual tool activity and the answer. |
 | [`test_mcp.py`](tests/test_mcp.py), [`test_frontend.py`](tests/test_frontend.py) | A simulated frontend supplies MCP envelopes, resource fixtures, encoded observations, and camera/publication results. | Register real equipment and use the built-in frontend, camera-control data flow graphs, connector for ONVIF, and an independent subscriber. |
 | [`test_kubernetes.py`](tests/test_kubernetes.py) | Mocked model-endpoint API responses; no custom AIO resource reader. | Verify the actual Foundry ModelDeployment's internal endpoint. |
-| [Camera-control WASM unit tests](native-camera-actions/) | Synthetic request envelopes and response objects; no MQTT or ONVIF invocation in unit tests. | Build the WASM modules, deploy the data flow graphs, and qualify GetStatus through the real frontend before enabling movement. |
+| [Camera-control WASM unit tests](native-camera-actions/) | Synthetic request envelopes and response objects; no MQTT or ONVIF invocation in unit tests. | Deploy the published data flow graphs and qualify GetStatus through the real frontend before enabling movement. |
 | [`test_deployment.py`](tests/test_deployment.py) | Cluster commands are replaced where deployment behavior is exercised. | Follow the deployment steps and inspect the created resources and rollouts. |
 | README response examples | Illustrative JSON, not recorded observations. | Inspect the JSON returned by your own `tool` and `ask` commands. |
 | [`simulator/`](simulator/) | A generated calibration panorama and software PTZ state stand in for a camera and physical motion. | Register an authorized ONVIF camera and its real profile using the [hardware replacement steps](docs/camera-actions.md#use-an-actual-onvif-camera). |
@@ -659,6 +676,34 @@ Keep synthetic telemetry on separate validation topics and label it in both
 payloads and source descriptions. A synthetic publisher bypasses the camera
 and vision pipeline; a replay does not establish live physical-camera behavior.
 Stop test publishers before validating the real producer.
+
+## Customize and test locally
+
+This is optional; the default deployment uses the prebuilt release. With this
+sample's `.venv` active:
+
+```bash
+python -m pip install -e '.[dev]'
+python -m pytest
+ruff check src tests manage.py
+ruff format --check src tests manage.py
+```
+
+The local tests use the mocks and fixtures listed above, not a live cluster.
+To build a customized agent, install Docker, change `image` to your own registry
+repository and a new version, and authenticate using your approved process:
+
+```bash
+python manage.py build config.json
+python manage.py push config.json
+```
+
+`build` creates a Linux/amd64 image. `push` refuses the official GHCR namespace;
+official images are built and published by the
+[coordinated release workflow](../../tools/edge-ai-release/README.md).
+Configure private-image pull access separately if needed. Camera WASM and
+simulator customization are covered in the
+[camera tutorial](docs/camera-actions.md#customize-the-camera-components).
 
 ## Limitations
 

@@ -34,18 +34,42 @@ interpretation issue.
 
 ## Validation status and model limitations
 
-**The migrated built-in MCP path has not been live end-to-end qualified.**
-Local protocol/adapter tests and WASM module builds do not validate the
-installed frontend, ARM preview API, registry, camera, or model together.
-Earlier live results used the removed custom MCP servers and are not acceptance
-evidence for this version.
+**The 2026-11-11 private ACR run exercised the real built-in MCP path.**
+Resource reads, genuine producer observations, direct simulated camera control,
+and the operator-authored approval workflow passed. See the
+[shared qualification record](../../../docs/edge-ai-samples-validation.md)
+for the exact artifact snapshot, installed AIO/Foundry combination, and separate
+model-assisted results. Public GHCR publication and anonymous pulls remain
+pending; neither local tests nor private access qualify that release path.
 
-The configured CPU model has previously omitted observation fields and failed
-to produce valid nested recommendation arguments. Direct tool success does
-not establish reliable model selection or interpretation. The conversational
+The configured CPU model still has interpretation and tool-format limitations.
+A named ONVIF Asset field question was grounded, but other resource answers
+added unsupported Device-health claims. The observation answer omitted the
+requested frame fields and equated zero detections with an empty scene; the
+empty-error-window answer incorrectly claimed a healthy pipeline. These checks
+failed even with complete `stop` completions. Its model-generated recommendation
+was rejected with
+`Tool call contains text outside a parameter`, without creating an approval or
+publishing. Direct tool success does not establish reliable model selection or
+interpretation. The conversational
 loop still uses temperature 0, 256 generation tokens, four completions maximum,
 and one model-driven format correction; it does not repair malformed model
 output or substitute an operator-authored answer.
+
+The Foundry client requests complete OpenAI-compatible JSON responses with
+`stream: false`. In the tested Foundry `2.261102.2` CPU serving image, the
+streaming handler iterates a blocking SDK iterator on its async event loop.
+Actual streaming questions coincided with health-probe timeouts and HTTP 503
+on subsequent model calls. The supported non-streaming handler runs generation
+in a worker thread; a comparison using the actual tool prompt returned HTTP 200
+while all eight concurrent health checks succeeded. This changes the model
+transport, not the agent's question/answer interface. TLS, SAT authentication,
+response-size limits, deadlines, and model-output validation remain enabled;
+no vendor probes or generated workloads are patched.
+
+That protocol comparison alone does not qualify a complete question or action.
+See the [qualification record](../../../docs/edge-ai-samples-validation.md)
+for the results obtained with the rebuilt prebuilt assistant.
 
 ### Accept a model-assisted result
 
@@ -146,7 +170,7 @@ python manage.py ask config.json \
 Confirm that the result names the selected model and contains a real
 `list_assets` call with matching metadata. For a GPU result, also inspect the
 serving Pod's GPU allocation and runtime GPU use; a GPU-capable VM alone is not
-proof the model ran on the GPU. Readiness and local SSE tests do not replace
+proof the model ran on the GPU. Readiness and local protocol tests do not replace
 these checks.
 
 ### Replace synthetic telemetry or camera replay
@@ -233,7 +257,7 @@ to troubleshoot authentication.
 | Frontend TLS or Service unavailable | Existing AIO frontend installation, Service port 443, DNS, CA bundle, and platform certificate readiness. The sample creates no MCP serving certificate. |
 | `ImagePullBackOff` | Published image/version, architecture, and registry pull secret in the sample namespace. The model's catalog access is managed separately by Foundry. |
 | Simulator image pull says `insufficient_scope` | The registry credential must cover the simulator repository as well as the assistant repository. The connector for ONVIF's optional private-image pull Secret belongs in the AIO namespace. |
-| Connector for ONVIF Pod rejects named user `nonroot` | Use the [numeric-user compatibility image](camera-actions.md#numeric-non-root-image-compatibility) or a validated compatible official release. Do not disable non-root enforcement or patch controller-owned Pods. |
+| Connector for ONVIF Pod rejects named user `nonroot` | Block baseline qualification and resolve a compatible official image/operator combination. The [numeric-user wrapper](camera-actions.md#numeric-non-root-image-compatibility) is only a development workaround, not an official prerequisite. Do not disable non-root enforcement or patch controller-owned Pods. |
 | Frontend 401/403 or missing tools | Frontend inbound audience, projected token, `aio-mcp-auth/roles` annotation, and platform authentication configuration. Reader/DataReader are required; publication also requires Admin. |
 | Resource tool denied | Backend's platform-owned Kubernetes identity and configured resource scope. Do not grant the assistant direct Asset/Device permissions as a fallback. |
 | Unknown asset/device | Use `list_assets`/`list_devices`; configured names and resource namespace must match. A Kubernetes 404 is not an empty success. |

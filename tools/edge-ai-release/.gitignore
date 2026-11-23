@@ -1,0 +1,3 @@
+.candidate/
+.venv/
+.ruff_cache/

@@ -55,7 +55,17 @@ failed invocation attempts; it is not durable exactly-once execution. Requests
 are not automatically retried. Separate graphs prevent a blocked Move operator
 from serializing Stop but cannot guarantee broker/connector ordering.
 
-## Build and publish
+## Use the published graphs
+
+The default tutorial consumes versioned graph definitions and WASM modules from
+the [coordinated release](../../../docs/edge-ai-samples-release.md).
+Set `cameraGraphs.artifactRepository` to
+`azure-samples/explore-iot-operations/aio-mcp-ai-assistant/camera-actions`,
+`registry` to `ghcr.io`, and `artifactVersion` to the selected release.
+No local build or registry push is required. Publication and live qualification
+are recorded separately; do not assume the example candidate is available.
+
+## Build and publish customizations
 
 From the parent sample directory, with its Python environment active:
 
@@ -69,8 +79,11 @@ format checks, Rust unit tests, Clippy, and all three WASM builds. Unit tests
 use synthetic envelopes; they do not contact an MQTT broker or camera.
 
 Publication requires ORAS, approved registry authentication, and a populated
-`cameraGraphs` configuration. It pushes three WASM modules and three graph
-definition artifacts under `azure-samples/aio-mcp-ai-assistant/camera-actions`. The existing
+`cameraGraphs` configuration using your own repository and a new version.
+It pushes three WASM modules and three graph definitions under
+`<registry>/<artifactRepository>`. Configurations omitting `artifactRepository`
+retain the earlier `azure-samples/aio-mcp-ai-assistant/camera-actions` prefix.
+The helper refuses the official GHCR namespace; use CI for official releases. The existing
 AIO registry endpoint must independently have pull access to these paths.
 Do not use mutable `latest` tags or commit registry credentials.
 

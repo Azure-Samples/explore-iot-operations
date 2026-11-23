@@ -220,5 +220,5 @@ deduplication ledgers are not durable operational evidence.
 | Built-in MCP protocol client | [`mcp_transport.py`](../src/aio_mcp_ai_assistant/mcp_transport.py) |
 | Resource adaptation, observations, publication, camera policy | [`frontend.py`](../src/aio_mcp_ai_assistant/frontend.py) |
 | Camera-control WASM modules and data flow graph deployment | [`native-camera-actions/`](../native-camera-actions/), [`camera-actions.bicep`](../bicep/camera-actions.bicep) |
-| Model endpoint lookup and streaming inference | [`kubernetes.py`](../src/aio_mcp_ai_assistant/kubernetes.py), [`foundry.py`](../src/aio_mcp_ai_assistant/foundry.py) |
+| Model endpoint lookup and non-streaming JSON inference | [`kubernetes.py`](../src/aio_mcp_ai_assistant/kubernetes.py), [`foundry.py`](../src/aio_mcp_ai_assistant/foundry.py) |
 | Separate vision producer | [Edge predictive inference](../../edge-predictive-inference/README.md) |

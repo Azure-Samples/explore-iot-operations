@@ -6,7 +6,7 @@ ACTION="${1:?Usage: ./deploy.sh ACTION CONFIG.json}"
 CONFIG="${2:?Usage: ./deploy.sh ACTION CONFIG.json}"
 CONFIG="$(realpath "$CONFIG")"
 case "$ACTION" in
-    preflight|storage|model|definition|connector|camera|flow|reader|enable|disable|status) ;;
+    preflight|storage|storage-check|model|definition|connector|camera|flow|reader|enable|disable|status) ;;
     *) echo "Unknown action: $ACTION" >&2; exit 2 ;;
 esac
 python "$ROOT/render.py" "$CONFIG"
@@ -90,6 +90,21 @@ case "$ACTION" in
                 >/dev/null || fail "The data claim must be Bound with ReadWriteMany"
         require_owned_or_absent cronjob edge-predictive-cleanup "$NAMESPACE"
         k apply -f "$ROOT/.generated/cleanup.yaml"
+        ;;
+    storage-check)
+        require_owned_or_absent persistentvolumeclaim "$CLAIM" "$NAMESPACE"
+        k get pvc "$CLAIM" -n "$NAMESPACE" -o json |
+            jq -e '.status.phase == "Bound" and (.spec.accessModes | index("ReadWriteMany") != null)' \
+                >/dev/null || fail "Initialize the sample's Bound RWX claim with the storage command first"
+        job="$(k create -f "$ROOT/.generated/storage-check.yaml" -o jsonpath='{.metadata.name}')"
+        echo "Verifying cross-node storage with job/$job"
+        if ! k wait -n "$NAMESPACE" --for=condition=Complete "job/$job" --timeout=260s; then
+            k get pods -n "$NAMESPACE" -l "job-name=$job" -o wide
+            fail "Storage verification failed. Inspect job/$job and its pod logs; it has been retained for diagnosis."
+        fi
+        k get pods -n "$NAMESPACE" -l "job-name=$job" -o wide
+        k logs -n "$NAMESPACE" -l "job-name=$job" --prefix=true --tail=-1
+        k delete job "$job" -n "$NAMESPACE" --wait=true
         ;;
     model)
         require_owned_or_absent modeldeployment "$MODEL" "$FOUNDRY"

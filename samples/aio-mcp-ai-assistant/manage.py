@@ -72,6 +72,11 @@ def main() -> int:
                     check=True,
                 )
             else:
+                if settings.image.startswith("ghcr.io/azure-samples/explore-iot-operations/"):
+                    raise SampleError(
+                        "Official GHCR images are published by the Edge AI samples workflow. "
+                        "Use your own image repository for customization."
+                    )
                 subprocess.run(["docker", "push", settings.image], check=True)
         elif arguments.command in {"check", "camera-check"}:
             deployment.client(arguments.command)

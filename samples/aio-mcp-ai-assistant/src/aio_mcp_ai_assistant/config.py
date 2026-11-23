@@ -103,6 +103,12 @@ class Camera(StrictModel):
 
 class CameraGraphs(StrictModel):
     registry: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9][a-z0-9.-]*$")
+    artifact_repository: str = Field(
+        default="azure-samples/aio-mcp-ai-assistant/camera-actions",
+        alias="artifactRepository",
+        max_length=200,
+        pattern=r"^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)*$",
+    )
     registry_endpoint_name: str = Field(alias="registryEndpointName", max_length=63, pattern=NAME)
     artifact_version: str = Field(
         alias="artifactVersion",

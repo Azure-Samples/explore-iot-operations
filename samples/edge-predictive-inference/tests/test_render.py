@@ -54,16 +54,21 @@ class RenderingTests(unittest.TestCase):
             self.assertEqual(
                 subjects[0]["serviceAccountName"], "aioappcfg-edge-predictive-inference-sa"
             )
-            for name in ("storage", "reader", "cleanup"):
+            for name in ("storage", "storage-check", "reader", "cleanup"):
                 raw = (output / f"{name}.yaml").read_text()
                 self.assertNotIn("${", raw)
                 self.assertIn(config["dataClaimName"], raw)
                 list(yaml.safe_load_all(raw))
+            self.assertEqual(dataflow["artifactRepository"]["value"], config["artifactRepository"])
+            self.assertEqual(
+                model["spec"]["model"]["custom"]["repository"],
+                f"{config['artifactRepository']}/yolox-nano",
+            )
             for stage in ("preprocess", "postprocess"):
                 graph = yaml.safe_load((output / f"{stage}-graph.yaml").read_text())
                 self.assertEqual(
                     graph["operations"][1]["module"],
-                    f"{render.REPOSITORY}/{stage}:1.2.3",
+                    f"{config['artifactRepository']}/{stage}:1.2.3",
                 )
                 self.assertEqual(
                     set(graph["moduleConfigurations"][0]["parameters"]),
@@ -87,6 +92,9 @@ class RenderingTests(unittest.TestCase):
             {"nmsThreshold": float("nan")},
             {"cameraAuthentication": {"method": "UsernamePassword", "password": "not-allowed"}},
             {"unknown": "setting"},
+            {"artifactRepository": "ghcr.io/../wrong"},
+            {"artifactRepository": "/absolute"},
+            {"artifactVersion": "latest"},
             {"resourceGroup": "REPLACE_WITH_RESOURCE_GROUP"},
         ]
         with tempfile.TemporaryDirectory() as temporary:
@@ -98,6 +106,15 @@ class RenderingTests(unittest.TestCase):
                     path.write_text(json.dumps(config))
                     with self.assertRaises((ValueError, jsonschema.ValidationError)):
                         render.load_config(path)
+
+    def test_existing_private_registry_configuration_keeps_its_repository(self):
+        config = configuration()
+        config.pop("artifactRepository")
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "config.json"
+            path.write_text(json.dumps(config))
+            loaded = render.load_config(path)
+            self.assertEqual(loaded["artifactRepository"], render.REPOSITORY)
 
     def test_preserves_yaml_types_and_supports_explicit_anonymous_camera(self):
         config = configuration()

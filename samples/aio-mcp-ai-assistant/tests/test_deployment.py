@@ -1,4 +1,7 @@
 import json
+import runpy
+import subprocess
+import sys
 
 import pytest
 import yaml
@@ -7,6 +10,23 @@ from pydantic import ValidationError
 from aio_mcp_ai_assistant.common import SampleError
 from aio_mcp_ai_assistant.config import Settings
 from aio_mcp_ai_assistant.deployment import Deployment, ownership, render, write_manifests
+
+
+def test_local_push_cannot_replace_official_release(
+    config, template_dir, tmp_path, monkeypatch, capsys
+):
+    config["image"] = "ghcr.io/azure-samples/explore-iot-operations/aio-mcp-ai-assistant:0.1.0-rc.1"
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps(config))
+    main = runpy.run_path(str(template_dir.parent / "manage.py"))["main"]
+    monkeypatch.setattr(sys, "argv", ["manage.py", "push", str(path)])
+
+    def unexpected_command(*args, **kwargs):
+        pytest.fail("A local publisher must not write an official release")
+
+    monkeypatch.setattr(subprocess, "run", unexpected_command)
+    assert main() == 1
+    assert "Use your own image repository" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -79,6 +99,7 @@ def test_asset_id_cannot_use_an_unpinned_version(config):
 
 
 def test_gpu_model_requests_one_device_on_the_selected_pool(config, template_dir):
+    config["foundry"].pop("assetId", None)
     config["foundry"].update(
         {
             "compute": "gpu",
@@ -313,15 +334,24 @@ def test_camera_graph_rendering_keeps_custom_target_and_separate_actions(
     action_settings, template_dir, tmp_path
 ):
     settings = action_settings.model_copy(
-        update={"camera": action_settings.camera.model_copy(update={"asset_name": "other-camera"})}
+        update={
+            "camera": action_settings.camera.model_copy(update={"asset_name": "other-camera"}),
+            "camera_graphs": action_settings.camera_graphs.model_copy(
+                update={
+                    "artifact_repository": "azure-samples/explore-iot-operations/camera-actions",
+                    "artifact_version": "1.2.3-rc.1",
+                }
+            ),
+        }
     )
     write_manifests(settings, render(settings, template_dir), tmp_path)
     parameters = json.loads((tmp_path / "camera-actions.parameters.json").read_text())["parameters"]
     assert parameters["cameraAssetName"]["value"] == "other-camera"
+    assert parameters["artifactRepository"]["value"] == settings.camera_graphs.artifact_repository
     for stage in ("get-status", "continuous-move", "stop"):
         graph = yaml.safe_load((tmp_path / f"camera-{stage}-graph.yaml").read_text())
-        assert graph["operations"][1]["module"].endswith(
-            f"/{stage}:{settings.camera_graphs.artifact_version}"
+        assert graph["operations"][1]["module"] == (
+            f"{settings.camera_graphs.artifact_repository}/{stage}:1.2.3-rc.1"
         )
         assert set(graph["moduleConfigurations"][0]["parameters"]) == {
             "asset_name",

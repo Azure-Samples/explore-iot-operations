@@ -35,6 +35,7 @@ def load_config(path: Path) -> dict:
             "modelEndpoint must be the deployment base URL, without API suffix or query"
         )
     config["modelEndpoint"] = config["modelEndpoint"].rstrip("/")
+    config.setdefault("artifactRepository", REPOSITORY)
     return config
 
 
@@ -52,7 +53,7 @@ def substitute(value, config: dict):
     return value
 
 
-def graph(stage: str, version: str) -> dict:
+def graph(stage: str, version: str, repository: str = REPOSITORY) -> dict:
     descriptions = {
         "preprocess": "Decode JPEG, letterbox BGR CHW tensor, and write the input file.",
         "postprocess": "Read the raw model output, decode person boxes, and publish an observation.",
@@ -85,7 +86,7 @@ def graph(stage: str, version: str) -> dict:
             {
                 "operationType": "map",
                 "name": stage,
-                "module": f"{REPOSITORY}/{stage}:{version}",
+                "module": f"{repository}/{stage}:{version}",
             },
             {"operationType": "sink", "name": "output", "arity": 1},
         ],
@@ -138,6 +139,7 @@ def render(config: dict, output: Path) -> None:
                     "dataClaimName",
                     "registryEndpointName",
                     "artifactVersion",
+                    "artifactRepository",
                     "cameraId",
                     "modelName",
                     "topicPrefix",
@@ -149,6 +151,10 @@ def render(config: dict, output: Path) -> None:
         },
     }
     files = {}
+    variables = {
+        **config,
+        "modelRepository": f"{config['artifactRepository']}/yolox-nano",
+    }
     for name, parameters in parameter_sets.items():
         files[f"{name}.parameters.json"] = (
             json.dumps(
@@ -164,12 +170,12 @@ def render(config: dict, output: Path) -> None:
         )
     for template in sorted((ROOT / "kubernetes").glob("*.yaml")):
         documents = [
-            substitute(document, config) for document in yaml.safe_load_all(template.read_text())
+            substitute(document, variables) for document in yaml.safe_load_all(template.read_text())
         ]
         files[template.name] = yaml.safe_dump_all(documents, sort_keys=False)
     for stage in ("preprocess", "postprocess"):
         files[f"{stage}-graph.yaml"] = yaml.safe_dump(
-            graph(stage, config["artifactVersion"]), sort_keys=False
+            graph(stage, config["artifactVersion"], config["artifactRepository"]), sort_keys=False
         )
     output.mkdir(parents=True, exist_ok=True)
     for name, text in files.items():

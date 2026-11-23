@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: edge-predictive-storage-check-
+  namespace: azure-iot-operations
+  labels:
+    app.kubernetes.io/part-of: edge-predictive-inference
+spec:
+  completionMode: Indexed
+  completions: 2
+  parallelism: 2
+  backoffLimit: 0
+  activeDeadlineSeconds: 240
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: edge-predictive-storage-check
+        app.kubernetes.io/part-of: edge-predictive-inference
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: edge-predictive-storage-check
+              topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: verify
+          image: mcr.microsoft.com/azurelinux/busybox:1.36
+          command: [/bin/sh, -ec]
+          args:
+            - |
+              test "$(id -u)" = 65532
+              test "$(id -g)" = 65532
+              case "$SIDE" in
+                0) peer=1 ;;
+                1) peer=0 ;;
+                *) echo "Invalid job completion index" >&2; exit 1 ;;
+              esac
+              base=/data/edge-predictive-inference
+              own="storage-check-$JOB_UID-$SIDE"
+              other="storage-check-$JOB_UID-$peer"
+              for directory in inputs responses; do
+                cd "$base/$directory" || exit 1
+                printf 'writer=%s node=%s\n' "$SIDE" "$NODE" > "$own.txt"
+                sha256sum "$own.txt" > "$own.sha256.partial"
+                mv "$own.sha256.partial" "$own.sha256"
+              done
+              for directory in inputs responses; do
+                cd "$base/$directory" || exit 1
+                attempts=0
+                until test -s "$other.sha256"; do
+                  attempts=$((attempts + 1))
+                  if test "$attempts" -ge 60; then
+                    echo "Timed out waiting for peer in $directory" >&2
+                    exit 1
+                  fi
+                  sleep 2
+                done
+                sha256sum -c "$other.sha256"
+                rm -- "$other.txt" "$other.sha256"
+              done
+              printf 'PASS: node=%s uid=65532 gid=65532 verified peer files in inputs and responses\n' "$NODE"
+          env:
+            - name: SIDE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: JOB_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['batch.kubernetes.io/controller-uid']
+            - name: NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 32Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ${dataClaimName}

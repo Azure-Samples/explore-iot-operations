@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import re
 import socket
+from collections.abc import Callable
 
 from onvif_simulator.config import Settings
 from onvif_simulator.image_catalog import ImageCatalog
 from onvif_simulator.media.encoder import AccessUnit, VideoPipeline
 from onvif_simulator.renderer import FrameRenderer
-from onvif_simulator.rtsp import RtspServer, Transport, next_keyframe, rtp_packet_interval
+from onvif_simulator.rtsp import (
+    RtspRequest,
+    RtspServer,
+    Transport,
+    next_keyframe,
+    rtp_packet_interval,
+)
 from onvif_simulator.state import CameraState
 
 
@@ -33,6 +41,23 @@ def test_udp_packets_are_paced_across_frame_interval() -> None:
 
     assert interval == 0.0005
     assert rtp_packet_interval(Transport(tcp=True), 100, 20) == 0.0
+
+
+def test_rtsp_digest_replay_is_rejected(
+    settings: Settings, digest_header: Callable[..., str]
+) -> None:
+    server = RtspServer(settings, {})
+    uri = "rtsp://127.0.0.1:8554/stream1"
+    match = re.search(r'nonce="([^"]+)"', server._digest.challenge())
+    assert match is not None
+    header = digest_header(match.group(1), method="DESCRIBE", uri=uri)
+    request = RtspRequest("DESCRIBE", uri, "RTSP/1.0", {"authorization": header}, b"")
+    assert server._authorized(request)
+    assert not server._authorized(request)
+    request.headers["authorization"] = digest_header(
+        match.group(1), method="DESCRIBE", uri=uri, nc="00000002"
+    )
+    assert server._authorized(request)
 
 
 async def read_response(

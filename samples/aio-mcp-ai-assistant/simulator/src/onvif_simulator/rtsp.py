@@ -10,9 +10,8 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from onvif_simulator.authentication import (
-    digest_challenge,
+    DigestAuthenticator,
     is_basic_authorized,
-    is_digest_authorized,
 )
 from onvif_simulator.config import Settings
 from onvif_simulator.media.encoder import AccessUnit, VideoPipeline
@@ -72,7 +71,7 @@ class RtspServer:
         self._settings = settings
         self._pipelines = pipelines
         self._server: asyncio.Server | None = None
-        self._nonce = secrets.token_hex(16)
+        self._digest = DigestAuthenticator()
 
     async def start(self) -> None:
         self._server = await asyncio.start_server(
@@ -108,7 +107,7 @@ class RtspServer:
                         401,
                         "Unauthorized",
                         cseq,
-                        headers={"WWW-Authenticate": digest_challenge(self._nonce)},
+                        headers={"WWW-Authenticate": self._digest.challenge()},
                     )
                     continue
 
@@ -269,11 +268,10 @@ class RtspServer:
             authorization,
             self._settings.camera_username,
             self._settings.camera_password.get_secret_value(),
-        ) or is_digest_authorized(
+        ) or self._digest.authorize(
             authorization,
             method=request.method,
             uri=request.uri,
-            nonce=self._nonce,
             username=self._settings.camera_username,
             password=self._settings.camera_password.get_secret_value(),
         )

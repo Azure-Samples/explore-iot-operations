@@ -13,7 +13,8 @@ products:
 # Edge predictive inference: person-detection scenario
 
 This sample integrates the Azure IoT Operations (AIO) **media connector** and
-**inference connector** to produce person detections from an RTSP camera. Foundry
+**[inference connector](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/overview-inference-connector)**
+to produce person detections from an RTSP camera. Foundry
 Local hosts the YOLOX-Nano ONNX model, while a data flow graph prepares images
 and converts model outputs into MQTT observations.
 
@@ -21,8 +22,9 @@ Each successful observation includes the detection count, confidence scores,
 bounding boxes, and references to its model input and output files. This provides
 both an application-facing result and a way to inspect the data used for inference.
 
-**Use the sample:** [Build and run locally](#build-and-run-locally) |
+**Use the sample:** [Select a prebuilt release](../../docs/edge-ai-samples-release.md) |
 [Deploy](#deployment-and-operations) | [Run and observe](#run-and-observe-the-pipeline) |
+[Customize locally](#build-and-run-locally) |
 [Test](#tests-and-validation) | [Stop and clean up](#stop-and-clean-up).
 
 > [!IMPORTANT]
@@ -34,6 +36,10 @@ both an application-facing result and a way to inspect the data used for inferen
 > application.
 > Check the [media compatibility findings](docs/deployment.md#media-connector-compatibility)
 > before choosing a media image; successful pod startup alone is not sufficient.
+> A private ACR candidate passed the software-source inference and recovery
+> checks on 2026-11-11. See the [observed AIO/Foundry combination and results](../../docs/edge-ai-samples-validation.md).
+> Public GHCR publication remains pending; the example `0.1.0-rc.1` tag is not
+> an available release. These checks do not qualify a physical camera or model accuracy.
 
 ## Scenario
 
@@ -67,7 +73,7 @@ flow graph contains five nodes:
 | --- | --- | --- |
 | Camera source | Subscribe to sampled camera images. | JPEG bytes and MQTT metadata. |
 | Preprocess | Validate and decode a complete JPEG, then resize, pad, and arrange it for YOLOX-Nano. | A prepared tensor file, its reference, and frame context. |
-| Inference transform (preview) | Invoke the inference connector through MQTT RPC. | The connector's response-file reference. |
+| [Inference transform (preview)](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/howto-inference-connector-dataflow-graph) | Invoke the inference connector through MQTT RPC. | The connector's response-file reference. |
 | Postprocess | Decode model output, filter person detections, and suppress overlapping boxes. | An observation or a contextual postprocessing error. |
 | Observation destination | Publish JSON to the appropriate MQTT topic. | Results for downstream applications. |
 
@@ -156,52 +162,23 @@ The error topic does not cover every failure: preprocessing and built-in inferen
 failures can log and drop a message without producing an observation. See the
 [failure contract](docs/architecture.md#failure-behavior).
 
-## Build and run locally
-
-Local execution requires Linux or WSL, Bash, Python 3.10+, Rustup, and system
-build tools for Rust's linker. From the repository root:
-
-```bash
-cd samples/edge-predictive-inference
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt -r models/requirements.txt
-./build.sh
-python models/prepare.py
-```
-
-`build.sh` checks Rust formatting, runs the core unit tests, and builds both WASM
-components and the local validation helper under `.build/`. Rustup installs the
-pinned toolchain when needed. `prepare.py` downloads and verifies the model and
-its license under `.assets/model/`.
-
-Run inference on an authorized JPEG image:
-
-```bash
-python models/verify.py --image /absolute/path/to/authorized-camera-image.jpg
-```
-
-The command prints an observation JSON object and saves the prepared tensor,
-raw response, frame context, and observation under `.build/local-inference/`.
-It uses the same Rust preprocessing and postprocessing as the deployed components,
-with ONNX Runtime on the local CPU.
-
-This local run does **not** use a camera stream, MQTT, the inference
-connector, or Foundry Local. Deploy the pipeline below to exercise those
-integrations.
-
 ## Deployment and operations
 
 Use an existing compatible Azure IoT Operations environment with the media
-connector, Foundry Local, an authorized camera, an OCI registry, and
+connector, Foundry Local, an authorized camera, access to the released artifacts, and
 ReadWriteMany (RWX) storage. Deployment also requires Azure CLI with Bicep,
-`kubectl`, `jq`, and ORAS 1.2+. Authenticate Azure CLI and ORAS before proceeding.
+`kubectl`, `jq`, Python 3.10+, and ORAS 1.3+. Authenticate Azure CLI.
+The default path uses versioned prebuilt GHCR artifacts; no Rust, Docker build,
+local model download, or registry push permission is required.
 
 Complete the [deployment prerequisites](docs/deployment.md#prerequisites),
 including [trust, credentials, and permissions](docs/deployment.md#trust-credentials-and-permissions).
+First [select and verify a coordinated release](../../docs/edge-ai-samples-release.md),
+then configure its AIO registry endpoint and separate Foundry model credentials.
 For a multi-node cluster, use shared RWX storage such as Azure Container Storage
 enabled by Azure Arc (ACSA) with `unbacked-sc`; a default Azure Disk RWO claim is
-not a substitute. Review [multi-node storage](docs/deployment.md#multi-node-shared-storage)
+not a substitute. Use the [ACSA configuration and cross-node verification sample](docs/shared-storage.md).
+Review [multi-node storage](docs/deployment.md#multi-node-shared-storage)
 and [media image compatibility](docs/deployment.md#media-connector-compatibility).
 These commands do not install Azure IoT Operations, Foundry Local, or a storage
 driver. Run them in order from the sample directory with `.venv` active, and
@@ -213,11 +190,15 @@ stop if a command fails.
 > existing installation, coordinate changes with its owner and follow
 > [managed updates](docs/operations.md#managed-updates).
 
-### Configure and publish
+### Prepare tools and configure the release
 
-Create your environment configuration:
+From the repository root:
 
 ```bash
+cd samples/edge-predictive-inference
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 cp config.example.json config.json
 ```
 
@@ -226,18 +207,22 @@ resource names, Kubernetes context, camera URL, secret references, registry, and
 RWX storage class. Use new sample resource names rather than reusing unrelated
 resources. Do not put credentials in the camera URL or commit secrets.
 `modelEndpoint` must be the model's HTTPS base URL, without `/v1/predict`.
+For the prebuilt path, keep `registry: ghcr.io` and
+`artifactRepository: azure-samples/explore-iot-operations/edge-predictive-inference`.
+Set `artifactVersion` to the verified release version, not an assumed existing
+tag, and `registryEndpointName` to the dedicated AIO GHCR endpoint.
 
-Render the configuration and publish the prepared model and graph artifacts:
+Render the environment-specific resources:
 
 ```bash
-python render.py config.json &&
-./publish.sh config.json
+python render.py config.json
 ```
 
 The renderer writes deployment files to `.generated/`, with the camera and data
-flow disabled. Publication uploads the two WASM components, two custom graphs,
-and YOLOX-Nano model to your registry. Edit source configuration, not generated
-files; the helpers render them again.
+flow disabled. AIO pulls the published graph definitions and their matching WASM
+modules; Foundry pulls the published YOLOX-Nano package. Rendering also produces
+graph YAML for inspection or customization; you do not publish it for a prebuilt
+deployment. Edit source configuration, not generated files.
 
 ### Deploy storage and the model
 
@@ -312,6 +297,11 @@ are `[1,3,416,416]` for the request and `[1,3549,85]` for the response's `output
 
 ## Tests and validation
 
+The [shared qualification record](../../docs/edge-ai-samples-validation.md)
+separates local/CI checks, artifact publication, and actual AIO/Foundry results.
+The [Edge AI samples workflow](../../.github/workflows/edge-ai-samples.yml) covers
+both samples and publishes a coordinated release only after candidate checks.
+
 Run from the sample directory with `.venv` active. Install ShellCheck separately
 if it is not already available:
 
@@ -339,6 +329,40 @@ For live verification, fully decode sampled MQTT JPEGs, exercise both an empty
 and a person-containing authorized scene, and retrieve each observation's
 referenced tensor files. A JPEG header or a zero-person observation alone is
 insufficient evidence that the full image reached inference.
+
+## Build and run locally
+
+This optional path is for customization and local model checks, not a prerequisite
+for deploying prebuilt artifacts. It additionally requires Rustup and system
+build tools for Rust's linker. From the sample directory with `.venv` active:
+
+```bash
+python -m pip install -r models/requirements.txt
+./build.sh
+python models/prepare.py
+python models/verify.py --image /absolute/path/to/authorized-camera-image.jpg
+```
+
+`build.sh` checks formatting, runs the Rust unit tests, and builds both WASM
+components and the local helper under `.build/`. `prepare.py` downloads the
+unmodified upstream model and verifies its checksum, ONNX contract, and license.
+The local run uses the same preprocessing/postprocessing and ONNX Runtime CPU
+inference. It writes tensors, frame context, and the observation under
+`.build/local-inference/`; it does not exercise MQTT, either connector, or
+Foundry Local.
+
+To deploy customized artifacts, set your own `registry`, `artifactRepository`,
+and a new `artifactVersion`, and configure the corresponding AIO/Foundry pull
+access. Authenticate ORAS using your approved process, then:
+
+```bash
+python render.py config.json &&
+./publish.sh config.json
+```
+
+This publishes both modules, both graph definitions, and the model package to
+your repository. The helper refuses the official GHCR namespace; official
+releases use CI. Never overwrite a version used by running workloads.
 
 ## Stop and clean up
 
@@ -393,3 +417,4 @@ The model is downloaded separately, not embedded in this repository. Review
 | [Deployment and inspection](docs/deployment.md) | Detailed prerequisites, trust configuration, deployment stages, and input/output file retrieval. |
 | [Architecture and data contracts](docs/architecture.md) | Request sequence, model tensors, correlation, delivery, compatibility, and model adaptation. |
 | [Operations and cleanup](docs/operations.md) | Missing-result diagnostics, retention, managed updates, and resource-specific removal. |
+| [Event-triggered camera inference](https://learn.microsoft.com/en-us/azure/iot-operations/ai/inference-connector/howto-media-connector-inference) | Related product walkthrough using `ExtractClip`, shared JPEG files, and YOLOv8. This sample instead processes periodic MQTT JPEGs with YOLOX-Nano and exchanges prepared tensor files. |
