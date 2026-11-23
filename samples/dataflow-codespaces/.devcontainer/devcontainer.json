@@ -1,0 +1,24 @@
+{
+    "name": "Azure IoT Operations Data Flow",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:4": {}
+    },
+    "remoteUser": "vscode",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azureiotoperations.azure-iot-operations-data-flow-vscode"
+            ]
+        }
+    },
+    "postCreateCommand": {
+        "host-app": "docker pull mcr.microsoft.com/azureiotoperations/processor-app:1.2.0 && docker tag mcr.microsoft.com/azureiotoperations/processor-app:1.2.0 host-app",
+        "devx": "docker pull mcr.microsoft.com/azureiotoperations/devx-runtime:0.1.13 && docker tag mcr.microsoft.com/azureiotoperations/devx-runtime:0.1.13 devx",
+        "statestore-cli": "docker pull mcr.microsoft.com/azureiotoperations/statestore-cli:0.1.2 && docker tag mcr.microsoft.com/azureiotoperations/statestore-cli:0.1.2 statestore-cli",
+        "aio-vscode-mcp": "docker pull mcr.microsoft.com/azureiotoperations/aio-vscode-mcp:0.1.10 && docker tag mcr.microsoft.com/azureiotoperations/aio-vscode-mcp:0.1.10 aio-vscode-mcp"
+    }
+}
