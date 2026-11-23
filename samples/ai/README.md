@@ -1,10 +1,10 @@
 # AI relay cloud access sample
 
-Expose an existing in-cluster AI MCP Frontend or A2A endpoint through
+Expose an existing in-cluster AI MCP Gateway or A2A endpoint through
 authenticated Azure API Management (APIM) and Azure Relay:
 
 ```text
-Client with Entra token -> APIM -> Azure Relay Hybrid Connection -> relay pod -> MCP Frontend / A2A service
+Client with Entra token -> APIM -> Azure Relay Hybrid Connection -> relay pod -> MCP Gateway / A2A service
 ```
 
 `deploy.sh` deploys the Azure resources from `bicep/ai-relay.bicep` and installs
@@ -37,7 +37,7 @@ confirming that no other API references them.
   Access and organizational registration metadata requirements, still apply.
 - A configured kubectl context for the target cluster. The script does not
   create a cluster or switch contexts.
-- For MCP: an existing MCP Frontend Service, its TLS trust bundle and
+- For MCP: an existing MCP Gateway Service, its TLS trust bundle and
   service-account-token authentication configured for the intended audience.
   The relay chart expects the AIO CA trust bundle in the same namespace.
 - Published, accessible agent/relay release artifacts. The relay chart must
@@ -81,8 +81,8 @@ bash samples/ai/deploy.sh \
   --aio-extension-name '<azure-iot-operations-extension-name>' \
   --entra-app-name '<unique-app-name>' \
   --endpoint-protocol mcp \
-  --mcp-frontend-service-name aio-mcp-frontend \
-  --mcp-frontend-audience aio-mcp-frontend
+  --mcp-gateway-service-name aio-mcp-gateway \
+  --mcp-gateway-audience aio-mcp-gateway
 ```
 
 The script downloads the chart before creating Azure resources and uses the
@@ -91,12 +91,20 @@ publisher signature. If signature enforcement is required, independently verify
 the published digest with the approved publisher trust policy before deployment.
 
 No MCP role is assigned by default. Add `--mcp-role Reader` only if the existing
-frontend policy authorizes that role for the relay ServiceAccount. The annotation
+gateway policy authorizes that role for the relay ServiceAccount. The annotation
 is a JSON array encoded as a string, `aio-mcp-auth/roles: '["Reader"]'`.
 All callers through the relay share its backend MCP permissions.
 
-The frontend Service name and its inbound SAT audience are independent. Do not
-use its backend token audience as `--mcp-frontend-audience`.
+The gateway Service name, port, and inbound SAT audience are independent. If the
+`MCPGateway` resource sets a different Service port or audiences, pass
+`--mcp-gateway-port` and one of its audiences as `--mcp-gateway-audience`. Do
+not use the gateway's backend token audience as `--mcp-gateway-audience`.
+
+MCP Gateway was previously named MCP Frontend. The `--mcp-frontend-service-name`
+and `--mcp-frontend-audience` options remain as deprecated aliases for the
+`--mcp-gateway-*` options. For an earlier Azure IoT Operations MCP preview that
+still serves clients through MCP Frontend, pass `aio-mcp-frontend` to both
+`--mcp-gateway-service-name` and `--mcp-gateway-audience`.
 
 The script checks response types when looking up Entra apps and reading Azure
 deployment outputs. Hybrid Connection names, Relay URLs and APIM gateway URLs
@@ -130,7 +138,7 @@ An administrator must assign approved callers through **Entra Enterprise
 applications > your app > Users and groups**, or Microsoft Graph for application
 assignments. No caller is assigned automatically.
 
-The Entra `AIOMcpAdmin` role, the MCP Frontend `Reader` role, and Azure's Relay
+The Entra `AIOMcpAdmin` role, the MCP Gateway `Reader` role, and Azure's Relay
 Listener/Sender roles are different permissions.
 
 ### Use a manually configured app
