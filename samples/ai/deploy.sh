@@ -36,10 +36,13 @@ Authentication:
 Endpoint:
   --endpoint-protocol <mcp|a2a|both>  Default: mcp. "both" installs two Helm releases.
   --endpoint-url <url>               Required for a2a/both; A2A target URL.
-  --mcp-frontend-service-name <name> Default: aio-mcp-frontend.
-  --mcp-frontend-audience <audience> Default: aio-mcp-frontend (inbound SAT audience).
-  --mcp-role <role>                  Optional single MCP Frontend role, e.g. Reader.
+  --mcp-gateway-service-name <name>  Default: aio-mcp-gateway.
+  --mcp-gateway-port <port>          Default: 443 (MCP Gateway Service port).
+  --mcp-gateway-audience <audience>  Default: aio-mcp-gateway (inbound SAT audience).
+  --mcp-role <role>                  Optional single MCP Gateway role, e.g. Reader.
                                       No role by default. Applied only to the MCP relay.
+  --mcp-frontend-service-name, --mcp-frontend-audience
+                                      Deprecated aliases for the --mcp-gateway-* options.
 
 Optional:
   --chart-version <version>         Exact published chart version. Default: 0.1.3.
@@ -81,8 +84,9 @@ ENTRA_APP_ROLE="AIOMcpAdmin"
 ENTRA_APP_SCOPE="mcp.access"
 ENDPOINT_PROTOCOL="mcp"
 ENDPOINT_URL=""
-MCP_FRONTEND_SERVICE_NAME="aio-mcp-frontend"
-MCP_FRONTEND_AUDIENCE="aio-mcp-frontend"
+MCP_GATEWAY_SERVICE_NAME="aio-mcp-gateway"
+MCP_GATEWAY_PORT=443
+MCP_GATEWAY_AUDIENCE="aio-mcp-gateway"
 MCP_ROLE=""
 IMAGE_TAG="0.1.3"
 VALUES_FILE=""
@@ -96,11 +100,12 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
         --aio-mcp-release-name)
-            echo "Error: --aio-mcp-release-name is no longer supported; use --mcp-frontend-service-name and --mcp-frontend-audience." >&2
+            echo "Error: --aio-mcp-release-name is no longer supported; use --mcp-gateway-service-name and --mcp-gateway-audience." >&2
             exit 1 ;;
         --resource-group|--relay-namespace-name|--apim-name|--apim-publisher-email|--apim-publisher-name|\
         --chart-version|--chart-reference|--auth-mode|--cluster-name|--aio-extension-name|\
         --entra-app-name|--entra-app-id|--entra-tenant-id|--entra-app-scope|--entra-azure-config-dir|--endpoint-protocol|--endpoint-url|\
+        --mcp-gateway-service-name|--mcp-gateway-port|--mcp-gateway-audience|\
         --mcp-frontend-service-name|--mcp-frontend-audience|--mcp-role|--image-tag|--values|\
         --hybrid-connection-name|--apim-sku|--apim-capacity|--k8s-namespace|--helm-release-name)
             if [[ $# -lt 2 || ! "${2:-}" =~ [^[:space:]] || "${2:-}" == --* ]]; then
@@ -127,8 +132,15 @@ while [[ $# -gt 0 ]]; do
         --entra-azure-config-dir) ENTRA_AZURE_CONFIG_DIR="$2" ;;
         --endpoint-protocol) ENDPOINT_PROTOCOL="$2" ;;
         --endpoint-url) ENDPOINT_URL="$2" ;;
-        --mcp-frontend-service-name) MCP_FRONTEND_SERVICE_NAME="$2" ;;
-        --mcp-frontend-audience) MCP_FRONTEND_AUDIENCE="$2" ;;
+        --mcp-gateway-service-name) MCP_GATEWAY_SERVICE_NAME="$2" ;;
+        --mcp-gateway-port) MCP_GATEWAY_PORT="$2" ;;
+        --mcp-gateway-audience) MCP_GATEWAY_AUDIENCE="$2" ;;
+        --mcp-frontend-service-name)
+            echo "Warning: --mcp-frontend-service-name is deprecated; use --mcp-gateway-service-name." >&2
+            MCP_GATEWAY_SERVICE_NAME="$2" ;;
+        --mcp-frontend-audience)
+            echo "Warning: --mcp-frontend-audience is deprecated; use --mcp-gateway-audience." >&2
+            MCP_GATEWAY_AUDIENCE="$2" ;;
         --mcp-role) MCP_ROLE="$2" ;;
         --image-tag) IMAGE_TAG="$2" ;;
         --values) VALUES_FILE="$2" ;;
@@ -182,8 +194,12 @@ if [[ "$ENDPOINT_PROTOCOL" == a2a && -n "$MCP_ROLE" ]]; then
     echo "Error: --mcp-role requires --endpoint-protocol mcp or both." >&2
     exit 1
 fi
-if [[ "$ENDPOINT_PROTOCOL" != a2a && ( -z "$MCP_FRONTEND_SERVICE_NAME" || -z "$MCP_FRONTEND_AUDIENCE" ) ]]; then
-    echo "Error: MCP Frontend Service name and audience must not be empty." >&2
+if [[ "$ENDPOINT_PROTOCOL" != a2a && ( -z "$MCP_GATEWAY_SERVICE_NAME" || -z "$MCP_GATEWAY_AUDIENCE" ) ]]; then
+    echo "Error: MCP Gateway Service name and audience must not be empty." >&2
+    exit 1
+fi
+if [[ ! "$MCP_GATEWAY_PORT" =~ ^[1-9][0-9]{0,4}$ ]] || (( MCP_GATEWAY_PORT > 65535 )); then
+    echo "Error: --mcp-gateway-port must be a port number from 1 to 65535." >&2
     exit 1
 fi
 if [[ "$CHART_REFERENCE" != oci://* || ! "$APIM_CAPACITY" =~ ^[1-9][0-9]*$ ]]; then
@@ -376,10 +392,10 @@ install_relay_release() {
         args+=("--set-string" "relay.auth.managedIdentity.extension=$AIO_EXTENSION_NAME")
     fi
     if [[ "$protocol" == mcp ]]; then
-        args+=("--set-string" "endpoint.url=https://${MCP_FRONTEND_SERVICE_NAME}.${K8S_NAMESPACE}:443/mcp"
-            "--set-string" "endpoint.serviceAccountTokens[0].name=aio-mcp-frontend"
-            "--set-string" "endpoint.serviceAccountTokens[0].audience=$MCP_FRONTEND_AUDIENCE"
-            "--set-string" "endpoint.auth.file=/var/run/secrets/tokens/aio-mcp-frontend"
+        args+=("--set-string" "endpoint.url=https://${MCP_GATEWAY_SERVICE_NAME}.${K8S_NAMESPACE}:${MCP_GATEWAY_PORT}/mcp"
+            "--set-string" "endpoint.serviceAccountTokens[0].name=aio-mcp-gateway"
+            "--set-string" "endpoint.serviceAccountTokens[0].audience=$MCP_GATEWAY_AUDIENCE"
+            "--set-string" "endpoint.auth.file=/var/run/secrets/tokens/aio-mcp-gateway"
             "--set-string" "endpoint.auth.kind=bearer-token")
         if [[ -n "$MCP_ROLE" ]]; then
             annotations="$(jq -cn --arg role "$MCP_ROLE" '{"aio-mcp-auth/roles":([$role]|tojson)}')"

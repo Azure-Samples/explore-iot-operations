@@ -48,7 +48,7 @@ param entraTenantId string
 @description('Delegated scope advertised by the MCP protected-resource metadata endpoint.')
 param entraAppScope string = 'mcp.access'
 
-@description('App role required in the caller token. Separate from MCP Frontend roles.')
+@description('App role required in the caller token. Separate from MCP Gateway roles.')
 param entraAppRole string = 'AIOMcpAdmin'
 
 var usesSas = authMode == 'SharedAccessSignature'
